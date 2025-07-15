@@ -1,0 +1,54 @@
+<div
+    appBsModal
+    #addWidgetModal="bs-modal"
+    class="modal fade"
+    tabindex="-1"
+    role="dialog"
+    aria-hidden="true"
+    [config]="{ backdrop: 'static' }"
+>
+    <div class="modal-dialog modal-dialog-centered modal-lg modal">
+        <div class="modal-content" >
+            <form #addWidgetModalForm="ngForm" (ngSubmit)="save()">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <span>{{ 'AddWidget' | localize }}</span>
+                    </h5>
+                    <button type="button" class="btn-close" [attr.aria-label]="l('Close')" (click)="close()">
+                    </button>
+                </div>
+                <div class="modal-body" style="height: 400px;" >
+                    <div class="mb-5 row" *ngIf="widgets && widgets.length > 0">
+                        <div class="col-4">
+                            <dx-radio-group [dataSource]="widgets" [(value)]="selectedWidgetId" valueExpr="id" itemTemplate="radio">
+                                <div class="radio" *dxTemplate="let widget of 'radio'">
+                                    {{ widget.name | localize }}
+                                </div>
+                            </dx-radio-group>
+                        </div>
+                        <div class="col-8">
+                            <img class="w-100" [src]="imagePath" [alt]="selectedWidgetId" />
+                        </div>
+                    </div>
+                    <div class="mb-5" *ngIf="!widgets || widgets.length == 0">
+                        {{ 'NoWidgetAvailableMessage' | localize }}
+                    </div>
+                </div>
+                <div class="modal-footer w-100">
+                    <button
+                        type="button"
+                        class="btn btn-light-primary fw-bold"
+                        (click)="close()"
+                        [disabled]="saving"
+                    >
+                        {{ 'Cancel' | localize }}
+                    </button>
+                    <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving">
+                        <i class="fa fa-save"></i>
+                        <span>{{ 'Next' | localize }}</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

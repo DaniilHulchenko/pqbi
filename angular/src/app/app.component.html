@@ -1,0 +1,24 @@
+<div [ngClass]="{ 'subscription-bar-visible': subscriptionStatusBarVisible() }" class="d-flex flex-column flex-root">
+    <default-layout *ngIf="theme == 'default'"></default-layout>
+</div>
+
+<kt-scroll-top></kt-scroll-top>
+
+<linkedAccountsModal
+    *ngIf="!installationMode"
+    #linkedAccountsModal
+    (modalClose)="getRecentlyLinkedUsers()"
+></linkedAccountsModal>
+<userDelegationsModal #userDelegationsModal></userDelegationsModal>
+<changePasswordModal #changePasswordModal></changePasswordModal>
+<changeProfilePictureModal #changeProfilePictureModal></changeProfilePictureModal>
+<mySettingsModal #mySettingsModal (modalSave)="onMySettingsModalSaved()"></mySettingsModal>
+<notificationSettingsModal #notificationSettingsModal></notificationSettingsModal>
+
+<addFriendModal #addFriendModal></addFriendModal>
+<chat-bar #chatBarComponent *ngIf="!installationMode" [addFriendModal]="addFriendModal"></chat-bar>
+<theme-selection-panel
+    #themeSelectionPanelComponent
+    *ngIf="!installationMode && isQuickThemeSelectEnabled"
+></theme-selection-panel>
+<session-timeout #sessionTimeout *ngIf="IsSessionTimeOutEnabled"></session-timeout>

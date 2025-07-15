@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  
+  PQSServiceMock:
+    image: {{NEXUS_DOCKER_HOSTED}}/{{PQBI_PQSSERVICE_MOCK_IMAGE}}
+    container_name: {{PQBI_PQSSERVICE_MOCK_CONTAINER}}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8777:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT={{ASPNETCORE_ENVIRONMENT}}
+    volumes:
+      - ./docker_logs:/app/Logs
+    networks:
+      - pqbi_network
+networks:
+  pqbi_network:
+    name:   {{NETWORK_NAME}}
+    driver: bridge
+

@@ -1,0 +1,174 @@
+<dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="isPopupVisible" [dragAndResizeArea]="false"
+    [dragEnabled]="false" [deferRendering]="false" title="Custom Parameter Configuration" height="90vh" width="90vw">
+    <dx-scroll-view [showScrollbar]="true">
+        <div class="pe-2">
+            <form *ngIf="active" #customParameterForm="ngForm" novalidate (ngSubmit)="save()" autocomplete="off">
+                <div class="my-3">
+                    <label class="form-label" for="CustomParameter_Name">
+                        {{ l('CustomParameter_Name') }} *
+                    </label>
+                    <input type="text" #CustomParameter_Name="ngModel" id="CustomParameter_Name" class="form-control"
+                        [(ngModel)]="customParameter.name" name="Name" required />
+                    <validation-messages [formCtrl]="CustomParameter_Name"></validation-messages>
+                </div>
+
+                <div class="my-3">
+                    <label class="form-label" for="CustomParameter_Type">
+                        {{ l('CustomParameter_Type') }} *
+                    </label>
+                    <p-dropdown id="CustomParameter_Type" name="Type" [(ngModel)]="selectedType"
+                        (onChange)="deleteAllParameters()" #CustomParameter_Type="ngModel" [options]="typeOptions"
+                        optionLabel="name" optionValue="value" placeholder="Select a custom parameter type"
+                        [showClear]="true" required />
+                    <validation-messages [formCtrl]="CustomParameter_Type"></validation-messages>
+                </div>
+
+                <div class="my-3">
+                    <div class="row">
+                        <div class="col-auto">
+                            <resolutionSelector [onlyCustomAllowed]="true" [minResolution]="minAllowedResolution"
+                                [(ngModel)]="selectedResolution" (ngModelChange)="updateResolutionModel()"
+                                name="resolution" />
+                        </div>
+                        <div class="col-auto">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <label class="form-label" for="selectedAggregationFunction">{{'OuterAggregatinFunction' | localize }}
+                                        *</label>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="dx-icon-info info-icon-style" id="aggregationFunctionTooltipTarget"></i>
+                                </div>
+                                <dx-tooltip target="#aggregationFunctionTooltipTarget" showEvent="mouseenter"
+                                    hideEvent="mouseleave" [hideOnOutsideClick]="false"
+                                    [textContent]="'Select a function to be applied on each resolution point to provide one value for all base parameter'" />
+                            </div>
+
+                            <p-dropdown id="selectedAggregationFunction" inputId="selectedAggregationFunction"
+                                #CustomParameter_AggregationFunction="ngModel" name="selectedAggregationFunction"
+                                [(ngModel)]="selectedAggregationFunction"
+                                (ngModelChange)="updateAggregationFunctionModel()"
+                                [options]="aggregationFunctions"
+                                optionLabel="name" optionValue="name"
+                                [showClear]="true" />
+                            <small class="p-error" *ngIf="!selectedAggregationFunction && CustomParameter_AggregationFunction.touched">
+                                {{'AggregationFunctionRequired' | localize }}
+                            </small>
+                            <dx-tooltip target="#aggregationFunctionTooltipTarget" showEvent="mouseenter"
+                                hideEvent="mouseleave" [hideOnOutsideClick]="false"
+                                [textContent]="'Select a function to be applied on each resolution point to provide one value for all base parameter'" />
+                        </div>
+                        <div class="col-auto">
+                            <ng-container *ngIf="CustomParameter_AggregationFunction.value === 'PERCENTILE'">
+                                <label class="form-label" for="CustomParameter_AggregationFunctionArgument">
+                                    {{ l('CustomParameter_AggregationFunction') }} {{'Argument' | localize }}
+                                </label>
+                                <div>
+                                    <p-inputNumber name="AggregationFunctionArgument"
+                                        inputId="AggregationFunctionArgument"
+                                        [(ngModel)]="selectedAggregationArgument_InNumber"
+                                        (ngModelChange)="updateAggregationArgumentValue($event)" mode="decimal"
+                                                   (onFocus)="onFocus()"
+                                        #AggregationFunctionVariable="ngModel"
+                                        [min]="0.00" [max]="1.00" [step]="0.05" [minFractionDigits]="2"
+                                        [maxFractionDigits]="2" [showButtons]="true" [showClear]="true" required />
+                                    <small class="p-error" *ngIf="!selectedAggregationArgument_InNumber && AggregationFunctionVariable.touched">
+                                        {{'MustNotBeEmpty' | localize }}
+                                    </small>
+                                </div>
+                            </ng-container>
+
+                            <ng-container *ngIf="['ARITHMETICS'].includes(CustomParameter_AggregationFunction.value)">
+                                <div>
+                                    <label class="form-label" for="CustomParameter_AggregationFunctionArgument">
+                                        {{ l('CustomParameter_AggregationFunction') }} {{'Argument' | localize }}
+                                    </label>
+                                    <p-inputGroup>
+                                        <input pInputText readonly name="AggregationFunctionArgument"
+                                            inputId="AggregationFunctionArgument"
+                                            [(ngModel)]="selectedAggregationFunctionArgument"
+                                            (ngModelChange)="updateAggregationFunctionModel()" required
+                                            #AggregationFunctionArgumentVariable="ngModel" />
+                                        <button type="button" pButton icon="pi pi-cog" severity="info"
+                                            tooltip="Open calculator" (click)="showArithmeticsModal()"></button>
+                                    </p-inputGroup>
+                                    <small class="p-error" *ngIf="!selectedAggregationFunctionArgument && AggregationFunctionArgumentVariable.touched">
+                                        {{'MustNotBeEmpty' | localize }}
+                                    </small>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="my-3">
+                    <dx-tab-panel #tabPanel [deferRendering]="false" [dataSource]="tabs" [selectedIndex]="0"
+                        [disabled]="!isParameterSelectionEnabled" [loop]="false" [animationEnabled]="true"
+                        [swipeEnabled]="true" class="trend-custom-styles" (onSelectionChanging)="onTabSelectionChanging($event)">
+                        <div *dxTemplate="let option of 'title'">
+                            <i class="fa" [ngClass]="getIconClass(option.ID)"></i>
+                            <span>{{option.name}}</span>
+                        </div>
+                        <div class="h-450px" *dxTemplate="let option of 'customTemplate'">
+                            <cpCustomParameterSelectionTab #cpCustomParameterSelectionTab [multiple]="customParameter.type !== 'SPMC'"
+                                [outerResolutionState]="selectedResolution" (onAdd)="onAddCustomParameter($event)"
+                                (onEditSave)="onEditCustomParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
+                        </div>
+                        <div class="h-450px" *dxTemplate="let option of 'logicalTemplate'">
+                            <cpBaseParameterSelectionTab #cpLogicalParameterSelectionTab [baseParameterType]="baseParameterTypes.Logical"
+                                [disableComponentSelection]="!isComponentsSelectionEnabled"
+                                [multiple]="customParameter.type !== 'SPMC'" [outerResolutionState]="selectedResolution"
+                                (onAdd)="onAddBaseParameter($event)" [dynamicSelection]="customParameter.type === 'EXCEPTION'" [isFeederSelectionEnabled]="true"
+                                (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
+                        </div>
+                        <div class="h-450px" *dxTemplate="let option of 'channelTemplate'">
+                            <cpBaseParameterSelectionTab #cpChannelParameterSelectionTab [baseParameterType]="baseParameterTypes.Channel"
+                                [disableComponentSelection]="!isComponentsSelectionEnabled"
+                                [multiple]="customParameter.type !== 'SPMC'" (onAdd)="onAddBaseParameter($event)" [dynamicSelection]="customParameter.type === 'EXCEPTION'" [isFeederSelectionEnabled]="false"
+                                (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
+                        </div>
+                        <div class="h-450px" *dxTemplate="let option of 'additionalTemplate'">
+                            <cpAdditionalParameterSelectionTab #cpAdditionalParameterSelectionTab
+                                [disableComponentSelection]="!isComponentsSelectionEnabled"
+                                [multiple]="customParameter.type !== 'SPMC'" (onAdd)="onAddBaseParameter($event)"
+                                (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
+                        </div>
+                    </dx-tab-panel>
+                </div>
+
+                <div class="my-2" style="width: 100%;">
+                    <dx-data-grid name="components" [dataSource]="parameters" [showBorders]="true" (onEditingStart)="updateParameter($event)"
+                        (onRowRemoved)="onParameterDelete($event)" style="width: 100%;">
+                        <dxi-column caption="Name" dataField="name"></dxi-column>
+                        <dxi-column caption="Type" dataField="type"></dxi-column>
+                        <!-- <dxi-column caption="Components" dataField="component" cellTemplate="componentsTemplate"></dxi-column> -->
+                        <dxi-column caption="Quantity" dataField="quantity"></dxi-column>
+                        <dxi-column caption="Resolution" dataField="resolution"></dxi-column>
+                        <dxi-column caption="Operator" dataField="operator"></dxi-column>
+                        <dxi-column caption="Inner Alignment" dataField="innerAggregation"></dxi-column>
+                        <dxo-editing [useIcons]="true" [allowUpdating]="true" [allowDeleting]="true"></dxo-editing>
+                        <dxi-column type="buttons">
+                            <dxi-button name="edit"></dxi-button>
+                            <dxi-button hint="Duplicate" icon="copy" [onClick]="duplicateParameterCommand"></dxi-button>
+                            <dxi-button name="delete"></dxi-button>
+                        </dxi-column>
+                        <!-- <div *dxTemplate="let context of 'componentsTemplate'">
+                            {{ componentsToString(context.data.components) }}
+                        </div> -->
+                    </dx-data-grid>
+                </div>
+            </form>
+        </div>
+        <arithmetics-modal #arithmeticsModal [parameters]="parameters"
+            (onSelect)="onArithmeticsSelected($event)"></arithmetics-modal>
+    </dx-scroll-view>
+    <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
+        <button type="button" class="btn btn-light-primary fw-bold" (click)="close()" [disabled]="saving">
+            {{ 'Cancel' | localize }}
+        </button>
+        <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving || !isFormValid()" (click)="save()">
+            <i class="fa fa-save"></i>
+            <span>{{ 'Save' | localize }}</span>
+        </button>
+    </dxi-popup-toolbar-item>
+</dx-popup>

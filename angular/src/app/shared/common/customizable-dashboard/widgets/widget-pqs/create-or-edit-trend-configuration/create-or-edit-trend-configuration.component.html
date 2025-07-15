@@ -1,0 +1,75 @@
+<dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="popupVisible" [dragAndResizeArea]="false"
+    [dragEnabled]="false" title="Edit Trend Widget Configuration" height="90vh" width="90vw">
+    <dx-scroll-view #scrollView [showScrollbar]="true">
+        <form #pqsForm="ngForm" (ngSubmit)="save()" novalidate autocomplete="off">
+            <div class="d-flex gap-3 mb-3">
+                <datetimeRangeSelector name="dateRange" [(ngModel)]="dateRangeSelectionState" [isVertical]="false"
+                    required />
+                <resolutionSelector name="resolution" [(ngModel)]="resolutionState"
+                    [minResolution]="minAllowedResolution" [isVertical]="false" required />
+            </div>
+
+            <div class="d-flex flex-column mb-3" style="width: 100%;">
+                <dx-tab-panel #tabPanel [dataSource]="tabs" [selectedIndex]="selectedTabIndex" [loop]="false"
+                    [animationEnabled]="true" [deferRendering]="false" [swipeEnabled]="true"
+                    class="trend-custom-styles" (onSelectionChanging)="onTabSelectionChanging($event)" (onSelectionChanged)="onTabSelectionChanged($event)">
+                    <div *dxTemplate="let option of 'title'">
+                        <i class="fa" [ngClass]="getIconClass(option.ID)"></i>
+                        <span>{{option.name}}</span>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'customTemplate'">
+                        <customParameterSelectionTab #customParameterSelectionTab
+                            [customParameterTypes]="['SPMC','MPSC']" (onAdd)="onAddCustomParameter($event)"
+                            (onEditSave)="onEditCustomParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'logicalTemplate'">
+                        <logicalParameterSelectionTab #logicalParameterSelectionTab (onAdd)="onAddBaseParameter($event)"
+                            (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'channelTemplate'">
+                        <channelParameterSelectionTab #channelParameterSelectionTab (onAdd)="onAddBaseParameter($event)"
+                            (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'additionalTemplate'">
+                        <additional-parameter-selection-tab #additionalParameterSelectionTab
+                            (onAdd)="onAddBaseParameter($event)" (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)" />
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'exceptionTemplate'">
+                        <exceptionParameterSelectionTab #exceptionParameterSelectionTab (onAdd)="onAddException($event)"
+                            (onEditSave)="onEditException($event)" />
+                    </div>
+                </dx-tab-panel>
+            </div>
+
+            <div class="d-flex flex-column" style="width: 100%;">
+                <dx-data-grid #grid name="components" [dataSource]="parameters" (onEditingStart)="updateParameter($event)"
+                    [showBorders]="true" style="width: 100%;">
+                    <dxi-column caption="Name" dataField="name"></dxi-column>
+                    <dxi-column caption="Type" dataField="type"></dxi-column>
+                    <dxi-column caption="Components" dataField="component"
+                        cellTemplate="componentsTemplate"></dxi-column>
+                    <dxi-column caption="Quantity" dataField="quantity"></dxi-column>
+                    <dxo-editing [useIcons]="true" [allowUpdating]="true" [allowDeleting]="true"></dxo-editing>
+                    <dxi-column type="buttons">
+                        <dxi-button name="edit"></dxi-button>
+                        <dxi-button hint="Duplicate" icon="copy" [onClick]="duplicateParameterCommand"></dxi-button>
+                        <dxi-button name="delete"></dxi-button>                        
+                    </dxi-column>
+
+                    <div *dxTemplate="let context of 'componentsTemplate'">
+                        {{ componentsToString(context.data.componentsState) }}
+                    </div>
+                </dx-data-grid>
+            </div>
+        </form>
+    </dx-scroll-view>
+    <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
+        <button type="button" class="btn btn-light-primary fw-bold" (click)="hide()" [disabled]="saving">
+            {{ 'Cancel' | localize }}
+        </button>
+        <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving || !isFormValid()" (click)="save()">
+            <i class="fa fa-save"></i>
+            <span>{{ 'Save' | localize }}</span>
+        </button>
+    </dxi-popup-toolbar-item>
+</dx-popup>

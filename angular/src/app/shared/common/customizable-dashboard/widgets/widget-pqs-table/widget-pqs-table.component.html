@@ -1,0 +1,85 @@
+<div class="kt-portlet kt-portlet--height-fluid">
+    <div class="kt-portlet__head">
+        <div class="kt-portlet__head-label">
+            <h3 class="kt-portlet__head-title">
+                {{ widgetName }}
+                <button class="btn btn-sm btn-elevate-hover" *ngIf="editModeEnabled" (click)="onNameEdit()">
+                    <i class="fa fa-edit"></i>
+                </button>
+            </h3>
+        </div>
+    </div>
+    <div class="kt-portlet__body" id="outerScroll" style="width: 98%; height: 600px; overflow-y: auto">
+        <div class="d-flex mb-2" style="gap: 12px">
+            <div *ngIf="editModeEnabled" class="row">
+                <div class="col">
+                    <button class="btn btn-primary" (click)="edit()">{{ 'Edit' | localize }}</button>
+                </div>
+            </div>
+    
+            <div *ngIf="hasEventParameter()" class="row mb-2">
+                <span style="margin: 0 12px;">{{'FilterEventBy' | localize}}</span>
+                <div class="col">
+                    <dx-radio-group
+                        [items]="[{ text: 'Value', value: 'value' }, { text: 'Duration', value: 'duration' }]"
+                        [(value)]="eventDisplayMode"
+                        layout="horizontal">
+                    </dx-radio-group>
+                </div>
+            </div>
+    
+            <div class="row mb-2">
+                <span style="margin: 0 12px;">{{'SortBy' | localize}}</span>
+                <div class="col">
+                    <dx-radio-group
+                        [value]="sortMode"
+                        [items]="[
+                        { value: 'value', text: 'Value' },
+                        { value: 'color', text: 'Color' }]"
+                        displayExpr="text"
+                        valueExpr="value"
+                        layout="horizontal"
+                        (onValueChanged)="onSortModeChange($event.value)">
+                    </dx-radio-group>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div id="innerScroll" class="table-container">
+                    <div *ngIf="isLoading" class="loading-overlay">
+                        <dx-load-indicator></dx-load-indicator>
+                        <p>{{'LoadingData' | localize }}</p>
+                    </div>
+                    <dx-tree-list
+                        *ngIf="dataSource && columns"
+                        #treeListRef
+
+                        [dataSource]="dataSource"
+                        [columns]="columns"
+                        [filterRow]="{ visible: true }"
+                        keyExpr="id"
+                        parentIdExpr="parentId"
+                        [autoExpandAll]="true"
+                        [showRowLines]="true"
+                        [showColumnLines]="true"
+                        [columnAutoWidth]="true"
+                        [wordWrapEnabled]="true"
+                        [showBorders]="true"
+                        [rowAlternationEnabled]="tableWidgetConfiguration.designOptions?.bandedRows"
+                        (onContentReady)="onContentReady()">
+                  </dx-tree-list>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-container *ngIf="editModeEnabled">
+    <createOrEditTableConfiguration
+        #createOrEditModal
+        (onSave)="onConfigurationChange($event)"
+    ></createOrEditTableConfiguration>
+    <rename-widget-modal #renameWidgetModal (onSave)="saveName($event)"></rename-widget-modal>
+</ng-container>

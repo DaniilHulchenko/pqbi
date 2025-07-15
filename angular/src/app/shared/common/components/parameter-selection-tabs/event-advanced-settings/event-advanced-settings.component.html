@@ -1,0 +1,96 @@
+<dx-popup
+    [hideOnOutsideClick]="false"
+    [showCloseButton]="true"
+    [(visible)]="modalVisible"
+    [dragEnabled]="false"
+    title="Event Advanced Settings"
+    height="60vh"
+    width="50vw"
+>
+    <dx-scroll-view>
+        <div style="margin: 20px; display: flex; flex-direction: column; gap: 24px;">
+            <!-- Normalize -->
+            <div>
+                <h5>Normalize Values:</h5>
+                <div *ngFor="let opt of normalizationOptions" style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="opt.text"
+                        [ngModel]="normalizeValue === opt.value"
+                        (onChange)="onSelectNormalize(opt.value)"
+                    ></p-checkbox>
+                </div>
+
+                <dx-number-box
+                    *ngIf="normalizeValue === normalizeTypes.VALUE"
+                    [(value)]="normalizeNominalValue"
+                    placeholder="Normalization Value"
+                    [min]="0">
+                </dx-number-box>
+            </div>
+
+            <!-- Limits -->
+            <div>
+                <h5>Lower & Upper Limits:</h5>
+                <div *ngFor="let opt of limitOptions" style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="opt.text"
+                        [ngModel]="setLimits === opt.value"
+                        (onChange)="onSelectLimitType(opt.value)"
+                    ></p-checkbox>
+                </div>
+
+                <div *ngIf="setLimits !== limitTypes.None" style="margin-top: 12px; display: flex; gap: 12px;">
+                    <dx-number-box [(value)]="lowerLimit" placeholder="Lower Limit" [min]="0"></dx-number-box>
+                    <dx-number-box [(value)]="upperLimit" placeholder="Upper Limit" [min]="0"></dx-number-box>
+                </div>
+            </div>
+
+            <!-- Color Scheme -->
+            <div>
+                <h5>Color Scheme:</h5>
+                <div *ngFor="let opt of colorSchemaOptions" style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="opt.text"
+                        [ngModel]="colorScheme === opt.value"
+                        (onChange)="onSelectColorScheme(opt.value)"
+                    ></p-checkbox>
+                </div>
+
+
+                <div *ngIf="colorScheme === colorSchemaTypes.OutOfLimit" style="margin-top:12px;">
+                    <dx-color-box [(value)]="outOfLimitColor" placeholder="Color"></dx-color-box>
+                </div>
+                <div *ngIf="colorScheme === colorSchemaTypes.Gradient" style="margin-top:12px; display:flex; gap:12px;">
+                    <dx-color-box [(value)]="gradientFromColor" placeholder="From"></dx-color-box>
+                    <dx-color-box [(value)]="gradientToColor" placeholder="To"></dx-color-box>
+                </div>
+
+                <div style="margin-top:12px; display:flex; gap:12px;">
+                    <dx-color-box [(value)]="okColor" placeholder="OK Color"></dx-color-box>
+                    <dx-color-box [(value)]="noDataColor" placeholder="No Data Color"></dx-color-box>
+                </div>
+            </div>
+
+            <!-- Tag Value Calculation -->
+            <div>
+                <h5>Tag Value Calculation:</h5>
+                <dx-select-box
+                    [(value)]="customAggregationFunc"
+                    [items]="aggregationFuncOptions"
+                    [showClearButton]="true"
+                    displayExpr="text"
+                    valueExpr="value"
+                    placeholder="Select aggregation function">
+                </dx-select-box>
+            </div>
+        </div>
+
+        <div style="margin: 20px; display: flex; justify-content: center; gap: 24px;">
+            <dx-button text="Cancel" (onClick)="hide()" stylingMode="contained" [width]="120" [height]="40"></dx-button>
+            <dx-button text="OK" type="success" (onClick)="save()" stylingMode="contained" [width]="120" [height]="40"></dx-button>
+        </div>
+    </dx-scroll-view>
+</dx-popup>

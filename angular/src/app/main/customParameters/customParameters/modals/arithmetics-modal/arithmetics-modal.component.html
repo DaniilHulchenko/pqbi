@@ -1,0 +1,80 @@
+<div bsModal #arithmeticsModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="arithmeticsModal" aria-hidden="true" [config]="{ backdrop: 'static' }">
+    <div class="modal-dialog calculator">
+        <div class="modal-header">
+            <h4 class="modal-title">
+                <span>{{ 'ArithmeticsCalculator' | localize }}</span>
+            </h4>
+        </div>
+        <div class="modal-content">
+            <!-- <form  #arithmeticsForm="ngForm" (ngSubmit)="select()" autocomplete="off"> -->
+                <div class="modal-body">
+                    <!-- Vars Button Section -->
+                    <p-panel header="Parameters">
+                        <fieldset [disabled]="!isVarsActive" class="parameters">
+                            <button type="button" class="btn" *ngFor="let parameter of parameters"
+                                (click)="onButtonClick('{'+ parameter.name + '}')">
+                                {{ '{'+ parameter.name + '}' }}
+                            </button>
+                        </fieldset>
+                    </p-panel>
+
+                    <!-- Numbers Button Section -->
+                    <div class="row mt-4 mb-4">
+                        <div class="col">
+                            <div class="numbers">
+                                <button type="button" class="btn" (click)="onButtonClick('(')" [disabled]="!isOpenParenthesesActive">(</button>
+                                <button type="button" class="btn" (click)="onButtonClick(')')" [disabled]="!isCloseParenthesesActive">)</button>
+
+                                <button type="button" class="btn" *ngFor="let number of numbers"
+                                    (click)="onButtonClick(number)" [disabled]="!isNumbersActive">
+                                    {{ number }}
+                                </button>
+
+                                <button type="button" class="btn" (click)="onButtonClick('.')" [disabled]="!isPeriodActive">
+                                    .
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                                <!-- Arithmetic Operations -->
+                                <fieldset [disabled]="!isOperatorsActive" class="operators">
+                                    <button type="button" class="btn" (click)="onButtonClick('+')">+</button>
+                                    <button type="button" class="btn" (click)="onButtonClick('-')">-</button>
+                                    <button type="button" class="btn" (click)="onButtonClick('*')">*</button>
+                                    <button type="button" class="btn" (click)="onButtonClick('/')">/</button>
+                                </fieldset>
+                        </div>
+                    </div>
+        
+                    <!-- Result Input -->
+                    <p-panel>
+                        <label for="result">{{'Result' | localize }}:</label>
+                        <p-inputGroup>
+                            <input
+                                pInputText  
+                                readonly
+                                name="result"
+                                inputId="result" 
+                                [(ngModel)]="result" 
+                                class="form-control"
+                            />
+                            <button type="button" pButton icon="pi pi-angle-left" severity="warning" tooltip="Delete last action" (click)="deleteLastAction()"></button>
+                            <button type="button" pButton icon="pi pi-times" severity="danger" tooltip="Delete all" (click)="deleteAll()"></button>
+                        </p-inputGroup>
+                    </p-panel>
+            
+                    <div *ngIf="errorMessage" class="alert alert-danger">
+                        {{ errorMessage | localize}}
+                    </div>                    
+                </div>
+                <div class="modal-footer">
+                    <div class="actions">
+                        <button type="button" class="btn btn-danger cancel" (click)="close()">{{'Cancel'| localize }}</button>
+                        <button type="button" class="btn btn-success select" (click)="select()">{{'Select' | localize}}</button>
+                    </div>
+                </div>
+            <!-- </form> -->
+        </div>
+    </div>
+</div>
+

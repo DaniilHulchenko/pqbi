@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageReference Include="xunit" Version="2.6.6" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.5.6">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="3.1.2">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\PQBI.Core\PQBI.Core.csproj" />
+		<ProjectReference Include="..\..\src\PQBI.Network.RestApi\PQBI.Network.RestApi.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FluentAssertions" Version="6.12.0" />
+	</ItemGroup>
+
+
+	<!--<ItemGroup>
+		<Reference Include="PQS.CommonUI.Data">
+			<HintPath>..\..\Libraries\PQS.CommonUI.Data\PQS.CommonUI.Data.dll</HintPath>
+		</Reference>
+		<Reference Include="PQS.Translator">
+			<HintPath>..\..\Libraries\PQS.Translator\netstandard2.0\PQS.Translator.dll</HintPath>
+		</Reference>
+	</ItemGroup>-->
+
+
+
+</Project>

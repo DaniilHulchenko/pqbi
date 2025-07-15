@@ -1,0 +1,72 @@
+<div class="kt-portlet kt-portlet--height-fluid">
+    <div class="kt-portlet__head">
+        <div class="kt-portlet__head-label">
+            <h3 class="kt-portlet__head-title">
+                {{ widgetName }}
+                <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
+                    <i class="fa fa-edit"></i>
+                </button>
+            </h3>
+        </div>
+    </div>
+
+    <div *ngIf="editState" class="row align-items-center">
+        <div class="col-auto">
+            <button class="btn btn-primary" (click)="edit()">{{ 'Edit' | localize }}</button>
+        </div>
+        <div class="col-auto d-flex align-items-center">
+            <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
+            <label for="stepLineToggle" class="ms-2">{{ 'StepLine' | localize }}</label>
+        </div>
+    </div>
+
+    <div class="chart-wrapper position-relative">
+
+        <div *ngIf="lineChart.loading" class="loading-overlay">
+            <dx-load-indicator></dx-load-indicator>
+            <p>{{ 'LoadingWidget' | localize }}</p>
+        </div>
+
+
+        <div *ngIf="errorMessage; else chartContent" class="chart-container d-flex align-items-center justify-content-center">
+            <div class="text-center">
+                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 2rem"></i>
+                <h4 class="mt-2">{{ 'Warning!' | localize }}</h4>
+                <p>{{ errorMessage | localize }}</p>
+            </div>
+        </div>
+
+        <ng-template #chartContent>
+            <div #chartContainer class="chart-container">
+                <dx-chart #chartComponent class="w-100" id="chart" [dataSource]="lineChart.chartData">
+                    <dxi-pane name="top"></dxi-pane>
+
+                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key">
+                        <dxo-stepline *ngIf="isStepLine">
+                            <dxo-point [visible]="false"></dxo-point>
+                        </dxo-stepline>
+                    </dxo-common-series-settings>
+
+                    <dxi-series
+                        pane="top"
+                        *ngFor="let source of lineChart.chartConfiguration.lineLegend"
+                        [name]="source.name"
+                        [valueField]="source.id"
+                    >
+                        <dxo-point [visible]="false"></dxo-point>
+                    </dxi-series>
+
+                    <dxo-legend verticalAlignment="bottom" horizontalAlignment="center" itemTextPosition="bottom"></dxo-legend>
+
+                    <dxo-tooltip [enabled]="true" [customizeTooltip]="lineChart.customizeTooltip"></dxo-tooltip>
+                </dx-chart>
+            </div>
+        </ng-template>
+    </div>
+
+
+    <ng-container *ngIf="editState">
+        <createOrEditTrendConfiguration #createOrEditModal (onSave)="save($event)"></createOrEditTrendConfiguration>
+        <rename-widget-modal #renameWidgetModal (onSave)="saveName($event)"></rename-widget-modal>
+    </ng-container>
+</div>

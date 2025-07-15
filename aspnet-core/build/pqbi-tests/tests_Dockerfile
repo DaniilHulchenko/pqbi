@@ -1,0 +1,23 @@
+#FROM cypress/browsers:node-20.9.0-chrome-118.0.5993.88-1-ff-118.0.2-edge-118.0.2088.46-1
+FROM cypress/base:20.9.0
+
+WORKDIR /app
+COPY . /app
+
+COPY package.json nexus.elspec.pem .
+
+COPY nexus.elspec.pem /usr/local/share/ca-certificates/nexus.elspec.crt
+RUN update-ca-certificates
+
+ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/nexus.elspec.crt
+
+RUN sed -i '/"cypress":/d' package.json
+
+RUN npm config set registry {{NEXUS_NPM_PROXY_URL}} && npm install
+
+COPY . .
+
+RUN CYPRESS_INSTALL_BINARY={{NEXUS_CYPRESS_BIN}} npm install cypress@{{CYPRESS_VERSION}} && \
+    npx cypress verify
+
+ENTRYPOINT [ "npm", "run"]

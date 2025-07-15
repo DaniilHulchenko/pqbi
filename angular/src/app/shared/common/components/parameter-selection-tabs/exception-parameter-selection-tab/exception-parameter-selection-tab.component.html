@@ -1,0 +1,36 @@
+<form class="h-100 d-flex" #pqsForm="ngForm" novalidate (ngSubmit)="add()" autocomplete="off">
+    <div class="row flex-grow-1" style="align-items: center;">
+        <div class="col-3 pe-0 h-100">
+            <div class="container">
+                <div *ngIf="customParameterError" class="text-danger px-2">{{ customParameterError }}</div>
+                <customParameterSelector id="customParameterId" name="customParameterId" [height]="'382px'"
+                    [(ngModel)]="customParameterId" [customParameterTypes]="['EXCEPTION']" required />
+            </div>
+        </div>
+        <div class="col-2 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
+            <div class="container">
+                <div *ngIf="quantityError" class="text-danger px-2">{{ quantityError }}</div>
+                <quantitySelector id="quantity" name="quantity" [(ngModel)]="quantity" [allowedQuantities]="allowedQuantities" required />
+            </div>
+            <div>
+                <dx-button [useSubmitBehavior]="true" stylingMode="contained" type="default" style="min-width: 120px;"
+                    [disabled]="!isFormValid()">
+                    <span class="d-flex align-items-center">
+                        <ng-container *ngIf="isEdit;else newParameter">
+                            <i class="fa fa-save me-2" style="color: #ffff;"></i> {{'Save' | localize }}
+                        </ng-container>
+                        <ng-template #newParameter><i class="fa fa-plus me-2" style="color: #ffff;"></i>
+                            Add</ng-template>
+                    </span>
+                </dx-button>
+                <ng-container *ngIf="isEdit">
+                    <dx-button class="mt-1" (onClick)="finishEdit()" stylingMode="contained" type="danger" style="min-width: 120px;">
+                        <span class="d-flex align-items-center">
+                            Cancel
+                        </span>
+                    </dx-button>
+                </ng-container>
+            </div>
+        </div>
+    </div>
+</form>

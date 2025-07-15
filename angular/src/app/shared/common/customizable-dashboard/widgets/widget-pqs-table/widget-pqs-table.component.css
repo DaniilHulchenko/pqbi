@@ -1,0 +1,64 @@
+.table-container {
+    position: relative;
+    height: 440px;
+    overflow-y: auto;
+}
+
+::ng-deep .dx-treelist-table tr > td:not(:first-child) {
+    text-align: center !important;
+}
+
+::ng-deep .dx-treelist-table tr > td:not(:first-child) .dx-treelist-text-content {
+    text-align: center !important;
+}
+
+::ng-deep .dx-treelist-table tr > td:first-child .dx-treelist-text-content {
+    font-weight: bold;
+}
+
+::ng-deep .dx-treelist .dx-data-row > td:not(:first-child) .dx-treelist-text-content {
+    text-align: center !important;
+}
+
+::ng-deep .dx-treelist .dx-treelist-table td {
+    font-family: var(--cell-font-family);
+}
+
+::ng-deep .dx-treelist .dx-treelist-table {
+    border-collapse: collapse;
+}
+
+::ng-deep .dx-treelist .dx-data-row > td {
+    padding: 8px;  
+}
+
+::ng-deep .dx-treelist .dx-treelist-rowsview .dx-data-row .dx-treelist-text-content {
+    font-family: var(--cell-font-family, "Arial, sans-serif");
+}
+
+::ng-deep .dx-treelist-borders > .dx-treelist-headers,
+::ng-deep .dx-treelist-borders > .dx-treelist-rowsview,
+::ng-deep .dx-treelist-borders > .dx-treelist-total-footer,
+::ng-deep .dx-treelist-borders > .dx-treelist-pager {
+  border-color: var(--border-color, #ddd) !important;
+}
+
+::ng-deep .dx-treelist .dx-treelist-table td {
+    border: 1px solid var(--border-color, #ddd);
+}
+
+::ng-deep .dx-treelist .dx-header-row {
+    background-color: var(--header-bg-color, #e3f2fd);
+}
+
+::ng-deep .dx-treelist .dx-header-row .dx-treelist-text-content {
+    font-weight: bold;
+    color: var(--header-text-color, #333);
+    font-family: var(--header-font-family, "Arial, sans-serif");
+}
+
+::ng-deep .dx-treelist .dx-icon-filter-operation-default::before,
+.dx-treelist-container .dx-icon-filter-operation-default::before {
+    font-family: "FontAwesome";
+    content: "\f0b0" !important;
+}

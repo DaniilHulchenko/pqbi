@@ -1,0 +1,75 @@
+ol,
+ul,
+dl {
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
+}
+
+.p-contextmenu {
+    padding: 0 !important;
+}
+
+.blue-background {
+    background-color: blue;
+}
+
+.blue-color {
+    color: blue;
+}
+
+.turned-on-270 {
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -o-transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    transform: rotate(270deg);
+}
+
+.trend-custom-styles {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.trend-custom-styles .dx-tab-selected {
+    font-weight: bold;
+    background-color: #4A90E2;
+    color: #FFFFFF;
+    border-radius: 5px;
+    padding: 5px 10px;
+    border: none;
+    pointer-events: none;
+}
+
+.dx-tab:not(.dx-tab-selected):hover {
+    background-color: #e6f0ff;
+    color: #000000;
+    cursor: pointer;
+}
+
+.trend-custom-styles .dx-tabs-wrapper {
+    padding: 10px;
+    border-bottom: 0;
+}
+
+.trend-custom-styles .dx-tab {
+    border-radius: 5px;
+    margin-right: 5px;
+    border: none;
+}
+
+.trend-custom-styles .dx-tab i {
+    margin-right: 8px;
+    font-size: 16px;
+    vertical-align: middle;
+}
+
+.trend-custom-styles .dx-tab-selected i {
+    color: #FFFFFF;
+}
+
+.dx-tab:not(.dx-tab-selected):hover i {
+    color: #4A90E2;
+}
+
+.width-dropdown {
+    width: 200px;
+}

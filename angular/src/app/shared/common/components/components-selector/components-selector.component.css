@@ -1,0 +1,60 @@
+.block {
+    position: relative; /* Needed for positioning the button */
+    width: 100%;
+    height: 100%;
+    padding-right: 40px;
+}
+
+.side-button {
+    position: absolute;
+    right: -46px;       
+    top: 50%;           
+    transform: translateY(-50%) rotate(-90deg); 
+    transform-origin: center;  
+    background: transparent;
+    color: #1C252E;     
+    border: 1px solid #1C252E; 
+    height: 30px;
+    border-radius: 5px; 
+    font-size: 14px;    
+    transition: all 0.3s ease; 
+    cursor: pointer;    
+}
+
+.side-button:hover {
+    background: #1C252E;   
+    color: #FFFFFF;        
+    border: 1px solid #1C252E; 
+}
+
+.dx-button-mode-contained.dx-state-focused {
+    background: #4A90E2;   
+    color: #FFFFFF;        
+    border: 1px solid #4A90E2; 
+    font-weight: bold;     
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    transition: all 0.3s ease; 
+}
+
+.blue-color {
+    color: blue;
+}
+
+.turned-on-270 {
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -o-transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    transform: rotate(270deg);
+}
+
+.tree-icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+strong {
+    font-weight: 600;
+}

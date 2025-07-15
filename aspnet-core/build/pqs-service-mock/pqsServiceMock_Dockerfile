@@ -1,0 +1,49 @@
+##### BUILD STAGE ######
+
+FROM {{NEXUS_DOCKER_HOSTED}}/sdk:8.0-alpine-custom AS build-env
+
+WORKDIR /app
+
+COPY . /app
+
+ADD nexus.elspec.pem /usr/local/share/ca-certificates/tmp.crt
+RUN update-ca-certificates
+COPY ./nuget.config /root/.nuget/NuGet/NuGet.Config
+
+WORKDIR /app/Utilities/PQSServiceMock
+
+ENV DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+ 
+RUN dotnet restore PQSServiceMock.csproj \
+    --configfile ../../nuget.config \
+    --runtime linux-musl-x64
+
+RUN dotnet publish PQSServiceMock.csproj \
+    --no-restore \
+    -c Release \
+    --output out \
+    --runtime linux-musl-x64 \ 
+    --self-contained true
+
+
+##### RUN TIME STAGE ######
+
+FROM {{NEXUS_DOCKER_HOSTED}}/runtime-deps:8.0-alpine-custom AS base
+
+RUN mkdir -p /app/Logs /app/publish
+
+ENV ASPNETCORE_HTTP_PORTS=80
+
+RUN adduser --disabled-password \
+    --home /app --gecos '' dotnetuser && \
+    chown -R dotnetuser /app 
+
+WORKDIR /app
+
+COPY --from=build-env /app/Utilities/PQSServiceMock/out .
+
+USER dotnetuser
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+ENTRYPOINT ["./PQSServiceMock"]

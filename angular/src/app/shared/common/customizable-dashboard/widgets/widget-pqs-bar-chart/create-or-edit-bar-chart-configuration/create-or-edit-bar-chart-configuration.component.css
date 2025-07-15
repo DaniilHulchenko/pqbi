@@ -1,0 +1,61 @@
+.container {
+    border: 1px #6b6b6b solid;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 0;
+    height: 97%
+}
+
+.h-500 {
+    height: 500px;
+}
+
+.h-450 {
+    height: 450px;
+}
+
+.table-custom-styles {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.table-custom-styles .dx-tab-selected {
+    font-weight: bold;
+    background-color: #4A90E2;
+    color: #FFFFFF;
+    border-radius: 5px;
+    padding: 5px 10px;
+    border: none;
+    pointer-events: none;
+}
+
+.dx-tab:not(.dx-tab-selected):hover {
+    background-color: #e6f0ff;
+    color: #000000;
+    cursor: pointer;
+}
+
+.table-custom-styles .dx-tabs-wrapper {
+    padding: 10px;
+    border-bottom: 0;
+}
+
+.table-custom-styles .dx-tab {
+    border-radius: 5px;
+    margin-right: 5px;
+    border: none;
+}
+
+.table-custom-styles .dx-tab i {
+    margin-right: 8px;
+    font-size: 16px;
+    vertical-align: middle;
+}
+
+.table-custom-styles .dx-tab-selected i {
+    color: #FFFFFF;
+}
+
+.dx-tab:not(.dx-tab-selected):hover i {
+    color: #4A90E2;
+}
+

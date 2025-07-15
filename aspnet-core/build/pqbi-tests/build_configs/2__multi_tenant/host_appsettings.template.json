@@ -1,0 +1,25 @@
+{
+	"ConnectionStrings": {
+    "Default": "Host=db;Port=5432;Database=pqbi;Username=postgres;Password=postgres"
+  },
+  
+ "PqbiConfig": {
+    "MultiTenancyEnabled": true
+  },
+   "PQSComunication": {
+    "IsAllCertificatesTrusted": true,
+    "PQSServiceRestUrl": "{{PQS_SERVICE_REST_URL}}",
+    "PQSServiceGrpcUrl": "https://{{PQS_SERVICE_REST_URL}}:443",
+    "DefaultCommunicationType": "RestApi"
+  },
+  
+  "App": {
+    "ServerRootAddress": "{{NG_HTTP_APPBASE_URL}}",
+    "ClientRootAddress": "{{NG_HTTP_APPBASE_URL}}",
+    "CorsOrigins": "{{NG_HTTP_APPBASE_URL}},http://localhost:9876,{{CORS_ORIGIN_CONTAINER}}"
+  },
+  
+  "NopSessionConfig": {
+    "IntervalInSeconds": "{{NOP_SESSION_INTERVAL_IN_SECONDS}}"
+  }
+}

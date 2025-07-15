@@ -1,0 +1,4 @@
+{
+  "remoteServiceBaseUrl": "{{NG_HTTP_APPBASE_URL}}",
+  "appBaseUrl": "{{NG_HTTP_APPBASE_URL}}"
+}

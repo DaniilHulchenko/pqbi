@@ -1,0 +1,85 @@
+<div class="kt-portlet kt-portlet--height-fluid">
+    <div class="kt-portlet__head">
+        <div class="kt-portlet__head-label">
+            <h3 class="kt-portlet__head-title">
+                {{ widgetName }}
+                <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
+                    <i class="fa fa-edit"></i>
+                </button>
+            </h3>
+        </div>
+    </div>
+    <div class="kt-portlet__body" id="outerScroll" style="width: 98%; height: 500px; overflow-y: auto;">
+        <div *ngIf="editState" class="row">
+            <div class="col">
+                <button class="btn btn-primary" (click)="edit()">Edit</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div id="innerScroll" style="height: 440px; overflow-y: auto;">
+                    <div [ngSwitch]="barChartdConfiguration?.type">
+                        <div *ngSwitchCase="barChartType.Plain">
+                            <dx-chart id="chart" [dataSource]="dataSource">
+                                <dxi-series argumentField="componentName" valueField="eventCount" type="bar">
+                                </dxi-series>
+                                <dxo-export [enabled]="true"></dxo-export>
+                            </dx-chart>
+                        </div>
+                        <div *ngSwitchCase="barChartType.Stacked">
+                            <dx-chart id="chart" title="Component(s) Event(s) Count Stacked Bar"
+                                [dataSource]="dataSource">
+                                <dxo-common-series-settings argumentField="componentName" valueField="eventCount"
+                                    type="stackedBar" hoverMode="allArgumentPoints" selectionMode="allArgumentPoints">
+                                    <dxo-label [visible]="true" [format]="{
+                                                                        type: 'fixedPoint',
+                                                                        precision: '2'
+                                                                    }">
+                                    </dxo-label>
+                                </dxo-common-series-settings>
+
+                                <dxo-series-template nameField="eventName"></dxo-series-template>
+
+                                <dxo-legend verticalAlignment="bottom" horizontalAlignment="center">
+                                </dxo-legend>
+
+                                <dxo-export [enabled]="true"></dxo-export>
+
+                                <dxo-tooltip [enabled]="true" location="edge" [customizeTooltip]="customizeTooltip">
+                                </dxo-tooltip>
+                            </dx-chart>
+                        </div>
+                        <div *ngSwitchCase="barChartType.Clustered">
+                            <dx-chart id="chart" title="Component(s) Event(s) Count Clustered Bar"
+                                [dataSource]="dataSource">
+                                <dxo-common-series-settings argumentField="componentName" valueField="eventCount"
+                                    type="bar">
+                                    <dxo-label [visible]="true" [format]="{
+                                            type: 'fixedPoint',
+                                            precision: '2'
+                                        }">
+                                    </dxo-label>
+                                </dxo-common-series-settings>
+
+                                <dxo-series-template nameField="eventName"></dxo-series-template>
+
+                                <dxo-legend verticalAlignment="bottom" horizontalAlignment="center"
+                                    itemTextPosition="top">
+                                </dxo-legend>
+                                <dxo-export [enabled]="true"></dxo-export>
+                                <dxo-tooltip [enabled]="true" location="edge" [customizeTooltip]="customizeTooltip">
+                                </dxo-tooltip>
+                            </dx-chart>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-container *ngIf="editState">
+    <createOrEditBarChartConfiguration #createOrEditModal (onSave)="onConfigurationChange($event)">
+    </createOrEditBarChartConfiguration>
+    <rename-widget-modal #renameWidgetModal (onSave)="saveName($event)"></rename-widget-modal>
+</ng-container>

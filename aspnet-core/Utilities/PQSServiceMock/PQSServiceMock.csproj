@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="2.5.1" />
+		<PackageReference Include="PQZProtocolSapphire" Version="1.9.6" />
+		<PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+		<PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
+		<PackageReference Include="Serilog.Enrichers.Process" Version="2.0.2" />
+		<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+		<PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
+		<PackageReference Include="Serilog.Sinks.Seq" Version="7.0.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="logs\" />
+		<Folder Include="logs\" />
+		<Folder Include="wwwroot\" />
+		<Folder Include="wwwroot\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\PQBI.Network.Base\PQBI.Network.Base.csproj" />
+		<ProjectReference Include="..\..\src\PQBI.Network.RestApi\PQBI.Network.RestApi.csproj" />
+		<!--<ProjectReference Include="..\..\src\PQBI.Network.Base\PQBI.Network.RestApi.csproj" />-->
+
+
+		
+	</ItemGroup>
+
+	<!--<ItemGroup>
+	  <Reference Include="PQS.Data">
+	    <HintPath>..\..\..\Library\Core\netcoreapp8.0\PQS.Data.dll</HintPath>
+	  </Reference>
+	</ItemGroup>-->
+
+	<ItemGroup>
+	  <None Update="Dockerfile">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+
+	<!--<ItemGroup>
+		<Reference Include="PQS.Data">
+			<HintPath>..\..\..\..\Library\Core\netstandard2.0\PQS.Data.dll</HintPath>
+		</Reference>
+		<Reference Include="PQS.PQZBinary">
+			<HintPath>..\..\..\..\Library\Core\netstandard2.0\PQS.PQZBinary.dll</HintPath>
+		</Reference>
+		<Reference Include="PQZTimeFormat">
+			<HintPath>..\..\..\..\Library\Core\netstandard2.0\PQZTimeFormat.dll</HintPath>
+		</Reference>
+	</ItemGroup>-->
+
+
+	<!--<ItemGroup>
+		<Reference Include="PQS.Data">
+			<HintPath>..\..\..\..\Library\Core\netstandard2.0\PQS.Data.dll</HintPath>
+		</Reference>
+		<Reference Include="PQS.PQZBinary">
+			<HintPath>..\..\..\..\Library\Core\netstandard2.0\PQS.PQZBinary.dll</HintPath>
+		</Reference>
+		<Reference Include="PQZTimeFormat">
+			<HintPath>..\..\..\..\Library\Core\netstandard2.0\PQZTimeFormat.dll</HintPath>
+		</Reference>
+	</ItemGroup>-->
+
+
+</Project>

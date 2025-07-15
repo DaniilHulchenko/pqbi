@@ -1,0 +1,222 @@
+{
+  "ConnectionStrings": {
+    "Default": "Data Source=PQBI_Db.db;Cache=Shared",
+    "SQLiteDb": "Data Source=PQBI_Db.db;Cache=Shared",
+    "PostgresDb": "Server=localhost;Port=5432;Database=pqbi;User Id=postgres;Password=postgres"
+  },
+  "AbpZeroLicenseCode": "00cik++h4P0k4dg8vOvG92EA==60cfa65aed5e6ae54d19b3fb0a29b4d6",
+  "Abp": {
+    "RedisCache": {
+      "ConnectionString": "localhost",
+      "DatabaseId": -1
+    }
+  },
+  "SeqConfig": {
+    "Url": "http://localhost:8090"
+  },
+  "PqbiConfig": {
+    "MultiTenancyEnabled": false,
+    "TenantSeedConfig": {
+      "AdminEmailAddress": "pqbi.pqbi@gmail.com",
+      "AdminName": "admin",
+      "AdminPassword": "Qq123456",
+      "AdminSurname": "admin",
+      "ConnectionString": null,
+      "SendActivationEmail": false,
+      "ShouldChangePasswordOnNextLogin": false,
+      "PQSComunication": {
+        "IsAllCertificatesTrusted": true,
+        "PQSServiceRestUrl": "https://178.156.128.72/PQS5/rpqz/",
+        "PQSServiceGrpcUrl": "https://localhost:443",
+        "DefaultCommunicationType": "RestApi"
+      }
+    }
+  },
+  "TaskOrchestratorConfig": {
+    "MaxTasks": 2
+  },
+
+  "PQSComunication": {
+    "IsAllCertificatesTrusted": true,
+    "PQSServiceRestUrl": "https://178.156.128.72/PQS5/rpqz/",
+    "PQSServiceGrpcUrl": "https://localhost:443",
+    "DefaultCommunicationType": "RestApi"
+  },
+  "NopSessionConfig": {
+    "IntervalInSeconds": 180
+  },
+  "PQSUserCacheConfig": {
+    "UnusedExpireTimeInMinute": 5
+  },
+  "LogWatcherConfig": {
+    "Capacity": 500
+  },
+  "ClientPolicyConfig": {
+    "RetryAmount": 1
+  },
+  "FunctionEngineConfig": {
+    "IsDuringDevisionThrowException": true,
+    "DefaultValueDuringDivision": 130
+  },
+
+  "App": {
+    "ServerRootAddress": "https://localhost:44301/",
+    "ClientRootAddress": "http://localhost:4200/",
+    "CorsOrigins": "http://*.mycompany.com,http://localhost:4200,http://localhost:9876",
+    "SwaggerEndPoint": "/swagger/v1/swagger.json",
+    "AllowAnonymousSignalRConnection": "true",
+    "HomePageUrl": "/index.html",
+    "AuditLog": {
+      "AutoDeleteExpiredLogs": {
+        "IsEnabled": false,
+        "ExcelBackup": {
+          "IsEnabled": false,
+          "FilePath": "App_Data/AuditLogsBackups/"
+        }
+      }
+    }
+  },
+  "Authentication": {
+    "AllowSocialLoginSettingsPerTenant": false,
+    "Facebook": {
+      "IsEnabled": "false",
+      "AppId": "",
+      "AppSecret": ""
+    },
+    "Twitter": {
+      "IsEnabled": "false",
+      "ApiKey": "",
+      "ApiKeySecret": ""
+    },
+    "Google": {
+      "IsEnabled": "false",
+      "ClientId": "",
+      "ClientSecret": "",
+      "UserInfoEndpoint": "https://www.googleapis.com/oauth2/v2/userinfo"
+    },
+    "Microsoft": {
+      "IsEnabled": "false",
+      "ConsumerKey": "",
+      "ConsumerSecret": ""
+    },
+    "OpenId": {
+      "IsEnabled": "false",
+      "ClientId": "",
+      "Authority": "",
+      "LoginUrl": "",
+      "ValidateIssuer": "false",
+      "ResponseType": "id_token",
+      "ClaimsMapping": [
+        {
+          "claim": "unique_name",
+          "key": "preferred_username"
+        }
+      ]
+    },
+    "WsFederation": {
+      "IsEnabled": "false",
+      "Authority": "",
+      "ClientId": "",
+      "Tenant": "",
+      "MetaDataAddress": ""
+    },
+    "JwtBearer": {
+      "IsEnabled": "true",
+      "SecurityKey": "7F0E89BA139040DD9C6C59B41B06BC04",
+      "Issuer": "PQBI",
+      "Audience": "PQBI"
+    }
+  },
+  "Configuration": {
+    "AzureKeyVault": {
+      "IsEnabled": "false",
+      "KeyVaultName": "",
+      "TenantId": "",
+      "ClientId": "",
+      "ClientSecret": ""
+    }
+  },
+  "Twilio": {
+    "AccountSid": "",
+    "AuthToken": "",
+    "SenderNumber": ""
+  },
+  "Recaptcha": {
+    "SiteKey": "6LeEZ-kUAAAAAGdgiM9BoWiRKBZOeULch73OlyZP",
+    "SecretKey": "6LeEZ-kUAAAAADBrLM1zkIy0mF_4rbBp3toA6zIJ"
+  },
+  "OpenIddict": {
+    "IsEnabled": "false",
+    "Applications": [
+      {
+        "ClientId": "client",
+        "ClientSecret": "def2edf7-5d42-4edc-a84a-30136c340e13",
+        "DisplayName": "PQBI_App",
+        "ConsentType": "Explicit",
+        "RedirectUris": [
+          "https://oauthdebugger.com/debug"
+        ],
+        "PostLogoutRedirectUris": [
+
+        ],
+        "Scopes": [
+          "default-api",
+          "profile"
+        ],
+        "Permissions": [
+          "ept:token",
+          "ept:authorization",
+          "gt:password",
+          "gt:client_credentials",
+          "gt:authorization_code",
+          "rst:code",
+          "rst:code id_token"
+        ]
+      }
+    ]
+  },
+  "Payment": {
+    "PayPal": {
+      "IsActive": "true",
+      "Environment": "sandbox",
+      "BaseUrl": "https://api.sandbox.paypal.com/v1",
+      "ClientId": "",
+      "ClientSecret": "",
+      "DemoUsername": "",
+      "DemoPassword": "",
+      "DisabledFundings": [
+
+      ]
+    },
+    "Stripe": {
+      "IsActive": "true",
+      "BaseUrl": "https://api.stripe.com/v1",
+      "SecretKey": "",
+      "PublishableKey": "",
+      "WebhookSecret": "",
+      "PaymentMethodTypes": [
+        "card"
+      ]
+    }
+  },
+  "HealthChecks": {
+    "HealthChecksEnabled": false,
+    "HealthChecksUI": {
+      "HealthChecksUIEnabled": false,
+      "HealthChecks": [
+        {
+          "Name": "PQBI.Web.Host",
+          "Uri": "https://localhost:44301/health"
+        }
+      ],
+      "EvaluationTimeOnSeconds": 10,
+      "MinimumSecondsBetweenFailureNotifications": 60
+    }
+  },
+  "KestrelServer": {
+    "IsEnabled": false
+  },
+  "Swagger": {
+    "ShowSummaries": false
+  }
+}

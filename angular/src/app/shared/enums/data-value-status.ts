@@ -1,0 +1,9 @@
+export enum DataValueStatus {
+    OK = 'OK',
+    HOLE = 'HOLE',
+    FLAG_MISSED_DATA = 'FLAG_MISSED_DATA',
+    FLAG_EVENT = 'FLAG_EVENT',
+    FLAG_USER_DEFINE = 'FLAG_USER_DEFINE',
+    AVAILABILITY_SKIP = 'AVAILABILITY_SKIP',
+    NOAP = 'NOAP'
+}

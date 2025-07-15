@@ -1,0 +1,16 @@
+<div>
+    <dx-tree-list
+        *ngIf="dataSource && columns"
+        [dataSource]="dataSource"
+        [columns]="columns"
+        keyExpr="id"
+        [expandedRowKeys]="true"
+        parentIdExpr="parentId"
+        [autoExpandAll]="true"
+        [showRowLines]="true"
+        [showColumnLines]="true"
+        [columnAutoWidth]="true"
+        [wordWrapEnabled]="true"
+        [rowAlternationEnabled]="designOptions.bandedRows">
+    </dx-tree-list>
+</div>

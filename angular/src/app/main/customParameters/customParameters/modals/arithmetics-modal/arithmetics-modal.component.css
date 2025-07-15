@@ -1,0 +1,133 @@
+:host {
+  display: block;
+}
+
+/* General Calculator Styling */
+.calculator {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto; /* Adjust grid rows for different sections */
+    gap: 10px;
+    background-color: #f9f9f9;
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    width: 99%; 
+    /* min-width: 500px;     */
+    /* max-width: 400px; */
+}
+
+
+/* Parameters */
+.calculator .parameters {
+    display: flex;
+    flex-wrap: wrap;
+    /* justify-content: space-between; */
+    gap: 10px;
+}
+
+.calculator .parameters button {
+    flex: 0 0 25%; /* This makes 4 items per row (100% / 4 = 25%) */
+    background-color: #aaa;
+    color: #333;
+    border: none;
+    padding: 5px 10px;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.calculator .parameters button:hover {
+    background-color: #bbb;
+}
+
+.calculator .numpad {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* Parentheses */
+.calculator .parentheses {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.calculator .parentheses button {
+    background-color: #ddd;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.calculator .parentheses button:hover {
+    background-color: #ccc;
+}
+
+/* Numeric Buttons */
+.calculator .numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.calculator .numbers button {
+    flex: 0 0 25%;
+    background-color: #e1e1e1;
+    color: #333;
+    border: none;
+    padding: 15px;
+    font-size: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.calculator .numbers > :first-child {
+    margin-left: 5px; 
+}
+
+.calculator .numbers button:hover {
+    background-color: #ccc;
+}
+
+
+/* Operators */
+.calculator .operators {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.calculator .operators button {
+    flex: 0 0 100%; 
+    background-color: #e1e1e1;
+    color: #333;
+    border: none;
+    padding: 15px;
+    font-size: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.calculator .operators button:hover {
+    background-color: #ccc;
+}
+
+.calculator .operators > :first-child {
+    margin-left: 5px; 
+}
+
+/* Result Display */
+.calculator .result {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-size: 24px;
+    text-align: right;
+    border-radius: 5px;
+}
+

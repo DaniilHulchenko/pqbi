@@ -1,0 +1,2 @@
+NPM_COMMAND_VALUE_NAME::cypress run --config baseUrl={{CLIENT_ROOT_ADDRESS}}
+NPM_COMMAND_PROPERTY::cypress:run

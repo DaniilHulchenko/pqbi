@@ -1,0 +1,24 @@
+# version: '3.7'
+
+services:
+
+  db:
+    container_name: pqbi.postgres.db
+    image: postgres:alpine3.19
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pqbi
+    ports:
+      - "5432:5432"
+    networks:
+      - pqbi_network
+  
+
+      
+networks:
+  pqbi_network:
+    name:   PQBI_Local_Run
+    driver: bridge
+

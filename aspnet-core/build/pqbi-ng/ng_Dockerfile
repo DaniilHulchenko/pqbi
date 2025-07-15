@@ -1,0 +1,38 @@
+#stage 1
+FROM node:22.2-bookworm as build
+
+RUN mkdir /app
+WORKDIR /app
+
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /app/nginx.key \
+    -out /app/nginx.crt \
+	-subj "/C=IL/ST=Caesarea/L=Caesarea/O=Elspec-ltd/CN=pqbi.elspec"
+
+COPY package.json nexus.elspec.pem .
+
+RUN yarn config set registry {{NEXUS_YARN_PROXY_URL}} && \
+    yarn config set cafile nexus.elspec.pem && \
+    yarn install
+
+COPY . .
+RUN npm run publish
+
+#stage 2
+FROM nginx:mainline-alpine3.18-slim
+
+RUN addgroup -S nginxgroup && \ 
+    adduser -S nginxuser -G nginxgroup && \
+    chown -R nginxuser:nginxgroup /var/cache/nginx /var/log/nginx /var/run && \
+    chmod -R 755 /var/cache/nginx /var/log/nginx /var/run && \
+    chown -R nginxuser:nginxgroup /usr/share/nginx/html && \
+    touch /var/run/nginx.pid && \
+    chown -R nginxuser:nginxgroup /var/run/nginx.pid
+
+COPY --from=build --chown=nginxuser:nginxgroup /app/dist/ /usr/share/nginx/html
+COPY --from=build --chown=nginxuser:nginxgroup /app/nginx.key /usr/share/nginx/
+COPY --from=build --chown=nginxuser:nginxgroup /app/nginx.crt /usr/share/nginx/
+
+USER nginxuser
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,53 @@
+<div class="py-2 ps-2 block">
+    <!-- <dx-button class="side-button" height="50px" (onClick)="changeTreeSettingsState()">
+        {{ treeSettingsIsOpen ? ('Hide tree settings' | localize) : ('OpenTreeSettings' | localize) }}
+    </dx-button>     -->
+    <!-- Does not show the Open tree settings if trying to localize -->
+    <dx-button class="side-button" (onClick)="changeTreeSettingsState()">{{ treeSettingsIsOpen ? 'Hide tree settings' :
+        'Open tree settings' }}</dx-button>
+
+    <div [hidden]="treeSettingsIsOpen">
+        <div *ngIf="isLoading" class="loading-container text-center">
+            <dx-load-indicator [visible]="true"></dx-load-indicator>
+            <p>{{'LoadingComponents' | localize }}</p>
+        </div>
+        <div *ngIf="!isLoading">
+            <div class="row justify-content-between align-items-center">
+                <div class="col-auto">
+                    <div *ngIf="componentError" class="text-danger">
+                        {{ componentError }}
+                    </div>
+                    <div *ngIf="feederError" class="text-danger">
+                        {{ feederError }}
+                    </div>
+                    <label class="form-label" for="components">
+                        {{'ApplyToComponents' | localize }} *
+                    </label>
+                </div>
+                <div class="col-auto">
+                    <dx-button (onClick)="changeExpandState()" [disabled]="isExpandButtonDisabled" stylingMode="text"><i
+                            [ngClass]="!isExpandButtonDisabled && expandTags ? 'blue-color' : ''" class="dx-icon-tags turned-on-270"></i></dx-button>
+                </div>
+            </div>
+            <div [style]="scrollHeight">
+                <dx-scroll-view direction="vertical">
+                    <p-tree [selection]="selectedItems" (onNodeUnselect)="onNodeUnselect($event)" (selectionChange)="onSelectionChange($event)"
+                        [value]="formattedComponentsOptions" [propagateSelectionDown]="true"
+                        selectionMode="checkbox" filter="true" required>
+                        
+                        <ng-template let-node pTemplate="default">
+                            <img *ngIf="isLastParentInTree(node)" [src]="getIconForTree()" class="tree-icon" alt="Tree Icon" aria-label="Tree Icon">
+                            <strong>{{ node.label }}</strong>
+                        </ng-template>
+                    
+                    </p-tree>            
+                </dx-scroll-view>
+            </div>
+        </div>
+    </div>
+    <div [hidden]="!treeSettingsIsOpen">
+        <app-dynamic-tree-builder [(ngModel)]="state.pickListState" name="pickListState"
+            (pickListChange)="onPickListChange($event)" required >
+        </app-dynamic-tree-builder>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+
+	<ItemGroup>
+		<PackageReference Include="PQZProtocolSapphire" Version="1.9.6" />
+
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <ProjectReference Include="..\PQBI.Application.Shared\PQBI.Application.Shared.csproj" />
+	</ItemGroup>
+
+	<!--<ItemGroup>
+		<Reference Include="PQS.Translator">
+			<HintPath>..\..\..\..\pqs5_x\PQS.Translator\bin\Debug\netstandard2.0\PQS.Translator.dll</HintPath>
+		</Reference>
+	</ItemGroup>-->
+
+</Project>

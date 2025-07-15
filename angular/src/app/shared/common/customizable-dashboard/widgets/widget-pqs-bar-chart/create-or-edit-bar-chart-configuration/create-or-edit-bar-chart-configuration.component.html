@@ -1,0 +1,120 @@
+<dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="modalVisible" [dragAndResizeArea]="false"
+    [dragEnabled]="false" title="Edit Bar Chart Widget Configuration" height="90vh" width="90vw">
+
+    <form class="d-flex flex-column h-100" #barChartWidgetConfigurationForm="ngForm" novalidate autocomplete="off">
+        <div class="my-3">
+            <label class="form-label" for="BarChartWidgetConfiguration_Type">{{ l('Type') }} *</label>
+            <select class="form-select" #BarChartWidgetConfiguration_Type="ngModel" name="Type"
+                style="border: 1px solid rgba(0, 0, 0, 0.38)" id="BarChartWidgetConfiguration_Type"
+                [(ngModel)]="barChartWidgetConfiguration.type" required>
+                <option value="1">{{ l('Plain') }}</option>
+
+                <option value="2">{{ l('Stacked') }}</option>
+
+                <option value="3">{{ l('Clustered') }}</option>
+            </select>
+            <validation-messages [formCtrl]="BarChartWidgetConfiguration_Type"></validation-messages>
+        </div>
+
+        <div class="d-flex align-items-center mb-3">
+            <datetimeRangeSelector name="dateRange" [(ngModel)]="dateRangeSelectionState" required
+                style="flex-grow: 1;max-width: 300px;" />
+        </div>
+
+        <div class="d-flex flex-grow-0 mb-3" style="gap: 20px;">
+            <div style="min-width: 400px; max-width: 400px;" class="container">
+                <componentsSelector id="componentsState" name="componentsState" [height]="'420px'"
+                    [(ngModel)]="componentsState" (ngModelChange)="onComponentsStateChange()"
+                    [isFeederSelectionEnabled]="true" required />
+            </div>
+            <div style="height: 460px; min-width: 400px; overflow-y: scroll; overflow-x: scroll;"
+                class="container flex-grow-1">
+                <bar-chart-preview></bar-chart-preview>
+            </div>
+        </div>
+
+        <div class="d-flex flex-grow-0 mb-3">
+            <div class="flex-grow-1 h-500px">
+                <dx-tab-panel #tabPanel [dataSource]="tabs" [loop]="false" [animationEnabled]="true"
+                    [swipeEnabled]="true" [deferRendering]="false" class="table-custom-styles">
+                    <div class="h-450px" *dxTemplate="let option of 'customTemplate'">
+                        <customParameterSelectionTab
+                            #customParameterSelectionTab
+                            [disableComponentSelection]="true"
+                            [isInsideTable]="true"
+                            [customParameterTypes]="['SPMC','MPSC']" (onAdd)="onAddCustomParameter($event)"
+                            (onEditSave)="onEditCustomParameter($event)" />
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'logicalTemplate'">
+                        <logicalParameterSelectionTab #logicalParameterSelectionTab
+                            [disableComponentSelection]="true"
+                            [isInsideTable]="true"
+                            [outerComponentsState]="componentsState"
+                            (onAdd)="onAddBaseParameter($event)" (onEditSave)="onEditBaseParameter($event)" />
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'channelTemplate'">
+                        <channelParameterSelectionTab #channelParameterSelectionTab
+                            [disableComponentSelection]="true"
+                            [isInsideTable]="true"
+                            [outerComponentsState]="componentsState"
+                            (onAdd)="onAddBaseParameter($event)" (onEditSave)="onEditBaseParameter($event)" />
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'additionalTemplate'">
+                        <additional-parameter-selection-tab #additionalParameterSelectionTab
+                            [disableComponentSelection]="true"
+                            [isInsideTable]="true"
+                            [outerComponentsState]="componentsState"
+                            (onAdd)="onAddBaseParameter($event)" (onEditSave)="onEditBaseParameter($event)" />
+                    </div>
+                    <!-- <div class="h-450px" *dxTemplate="let option of 'exceptionTemplate'">
+                        <exceptionParameterSelectionTab #exceptionParameterSelectionTab
+                            (onAdd)="onAddException($event)" (onEditSave)="onEditException($event)" />
+                    </div> -->
+                    <div class="h-450px" *dxTemplate="let option of 'eventTemplate'">
+                        <eventParameterSelectionTab #eventParameterSelectionTab
+                            [isInsideTable]="true"
+                            (onAdd)="onAddEvent($event)"
+                            (onEditSave)="onEditEvent($event)" />
+                    </div>
+                    <div *dxTemplate="let option of 'title'">
+                        <i class="fa" [ngClass]="getIconClass(option.ID)"></i>
+                        <span>{{option.name}}</span>
+                    </div>
+                </dx-tab-panel>
+            </div>
+        </div>
+
+        <div class="my-3">
+            <label class="form-label" for="BarChartWidgetConfiguration_Events">
+                {{ l('Events') }} *
+            </label>
+            <p-multiSelect [(ngModel)]="selectedEvents" [options]="events" filterBy="description"
+                (onChange)="onEventsChanged()" name="BarChartWidgetConfiguration_Events"
+                #BarChartWidgetConfiguration_Events="ngModel" required>
+                <ng-template let-value pTemplate="selectedItems">
+                    <span *ngFor="let option of value">
+                        {{ option.description }},
+                    </span>
+                    <div *ngIf="!value || value.length === 0">Select Events</div>
+                </ng-template>
+                <ng-template let-option pTemplate="item">
+                    <div class="flex align-items-center gap-2">
+                        <div>{{ option.description }}</div>
+                    </div>
+                </ng-template>
+            </p-multiSelect>
+            <validation-messages [formCtrl]="BarChartWidgetConfiguration_Events"></validation-messages>
+        </div>
+    </form>
+
+
+    <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
+        <button type="button" class="btn btn-light-primary fw-bold" (click)="close()" [disabled]="saving">
+            {{ 'Cancel' | localize }}
+        </button>
+        <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving || !isFormValid()" (click)="save()">
+            <i class="fa fa-save"></i>
+            <span>{{ 'Save' | localize }}</span>
+        </button>
+    </dxi-popup-toolbar-item>
+</dx-popup>

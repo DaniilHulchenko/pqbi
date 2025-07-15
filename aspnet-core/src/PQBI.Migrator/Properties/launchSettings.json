@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "PQBI.Migrator": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "environmentVariables": {
+        "ASPNETCORE_Docker_Enabled": "true",
+        "ConnectionStrings__Default": "Data Source=PQBI_Db.db;Cache=Shared"
+      }
+    }
+  }
+}

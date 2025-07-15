@@ -1,0 +1,75 @@
+##### BUILD STAGE ######
+
+FROM {{NEXUS_DOCKER_HOSTED}}/sdk:8.0-alpine-custom AS build-env
+
+RUN mkdir -p /app/Logs /app/publish
+WORKDIR /app
+COPY . /app
+
+ADD nexus.elspec.pem /usr/local/share/ca-certificates/tmp.crt
+RUN update-ca-certificates
+COPY ./nuget.config /root/.nuget/NuGet/NuGet.Config
+RUN dotnet tool install --global dotnet-ef --version 8.0.4
+
+ENV PATH=${PATH}:/root/.dotnet/tools
+#ENV ASPNETCORE_ENVIRONMENT=Development
+ENV PROTOBUF_PROTOC=/usr/bin/protoc
+ENV GRPC_PROTOC_PLUGIN=/usr/bin/grpc_csharp_plugin
+ENV DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+
+WORKDIR /app/src/PQBI.Web.Host    
+ 
+RUN dotnet restore PQBI.Web.Host.csproj \
+    --configfile ../../nuget.config \
+    --runtime linux-musl-x64
+
+RUN dotnet publish PQBI.Web.Host.csproj \
+    --no-restore \
+    -c Release \
+    --output out \
+    --runtime linux-musl-x64 \ 
+    --self-contained true
+
+WORKDIR /app/src/PQBI.Web.Host/out
+
+ARG CACHEBUST
+RUN dotnet ef database update \
+    --configuration Release \
+    --project /app/src/PQBI.EntityFrameworkCore/PQBI.EntityFrameworkCore.csproj \
+    --startup-project /app/src/PQBI.Web.Host/PQBI.Web.Host.csproj \
+    --runtime linux-musl-x64 \
+    --no-build \
+    -- env:{{ASPNETCORE_ENVIRONMENT}} connection:"Host={{HOST_DOCKER_INTERNAL_IP}};Port=5432;Database=pqbi;Username={{POSTGRES_USERNAME}};Password={{POSTGRES_PASSWORD}}"
+
+RUN dotnet dev-certs https -v -ep /https/pqbi-devcert-host.pfx -p 2825e4d9-5cef-4373-bed3-d7ebf59de216
+
+
+##### RUN TIME STAGE ######
+
+FROM {{NEXUS_DOCKER_HOSTED}}/runtime-deps:8.0-alpine-custom AS base
+
+RUN mkdir -p /app/Logs /app/publish 
+RUN mkdir /https
+
+RUN adduser --disabled-password \
+    --home /app --gecos '' dotnetuser && \
+    chown -R dotnetuser /app 
+
+
+
+WORKDIR /app
+
+
+
+COPY --from=build-env /app/src/PQBI.Web.Host/out .
+COPY --from=build-env /https/* /https/
+
+
+RUN chown -R dotnetuser /https && chmod -R 755 /https
+
+
+USER dotnetuser
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+ENTRYPOINT ["./PQBI.Web.Host"]

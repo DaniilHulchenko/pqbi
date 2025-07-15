@@ -1,0 +1,46 @@
+﻿<dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="isPopupVisible" [dragAndResizeArea]="false"
+    [dragEnabled]="false" [deferRendering]="false" title="Custom Parameter Configuration" height="90vh" width="90vw">
+    <dx-scroll-view [showScrollbar]="true">
+        <div class="pe-2">
+            <form *ngIf="active" #customParameterForm="ngForm" novalidate (ngSubmit)="save()" autocomplete="off">
+                <div class="my-3">
+                    <label class="form-label" for="Group_Name">
+                        {{ l('Name') }} *
+                    </label>
+                    <input type="text" #Group_Name="ngModel" id="Group_Name" class="form-control"
+                        [(ngModel)]="group.name" name="Name" required />
+                    <validation-messages [formCtrl]="Group_Name"></validation-messages>
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <subgroupCreateOrEditBlock #subgroupBlock (onAdd)="addSubGroup($event)" (onEditSave)="saveEditSubGroup($event)"></subgroupCreateOrEditBlock>
+                    </div>
+                    <div class="col-6">
+                        <dx-data-grid name="components" [dataSource]="subgroups" [showBorders]="true"
+                            (onEditingStart)="onSubgroupEdit($event)" (onRowRemoved)="onSubgroupDelete($event)" style="width: 100%;">
+                            <dxi-column caption="Name" dataField="name"></dxi-column>
+                            <dxi-column caption="From" dataField="fromVal"></dxi-column>
+                            <dxi-column caption="To" dataField="toVal"></dxi-column>
+                            <dxo-editing [useIcons]="true" [allowUpdating]="true" [allowDeleting]="true"></dxo-editing>
+                            <dxi-column type="buttons">
+                                <dxi-button name="edit"></dxi-button>
+                                <dxi-button name="delete"></dxi-button>
+                            </dxi-column>
+                        </dx-data-grid>
+                    </div>
+                </div>
+                
+            </form>
+        </div>
+    </dx-scroll-view>
+    <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
+        <button type="button" class="btn btn-light-primary fw-bold" (click)="close()" [disabled]="saving">
+            {{ 'Cancel' | localize }}
+        </button>
+        <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving || !isFormValid()" (click)="save()">
+            <i class="fa fa-save"></i>
+            <span>{{ 'Save' | localize }}</span>
+        </button>
+    </dxi-popup-toolbar-item>
+</dx-popup>

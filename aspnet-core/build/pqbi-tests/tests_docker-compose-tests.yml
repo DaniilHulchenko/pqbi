@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  pqbi_tests:
+    image: {{NEXUS_DOCKER_HOSTED}}/{{PQBI_TESTS_IMAGE}}
+    container_name: "{{PQBI_TESTS_CONTAINER}}"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: "{{NPM_COMMAND_PROPERTY}}"
+    volumes:
+      - "./docker_logs:/app/cypress/results"
+      - "./docker_logs:/app/cypress/videos"
+      - "./specs:/app/cypress/e2e"
+    networks:
+      - pqbi_network
+networks:
+  pqbi_network:
+    name: "{{NETWORK_NAME}}"
+    driver: bridge

@@ -1,0 +1,114 @@
+<div class="row">
+    <ng-container *ngIf="!onlyCustomAllowed">
+        <div class="col-4 mx-0 w-auto">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <label class="form-label" for="resolution">{{"Resolution" | localize }} *</label>
+                </div>
+                <ng-container *ngIf="tooltip?.resolution">
+                    <div class="col-auto">
+                        <i class="dx-icon-info info-icon-style" [id]="tooltipId"></i>
+                    </div>
+                </ng-container>
+            </div>
+
+            <dx-select-box
+                width="100%"
+                id="resolution"
+                inputId="resolution"
+                name="resolution"
+                [ngModel]="resolutionState.resolutionUnit"
+                (ngModelChange)="onResolutionUnitChange($event)"
+                [dataSource]="allowedResolutionOptions"
+                [showClearButton]="true"
+                displayExpr="label"
+                valueExpr="value"
+                required
+                [class.is-invalid]="!isResolutionValid()">
+                <div *dxTemplate="let data of 'selectedItem'">
+                    <dx-text-box
+                        [readOnly]="true"
+                        stylingMode="filled"
+                        [value]="data.label">
+                    </dx-text-box>
+                </div>
+                <div *dxTemplate="let data of 'displayItem'">
+                    {{ data.label | localize }}
+                </div>
+            </dx-select-box>
+            <!-- Error message -->
+            <small *ngIf="!isResolutionValid()" class="text-danger">{{'ResolutionRequired' | localize }}</small>
+        </div>
+    </ng-container>
+    <ng-container *ngIf="resolutionState?.resolutionUnit === allResolutionOptions.CUSTOM || onlyCustomAllowed">
+        <div class="col" [ngClass]="isVertical ? 'd-block' : 'd-flex gap-6'">
+            <div class="col-4 mx-0 w-auto">
+                <label class="form-label" for="selectedResolutionArgument">{{'ResolutionArgument' | localize }} *</label>
+                    <i class="dx-icon-info info-icon-style" [id]="tooltipId + '-unit'" *ngIf="tooltip?.unit"></i>
+                    <dx-number-box
+                    width="auto"
+                    id="selectedResolutionArgument"
+                    name="selectedResolutionArgument"
+                    inputId="selectedResolutionArgument"
+                    [(value)]="resolutionState.customResolutionValue"
+                    (valueChange)="updateResolutionModel()"
+                    (onFocusOut)="onFocus()"
+                    [min]="minCustomArgument"
+                    [max]="maxCustomArgument"
+                    [step]="1"
+                    [showSpinButtons]="true"
+                    [showClearButton]="true"
+                    required
+                    [class.is-invalid]="!isCustomResolutionArgumentValid()">
+                </dx-number-box>
+                <dx-tooltip
+                    *ngIf="tooltip?.unit"
+                    [target]="'#' + tooltipId + '-unit'"
+                    [textContent]="tooltip.unit"
+                    showEvent="mouseenter"
+                    hideEvent="mouseleave">
+                </dx-tooltip>
+                <small *ngIf="!resolutionState.customResolutionValue && isTouched" class="text-danger">
+                    {{'ResolutionArgumentRequired' | localize }}
+                </small>
+                <small *ngIf="resolutionState.customResolutionValue < minCustomArgument || resolutionState.customResolutionValue > maxCustomArgument" class="text-danger">
+                    {{'ArgumentBeBetween' | localize }} {{minCustomArgument}} & {{maxCustomArgument}}.
+                </small>
+            </div>
+            <div class="col-4 mx-0 w-auto">
+                <label class="form-label" for="resolutionUnit">{{'ResolutionUnit' | localize }} *</label>
+                <i class="dx-icon-info info-icon-style" [id]="tooltipId + '-argument'" *ngIf="tooltip?.argument"></i>
+                <dx-select-box
+                    width="auto"
+                    id="resolutionUnit"
+                    inputId="resolutionUnit"
+                    name="resolutionUnit"
+                    [(ngModel)]="resolutionState.customResolutionUnit"
+                    (ngModelChange)="onCustomResolutionUnitChange()"
+                    [dataSource]="allowedCustomResolutionOptions"
+                    displayExpr="label"
+                    valueExpr="value"
+                    [showClearButton]="true"
+                    required
+                    [class.is-invalid]="!isCustomResolutionUnitValid()">
+                </dx-select-box>
+                <dx-tooltip
+                    *ngIf="tooltip?.argument"
+                    [target]="'#' + tooltipId + '-argument'"
+                    [textContent]="tooltip.argument"
+                    showEvent="mouseenter"
+                    hideEvent="mouseleave">
+                </dx-tooltip>
+                <small *ngIf="!resolutionState.customResolutionUnit" class="text-danger">{{'ResolutionUnitRequired' | localize }}</small>
+            </div>
+        </div>
+        <!-- <ng-container *ngIf="onlyCustomAllowed && tooltipText">
+            <div class="col-auto">
+                <i class="dx-icon-info info-icon-style" [id]="tooltipId"></i>
+            </div>
+        </ng-container> -->
+    </ng-container>
+</div>
+
+<dx-tooltip [target]="'#'+tooltipId" showEvent="mouseenter" hideEvent="mouseleave" [hideOnOutsideClick]="false"
+    [textContent]="tooltip?.resolution" />

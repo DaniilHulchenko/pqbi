@@ -1,0 +1,168 @@
+<dx-popup
+    [hideOnOutsideClick]="false"
+    [showCloseButton]="true"
+    [visible]="modalVisible"
+    [dragEnabled]="false"
+    title="Base/Custom Parameter Advanced Settings"
+    height="80vh"
+    width="80vw"
+>
+    <dx-scroll-view>
+        <div style="margin: 20px; display: flex; gap: 40px;">
+            <div style="flex: 1; min-width: 300px;">
+                <h5>Normalize Values:</h5>
+                <div *ngFor="let opt of normalizationOptions" style="margin-bottom: 4px;">
+                <p-checkbox
+                    [binary]="true"
+                    [label]="opt.text"
+                    [value]="opt.value"
+                    [ngModel]="normalizeValue === opt.value"
+                    (onChange)="onSelectNormalize(opt.value)"
+                ></p-checkbox>
+                </div>
+
+                <dx-number-box
+                    *ngIf="normalizeValue === normalizeTypes.VALUE"
+                    [(value)]="normalizeNominalValue"
+                    placeholder="Normalization Value"
+                    [min]="0"
+                ></dx-number-box>
+
+                <h5 style="margin-top: 24px;">Exclude Flagged:</h5>
+                <div *ngFor="let opt of excludeFlaggedOptions" style="margin-bottom: 4px;">
+                <p-checkbox
+                    [binary]="true"
+                    [label]="opt.text"
+                    [ngModel]="excludeFlagged === opt.value"
+                    (onChange)="onSelectExcludeFlagged(opt.value)"
+                ></p-checkbox>
+                </div>
+
+                <div *ngIf="excludeFlagged === excludeFlaggedTypes.UserSelected" style="margin-top: 12px;">
+                <p-multiSelect
+                    [options]="flaggingEvents"
+                    [(ngModel)]="selectedFlagEvents"
+                    optionLabel="description"
+                    optionValue="eventClass"
+                    placeholder="Select events"
+                    display="chip"
+                    [showClear]="true"
+                    [filter]="true"
+                    [style]="{width: '100%'}"
+                ></p-multiSelect>
+                </div>
+
+                <h5 style="margin-top: 24px;">Tag Value Calculation:</h5>
+                <div style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="'Ignore aligning function'"
+                        [(ngModel)]="aligningIgnored"
+                    ></p-checkbox>
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="'Replace the parameter’s Aggregation with'"
+                        [(ngModel)]="replaceAggregation"
+                        (onChange)="onSelectReplaceAggregation()"
+                    ></p-checkbox>
+                </div>
+                <dx-select-box
+                    *ngIf="replaceAggregation"
+                    [(value)]="customAggregationFunc"
+                    [items]="aggregationFuncOptions"
+                    displayExpr="text"
+                    valueExpr="value"
+                    placeholder="Select aggregation function"
+                ></dx-select-box>                
+            </div>
+
+            <div style="flex: 1; min-width: 300px;">
+                <h5>Set Lower and Upper Limits:</h5>
+                <div *ngFor="let opt of limitOptions" style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="opt.text"
+                        [ngModel]="setLimits === opt.value"
+                        (onChange)="onSelectLimitType(opt.value)"
+                    ></p-checkbox>
+                </div>
+                <div *ngIf="setLimits" style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                    <dx-number-box [(value)]="lowerLimit" placeholder="Lower Limit" [min]="0"></dx-number-box>
+                    <dx-number-box [(value)]="upperLimit" placeholder="Upper Limit" [min]="0"></dx-number-box>
+                </div>
+
+                <h5 style="margin-top: 24px;">Set Color Schemes:</h5>
+                <h6>Select Out of Limit Mode:</h6>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+                    <p-radioButton
+                        name="colorMode"
+                        [value]="null"
+                        [(ngModel)]="colorScheme"
+                        label="— no selection —"
+                    ></p-radioButton>
+                    <p-radioButton
+                        name="colorMode"
+                        [value]="colorSchemaTypes.OutOfLimit"
+                        [(ngModel)]="colorScheme"
+                        label="Out of limits color"
+                    ></p-radioButton>
+                    <p-radioButton
+                        name="colorMode"
+                        [value]="colorSchemaTypes.Gradient"
+                        [(ngModel)]="colorScheme"
+                        label="Out of limits gradient"
+                    ></p-radioButton>
+                    <div *ngIf="colorScheme === colorSchemaTypes.Gradient" style="margin-top: 12px; display: flex; gap: 12px;">
+                        <dx-color-box [(value)]="gradientFromColor" placeholder="From Color" (onClosed)="onColorClosed('from')"></dx-color-box>
+                        <dx-color-box [(value)]="gradientToColor" placeholder="To Color" (onClosed)="onColorClosed('to')"></dx-color-box>
+                    </div>
+                </div>
+
+                <div *ngIf="colorScheme === colorSchemaTypes.OutOfLimit" style="margin-top: 12px;">
+                    <dx-color-box [(value)]="outOfLimitColor" placeholder="Out-of-limit Color"></dx-color-box>
+                </div>
+
+
+                <h6 style="margin-top: 16px;">Additional colors:</h6>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+                    <p-checkbox
+                        [(ngModel)]="useOkColor"
+                        binary="true"
+                        label="Ok color"
+                    ></p-checkbox>
+                    <p-checkbox
+                        [(ngModel)]="useNoDataColor"
+                        binary="true"
+                        label="No data color"
+                    ></p-checkbox>
+                </div>
+
+                <div style="margin-top: 12px; display: flex; gap: 12px;" *ngIf="useOkColor || useNoDataColor">
+                    <dx-color-box *ngIf="useOkColor" [(value)]="okColor" placeholder="OK Color"></dx-color-box>
+                    <dx-color-box *ngIf="useNoDataColor" [(value)]="noDataColor" placeholder="No Data Color"></dx-color-box>
+                </div>
+
+            </div>
+        </div>
+
+        <div style="margin: 20px; display: flex; justify-content: center; gap: 32px;">
+            <dx-button
+                text="Cancel"
+                (onClick)="hide()"
+                stylingMode="contained"
+                [width]="140"
+                [height]="48"
+            ></dx-button>
+            <dx-button
+                text="OK"
+                type="success"
+                (onClick)="save()"
+                stylingMode="contained"
+                [width]="140"
+                [height]="48"
+            ></dx-button>
+        </div>
+    </dx-scroll-view>
+</dx-popup>

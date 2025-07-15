@@ -1,0 +1,184 @@
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using Abp.MultiTenancy;
+using Abp.Timing;
+using PQBI.Authorization.Users;
+using PQBI.Configuration;
+using PQBI.Editions;
+using PQBI.Infrastructure;
+using PQBI.MultiTenancy.Payments;
+
+namespace PQBI.MultiTenancy
+{
+
+    //Every POCO which inherites from this interface is beign subject under object mapper.
+    public interface ITenantObjectMapperClonable : IObjectMapperClonable
+    {
+        string PQSServiceUrl { get; set; }
+        PQSCommunitcationType PQSCommunitcationType { get; set; }
+    }
+
+    public interface ITenantConfig : IObjectMapperClonable
+    {
+        public string TenancyName { get; }
+        public string Name { get; }
+    }
+
+    public class Tenant : AbpTenant<User>, IObjectMapperClonable, ITenantConfig
+    {
+        public const int MaxLogoMimeTypeLength = 64;
+
+        //Can add application specific tenant properties here
+
+        public string PQSServiceUrl { get; set; }
+
+        public PQSCommunitcationType PQSCommunitcationType { get; set; }
+
+        public DateTime? SubscriptionEndDateUtc { get; set; }
+
+        public bool IsInTrialPeriod { get; set; }
+
+        public virtual Guid? CustomCssId { get; set; }
+
+        public virtual Guid? DarkLogoId { get; set; }
+
+        [MaxLength(MaxLogoMimeTypeLength)]
+        public virtual string DarkLogoFileType { get; set; }
+        
+        public virtual Guid? DarkLogoMinimalId { get; set; }
+
+        [MaxLength(MaxLogoMimeTypeLength)]
+        public virtual string DarkLogoMinimalFileType { get; set; }
+        
+        public virtual Guid? LightLogoId { get; set; }
+
+        [MaxLength(MaxLogoMimeTypeLength)]
+        public virtual string LightLogoFileType { get; set; }
+        
+        public virtual Guid? LightLogoMinimalId { get; set; }
+
+        [MaxLength(MaxLogoMimeTypeLength)]
+        public virtual string LightLogoMinimalFileType { get; set; }
+
+        public SubscriptionPaymentType SubscriptionPaymentType { get; set; }
+
+        protected Tenant()
+        {
+
+        }
+
+        public Tenant(string tenancyName, string name)
+            : base(tenancyName, name)
+        {
+
+        }
+
+        public virtual bool HasLogo()
+        {
+            return (DarkLogoId != null && DarkLogoFileType != null) ||
+                   (LightLogoId != null && LightLogoFileType != null) ||
+                   (DarkLogoMinimalId != null && DarkLogoMinimalFileType != null) ||
+                   (LightLogoMinimalId != null && LightLogoMinimalFileType != null);
+        }
+        
+        public virtual bool HasDarkLogo()
+        {
+            return DarkLogoId != null && DarkLogoFileType != null;
+        }     
+        
+        public virtual bool HasLightLogo()
+        {
+            return LightLogoId != null && LightLogoFileType != null;
+        }
+        
+        public bool HasLightLogoMinimal()
+        {
+            return LightLogoMinimalId != null && LightLogoMinimalFileType != null;
+        }
+
+        public bool HasDarkLogoMinimal()
+        {
+            return DarkLogoMinimalId != null && DarkLogoMinimalFileType != null;
+        }
+
+        public void ClearDarkLogo()
+        {
+            DarkLogoId = null;
+            DarkLogoFileType = null;
+        }
+        
+        public void ClearLightLogo()
+        {
+            LightLogoId = null;
+            LightLogoFileType = null;
+        }
+        
+        public void ClearDarkLogoMinimal()
+        {
+            DarkLogoMinimalId = null;
+            DarkLogoMinimalFileType = null;
+        }
+        
+        public void ClearLightLogoMinimal()
+        {
+            LightLogoMinimalId = null;
+            LightLogoMinimalFileType = null;
+        }
+
+        public void UpdateSubscriptionDateForPayment(PaymentPeriodType paymentPeriodType, EditionPaymentType editionPaymentType)
+        {
+            switch (editionPaymentType)
+            {
+                case EditionPaymentType.NewRegistration:
+                case EditionPaymentType.BuyNow:
+                    {
+                        SubscriptionEndDateUtc = Clock.Now.ToUniversalTime().AddDays((int)paymentPeriodType);
+                        break;
+                    }
+                case EditionPaymentType.Extend:
+                    ExtendSubscriptionDate(paymentPeriodType);
+                    break;
+                case EditionPaymentType.Upgrade:
+                    if (HasUnlimitedTimeSubscription())
+                    {
+                        SubscriptionEndDateUtc = Clock.Now.ToUniversalTime().AddDays((int)paymentPeriodType);
+                    }
+                    break;
+                default:
+                    throw new ArgumentException();
+            }
+        }
+
+        private void ExtendSubscriptionDate(PaymentPeriodType paymentPeriodType)
+        {
+            if (SubscriptionEndDateUtc == null)
+            {
+                throw new InvalidOperationException("Can not extend subscription date while it's null!");
+            }
+
+            if (IsSubscriptionEnded())
+            {
+                SubscriptionEndDateUtc = Clock.Now.ToUniversalTime();
+            }
+
+            SubscriptionEndDateUtc = SubscriptionEndDateUtc.Value.AddDays((int)paymentPeriodType);
+        }
+
+        private bool IsSubscriptionEnded()
+        {
+            return SubscriptionEndDateUtc < Clock.Now.ToUniversalTime();
+        }
+
+        public int CalculateRemainingHoursCount()
+        {
+            return SubscriptionEndDateUtc != null
+                ? (int)(SubscriptionEndDateUtc.Value - Clock.Now.ToUniversalTime()).TotalHours //converting it to int is not a problem since max value ((DateTime.MaxValue - DateTime.MinValue).TotalHours = 87649416) is in range of integer.
+                : 0;
+        }
+
+        public bool HasUnlimitedTimeSubscription()
+        {
+            return SubscriptionEndDateUtc == null;
+        }
+    }
+}

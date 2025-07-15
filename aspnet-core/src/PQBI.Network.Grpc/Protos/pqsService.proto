@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcService1";
+
+//package greet;
+
+// The greeting service definition.
+service PQSCommunication {
+  rpc IdentifyRequestXML(RequestIdentify) returns (ResponseString);
+  rpc RequestXML(RequestString) returns (ResponseString);
+  rpc RequestBinary(RequestBytes) returns (ResponseBytes);
+}
+
+message RequestIdentify {
+}
+
+message RequestString {
+	string message = 1;
+}
+
+message ResponseString {
+	string message = 1;
+}
+
+message RequestBytes {
+	repeated bytes message = 1;
+}
+
+message ResponseBytes {
+	repeated bytes message = 1;
+}
+

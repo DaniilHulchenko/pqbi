@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    // Asaf 192.168.234.242
+    // Dima 178.156.128.72
+
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Staging",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "C:\\WORK\\PQBI\\aspnet-core\\build\\staging.ps1",
+            "args": [
+                "-configName:1__single_tenant",
+                "-pqsServiceUrl:https://192.168.234.242"
+                            ],
+            "cwd": "C:\\PQSCADA\\pqbi\\aspnet-core\\build"
+        },
+        {
+            "name": "localDeployer",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "C:\\WORK\\PQBI\\aspnet-core\\build\\deployment\\localDeployer.ps1",
+            "args": [
+
+                "-gitVersion:7df3c85a9",
+                "-pqsServiceUrl:178.156.128.72"
+                            ],
+            "cwd": "C:\\PQSCADA\\pqbi\\aspnet-core\\build\\deployment"
+        }
+    ]
+}

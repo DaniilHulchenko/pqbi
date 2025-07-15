@@ -1,0 +1,334 @@
+﻿<div [@routerTransition]>
+    <sub-header [title]="'CustomParameters' | localize" [description]="'CustomParametersHeaderInfo' | localize">
+        <div role="actions">
+            <div class="btn-group" dropdown placement="button right">
+                <button
+                    id="dropdownButtonExcelOperations"
+                    dropdownToggle
+                    type="button"
+                    class="btn btn-outline btn-outline-success btn-active-light-success dropdown-toggle me-1"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="dropdownMenuExcelOperations"
+                >
+                    <i class="far fa-file-excel btn-md-icon"></i>
+                    <span class="d-none d-md-inline-block">
+                        {{ 'ExcelOperations' | localize }}
+                    </span>
+                </button>
+                <ul
+                    id="dropdownMenuExcelOperations"
+                    class="dropdown-menu dropdown-menu-right dropdown-excel-operations"
+                    role="menu"
+                    *dropdownMenu
+                    aria-labelledby="dropdownButtonExcelOperations"
+                >
+                    <li role="menuitem">
+                        <a
+                            class="dropdown-item text-dark"
+                            id="ExportCustomParametersToExcelButton"
+                            (click)="exportToExcel()"
+                            href="javascript:;"
+                        >
+                            <i class="fa fa-download me-2 mt-1 text-dark" style="font-size: 1rem"></i>
+                            {{ 'ExportToExcel' | localize }}
+                        </a>
+                    </li>
+                    <li *ngIf="'Pages.CustomParameters.Create' | permission" role="menuitem">
+                        <a href="javascript:;" class="no-padding">
+                            <span class="fileinput-button">
+                                <p-fileUpload
+                                    customUpload="true"
+                                    name="ExcelFileUpload"
+                                    #ExcelFileUpload
+                                    maxFileSize="10000000"
+                                    auto="auto"
+                                    accept=".csv,.xls,.xlsx"
+                                    (uploadHandler)="uploadExcel($event)"
+                                    (onError)="onUploadExcelError()"
+                                    chooseLabel="{{ 'ImportFromExcel' | localize }}"
+                                ></p-fileUpload>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <button
+                id="btn_create_customParameter"
+                *ngIf="isGranted('Pages.CustomParameters.Create')"
+                (click)="createCustomParameter()"
+                class="btn btn-primary blue"
+            >
+                <i class="fa fa-plus"></i>
+                {{ l('CreateNewCustomParameter') }}
+            </button>
+        </div>
+    </sub-header>
+
+    <div [class]="containerClass">
+        <div class="card card-custom gutter-b">
+            <div class="card-body">
+                <form class="form" autocomplete="off">
+                    <div>
+                        <div class="row align-items-center">
+                            <div class="col-xl-12">
+                                <div class="my-3">
+                                    <div class="input-group mb-3">
+                                        <input
+                                            [(ngModel)]="filterText"
+                                            (ngModelChange)="getCustomParameters()"
+                                            name="filterText"
+                                            autoFocus
+                                            type="text"
+                                            class="form-control"
+                                            [placeholder]="l('SearchWithThreeDot')"
+                                        />
+                                        <button class="btn btn-primary" type="submit" (click)="getCustomParameters()">
+                                            <i class="flaticon-search-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" [hidden]="!advancedFiltersAreShown">
+                            <div class="col-md-12"></div>
+
+                            <div class="col-md-3">
+                                <div class="my-3">
+                                    <label class="form-label" for="NameFilter">{{ l('Name') }}</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="NameFilter"
+                                        name="nameFilter"
+                                        [(ngModel)]="nameFilter"
+                                        (ngModelChange)="getCustomParameters()"
+                                    />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="my-3">
+                                    <label class="form-label" for="AggregationFunctionFilter">
+                                        {{ l('AggregationFunction') }}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="AggregationFunctionFilter"
+                                        name="aggregationFunctionFilter"
+                                        [(ngModel)]="aggregationFunctionFilter"
+                                        (ngModelChange)="getCustomParameters()"
+                                    />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="my-3">
+                                    <label class="form-label" for="STDPQSParametersListFilter">
+                                        {{ l('STDPQSParametersList') }}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="STDPQSParametersListFilter"
+                                        name="stdpqsParametersListFilter"
+                                        [(ngModel)]="stdpqsParametersListFilter"
+                                        (ngModelChange)="getCustomParameters()"
+                                    />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="my-3">
+                                    <label class="form-label" for="TypeFilter">{{ l('Type') }}</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="TypeFilter"
+                                        name="typeFilter"
+                                        [(ngModel)]="typeFilter"
+                                        (ngModelChange)="getCustomParameters()"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mt-5">
+                                <button
+                                    (click)="resetFilters()"
+                                    class="btn btn-secondary btn-sm"
+                                    id="btn-reset-filters"
+                                >
+                            {{'Reset' | localize }}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row my-4">
+                            <div class="col-sm-12">
+                                <span
+                                    class="clickable-item text-muted"
+                                    *ngIf="!advancedFiltersAreShown"
+                                    (click)="advancedFiltersAreShown = !advancedFiltersAreShown"
+                                >
+                                    <i class="fa fa-angle-down"></i>
+                                    {{ l('ShowAdvancedFilters') }}
+                                </span>
+                                <span
+                                    class="clickable-item text-muted"
+                                    *ngIf="advancedFiltersAreShown"
+                                    (click)="advancedFiltersAreShown = !advancedFiltersAreShown"
+                                >
+                                    <i class="fa fa-angle-up"></i>
+                                    {{ l('HideAdvancedFilters') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row align-items-center">
+                    <!--<Primeng-Datatable-Start>-->
+                    <div class="primeng-datatable-container col-12" [busyIf]="primengTableHelper.isLoading">
+                        <p-table
+                            #dataTable
+                            (onLazyLoad)="getCustomParameters($event)"
+                            [value]="primengTableHelper.records"
+                            rows="{{ primengTableHelper.defaultRecordsCountPerPage }}"
+                            [paginator]="false"
+                            [lazy]="true"
+                            [scrollable]="true"
+                            ScrollWidth="100%"
+                            [tableStyle]="{ 'min-width': '50rem' }"
+                            [resizableColumns]="primengTableHelper.resizableColumns"
+                        >
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th
+                                        style="width: 130px"
+                                        [hidden]="
+                                            !isGrantedAny(
+                                                'Pages.CustomParameters.Edit',
+                                                'Pages.CustomParameters.Delete'
+                                            )
+                                        "
+                                    >
+                                        {{ l('Actions') }}
+                                    </th>
+                                    <th style="width: 150px" pSortableColumn="name">
+                                        {{ l('Name') }}
+                                        <p-sortIcon field="customParameter.name"></p-sortIcon>
+                                    </th>
+                                    <th style="width: 150px" pSortableColumn="aggregationFunction">
+                                        {{ l('AggregationFunction') }}
+                                        <p-sortIcon field="customParameter.aggregationFunction"></p-sortIcon>
+                                    </th>
+                                    <th style="width: 150px" pSortableColumn="stdpqsParametersList">
+                                        {{ l('STDPQSParametersList') }}
+                                        <p-sortIcon field="customParameter.stdpqsParametersList"></p-sortIcon>
+                                    </th>
+                                    <th style="width: 150px" pSortableColumn="type">
+                                        {{ l('Type') }}
+                                        <p-sortIcon field="customParameter.type"></p-sortIcon>
+                                    </th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-record="$implicit" let-i="rowIndex">
+                                <tr>
+                                    <td
+                                        style="width: 130px"
+                                        [hidden]="
+                                            !isGrantedAny(
+                                                'Pages.CustomParameters.Edit',
+                                                'Pages.CustomParameters.Delete'
+                                            )
+                                        "
+                                    >
+                                        <div class="btn-group dropdown" dropdown container="body">
+                                            <button class="dropdown-toggle btn btn-sm btn-primary" dropdownToggle>
+                                                <i class="fa fa-cog"></i>
+                                                <span class="caret"></span>
+                                                {{ l('Actions') }}
+                                            </button>
+                                            <ul class="dropdown-menu" *dropdownMenu>
+                                                <li>
+                                                    <a
+                                                        href="javascript:;"
+                                                        class="dropdown-item"
+                                                        (click)="viewCustomParameterModal.show(record)"
+                                                    >
+                                                        {{ l('View') }}
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a
+                                                        href="javascript:;"
+                                                        *ngIf="permission.isGranted('Pages.CustomParameters.Edit')"
+                                                        class="dropdown-item"
+                                                        (click)="
+                                                            createOrEditCustomParameterModal.show(
+                                                                record.customParameter.id
+                                                            )
+                                                        "
+                                                    >
+                                                        {{ l('Edit') }}
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a
+                                                        class="dropdown-item"
+                                                        href="javascript:;"
+                                                        *ngIf="permission.isGranted('Pages.CustomParameters.Delete')"
+                                                        (click)="deleteCustomParameter(record.customParameter)"
+                                                    >
+                                                        {{ l('Delete') }}
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                    <td style="width: 150px">
+                                        <span class="p-column-title">{{ l('Name') }}</span>
+                                        {{ record.customParameter.name }}
+                                    </td>
+                                    <td style="width: 150px">
+                                        <span class="p-column-title">{{ l('AggregationFunction') }}</span>
+                                        {{ record.customParameter.aggregationFunction }}
+                                    </td>
+                                    <td style="width: 150px">
+                                        <span class="p-column-title">{{ l('STDPQSParametersList') }}</span>
+                                        {{ record.customParameter.stdpqsParametersList }}
+                                    </td>
+                                    <td style="width: 150px">
+                                        <span class="p-column-title">{{ l('Type') }}</span>
+                                        {{ record.customParameter.type }}
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                        <div class="primeng-no-data" *ngIf="primengTableHelper.totalRecordsCount == 0">
+                            {{ l('NoData') }}
+                        </div>
+                        <div class="primeng-paging-container">
+                            <p-paginator
+                                [rows]="primengTableHelper.defaultRecordsCountPerPage"
+                                #paginator
+                                (onPageChange)="getCustomParameters($event)"
+                                [totalRecords]="primengTableHelper.totalRecordsCount"
+                                [rowsPerPageOptions]="primengTableHelper.predefinedRecordsCountPerPage"
+                                [showCurrentPageReport]="true"
+                                [currentPageReportTemplate]="
+                                    'TotalRecordsCount' | localize: primengTableHelper.totalRecordsCount
+                                "
+                            ></p-paginator>
+                        </div>
+                    </div>
+                    <!--<Primeng-Datatable-End>-->
+                </div>
+            </div>
+        </div>
+    </div>
+    <createOrEditCustomParameterModal
+        #createOrEditCustomParameterModal
+        (modalSave)="getCustomParameters()"
+    ></createOrEditCustomParameterModal>
+    <viewCustomParameterModal #viewCustomParameterModal></viewCustomParameterModal>
+</div>

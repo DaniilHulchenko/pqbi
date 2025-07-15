@@ -1,0 +1,23 @@
+<dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="popupVisible" [dragEnabled]="false"
+    title="Edit Widget Name" height="30vh" width="50vw">
+
+    <form class="d-flex flex-column h-100" #renameForm="ngForm" novalidate (ngSubmit)="save()" autocomplete="off">
+        <div class="my-3">
+            <label class="form-label" for="newName">
+                {{ 'Name' | localize }} *
+            </label>
+            <input type="text" #newName="ngModel" id="newName" class="form-control"
+                [(ngModel)]="name" name="newName" required />
+        </div>
+    </form>
+
+    <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
+        <button type="button" class="btn btn-light-primary fw-bold me-2" (click)="hide()">
+            {{ 'Cancel' | localize }}
+        </button>
+        <button type="submit" class="btn btn-primary fw-bold" [disabled]="!pqsForm?.form?.valid" (click)="save()">
+            <i class="fa fa-save"></i>
+            <span>{{ 'Save' | localize }}</span>
+        </button>
+    </dxi-popup-toolbar-item>
+</dx-popup>

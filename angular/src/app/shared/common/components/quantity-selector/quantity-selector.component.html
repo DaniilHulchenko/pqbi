@@ -1,0 +1,26 @@
+<div class="p-2">
+    <label class="form-label" for="group">{{'Quantity' | localize }} *</label>
+    <i class="dx-icon-info info-icon-style" [id]="uniqueTooltipId" *ngIf="showTooltip"></i>
+</div>
+<p-listbox 
+id="quantity"
+name="quantity"
+[(ngModel)]="selectedQuantities"
+(ngModelChange)="onQuantityChange()"
+[options]="quantityOptions"
+optionLabel="label"
+optionValue="value"
+[filter]="true"
+[virtualScroll]="false"
+[scrollHeight]="9999"
+[multiple]="multiple"
+required />
+
+<dx-tooltip 
+*ngIf="showTooltip" 
+[target]="'#' + uniqueTooltipId" 
+showEvent="mouseenter"
+hideEvent="mouseleave" 
+[hideOnOutsideClick]="false"
+[textContent]="'The function to use when grouping the values to the required resolution'">
+</dx-tooltip>

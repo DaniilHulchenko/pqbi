@@ -1,0 +1,16 @@
+﻿@page "/"
+@using PQBI.Core.Dependency
+@inherits PQBIMainLayoutPageComponentBase
+
+<div class="card">
+    <div class="card-body">
+        INDEX
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        DependencyResolver.Resolve<INavigationService>().NavigateTo(NavigationUrlConsts.User);
+    }
+}

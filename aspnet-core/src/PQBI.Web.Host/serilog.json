@@ -1,0 +1,62 @@
+﻿{
+  "Serilog": {
+    "Using": [],
+    //"Using": [ "Serilog.Sinks.Console", "Serilog.Sinks.File" ],
+    "MinimumLevel": "Debug",
+
+    //"MinimumLevel": {
+    //  "Default": "Debug",
+    //  "Override": {
+    //    "Microsoft": "Information",
+    //    "System": "Information"
+    //  }
+    //},
+    "WriteTo": [
+
+      { "Name": "Console" },
+
+      {
+        "Name": "File",
+        "Args": {
+
+          "path": "Logs/log.txt",
+          "outputTemplate": "{Timestamp:G} {Message}{NewLinw:1}{Exception:1}"
+
+        }
+      },
+      {
+        "Name": "File",
+        "Args": {
+
+          "path": "Logs/log.json",
+          "formatter": "Serilog.Formatting.Json.JsonFormatter, Serilog"
+        }
+      },
+      {
+        "Name": "Seq",
+        "Args": {
+
+          "serverUrl": "http://localhost:8090"
+        }
+      }
+    ],
+    "Enrich": [ "FromLogContext", "WithMachineName", "WithProcessId", "WithThreadId" ],
+    "Destructure": [
+      {
+        "Name": "ToMaximumDepth",
+        "Args": { "maximumDestructuringDepth": 4 }
+      },
+      {
+        "Name": "ToMaximumStringLength",
+        "Args": { "maximumStringLength": 100 }
+      },
+      {
+        "Name": "ToMaximumCollectionCount",
+        "Args": { "maximumCollectionCount": 10 }
+      }
+    ],
+    "Properties": {
+      "Application": "Sample"
+    }
+  }
+}

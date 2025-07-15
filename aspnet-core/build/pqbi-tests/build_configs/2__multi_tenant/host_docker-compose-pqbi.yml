@@ -1,0 +1,48 @@
+version: '3.7'
+
+services:
+  
+  seq.host:
+    image: datalust/seq:2023.4
+    container_name: {{PQBI_HOST_SEQ_CONTAINER}}
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "8095:80"
+      - "45341:45341"
+    networks:
+      - pqbi_network
+      
+  pqbi.web.host:
+    image: {{NEXUS_DOCKER_HOSTED}}/{{PQBI_HOST_IMAGE}}
+    container_name: {{PQBI_HOST_CONTAINER}}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CACHEBUST: ${CACHEBUST}
+    ports:
+      - "44301:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT={{ASPNETCORE_ENVIRONMENT}}
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_HTTPS_PORT=44301
+      - Kestrel__Certificates__Default__Password=2825e4d9-5cef-4373-bed3-d7ebf59de216
+      - Kestrel__Certificates__Default__Path=/https/pqbi-devcert-host.pfx
+      - KestrelServer__IsEnabled=true
+      - LOG_FILE_PATH=Logs/
+      - SEQ_HOST_URL=http://seq.host
+      - BUILDER_REFERER={{BUILDER_REFERER}}
+    volumes:
+      - ./docker_logs:/app/Logs
+      - ./docker_configurations/appsettings.{{ASPNETCORE_ENVIRONMENT}}.json:/app/appsettings.{{ASPNETCORE_ENVIRONMENT}}.json
+    networks:
+      - pqbi_network
+    depends_on:
+      - seq.host
+networks:
+  pqbi_network:
+    name:   {{NETWORK_NAME}}
+    driver: bridge
+

@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+		<RootNamespace>PQBI</RootNamespace>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Abp.Web.Common" Version="9.1.3" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <ProjectReference Include="..\PQBI.Application\PQBI.Application.csproj" />
+	  <ProjectReference Include="..\PQBI.Core\PQBI.Core.csproj" />
+	  <ProjectReference Include="..\PQBI.Network.Grpc\PQBI.Network.Grpc.csproj" />
+	  <ProjectReference Include="..\PQBI.Network.RestApi\PQBI.Network.RestApi.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,39 @@
+<fieldset style="padding: 1rem; border: 1px solid #ccc;">
+    <legend>Define sub-group</legend>
+
+    <div class="p-fluid">
+        <div class="p-field">
+            <label for="name">Name</label>
+            <input id="name" type="text" pInputText [(ngModel)]="subgroup.name" />
+        </div>
+
+        <div class="p-field mt-2">
+            <label for="from">From</label>
+            <p-inputNumber inputId="to" [(ngModel)]="subgroup.fromVal" />
+        </div>
+
+        <div class="p-field my-2">
+            <label for="to">To</label>
+            <p-inputNumber inputId="to" [(ngModel)]="subgroup.toVal" />
+        </div>
+    </div>
+
+    <dx-button (onClick)="save()" stylingMode="contained" type="default" style="min-width: 120px;"
+        [disabled]="!isFormValid()">
+        <span class="d-flex align-items-center">
+            <ng-container *ngIf="isEditMode;else newSubGroup">
+                <i class="fa fa-save me-2" style="color: #ffff;"></i> {{'Save' | localize }}
+            </ng-container>
+            <ng-template #newSubGroup><i class="fa fa-plus me-2" style="color: #ffff;"></i> {{'Add' | localize }}
+            </ng-template>
+        </span>
+    </dx-button>
+    <ng-container *ngIf="isEditMode">
+        <dx-button class="ms-2" (onClick)="finishEdit()" stylingMode="contained" type="danger"
+            style="min-width: 120px;">
+            <span class="d-flex align-items-center">
+                {{'Cancel' | localize}}
+            </span>
+        </dx-button>
+    </ng-container>
+</fieldset>

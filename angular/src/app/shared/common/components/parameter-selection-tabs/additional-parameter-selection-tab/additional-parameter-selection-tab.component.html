@@ -1,0 +1,110 @@
+<form class="h-100 d-flex" #pqsForm="ngForm" novalidate (ngSubmit)="add()" autocomplete="off">
+    <div class="row flex-grow-1" style="align-items: center;">
+
+        <ng-container *ngIf="!disableComponentSelection">
+            <form-container wrapperClass="col-4 pe-0 h-100">
+                <componentsSelector
+                        id="componentsState"
+                        name="componentsState"
+                        [height]="'382px'"
+                        [(ngModel)]="componentsState"
+                        (ngModelChange)="onComponentsChange()"
+                        required
+                    />
+            </form-container>
+        </ng-container>
+
+        <form-container wrapperClass="col-4 pe-0 h-100">
+            <div *ngIf="additionalError" class="text-danger px-2">{{ additionalError }}</div>
+            <label class="form-label p-2" for="additionalParameter">{{ 'AdditionalParameter' | localize }} *</label>
+            <div style="height: 335px;">
+                <dx-scroll-view direction="vertical">
+                    <p-listbox id="additional" inputId="additional" name="parameter.additionalParameter"
+                        [(ngModel)]="parameter.group" (ngModelChange)="onAdditionalChange($event)"
+                        [options]="additionalOptions" optionLabel="description" optionValue="groupName" optionDisabled="disabled"
+                        [filter]="true" [scrollHeight]="9999" required></p-listbox>
+                </dx-scroll-view>
+            </div>
+        </form-container>
+
+        <div class="col-4 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
+            <div class="container">
+                <div *ngIf="baseError" class="text-danger px-2">{{ baseError }}</div>
+                <label class="form-label p-2" for="base">{{ 'Base' | localize }} *</label>
+                <div style="height: 335px;">
+                    <dx-scroll-view direction="vertical">
+                        <p-listbox
+                            id="base"
+                            inputId="base"
+                            name="base"
+                            [(ngModel)]="selectedBases"
+                            (ngModelChange)="onBaseChange()"
+                            [options]="baseOptions"
+                            optionLabel="description"
+                            optionValue="phaseName"
+                            optionDisabled="disabled"
+                            [filter]="true"
+                            [scrollHeight]="9999"
+                            [multiple]="!isEdit"
+                            required
+                        ></p-listbox>
+                    </dx-scroll-view>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-4 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
+            <div class="container">
+                <div *ngIf="quantityError" class="text-danger px-2">{{ quantityError }}</div>
+                <label class="form-label p-2" for="quantity">{{ 'Quantity' | localize }} *</label>
+                <div style="height: 335px;">
+                    <dx-scroll-view direction="vertical">
+                        <p-listbox
+                            id="quantity"
+                            inputId="quantity"
+                            name="quantity"
+                            [(ngModel)]="selectedQuantities"
+                            [options]="quantityOptions"
+                            optionLabel="description"
+                            optionValue="phaseName"
+                            [filter]="true"
+                            [scrollHeight]="9999"
+                            [multiple]="!isEdit"
+                            required
+                        ></p-listbox>
+                    </dx-scroll-view>
+                </div>
+            </div>
+            <div>
+                <dx-button *ngIf="isInsideTable" class="btn btn-primary" (click)="showAdvancedSettingsModal()">
+                    {{ 'AdvancedSettings' | localize }}
+                </dx-button>
+                <dx-button [useSubmitBehavior]="true" stylingMode="contained" type="default" style="min-width: 120px;"
+                    [disabled]="!isFormValid()">
+                    <span class="d-flex align-items-center">
+                        <ng-container *ngIf="isEdit; else newParameter">
+                            <i class="fa fa-save me-2"></i> {{ 'Save' | localize }}
+                        </ng-container>
+                        <ng-template #newParameter><i class="fa fa-plus me-2"></i> {{ 'Add' | localize }}</ng-template>
+                    </span>
+                </dx-button>
+                <ng-container *ngIf="isEdit">
+                    <dx-button class="mt-1" (onClick)="finishEdit()" stylingMode="contained" type="danger"
+                        style="min-width: 120px;">
+                        <span class="d-flex align-items-center">{{ 'Cancel' | localize }}</span>
+                    </dx-button>
+                </ng-container>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+<ng-container *ngIf="isInsideTable">
+    <advanced-settings
+        #advancedSettingsModal
+        (configChange)="onAdvancedSettingsChanged($event)"
+        [config]="advancedSettingsConfig"
+        [isBaseParameter]="true"
+    ></advanced-settings>
+</ng-container>

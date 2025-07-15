@@ -1,0 +1,58 @@
+<div class="row">
+  <div class="col-4 w-auto">
+    <label class="form-label">{{'TimeInterval' | localize }} *</label>
+    <dx-select-box 
+        name="quickSelect" 
+        [ngModel]="state.rangeOption" 
+        [dataSource]="selectOptions"
+        displayExpr="value" 
+        valueExpr="value" 
+        [showClearButton]="true" 
+        placeholder="Date range quick select"
+        (ngModelChange)="onQuickSelectChange($event)" 
+        [class.is-invalid]="!isTimeIntervalValid()" 
+        required>
+    </dx-select-box>
+    <small *ngIf="!isTimeIntervalValid()" class="text-danger">{{'TimeIntervalRequired' | localize }}</small>
+  </div>
+
+  <ng-container *ngIf="state.rangeOption === dateRangeUnits.CUSTOM">
+    <div class="col" [ngClass]="isVertical ? 'd-block' : 'd-flex gap-6'">
+      <div class="col">
+        <label class="form-label">{{'From' | localize }} *</label>
+          <dx-date-box 
+          type="datetime" 
+          name="dateTimeRangeStart" 
+          [ngModel]="startDate"
+          [style]="{'width': '100%'}" 
+          dateFormat="yy-mm-dd"
+          (ngModelChange)="onStartDateChange($event)" 
+          [class.is-invalid]="!state.startDate || !isCustomDateRangeValid()" 
+          required>
+        </dx-date-box>
+        <small *ngIf="!state.startDate" class="text-danger">{{'StartDateRequired' | localize }}</small>
+        <small *ngIf="state.startDate && state.endDate && state.startDate >= state.endDate" class="text-danger">
+          {{'StartDateMustBeBeforeEnd' | localize }}
+        </small>
+      </div>
+  
+      <div class="col">
+        <label class="form-label">To *</label>
+          <dx-date-box 
+          type="datetime" 
+          name="dateTimeRangeEnd" 
+          [ngModel]="endDate"
+          [style]="{'width': '100%'}" 
+          dateFormat="yy-mm-dd"
+          (ngModelChange)="onEndDateChange($event)" 
+          [class.is-invalid]="!state.endDate || !isCustomDateRangeValid()" 
+          required>
+        </dx-date-box>
+        <small *ngIf="!state.endDate" class="text-danger">{{'EndDateRequired' | localize }}.</small>
+        <small *ngIf="state.startDate && state.endDate && state.startDate >= state.endDate" class="text-danger">
+          {{'StartDateMustBeBeforeEnd' | localize }}
+        </small>
+      </div>
+    </div>
+  </ng-container>
+</div>

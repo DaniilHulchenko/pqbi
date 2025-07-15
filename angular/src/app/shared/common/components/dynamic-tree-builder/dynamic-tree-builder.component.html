@@ -1,0 +1,27 @@
+<label class="ms-2 mb-3">
+    {{'TagSelectionAndReordering' | localize }}
+</label>
+
+<p-pickList [(source)]="pickListState.source" [(target)]="pickListState.target" 
+    [sourceHeader]="'Available'" [targetHeader]="'Selected'" 
+    [stripedRows]="true" [responsive]="true" 
+    (onMoveToTarget)="onPickListChange()" 
+    (onMoveToSource)="onPickListChange()" 
+    (onMoveAllToSource)="onPickListChange()" 
+    (onMoveAllToTarget)="onPickListChange()" 
+    (onSourceReorder)="onPickListChange()" 
+    (onTargetReorder)="onPickListChange()">
+    <ng-template let-tag pTemplate="item">
+        <div style="float:left;margin:1px 1px">{{tag.label}}</div>
+    </ng-template>
+</p-pickList>
+
+<div class="my-2">
+    <dx-check-box [(value)]="checkedSetAsDefault" [text]="'Set as default tag hierarchy'" sty></dx-check-box>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-auto">
+        <dx-button stylingMode="outlined" type="normal" (onClick)="apply()">{{'Apply' | localize }}</dx-button>
+    </div>
+</div>

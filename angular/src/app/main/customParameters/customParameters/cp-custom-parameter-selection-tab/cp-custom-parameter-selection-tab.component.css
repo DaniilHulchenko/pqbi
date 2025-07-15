@@ -1,0 +1,36 @@
+ol,
+ul,
+dl {
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
+}
+
+.p-contextmenu {
+    padding: 0 !important;
+}
+
+.blue-background {
+    background-color: blue;
+}
+
+.blue-color {
+    color: blue;
+}
+
+.turned-on-270 {
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -o-transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    transform: rotate(270deg);
+}
+
+.container {
+    border: 1px #6b6b6b solid;
+    border-radius: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    padding: 0;
+    height: 97%
+}

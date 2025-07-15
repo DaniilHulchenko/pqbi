@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+
+    pqbi.web.angular:
+        image: {{NEXUS_DOCKER_HOSTED}}/{{PQBI_FRONT_IMAGE}}
+        container_name: {{PQBI_FRONT_CONTAINER}}
+        build:
+          context: .
+          dockerfile: Dockerfile
+        ports:
+            - "443:443"
+        volumes:
+            - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+            - ./docker_configurations/appconfig.production.json:/usr/share/nginx/html/assets/appconfig.production.json
+        networks:
+            pqbi_network:
+
+networks:
+    pqbi_network:
+        name:   {{NETWORK_NAME}}
+        driver: bridge

@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "cypress:run": "{{NPM_COMMAND_VALUE_NAME}}"
+  }
+}

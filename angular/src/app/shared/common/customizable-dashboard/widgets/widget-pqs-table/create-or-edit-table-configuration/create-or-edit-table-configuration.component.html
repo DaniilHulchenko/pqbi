@@ -1,0 +1,127 @@
+<dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="modalVisible" [dragAndResizeArea]="false"
+    [dragEnabled]="false" title="Edit Table Widget Configuration" height="90vh" width="90vw">
+    <dx-scroll-view #scrollView [showScrollbar]="true">
+        <form class="d-flex flex-column h-100" #tableWidgetConfigurationForm="ngForm" novalidate (ngSubmit)="save()"
+            autocomplete="off">
+
+            <div class="d-flex align-items-center mb-3">
+                <datetimeRangeSelector name="dateRange" [(ngModel)]="dateRangeSelectionState" required
+                    style="flex-grow: 1;max-width: 300px;" />
+                <dx-button
+                    text="{{ 'Design Options' | localize }}"
+                    type="normal"
+                    stylingMode="contained"
+                    class="ms-3 btn btn-primary"
+                    (onClick)="designOptionsModalVisible = true"
+                    >
+                </dx-button>
+
+            </div>
+
+            <div class="d-flex flex-grow-0 mb-3" style="gap: 20px;">
+                <div style="min-width: 400px; max-width: 400px;" class="container">
+                    <componentsSelector id="componentsState" name="componentsState" [height]="'420px'"
+                        [(ngModel)]="componentsState" (ngModelChange)="onComponentsStateChange()"
+                        [isFeederSelectionEnabled]="true" required />
+                </div>
+                <div style="height: 460px; min-width: 400px; overflow-y: scroll; overflow-x: scroll;"
+                    class="container flex-grow-1">
+                    <table-preview *ngIf="componentsState" [components]="componentsState" [parameters]="parameters" [designOptions]="designOptionsObj"></table-preview>
+                </div>
+            </div>
+
+            <div class="d-flex flex-grow-0 mb-3">
+                <div class="flex-grow-1 h-500px">
+                    <dx-tab-panel #tabPanel [dataSource]="tabs" [loop]="false" [animationEnabled]="true"
+                        [swipeEnabled]="true" [deferRendering]="false" class="table-custom-styles">
+                        <div class="h-450px" *dxTemplate="let option of 'customTemplate'">
+                            <customParameterSelectionTab
+                                #customParameterSelectionTab
+                                [disableComponentSelection]="true"
+                                [isInsideTable]="true"
+                                [customParameterTypes]="['SPMC','MPSC']" (onAdd)="onAddCustomParameter($event)"
+                                (onEditSave)="onEditCustomParameter($event)" />
+                        </div>
+                        <div class="h-450px" *dxTemplate="let option of 'logicalTemplate'">
+                            <logicalParameterSelectionTab #logicalParameterSelectionTab
+                                [disableComponentSelection]="true"
+                                [isInsideTable]="true"
+                                [outerComponentsState]="componentsState"
+                                (onAdd)="onAddBaseParameter($event)" (onEditSave)="onEditBaseParameter($event)" />
+                        </div>
+                        <div class="h-450px" *dxTemplate="let option of 'channelTemplate'">
+                            <channelParameterSelectionTab #channelParameterSelectionTab
+                                [disableComponentSelection]="true"
+                                [isInsideTable]="true"
+                                [outerComponentsState]="componentsState"
+                                (onAdd)="onAddBaseParameter($event)" (onEditSave)="onEditBaseParameter($event)" />
+                        </div>
+                        <div class="h-450px" *dxTemplate="let option of 'additionalTemplate'">
+                            <additional-parameter-selection-tab #additionalParameterSelectionTab
+                                [disableComponentSelection]="true"
+                                [isInsideTable]="true"
+                                [outerComponentsState]="componentsState"
+                                (onAdd)="onAddBaseParameter($event)" (onEditSave)="onEditBaseParameter($event)" />
+                        </div>
+                        <!-- <div class="h-450px" *dxTemplate="let option of 'exceptionTemplate'">
+                            <exceptionParameterSelectionTab #exceptionParameterSelectionTab
+                                (onAdd)="onAddException($event)" (onEditSave)="onEditException($event)" />
+                        </div> -->
+                        <div class="h-450px" *dxTemplate="let option of 'eventTemplate'">
+                            <eventParameterSelectionTab #eventParameterSelectionTab
+                                [isInsideTable]="true"
+                                (onAdd)="onAddEvent($event)"
+                                (onEditSave)="onEditEvent($event)" />
+                        </div>
+                        <div *dxTemplate="let option of 'title'">
+                            <i class="fa" [ngClass]="getIconClass(option.ID)"></i>
+                            <span>{{option.name}}</span>
+                        </div>
+                    </dx-tab-panel>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <dx-data-grid #grid name="components" [dataSource]="parameters"
+                    (onEditingStart)="updateParameter($event)" (onRowRemoved)="onRowRemoved()" [showBorders]="true" style="height: 100%;">
+                    <dxi-column caption="Name" dataField="name"></dxi-column>
+                    <dxi-column caption="Type" dataField="type"></dxi-column>
+                    <dxi-column caption="Quantity" dataField="quantity"></dxi-column>
+                    <dxo-editing [useIcons]="true" [allowUpdating]="true" [allowDeleting]="true"></dxo-editing>
+
+                    <dxi-column type="buttons">
+                        <dxi-button name="edit"></dxi-button>
+                        <dxi-button hint="Duplicate" icon="copy" [onClick]="duplicateParameterCommand"></dxi-button>
+                        <dxi-button name="delete"></dxi-button>
+                    </dxi-column>
+                </dx-data-grid>
+            </div>
+        </form>
+    </dx-scroll-view>
+
+    <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
+        <button type="button" class="btn btn-light-primary fw-bold me-2" (click)="hide()" [disabled]="saving">
+            {{ 'Cancel' | localize }}
+        </button>
+        <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving || !isFormValid()" (click)="save()">
+            <i class="fa fa-save"></i>
+            <span>{{ 'Save' | localize }}</span>
+        </button>
+    </dxi-popup-toolbar-item>
+    <dx-popup
+        [(visible)]="designOptionsModalVisible"
+        [showCloseButton]="true"
+        [hideOnOutsideClick]="true"
+        title="Design Options"
+        [width]="'70vw'"
+        [height]="'auto'"
+    >
+    
+        <table-design-options
+        [designOptions]="designOptionsObj"
+        (designOptionsChange)="onDesignOptionsChange($event)">
+        </table-design-options>
+    
+    </dx-popup>
+
+</dx-popup>

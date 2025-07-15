@@ -1,0 +1,10 @@
+<div class="p-2">
+    <label class="form-label" for="group">{{'Group' | localize }} *</label>
+</div>
+<div [style]="scrollHeight">
+    <dx-scroll-view direction="vertical">
+        <p-listbox id="group" name="group" [(ngModel)]="selectedCustomParameter" (ngModelChange)="onSelectionChanged()" [options]="customParameters"
+            optionLabel="name" optionValue="id" [filter]="true" [virtualScroll]="false"
+            [scrollHeight]="9999" required />
+    </dx-scroll-view>
+</div>

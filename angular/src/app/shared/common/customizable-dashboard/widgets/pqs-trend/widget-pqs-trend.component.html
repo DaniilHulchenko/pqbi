@@ -1,0 +1,154 @@
+<div class="kt-portlet kt-portlet--height-fluid">
+    <div class="kt-portlet__head">
+        <div class="kt-portlet__head-label">
+            <h3 class="kt-portlet__head-title">
+                PQS Trend
+            </h3>
+
+            <div class="kt-portlet__head-toolbar">
+
+                <form #pqsForm="ngForm" (ngSubmit)="onSubmit(pqsForm.value)" novalidate autocomplete="off">
+                    <div class="form-group">
+                        <div class="form-group row">
+                            <div class="col-lg-2 col-md-9 col-sm-12">
+                                <label class="form-label" for="customParameter">
+                                    Function *
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-lg-2 col-md-9 col-sm-12">
+                                <label class="form-label" for="customParameter">
+                                    Custom Parameter *
+                                </label>
+    
+                                <p-dropdown 
+                                    id="customParameter" name="customParameter"
+                                    [(ngModel)]="formModel.customParameter" #customParameter="ngModel"
+                                    [options]="customParameterOptions" 
+                                    optionLabel="name"
+                                    [showClear]="true"
+                                    placeholder="Select a Custom Parameter"  
+                                    required 
+                                />
+                                    <!-- optionValue="value" -->
+                            </div>
+
+                            <div class="col-lg-2 col-md-9 col-sm-12">
+                                <label class="form-label" for="startDate">
+                                    Start Date *
+                                </label>
+    
+                                <input 
+                                    type="text" id="startDate" name="startDate" 
+                                    [(ngModel)]="formModel.startDate" #startDate="ngModel"
+                                    placeholder="Start Date" 
+                                    class="form-control" 
+                                    [bsConfig]="bsConfig"
+                                    bsDatepicker>
+                            </div>
+    
+                            <div class="col-lg-2 col-md-9 col-sm-12">
+                                <label class="form-label" for="endDate">
+                                    End Date *
+                                </label>
+    
+                                <input 
+                                    type="text" id="endDate" name="endDate" 
+                                    [(ngModel)]="formModel.endDate" #endDate="ngModel"
+                                    placeholder="End Date" 
+                                    class="form-control" 
+                                    [bsConfig]="bsConfig"
+                                    bsDatepicker>
+                            </div>
+    
+                            <div class="col-lg-1 col-md-9 col-sm-12">
+                                <label class="form-label" for="resolution">
+                                    Resolution *
+                                </label>
+    
+                                <p-dropdown 
+                                    id="resolution" name="resolution"
+                                    [(ngModel)]="formModel.resolution" #resolution="ngModel"
+                                    [options]="resolutionOptions" 
+                                    optionLabel="name"
+                                    optionValue="name"
+                                    [showClear]="true"
+                                    placeholder="Select resolution"  
+                                    required 
+                                />
+                            </div>
+    
+                            <div class="col-lg-1 col-md-9 col-sm-12">
+                            <ng-container *ngIf="formModel.customParameter?.value?.aggregationFunction === 'PERCENTILE'">
+                                <label class="form-label" for="percentile">
+                                    Percentile *
+                                </label>
+                            
+                                <p-dropdown 
+                                    id="percentile" name="percentile" 
+                                    [(ngModel)]="formModel.percentile" #percentile="ngModel"
+                                    [options]="percentileOptions" 
+                                    optionLabel="name" 
+                                    optionValue="value" 
+                                    [showClear]="true"
+                                    placeholder="Select percentile" />
+                            </ng-container>
+                            </div>
+    
+                            <div class="col-lg-1 col-md-9 col-sm-12">
+                                <button [disabled]="pqsForm.invalid" type="button" class="btn btn-primary" (click)="isActive ? stop() : start()">
+                                    <i class="fa fa-redo"></i> {{isActive ? 'Stop' : 'Start'}} Refresh
+                                  </button>
+                            </div>
+    
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+
+
+        </div>
+
+    </div>
+    <div class="kt-portlet__body">
+        <div class="row">
+            <div class="col-lg-2">
+                <div class="pre-container" >
+                    <pre *ngIf="formModel.customParameter">{{formModel.customParameter | json}}</pre>
+
+                </div>
+            </div>
+            <div class="col-lg-10">
+                <div class="chart-container">
+                    <ngx-charts-line-chart 
+                        [view]="view" 
+                        [scheme]="colorScheme" 
+                        [legend]="legend" 
+                        [showXAxisLabel]="showXAxisLabel"
+                        [showYAxisLabel]="showYAxisLabel" 
+                        [xAxis]="xAxis" 
+                        [yAxis]="yAxis" 
+                        [xAxisLabel]="xAxisLabel"
+                        [yAxisLabel]="yAxisLabel" 
+                        [timeline]="timeline" 
+                        [results]="multi" 
+                        >
+                        <!-- (select)="onSelect($event)"
+                        (activate)="onActivate($event)" 
+                        (deactivate)="onDeactivate($event)" -->
+                    </ngx-charts-line-chart>
+
+                </div>
+
+            </div>
+        </div>
+        
+         
+        
+    </div>
+
+
+</div>

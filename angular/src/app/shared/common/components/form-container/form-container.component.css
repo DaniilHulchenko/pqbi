@@ -1,0 +1,9 @@
+.container {
+    border: 1px #6b6b6b solid;
+    border-radius: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    padding: 0;
+    height: 97.5%;
+}

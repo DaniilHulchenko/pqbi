@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "PQBI.ConsoleApiClient": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:39072;http://localhost:39073"
+    }
+  }
+}
