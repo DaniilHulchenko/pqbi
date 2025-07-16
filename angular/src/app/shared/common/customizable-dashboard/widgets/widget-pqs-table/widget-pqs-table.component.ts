@@ -147,15 +147,18 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     ngOnInit(): void {
         super.ngOnInit();
-         const stored = localStorage.getItem('editMode');
-        if (stored === 'true') {
-            this.editModeEnabled  = true;
-            
-        }
+
+        abp.event.on('app.dashboardEdit.onEditStateChange', (editState) => {
+            this.editModeEnabled = editState;
+        });
+
+        const currentEditMode = localStorage.getItem('app.dashboard.editMode') === 'true';
+        this.editModeEnabled = currentEditMode;
         if (this.isNew) {
             this.runDelayed(() => this.edit());
         }
     }
+
 
     onSortModeChange(mode: 'value' | 'color') {
         this.sortMode = mode;
@@ -306,24 +309,37 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     edit() {
         this.editState = true;
         this.editModeEnabled = true;
-        localStorage.setItem('editMode', 'true');
+        localStorage.setItem('app.dashboard.editMode', 'true');
+        abp.event.trigger('app.dashboardEdit.onEditStateChange', true);
         this.createOrEditModal.show(this.widgetConfigurationInDB);
     }
 
     onConfigurationChange(newConfig: CreateOrEditTableWidgetConfigurationDto) {
         this.editState = false;
-        localStorage.removeItem('editMode');
+        
+        // localStorage.setItem('app.dashboard.editMode', 'false');
+        // localStorage.removeItem('editMode');
+        // abp.event.trigger('app.dashboardEdit.onEditStateChange', false);
+
+
         if (this.treeListRef?.instance) {
             this.savedPageIndex = this.treeListRef.instance.pageIndex();
         }
         if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
             this.saveConfiguration(newConfig.id.toString());
         }
-         this.refreshWidget();
+        this.refreshWidget();
+
+
+
+
     }
 
     refreshWidget(): void {
-        this.widgetRefresh.emit();
+        localStorage.setItem('app.dashboard.editMode', 'false');
+        abp.event.trigger('app.dashboardEdit.onEditStateChange', false);
+
+        this.widgetRefresh.emit();            
         this.isLoading = true;
         if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
             this._tableWidgetConfigurationsServiceProxy
@@ -467,6 +483,8 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                 }, 0);
 
             });
+
+
     };
 
     onContentReady() {
@@ -782,13 +800,28 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                         const span = document.createElement('span');
                         span.innerText = value != null ? value.toString() : '';
 
-                        const bg = getBackgroundColor(value, settings);
+                        let bg: string | null = null;
+
+                        if (value === 'DB_OUT_OF_RANGE' ||
+                            value === null ||
+                            value === undefined ||
+                            value === '' ||
+                            (typeof value === 'number' && isNaN(value))) {
+                            bg = settings?.noDataColor || '#e0e0e0';
+                            if (settings?.showNoDataColor !== false) {
+                                span.style.color = '#666';
+                            }
+                        } else {
+                            bg = getBackgroundColor(value, settings);
+                        }
+
                         if (bg) {
                             container.style.backgroundColor = bg;
                         }
 
-                            container.appendChild(span);
-                        }
+                        container.appendChild(span);
+                    }
+
                 };
                 if (param.type === ColumnType.Event) {
                     return {

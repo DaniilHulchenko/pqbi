@@ -101,6 +101,11 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
             this.flaggingEvents = evts;
             this.flaggingEvents = uniqBy(this.flaggingEvents, (x) => x.eventClass);
         });
+        const savedSort = localStorage.getItem('tableSortOption');
+        if (savedSort) {
+            this.tableSortOption = savedSort;
+        }
+        
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -128,13 +133,22 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
     }
 
     getNormalizationOptions() {
-        const opts = [];
-        // if (this.isBaseParameter) {
-        opts.push({ value: NormalizeEnum.NOMINAL, text: 'yes - by nominal value' });
-        // }
-        opts.push({ value: NormalizeEnum.VALUE, text: 'yes - by Normalization Value:' });
-        return opts;
-    }
+            const opts = [];
+            // if (this.isBaseParameter) {
+            opts.push({ value: NormalizeEnum.NOMINAL, text: 'yes - by nominal value' });
+            // }
+            opts.push({ value: NormalizeEnum.VALUE, text: 'yes - by Normalization Value:' });
+            return opts;
+        }
+
+        tableSortOptions = [
+            { text: 'No', value: 'none' },
+            { text: 'By column value', value: 'value' },
+            { text: 'By colors', value: 'color' }
+        ];
+
+        tableSortOption: string = 'none';
+
 
     show() {
         this.modalVisible = true;
@@ -173,6 +187,8 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
             showNoDataColor: this.showNoDataColor,
         };
         this.configChange.emit(config);
+        localStorage.setItem('tableSortOption', this.tableSortOption);
+
         this.hide();
     }
     onSelectNormalize(value: NormalizeEnum) {

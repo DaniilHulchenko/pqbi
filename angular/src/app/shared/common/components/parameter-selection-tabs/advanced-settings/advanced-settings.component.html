@@ -1,7 +1,7 @@
 <dx-popup
     [hideOnOutsideClick]="false"
     [showCloseButton]="true"
-    [visible]="modalVisible"
+    [(visible)]="modalVisible"
     [dragEnabled]="false"
     title="Base/Custom Parameter Advanced Settings"
     height="80vh"
@@ -120,11 +120,21 @@
                     </div>
                 </div>
 
+
+
                 <div *ngIf="colorScheme === colorSchemaTypes.OutOfLimit" style="margin-top: 12px;">
                     <dx-color-box [(value)]="outOfLimitColor" placeholder="Out-of-limit Color"></dx-color-box>
                 </div>
 
-
+                <h5 style="margin-top: 24px;">Sort Table (View Mode):</h5>
+                <dx-select-box
+                    [(value)]="tableSortOption"
+                    [items]="tableSortOptions"
+                    displayExpr="text"
+                    valueExpr="value"
+                    placeholder="Select sorting mode"
+                    [style]="{ width: '100%' }"
+                />
                 <h6 style="margin-top: 16px;">Additional colors:</h6>
                 <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
                     <p-checkbox
