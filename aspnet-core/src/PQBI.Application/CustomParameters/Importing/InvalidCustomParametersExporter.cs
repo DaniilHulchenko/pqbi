@@ -23,10 +23,10 @@ public class InvalidCustomParameterExporter(ITempFileCacheManager tempFileCacheM
                 {"Refuse Reason", customParameter.Exception},
                     {"Name", customParameter.Name},
                     {"AggregationFunction", customParameter.AggregationFunction},
+                    {"STDPQSParametersList", customParameter.STDPQSParametersList},
                     {"Type", customParameter.Type},
                     {"InnerCustomParameters", customParameter.InnerCustomParameters},
-                    {"ResolutionInSeconds", customParameter.ResolutionInSeconds},
-                    {"CustomBaseDataList", customParameter.CustomBaseDataList}
+                    {"ResolutionInSeconds", customParameter.ResolutionInSeconds}
             });
     }
 

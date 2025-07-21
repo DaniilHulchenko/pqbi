@@ -51,9 +51,6 @@ using Abp.Runtime.Validation;
 using PQBI.Network;
 using Abp.Dependency;
 using PQBI.Caching;
-using GrpcService1;
-using Microsoft.Extensions.DependencyInjection;
-using GraphQL;
 
 namespace PQBI.Web.Controllers
 {
@@ -86,8 +83,6 @@ namespace PQBI.Web.Controllers
         private readonly IUserDelegationManager _userDelegationManager;
         private readonly TenantManager _tenantManager;
         private readonly IPQSServiceProxy _userServiceProxy;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly PQBI.Infrastructure.PQSComunication _pQSCommunicationConfig;
 
         public TokenAuthController(
             ILogger<TokenAuthController> logger,
@@ -114,9 +109,7 @@ namespace PQBI.Web.Controllers
             AbpUserClaimsPrincipalFactory<User, Role> claimsPrincipalFactory,
             IUserDelegationManager userDelegationManager,
             TenantManager tenantManager,
-            IPQSServiceProxy userServiceProxy,
-            IOptions<PQBI.Infrastructure.PQSComunication> pQSCommunicationConfig,
-            IServiceProvider serviceProvider
+            IPQSServiceProxy userServiceProxy
             )
         {
             _logger = logger;
@@ -145,8 +138,6 @@ namespace PQBI.Web.Controllers
             _userDelegationManager = userDelegationManager;
             _tenantManager = tenantManager;
             _userServiceProxy = userServiceProxy;
-            _serviceProvider = serviceProvider;
-            _pQSCommunicationConfig = pQSCommunicationConfig.Value;
         }
 
         private async Task<string> EncryptQueryParameters(long userId, Tenant tenant, string passwordResetCode)
@@ -159,12 +150,12 @@ namespace PQBI.Web.Controllers
                 .ToString(PQBIConsts.DateTimeOffsetFormat));
 
             var query = $"userId={userId}&resetCode={passwordResetCode}&expireDate={expireDate}";
-
+            
             if (tenant != null)
             {
                 query += $"&tenantId={tenant.Id}";
             }
-
+            
             return SimpleStringCipher.Instance.Encrypt(query);
         }
 
@@ -204,7 +195,7 @@ namespace PQBI.Web.Controllers
                     returnUrl = AddSingleSignInParametersToReturnUrl(model.ReturnUrl, loginResult.User.SignInToken,
                         loginResult.User.Id, loginResult.User.TenantId);
                 }
-            }
+            }          
 
             //Password reset
             if (loginResult.User.ShouldChangePasswordOnNextLogin)
@@ -323,7 +314,7 @@ namespace PQBI.Web.Controllers
                 return await Task.FromResult(new RefreshTokenResult(
                     accessToken,
                     GetEncryptedAccessToken(accessToken),
-                    (int)_configuration.AccessTokenExpiration.TotalSeconds)
+                    (int) _configuration.AccessTokenExpiration.TotalSeconds)
                 );
             }
             catch (UserFriendlyException)
@@ -366,7 +357,7 @@ namespace PQBI.Web.Controllers
                     );
                 }
 
-                if (AbpSession.TenantId.HasValue)
+                if(AbpSession.TenantId.HasValue)
                 {
                     await _userServiceProxy.CloseSessionForUserAsync(AbpSession.UserId.Value, AbpSession.TenantId.Value);
                 }
@@ -436,7 +427,7 @@ namespace PQBI.Web.Controllers
             {
                 AccessToken = accessToken,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds
+                ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds
             };
         }
 
@@ -460,7 +451,7 @@ namespace PQBI.Web.Controllers
             {
                 AccessToken = accessToken,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                ExpireInSeconds = (int)expiration.TotalSeconds
+                ExpireInSeconds = (int) expiration.TotalSeconds
             };
         }
 
@@ -474,7 +465,7 @@ namespace PQBI.Web.Controllers
             {
                 AccessToken = accessToken,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds
+                ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds
             };
         }
 
@@ -574,10 +565,10 @@ namespace PQBI.Web.Controllers
                         {
                             AccessToken = accessToken,
                             EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                            ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
+                            ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds,
                             ReturnUrl = returnUrl,
                             RefreshToken = refreshToken.token,
-                            RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds
+                            RefreshTokenExpireInSeconds = (int) _configuration.RefreshTokenExpiration.TotalSeconds
                         };
                     }
                 case AbpLoginResultType.UnknownExternalLogin:
@@ -597,14 +588,14 @@ namespace PQBI.Web.Controllers
                             GetTenancyNameOrNull()
                         );
 
-                        if (loginResult.Result != AbpLoginResultType.Success)
-                        {
-                            throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
-                                loginResult.Result,
-                                externalUser.EmailAddress,
-                                GetTenancyNameOrNull()
-                            );
-                        }
+                    if (loginResult.Result != AbpLoginResultType.Success)
+                    {
+                        throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
+                            loginResult.Result,
+                            externalUser.EmailAddress,
+                            GetTenancyNameOrNull()
+                        );
+                    }
 
                         var refreshToken = CreateRefreshToken(await CreateJwtClaims(loginResult.Identity,
                             loginResult.User, tokenType: TokenType.RefreshToken)
@@ -617,19 +608,19 @@ namespace PQBI.Web.Controllers
                         {
                             AccessToken = accessToken,
                             EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                            ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
+                            ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds,
                             RefreshToken = refreshToken.token,
-                            RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds
+                            RefreshTokenExpireInSeconds = (int) _configuration.RefreshTokenExpiration.TotalSeconds
                         };
                     }
                 default:
-                    {
-                        throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
-                            loginResult.Result,
-                            externalUser.EmailAddress,
-                            GetTenancyNameOrNull()
-                        );
-                    }
+                {
+                    throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
+                        loginResult.Result,
+                        externalUser.EmailAddress,
+                        GetTenancyNameOrNull()
+                    );
+                }
             }
         }
 
@@ -864,22 +855,6 @@ namespace PQBI.Web.Controllers
             var shouldLockout = await SettingManager.GetSettingValueAsync<bool>(
                 AbpZeroSettingNames.UserManagement.UserLockOut.IsEnabled
             );
-
-            //Other way to override some meethods in the ABP
-            var tenant = await _tenantManager.FindByTenancyNameAsync(tenancyName);
-
-            if (tenant.PQSServiceUrl != _pQSCommunicationConfig.PQSServiceRestUrl)
-            {
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var tenantManager = scope.ServiceProvider.GetRequiredService<TenantManager>();
-
-                    tenant.PQSServiceUrl = _pQSCommunicationConfig.PQSServiceRestUrl;
-
-                    await tenantManager.UpdateAsync(tenant);
-                }
-            }
-
             var loginResult = await _logInManager.LoginAsync(usernameOrEmailAddress, password, tenancyName, shouldLockout);
 
             switch (loginResult.Result)
@@ -917,7 +892,7 @@ namespace PQBI.Web.Controllers
                 claims: claims,
                 notBefore: now,
                 signingCredentials: _configuration.SigningCredentials,
-                expires: expiration == null ? (DateTime?)null : now.Add(expiration.Value)
+                expires: expiration == null ? (DateTime?) null : now.Add(expiration.Value)
             );
 
             return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
@@ -1046,9 +1021,9 @@ namespace PQBI.Web.Controllers
 
             if (requestUserAgent.IsNullOrEmpty())
             {
-                return;
+                return;    
             }
-
+            
             if (WebConsts.ReCaptchaIgnoreWhiteList.Contains(requestUserAgent.Trim()))
             {
                 return;

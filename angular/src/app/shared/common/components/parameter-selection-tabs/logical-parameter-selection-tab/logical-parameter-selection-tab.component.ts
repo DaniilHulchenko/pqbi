@@ -16,7 +16,7 @@ import { BaseParameterCreationTreeBuilder } from '@app/shared/services/base-para
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
 import { QuantityUnits } from '@app/shared/enums/quantity-units';
 import { orderBy, uniqBy } from 'lodash-es';
-import { BaseDataInfo, GroupDataInfo, NormalizeEnum, PhaseDataInfo, QuantityDataInfo, Tag } from '@shared/service-proxies/service-proxies';
+import { BaseDataInfo, GroupDataInfo, PhaseDataInfo, QuantityDataInfo } from '@shared/service-proxies/service-proxies';
 import { EditableTabComponentBaseComponent } from '../editable-tab-component-base';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
 import safeStringify from 'fast-safe-stringify';
@@ -25,7 +25,6 @@ import { PopulatableForm } from '../populatable-form';
 import { UtilsModule } from '../../../../../../shared/utils/utils.module';
 import { AdvancedSettingsComponent, AdvancedSettingsConfig } from '../advanced-settings/advanced-settings.component';
 import { FormContainerComponent } from "../../form-container/form-container.component";
-import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
 
 @Component({
     selector: 'logicalParameterSelectionTab',
@@ -117,21 +116,22 @@ export class LogicalParameterSelectionTabComponent
         this.populateForm(parameter);
 
         this.advancedSettingsConfig = parameter.advancedSettings ?? {
-            normalizeValue: NormalizeEnum.NO,
-            normalizeNominalValue: 0,
-            excludeFlagged: ExcludeFlagged.None,
+            normalizeValue: 'none',
+            normalizeNominalValue: '0',
+            excludeFlagged: 'none',
             defaultFlagEvent: null,
-            setLimits: Limit.None,
-            lowerLimit: 0,
-            upperLimit: 0,
+            setLimits: 'none',
+            lowerLimit: '0',
+            upperLimit: '0',
             limitFromNominal: false,
             limitFromNormalization: false,
-            colorScheme: ColorSchema.None,
+            colorScheme: 'none',
             outOfLimitColor: '',
             gradientFromColor: '',
             gradientToColor: '',
             okColor: '',
             noDataColor: '',
+            tagValueCalculation: 'none',
             aligningIgnored: false,
             replaceAggregation: false,
             customAggregationFunc: ''
@@ -163,8 +163,6 @@ export class LogicalParameterSelectionTabComponent
         this.selectedHarmonics = this.isEdit
             ? this.parameter.harmonics?.value
             : ArrayUtils.ensureArray(this.parameter.harmonics?.value);
-
-        this.advancedSettingsConfig = parameter.advancedSettings;
     }
 
     populateComponentsFromTab(tab: any) {
@@ -317,9 +315,7 @@ export class LogicalParameterSelectionTabComponent
             parameter: JSON.parse(JSON.stringify(this.parameter)),
             componentsState: this.disableComponentSelection ? null : this.componentsState,
             quantity: null,
-            advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
+            advancedSettings: this.advancedSettingsConfig,
         };
 
         this._parameterCombinationsService
@@ -357,9 +353,7 @@ export class LogicalParameterSelectionTabComponent
                         parameter: JSON.parse(JSON.stringify(this.parameter)),
                         componentsState: eventComponentState,
                         quantity: null,
-                        advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
+                        advancedSettings: this.advancedSettingsConfig,
                     };
 
                     this._parameterCombinationsService
@@ -385,9 +379,6 @@ export class LogicalParameterSelectionTabComponent
                 parameter: JSON.parse(JSON.stringify(this.parameter)),
                 componentsState: null,
                 quantity: null,
-                advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
             };
 
             event.parameter.fromComponents = { feederId: this.componentsState.feeders[0].id, componentId: this.componentsState.feeders[0].componentId};

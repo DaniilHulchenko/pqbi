@@ -24,10 +24,10 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     @ViewChild('renameWidgetModal') renameModal: RenameWidgetModalComponent;
 
     barChartRequest: any;
-
-    barChartdConfiguration: BarChartWidgetConfigurationDto;
+    barChartConfiguration: BarChartWidgetConfigurationDto;
     barChartType = BarChartType;
     dataSource: any;
+    plainArgumentField: 'componentName' | 'eventName' = 'componentName';
 
     constructor(
         injector: Injector,
@@ -46,23 +46,22 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
 
     ngOnInit(): void {
         super.ngOnInit();
-        if(this.isNew){
+        if (this.isNew) {
             this.runDelayed(() => this.edit());
         }
     }
 
-    onNameEdit(){
+    onNameEdit(): void {
         this.renameModal.show(this.widgetName);
     }
 
-    fetch() {
-        let dateRangeState: DateRangeState = DateRangeState.fromJSON(this.barChartdConfiguration.dateRange);
-        let range: [DateTime, DateTime] = this._dateRangeService.getDateRangeFromState(dateRangeState);
+    fetch(): void {
+        const state: DateRangeState = DateRangeState.fromJSON(this.barChartConfiguration.dateRange);
+        const range: [DateTime, DateTime] = this._dateRangeService.getDateRangeFromState(state);
 
         this.barChartRequest = {
             config: undefined,
-            components: JSON.parse(this.barChartdConfiguration.components),
-            events: JSON.parse(this.barChartdConfiguration.events),
+            components: JSON.parse(this.barChartConfiguration.components),
             startDate: range[0],
             endDate: range[1],
         };
@@ -70,66 +69,74 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
         this._tenantDashboardService
             .pQSBarChartWidgetData(this.barChartRequest)
             .subscribe((response: BarChartResponse) => {
-                this.dataSource = this.transformData(response.components);
+                const comps = response.components;
+                if (this.barChartConfiguration.type === BarChartType.Plain) {
+                    this.dataSource = this.getPlainData(comps);
+                } else {
+                    this.dataSource = this.transformData(comps);
+                }
             });
     }
 
-    edit() {
+    edit(): void {
         this.createOrEditModal.show(this.widgetConfigurationInDB);
     }
 
-    onConfigurationChange(newConfig: CreateOrEditBarChartWidgetConfigurationDto){
+    onConfigurationChange(newConfig: CreateOrEditBarChartWidgetConfigurationDto): void {
         this.saveConfiguration(newConfig.id.toString());
         this.refreshWidget();
     }
 
     refreshWidget(): void {
-        if(this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration){
-            this._barChartWidgetConfigurationsServiceProxy.getBarChartWidgetConfigurationForView(+this.widgetConfigurationInDB.configuration).subscribe(result => {
-                this.barChartdConfiguration = result.barChartWidgetConfiguration;
-                if(this.barChartdConfiguration){
-                    this.fetch();
-                }
-            });
+        if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
+            this._barChartWidgetConfigurationsServiceProxy
+                .getBarChartWidgetConfigurationForView(+this.widgetConfigurationInDB.configuration)
+                .subscribe(result => {
+                    this.barChartConfiguration = result.barChartWidgetConfiguration;
+                    if (this.barChartConfiguration) {
+                        this.fetch();
+                    }
+                });
         }
     }
 
-    convertEventsDataByType(type: BarChartType, events: any[]): any {
-        switch (this.barChartdConfiguration.type) {
-            case BarChartType.Plain:
-                return events.reduce((acc, event) => acc + event.data, 0);
-            case BarChartType.Clustered:
-                return this.transformData(this.dataSource.components);
-            case BarChartType.Stacked:
-                return this.transformData(this.dataSource.components);
-            default:
-                break;
+    private getPlainData(components: any[]): any[] {
+        const totalComponents = components.length;
+        const totalEvents = components.reduce((sum, c) => sum + (c.events?.length || 0), 0);
+
+        if (totalComponents === 1 && totalEvents > 1) {
+            this.plainArgumentField = 'eventName';
+            return components[0].events.map(e => ({
+                eventName: e.name,
+                eventCount: e.data
+            }));
         }
+
+        this.plainArgumentField = 'componentName';
+        return components.map(c => ({
+            componentName: c.name,
+            eventCount: c.events[0]?.data ?? 0
+        }));
     }
 
     private transformData(components: any[]): any[] {
-        let transformedData: any[] = [];
-
+        const transformed: any[] = [];
         components.forEach(component => {
-          component.events.forEach(event => {
-            transformedData.push({
-              componentName: component.name,
-              eventName: event.name,
-              eventCount: event.data
+            (component.events || []).forEach(event => {
+                transformed.push({
+                    componentName: component.name,
+                    eventName: event.name,
+                    eventCount: event.data
+                });
             });
-          });
-
-          // If a component has no events, add a zero count entry
-          if (component.events.length === 0) {
-            transformedData.push({
-              componentName: component.name,
-              eventName: 'No Events',
-              eventCount: 0
-            });
-          }
+            if (!component.events?.length) {
+                transformed.push({
+                    componentName: component.name,
+                    eventName: 'No Events',
+                    eventCount: 0
+                });
+            }
         });
-
-        return transformedData;
-      }
-
+        return transformed;
+    }
 }

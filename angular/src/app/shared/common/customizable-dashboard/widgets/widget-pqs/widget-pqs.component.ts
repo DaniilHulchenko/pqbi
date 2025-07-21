@@ -17,7 +17,7 @@ import {
     TrendParameter,
     PQSRestApiServiceProxy,
     TenantDashboardServiceProxy,
-    TrendCalcRequest,
+    TrendCalcRequest222,
     TrendWidgetConfigurationsServiceProxy,
     TrendCustomWidgetData,
     BaseData,
@@ -113,13 +113,11 @@ class LineChart extends DashboardChartBase {
     init222(trend: TrendResponse) {
 
         const data = trend.data;
-        this.chartData = [];
-        this.chartConfiguration.lineLegend = [];
 
         let map: Map<number, object> = new Map(); // number is datetime representation in UNIX sec
 
         for (const dataItem of data) {
-            let legendLabel = dataItem.parameterName || this.parameterName222(dataItem);
+            let legendLabel = this.parameterName222(dataItem);
             let dataId = Guid.newGuid().toString();
 
             this.chartConfiguration.lineLegend.push({
@@ -128,14 +126,9 @@ class LineChart extends DashboardChartBase {
             });
 
             for (let i = 0; i < dataItem.data.length; i++) {
-                if (map.has(trend.timeStamps[i])) {
-                    let obj = map.get(trend.timeStamps[i]);
-                    obj[dataId] = dataItem.data[i];
-                }else {
-                    let obj = new Object();
-                    obj[dataId] = dataItem.data[i];
-                    map.set(trend.timeStamps[i], obj);
-                }
+                let obj = new Object();
+                obj[dataId] = dataItem.data[i];
+                map.set(trend.timeStamps[i], obj);
             }
         }
 
@@ -165,6 +158,8 @@ class LineChart extends DashboardChartBase {
             return `${feedersJoined} ${result}`;
         }
 
+
+
         return feedersJoined;
     }
 
@@ -190,10 +185,10 @@ class LineChart extends DashboardChartBase {
         };
     }
 
-    reload(input: TrendCalcRequest) {
+    reload(input: TrendCalcRequest222) {
         this.showLoading();
 
-        this._dashboardService.pQSTrendData(input)
+        this._dashboardService.pQSTrendData222(input)
             .pipe(
                 catchError((error) => {
                     this.hideLoading();
@@ -348,7 +343,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         return { toServer: Math.floor(this.chartWidth * 0.75), toRefresh: Math.floor((dateRangeInMs / this.chartWidth) * 0.75) };
     }
 
-    formatRequest(): TrendCalcRequest| null {
+    formatRequest(): TrendCalcRequest222 | null {
         try {
             let dateRange = this._dateRangeService.getDateRangeFromState(
                 DateRangeState.fromJSON(this.trendWidgetConfiguration.dateRange),
@@ -371,7 +366,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
 
             let parameters: WidgetParametersColumn[] = JSON.parse(this.trendWidgetConfiguration.parameters);
-            let request: TrendCalcRequest = new TrendCalcRequest({
+            let request: TrendCalcRequest222 = new TrendCalcRequest222({
                 isAutoResolution,
                 resolutionInSeconds,
                 userTimeZone: 1,
@@ -430,9 +425,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                         // quantity: parameter.quantity,
                         type: parameter.type,
                         feeders: parameter.componentsState?.feeders?.map(
-                            (feeder) => {
-                                return new FeederComponentInfo({id: feeder.id, componentId: feeder.componentId, name: feeder.name, compName: parameter.componentsState?.components?.find(c => c.key === feeder.componentId)?.label});
-                            }
+                            (feeder) => new FeederComponentInfo(feeder),
                         ),
                     });
 

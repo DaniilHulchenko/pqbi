@@ -1,6 +1,4 @@
-﻿using PQBI.Groups.Dtos;
-using PQBI.Groups;
-using PQBI.TrendWidgetConfigurations.Dtos;
+﻿using PQBI.TrendWidgetConfigurations.Dtos;
 using PQBI.TrendWidgetConfigurations;
 using PQBI.DefaultValues.Dtos;
 using PQBI.DefaultValues;
@@ -63,8 +61,6 @@ namespace PQBI
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
-            configuration.CreateMap<CreateOrEditGroupDto, Group>().ReverseMap();
-            configuration.CreateMap<GroupDto, Group>().ReverseMap();
             configuration.CreateMap<CreateOrEditTrendWidgetConfigurationDto, TrendWidgetConfiguration>().ReverseMap();
             configuration.CreateMap<TrendWidgetConfigurationDto, TrendWidgetConfiguration>().ReverseMap();
             configuration.CreateMap<CreateOrEditDefaultValueDto, DefaultValue>().ReverseMap();

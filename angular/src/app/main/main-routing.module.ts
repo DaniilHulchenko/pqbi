@@ -7,13 +7,6 @@ import { RouterModule } from '@angular/router';
             {
                 path: '',
                 children: [
-                    
-                    {
-                        path: 'groups/groups',
-                        loadChildren: () => import('./groups/groups/group.module').then(m => m.GroupModule),
-                        data: { permission: 'Pages.Groups' }
-                    },
-                
                     {
                         path: 'customParameters',
                         loadChildren: () =>

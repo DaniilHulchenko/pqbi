@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ComponentsState } from '../models/components-state';
 import { TagComponentInfo } from '../models/table-widget-component';
-import { WidgetParametersColumn } from '../interfaces/widget-parameter-column';
-import { TableWidgetResponseItem } from '@shared/service-proxies/service-proxies';
+// import { TableWidgetComponent } from '@shared/service-proxies/service-proxies';
 
 
 @Injectable({
@@ -27,7 +26,7 @@ export class TableWidgetDataSourceBuilderService {
             });
             item.componentName = component.label;
             const feeder = component.children.find((f) => f.id === +item.feederId);
-            item.feederName = component.label + ': ' + feeder?.label;
+            item.feederName = feeder?.label;
 
             return { ...item };
         }).filter((item) => item !== null);
@@ -46,13 +45,5 @@ export class TableWidgetDataSourceBuilderService {
         });
 
         return keys;
-    }
-
-    formatParameterNames(parameters: TableWidgetResponseItem[]) {
-        parameters.forEach((param) => {
-            if (!param.parameterName.endsWith(param.quantity)) {
-                param.parameterName += ` ${param.quantity}`;
-            }
-        });
     }
 }

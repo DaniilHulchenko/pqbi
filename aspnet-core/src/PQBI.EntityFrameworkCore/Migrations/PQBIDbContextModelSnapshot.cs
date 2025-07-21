@@ -1637,11 +1637,11 @@ namespace PQBI.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("DateRange")
+                    b.Property<string>("Configuration")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Events")
-                        .IsRequired()
+                    b.Property<string>("DateRange")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("TenantId")
@@ -1718,9 +1718,6 @@ namespace PQBI.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("CustomBaseDataList")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("InnerCustomParameters")
                         .HasColumnType("TEXT");
 
@@ -1730,6 +1727,9 @@ namespace PQBI.Migrations
 
                     b.Property<int>("ResolutionInSeconds")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("STDPQSParametersList")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("INTEGER");
@@ -1849,26 +1849,6 @@ namespace PQBI.Migrations
                     b.HasIndex("TenantId", "UserId");
 
                     b.ToTable("AppFriendships");
-                });
-
-            modelBuilder.Entity("PQBI.Groups.Group", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Subgroups")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Groups");
                 });
 
             modelBuilder.Entity("PQBI.MultiTenancy.Accounting.Invoice", b =>

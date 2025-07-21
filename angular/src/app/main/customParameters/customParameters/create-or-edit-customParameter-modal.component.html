@@ -1,5 +1,5 @@
 <dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="isPopupVisible" [dragAndResizeArea]="false"
-    [dragEnabled]="false" [deferRendering]="false" title="Custom Parameter Configuration" height="90vh" width="90vw">
+    [dragEnabled]="false" title="Custom Parameter Configuration" height="90vh" width="90vw">
     <dx-scroll-view [showScrollbar]="true">
         <div class="pe-2">
             <form *ngIf="active" #customParameterForm="ngForm" novalidate (ngSubmit)="save()" autocomplete="off">
@@ -128,10 +128,7 @@
                                 (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
                         </div>
                         <div class="h-450px" *dxTemplate="let option of 'additionalTemplate'">
-                            <cpAdditionalParameterSelectionTab #cpAdditionalParameterSelectionTab
-                                [disableComponentSelection]="!isComponentsSelectionEnabled"
-                                [multiple]="customParameter.type !== 'SPMC'" (onAdd)="onAddBaseParameter($event)"
-                                (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)"/>
+                            {{'AdditionalTemplate' | localize }}
                         </div>
                     </dx-tab-panel>
                 </div>

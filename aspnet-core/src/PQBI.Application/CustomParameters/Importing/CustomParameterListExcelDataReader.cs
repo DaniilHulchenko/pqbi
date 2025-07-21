@@ -33,10 +33,10 @@ private ImportCustomParameterDto ProcessExcelRow(dynamic row)
     {
         customParameter.Name = GetRequiredValueFromRowOrNull(row, nameof(customParameter.Name), exceptionMessage);
         customParameter.AggregationFunction = GetRequiredValueFromRowOrNull(row, nameof(customParameter.AggregationFunction), exceptionMessage);
+        customParameter.STDPQSParametersList = GetOptionalValueFromRowOrNull<string>(row, nameof(customParameter.STDPQSParametersList), exceptionMessage);
         customParameter.Type = GetRequiredValueFromRowOrNull(row, nameof(customParameter.Type), exceptionMessage);
         customParameter.InnerCustomParameters = GetOptionalValueFromRowOrNull<string>(row, nameof(customParameter.InnerCustomParameters), exceptionMessage);
         customParameter.ResolutionInSeconds = Convert.ToInt32(GetOptionalValueFromRowOrNull<int>(row, nameof(customParameter.ResolutionInSeconds), exceptionMessage));
-        customParameter.CustomBaseDataList = GetOptionalValueFromRowOrNull<string>(row, nameof(customParameter.CustomBaseDataList), exceptionMessage);
 
     }
     catch (Exception exception)

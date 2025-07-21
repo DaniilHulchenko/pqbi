@@ -41,9 +41,9 @@ namespace PQBI.BarChartWidgetConfigurations
                         : default;
 
             var filteredBarChartWidgetConfigurations = _barChartWidgetConfigurationRepository.GetAll()
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Components.Contains(input.Filter) || e.Events.Contains(input.Filter) || e.DateRange.Contains(input.Filter))
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Components.Contains(input.Filter) || e.Configuration.Contains(input.Filter) || e.DateRange.Contains(input.Filter))
                         .WhereIf(input.TypeFilter.HasValue && input.TypeFilter > -1, e => e.Type == typeFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.EventsFilter), e => e.Events.Contains(input.EventsFilter));
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.EventsFilter), e => e.Configuration.Contains(input.EventsFilter));
 
             var pagedAndFilteredBarChartWidgetConfigurations = filteredBarChartWidgetConfigurations
                 .OrderBy(input.Sorting ?? "id asc")
@@ -55,7 +55,7 @@ namespace PQBI.BarChartWidgetConfigurations
 
                                                    o.Type,
                                                    o.Components,
-                                                   o.Events,
+                                                   o.Configuration,
                                                    o.DateRange,
                                                    Id = o.Id
                                                };
@@ -74,7 +74,7 @@ namespace PQBI.BarChartWidgetConfigurations
 
                         Type = o.Type,
                         Components = o.Components,
-                        Events = o.Events,
+                        Configuration = o.Configuration,
                         DateRange = o.DateRange,
                         Id = o.Id,
                     }
@@ -172,9 +172,9 @@ namespace PQBI.BarChartWidgetConfigurations
                         : default;
 
             var filteredBarChartWidgetConfigurations = _barChartWidgetConfigurationRepository.GetAll()
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Components.Contains(input.Filter) || e.Events.Contains(input.Filter) || e.DateRange.Contains(input.Filter))
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Components.Contains(input.Filter) || e.Configuration.Contains(input.Filter) || e.DateRange.Contains(input.Filter))
                         .WhereIf(input.TypeFilter.HasValue && input.TypeFilter > -1, e => e.Type == typeFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.EventsFilter), e => e.Events.Contains(input.EventsFilter));
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.EventsFilter), e => e.Configuration.Contains(input.EventsFilter));
 
             var query = from o in filteredBarChartWidgetConfigurations
                         select new GetBarChartWidgetConfigurationForViewDto()
@@ -183,7 +183,7 @@ namespace PQBI.BarChartWidgetConfigurations
                             {
                                 Type = o.Type,
                                 Components = o.Components,
-                                Events = o.Events,
+                                Configuration = o.Configuration,
                                 DateRange = o.DateRange,
                                 Id = o.Id
                             }

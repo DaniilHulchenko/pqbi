@@ -1,5 +1,4 @@
-﻿using PQBI.Groups;
-using PQBI.TrendWidgetConfigurations;
+﻿using PQBI.TrendWidgetConfigurations;
 using PQBI.DefaultValues;
 using PQBI.BarChartWidgetConfigurations;
 using PQBI.TableWidgetConfigurations;
@@ -32,8 +31,6 @@ namespace PQBI.EntityFrameworkCore
 {
     public class PQBIDbContext : AbpZeroDbContext<Tenant, Role, User, PQBIDbContext>, IOpenIddictDbContext
     {
-        public virtual DbSet<Group> Groups { get; set; }
-
         public virtual DbSet<TrendWidgetConfiguration> TrendWidgetConfigurations { get; set; }
 
         public virtual DbSet<DefaultValue> DefaultValues { get; set; }

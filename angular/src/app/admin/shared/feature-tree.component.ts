@@ -15,7 +15,7 @@ import { find as _find, forEach as _forEach, filter as _filter, remove as _remov
 export class FeatureTreeComponent extends AppComponentBase {
     _editData: FeatureTreeEditModel;
     treeData: any;
-    selectedFeatures: TreeNode<any>[] = [];
+    selectedFeatures: TreeNode[] = [];
 
     constructor(
         private _arrayToTreeConverterService: ArrayToTreeConverterService,
@@ -269,6 +269,6 @@ export class FeatureTreeComponent extends AppComponentBase {
             data: { name: event.node.data.name },
         });
         childrenNodes.push(event.node.data.name);
-        _filter(this.selectedFeatures, (x) => childrenNodes.indexOf(x.data.name) !== -1);
+        _remove(this.selectedFeatures, (x) => childrenNodes.indexOf(x.data.name) !== -1);
     }
 }

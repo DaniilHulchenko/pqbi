@@ -77,10 +77,10 @@ export class CustomParametersComponent extends AppComponentBase {
                 this.filterText,
                 this.nameFilter,
                 this.aggregationFunctionFilter,
+                this.stdpqsParametersListFilter,
                 this.typeFilter,
                 undefined, // maxResolutionInSecondsFilter
                 undefined, // minResolutionInSecondsFilter
-                undefined, 
                 this.primengTableHelper.getSorting(this.dataTable),
                 this.primengTableHelper.getSkipCount(this.paginator, event),
                 this.primengTableHelper.getMaxResultCount(this.paginator, event),
@@ -117,8 +117,8 @@ export class CustomParametersComponent extends AppComponentBase {
                 this.filterText,
                 this.nameFilter,
                 this.aggregationFunctionFilter,
+                this.stdpqsParametersListFilter,
                 this.typeFilter,
-                undefined,
                 undefined,
                 undefined
             )

@@ -5,8 +5,7 @@ namespace PQBI.PQS;
 
 public class AdditionalData
 {
-    public string PropertyName { get; set; }
-    public string Base { get; set; }
+    public string PropertiesName { get; set; }
     public MeasurmentsParameterDetails MeasurmentsParameterDetails { get; set; } = null;
 
     public override bool Equals(object obj)

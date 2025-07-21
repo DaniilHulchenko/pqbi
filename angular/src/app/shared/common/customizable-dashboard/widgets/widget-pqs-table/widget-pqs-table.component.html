@@ -3,7 +3,7 @@
         <div class="kt-portlet__head-label">
             <h3 class="kt-portlet__head-title">
                 {{ widgetName }}
-                <button class="btn btn-sm btn-elevate-hover" *ngIf="editModeEnabled" (click)="onNameEdit()">
+                <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
                     <i class="fa fa-edit"></i>
                 </button>
             </h3>
@@ -11,7 +11,7 @@
     </div>
     <div class="kt-portlet__body" id="outerScroll" style="width: 98%; height: 600px; overflow-y: auto">
         <div class="d-flex mb-2" style="gap: 12px">
-            <div *ngIf="editModeEnabled" class="row">
+            <div *ngIf="editState" class="row">
                 <div class="col">
                     <button class="btn btn-primary" (click)="edit()">{{ 'Edit' | localize }}</button>
                 </div>
@@ -54,8 +54,6 @@
                     </div>
                     <dx-tree-list
                         *ngIf="dataSource && columns"
-                        #treeListRef
-
                         [dataSource]="dataSource"
                         [columns]="columns"
                         [filterRow]="{ visible: true }"
@@ -76,7 +74,7 @@
     </div>
 </div>
 
-<ng-container *ngIf="editModeEnabled">
+<ng-container *ngIf="editState">
     <createOrEditTableConfiguration
         #createOrEditModal
         (onSave)="onConfigurationChange($event)"

@@ -53,7 +53,7 @@ public abstract class PQSRestApiServiceBase : PQSServiceBase
     //    return await SendRecordsContainerPostRequest(url, stream);
     //}
 
-    protected async Task<PQSResponse> SendRecordsContainerPostBinaryRequestAndException<TRequest>(string url, TRequest request) where TRequest : PQSRequest
+    protected async Task<PQSResponse> SendRecordsContainerPostBinaryRequestAndException<TRequest>(string url, TRequest request) where TRequest : PQSRequestBase
     {
         byte[] stream = _pQZBinaryWriterCore.WriteMessage(request);
         url = UrlBinaryUrl(url);
@@ -69,14 +69,14 @@ public abstract class PQSRestApiServiceBase : PQSServiceBase
                     Logger.LogError($"in Url ={url} PQZStatus = {error.Status.ToString()}");
                     throw new SessionExpiredException(result);
                 }
-                //else
-                //{
-                //    if (error.Status != PQZStatus.OK)
-                //    {
-                //        Logger.LogError($"in Url ={url} PQZStatus ={error.Status.ToString()}");
-                //        throw new PQBIExceptionBase($"Response from scada is incorrect {error.ToString()}", result);
-                //    }
-                //}
+                else
+                {
+                    if (error.Status != PQZStatus.OK)
+                    {
+                        Logger.LogError($"in Url ={url} PQZStatus ={error.Status.ToString()}");
+                        throw new PQBIExceptionBase($"Response from scada is incorrect {error.ToString()}", result);
+                    }
+                }
             }
         }
 

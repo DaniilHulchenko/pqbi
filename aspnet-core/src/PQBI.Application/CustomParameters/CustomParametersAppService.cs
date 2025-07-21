@@ -36,13 +36,13 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
     {
 
         var filteredCustomParameters = _customParameterRepository.GetAll()
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Name.Contains(input.Filter) || e.AggregationFunction.Contains(input.Filter) || e.Type.Contains(input.Filter) || e.InnerCustomParameters.Contains(input.Filter) || e.CustomBaseDataList.Contains(input.Filter))
+                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Name.Contains(input.Filter) || e.AggregationFunction.Contains(input.Filter) || e.STDPQSParametersList.Contains(input.Filter) || e.Type.Contains(input.Filter) || e.InnerCustomParameters.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), e => e.Name.Contains(input.NameFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.AggregationFunctionFilter), e => e.AggregationFunction.Contains(input.AggregationFunctionFilter))
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.STDPQSParametersListFilter), e => e.STDPQSParametersList.Contains(input.STDPQSParametersListFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.TypeFilter), e => e.Type.Contains(input.TypeFilter))
                         .WhereIf(input.MinResolutionInSecondsFilter != null, e => e.ResolutionInSeconds >= input.MinResolutionInSecondsFilter)
-                        .WhereIf(input.MaxResolutionInSecondsFilter != null, e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.CustomBaseDataListFilter), e => e.CustomBaseDataList.Contains(input.CustomBaseDataListFilter));
+                        .WhereIf(input.MaxResolutionInSecondsFilter != null, e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter);
 
         var pagedAndFilteredCustomParameters = filteredCustomParameters
             .OrderBy(input.Sorting ?? "id asc")
@@ -54,6 +54,7 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
 
                                    o.Name,
                                    o.AggregationFunction,
+                                   o.STDPQSParametersList,
                                    o.Type,
                                    Id = o.Id,
                                    ResolutionInSeconds = o.ResolutionInSeconds,
@@ -73,6 +74,7 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
                     ResolutionInSeconds = o.ResolutionInSeconds,
                     Name = o.Name,
                     AggregationFunction = o.AggregationFunction,
+                    STDPQSParametersList = o.STDPQSParametersList,
                     Type = o.Type,
                     Id = o.Id,
                 }
@@ -160,13 +162,13 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
     {
 
         var filteredCustomParameters = _customParameterRepository.GetAll()
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Name.Contains(input.Filter) || e.AggregationFunction.Contains(input.Filter) || e.Type.Contains(input.Filter) || e.InnerCustomParameters.Contains(input.Filter) || e.CustomBaseDataList.Contains(input.Filter))
+                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Name.Contains(input.Filter) || e.AggregationFunction.Contains(input.Filter) || e.STDPQSParametersList.Contains(input.Filter) || e.Type.Contains(input.Filter) || e.InnerCustomParameters.Contains(input.Filter))
                     .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), e => e.Name.Contains(input.NameFilter))
                     .WhereIf(!string.IsNullOrWhiteSpace(input.AggregationFunctionFilter), e => e.AggregationFunction.Contains(input.AggregationFunctionFilter))
+                    .WhereIf(!string.IsNullOrWhiteSpace(input.STDPQSParametersListFilter), e => e.STDPQSParametersList.Contains(input.STDPQSParametersListFilter))
                     .WhereIf(!string.IsNullOrWhiteSpace(input.TypeFilter), e => e.Type.Contains(input.TypeFilter))
                     .WhereIf(input.MinResolutionInSecondsFilter != null, e => e.ResolutionInSeconds >= input.MinResolutionInSecondsFilter)
-                    .WhereIf(input.MaxResolutionInSecondsFilter != null, e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter)
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.CustomBaseDataListFilter), e => e.CustomBaseDataList.Contains(input.CustomBaseDataListFilter));
+                    .WhereIf(input.MaxResolutionInSecondsFilter != null, e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter);
 
         var query = from o in filteredCustomParameters
                     select new GetCustomParameterForViewDto()
@@ -175,6 +177,7 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
                         {
                             Name = o.Name,
                             AggregationFunction = o.AggregationFunction,
+                            STDPQSParametersList = o.STDPQSParametersList,
                             Type = o.Type,
                             Id = o.Id,
                             ResolutionInSeconds = o.ResolutionInSeconds,

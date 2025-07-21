@@ -21,10 +21,6 @@ using PQBI.Network.RestApi.EngineCalculation;
 using PQS.CommonUI.Enums;
 using PQS.CommonUI.Data;
 using PQS.Data.Measurements;
-using PQS.Data.RecordsContainer.Records;
-using PQS.Data.Configurations;
-using PQS.Data.Configurations.Enums;
-using PQS.Data.RecordsContainer;
 
 
 namespace PQBI.Web.Controllers;
@@ -34,7 +30,7 @@ public record PQSGetSessionResponseTest(ComponentDto[] Components);
 public record GetAllComponentsResponse(ComponentDto[] Components);
 public record GetAllEventsResponse(IEnumerable<PQSEventDto[]> Events);
 
-public record PQSCalculationRequestTest222(string UserNameOrEmailAddress, string Password, PQBI.PQS.CalcEngine.TableWidgetRequest Request);
+public record PQSCalculationRequestTest222(string UserNameOrEmailAddress, string Password, PQBI.PQS.CalcEngine.TableWidgetRequest222 Request);
 public record PQSCalculationChartBarRequestTest(string UserNameOrEmailAddress, string Password, PQBI.PQS.CalcEngine.BarChartRequest Request);
 public record GetBaseParameterNameIntegrationTest(string UserNameOrEmailAddress, string Password, BaseParameterNameSlim Request);
 
@@ -259,12 +255,9 @@ public class PQSRestApiController : PQBIControllerBase
     [Route(GetPqsEvents)]
     public async Task<IEnumerable<EventClassDescription>> GetPqdEvents()
     {
-        var tenantId = AbpSession.GetTenantId();
-        var userId = AbpSession.UserId;
-        var session = await _userSessionCacheRepository.GetCacheSessionAsync(AbpSession.UserId.Value);
-        var tenant = await _tenantCacheRepository.GetTenantByIdAsync(tenantId);
 
-        return await _pQSComponentOperation.GetEventsTypeAsync(tenant.PQSServiceUrl, session);       
+        var response = EventFactory.GetAllEventInfos();
+        return response;
     }
 
     /// <summary>

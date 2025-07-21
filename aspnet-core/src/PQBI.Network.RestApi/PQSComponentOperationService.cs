@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using PQBI.CalculationEngine;
 using PQBI.Friendships.Dto;
 using PQBI.Infrastructure.Extensions;
-using PQBI.Infrastructure.Sapphire;
 using PQBI.IntegrationTests.Scenarios.PopulatingParameters;
 using PQBI.Network.Base;
 using PQBI.Network.RestApi.EngineCalculation;
@@ -18,8 +17,6 @@ using PQBI.Tenants.Dashboard.Dto;
 using PQS.CommonUI.Data;
 using PQS.CommonUI.Enums;
 using PQS.Data.Common.Extensions;
-using PQS.Data.Common.Values;
-using PQS.Data.Configurations;
 using PQS.Data.Configurations.Enums;
 using PQS.Data.Events.Enums;
 using PQS.Data.Measurements;
@@ -58,7 +55,6 @@ public interface IPQSComponentOperationService
     Task<PQSOutput> GetBaseDataConcurrentAsync(string url, string session, PQSInput request);
     Task<PQSOutput> GetBaseDataAsync_Original(string url, string session, PQSInput request);
     Task<ComponentWithTagsResponse> GetAllTags(string url, string session);
-    Task<IEnumerable<EventClassDescription>> GetEventsTypeAsync(string url, string session);
     Task<IEnumerable<PQSEventDto[]>> GetEventss(string url, string session, GetEventstRequest request);
     Task<IEnumerable<ComponentSlimDto>> GetAllComponentSlimsAsync(string url, string session);
     Task<StaticDataInfo> GetStaticTree(string url, string session);
@@ -157,78 +153,7 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
         return name;
     }
 
-    public async Task<IEnumerable<EventClassDescription>> GetEventsTypeAsync(string url, string session)    
-    {       
-        ConfigurationParameterBase eventsIdAndNameConf = StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_SUPPORTED_EVENTS_ID_AND_NAME);
-        GetInstantConfigurationRecord getInstantConfigurationRecord = new GetInstantConfigurationRecord(Guid.Empty, [eventsIdAndNameConf]);
 
-        var request = new PQSRequest(Guid.NewGuid(), new Guid(session));
-        request.AddRecord(getInstantConfigurationRecord);       
-        var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
-
-        PQSRecordBase rec = pqsResponse.GetRecord(0);
-
-        if (rec is InstantConfigurationRecord instRec)
-        {
-            instRec.Configuration.TryGetConfigurationValue<ListValuesContainer<string>>(eventsIdAndNameConf, out ListValuesContainer<string> eventTypeList);
-            IEnumerable<EventClassDescription> eventClassDescriptionList = ParseEventsCodeAndNames(eventTypeList);          
-
-            return eventClassDescriptionList;
-        }
-
-        return null;
-    }
-
-    public static IEnumerable<EventClassDescription> ParseEventsCodeAndNames(ListValuesContainer<string> codesAndValues)
-    {
-        List<EventClassDescription> eventClassDescriptionList = new List<EventClassDescription>();
-        //List<Tuple<int, string, EventClass, AggregationEnum, bool>> values = new List<Tuple<int, string, EventClass, AggregationEnum, bool>>();
-        foreach (string cAndV in codesAndValues)
-        {
-            if (!string.IsNullOrEmpty(cAndV))
-            {
-                string[] splittedArray = cAndV.Split('&');
-                if (splittedArray.Length > 1)
-                {
-                    int eventID;
-                    if (int.TryParse(splittedArray[0], out eventID))
-                    {
-                        EventClassDescription eventClassDescription = new EventClassDescription() { ConfID = (uint)eventID };
-                        EventClass ec = EventClass.None;
-                        AggregationEnum aggregationEnum = AggregationEnum.NotAggregated;
-                        bool isSharedEvent = false;
-                        if (splittedArray.Length == 4)
-                        {
-                            Enum.TryParse<EventClass>(splittedArray[2], out ec);
-                            aggregationEnum = (AggregationEnum)byte.Parse(splittedArray[3]);                           
-                        }
-                        else if (splittedArray.Length == 5)
-                        {
-                            Enum.TryParse<EventClass>(splittedArray[2], out ec);
-                            aggregationEnum = (AggregationEnum)byte.Parse(splittedArray[3]);
-                            if (!bool.TryParse(splittedArray[4], out isSharedEvent))
-                            {
-                                isSharedEvent = false;
-                            }                         
-                        }
-                        else if (splittedArray.Length == 3)
-                        {
-                            Enum.TryParse<EventClass>(splittedArray[2], out ec);                           
-                        }
-
-                        eventClassDescription.EventClass = ec;
-                        eventClassDescription.IsShared = isSharedEvent;
-                        eventClassDescription.AggregationEnum = aggregationEnum;
-                        eventClassDescription.Name = splittedArray[1];
-                        eventClassDescription.Description = ec.Description();
-
-                        eventClassDescriptionList.Add(eventClassDescription);                       
-                    }
-                }
-            }
-        }
-        return eventClassDescriptionList;
-    }
 
     public async Task<IEnumerable<PQSEventDto[]>> GetEventss(string url, string session, GetEventstRequest input)
     {
@@ -606,4 +531,6 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
         return result;
     }
+
+
 }

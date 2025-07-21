@@ -8,9 +8,7 @@ using PQBI.Infrastructure.Extensions;
 using PQBI.PQS;
 using PQBI.PQS.CalcEngine;
 using PQBI.Tenants.Dashboard.Dto;
-using PQS.CommonReport;
 using PQS.Data.Common;
-using PQS.Data.Common.Units;
 using System.Data;
 
 namespace PQBI.Network.RestApi.EngineCalculation;
@@ -18,14 +16,21 @@ namespace PQBI.Network.RestApi.EngineCalculation;
 public interface IEngineCalculationService
 {
     BasicValue AggregationFunctionsAsync(string aggregationFunc, IEnumerable<BasicValue> numbers);
-    IEnumerable<GraphParametersComponentDtoV3> RootCalculation(CustomParameterNodeCalculator node);
+    GraphParametersComponentDtoV3 FullCalculation(CustomParameterNodeCalculator node);
     IEnumerable<BasicValue> CalculatedInnerAlignment(CustomParameterNodeCalculator node, BaseParameterComponent item);
-    void CalculateFinalMatrixChildless(CustomParameterNodeCalculator node);
-    void AddFinalMaxtrixCalculationWithChildren(CustomParameterNodeCalculator node);
+    IEnumerable<BasicValue> CalculateOutterAggregation(CustomParameterNodeCalculator node);
 }
 
 public class EngineCalculationService : IEngineCalculationService
 {
+
+    public enum InterpolationType
+    {
+        Avg,
+        Max,
+        Min
+    }
+
 
     private readonly ILogger<EngineCalculationService> _logger;
     private readonly IFunctionEngine _engineCalculator;
@@ -42,19 +47,9 @@ public class EngineCalculationService : IEngineCalculationService
         return result;
     }
 
-    private IEnumerable<GraphParametersComponentDtoV3> GetAxisForBaseParameter(CustomParameterNodeCalculator node)
+    private GraphParametersComponentDtoV3 CalculateBaseParameter222(CustomParameterNodeCalculator node)
     {
-        List<GraphParametersComponentDtoV3> response = new List<GraphParametersComponentDtoV3>();
-        NormalizeEnum normalizeEnum = NormalizeEnum.NO;
-        double nominalVal = 1;
-        var settings = node.AdvancedSettingsForTable;
-        if (settings is { NormalizeType: NormalizeEnum.VALUE, NominalVal: double nv })
-        {
-            normalizeEnum = NormalizeEnum.VALUE;
-            nominalVal = nv;
-        }
-        else if (settings is { NormalizeType: NormalizeEnum.NOMINAL })
-            normalizeEnum = NormalizeEnum.NOMINAL;
+        GraphParametersComponentDtoV3 response = null;
 
         var missings = new List<MissingBaseParameterInfo>();
         foreach (var baseParameter in node.BaseParameterComponents)
@@ -67,289 +62,155 @@ public class EngineCalculationService : IEngineCalculationService
                 baseParameter.SetRawData(new PQBIAxisDataEmpty(baseParameter.ComponentID, baseParameter.FeederId, baseParameter.BaseParameterName, PQZStatus.GENERAL_ERROR, baseParameter.DataUnitType), false, null);
             }
 
-            var points = baseParameter.Axis.DataTimeStamps.Select(x => new BasicValue(x.Point, x.DataValueStatus.ToPqbiDataValueStatus())).ToArray();          
-
-            IEnumerable<AxisValue> axisValCollection = null;
             if (baseParameter.Axis.PQZStatus == PQZStatus.OK)
             {
-                if (node.AdvancedSettingsForTable?.IsExcludeFlaggedData == true)
+                foreach (var dataTimeStamp in baseParameter.Axis.DataTimeStamps)
                 {
-                    //ParameterMatrix parameterMatrix = new ParameterMatrix();
-
-                    if (normalizeEnum != NormalizeEnum.NO)
-                    {
-                        var unitState = UnitsEnum.STD_PERCENT;
-                        var token = UnitsEnumHelper.GetLocalizedDescriptionKey(unitState);
-                        baseParameter.Axis.DataUnitType = new DataUnitType((int)unitState, token);                      
-                        if (normalizeEnum == NormalizeEnum.NOMINAL)
-                            nominalVal = baseParameter.Axis.Nominal ?? 100;
-                    }
-
-                    GroupByFunctionInput groupByOperation;
-                    int resolutionInSeconds = node.WidgetResolutionAutoOrInSeconds;
-
-                    if (node.IsWidgetResolutionAuto)
-                    {
-                        //axisValCollection = SetAutoModeAsync(node, points);
-
-                        var auto = new AutoCalcFunction();
-                        var numInGroup = auto.CalcNumInGroup(node.AutoWishListNumber, points);
-                        groupByOperation = new GroupByFunctionInput(points, numInGroup);                         
-                       
-                        TimeSpan interval = TimeSpan.FromTicks(node.Duration.Ticks / node.AutoWishListNumber);
-                        resolutionInSeconds = (int)interval.TotalSeconds;
-                    }
-                    else
-                    {
-                        groupByOperation = new GroupByFunctionInput(points, resolutionInSeconds, node.CustomParameterResolutionRecalculatedInSeconds);
-                        //{
-                        //    Data = points,
-                        //    NumInGroup = resolutionInSeconds / node.CustomParameterResolutionRecalculatedInSeconds
-                        //    //ResolutionInSeconds = resolutionInSeconds,
-                        //    //SyncInSeconds = node.CustomParameterResolutionRecalculatedInSeconds
-                        //};                        
-                    }
-                    var data = _engineCalculator.CalcGroupByAsync(groupByOperation);
-
-                    List<BasicValue[]> dataGroupList = data.Select(group => group.ToArray()).ToList();
-                    dataGroupList = ParameterMatrix.FilterByFlaggedEvents(true, dataGroupList);
-
-                    if (normalizeEnum == NormalizeEnum.NO)
-                        axisValCollection = CalculateQuantityFunction(node.WidgetAggragationFunction, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, dataGroupList);
-                    else
-                        axisValCollection = CalculateQuantityAndNormalizeFunction(node.WidgetAggragationFunction, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, dataGroupList, nominalVal);
+                    baseParameterAxis.Add(new AxisValue { Value = dataTimeStamp.Point, TimeStempInSeconds = dataTimeStamp.DateTime.ToDateTimeOffsetInSeconds() });
                 }
-                else
-                {
-                    if (normalizeEnum == NormalizeEnum.NO)
-                    {
-                        foreach (var dataTimeStamp in baseParameter.Axis.DataTimeStamps)
-                        {
-                            baseParameterAxis.Add(new AxisValue { Value = dataTimeStamp.Point, TimeStempInSeconds = dataTimeStamp.DateTime.ToDateTimeOffsetInSeconds() });
-                        }                      
-                    }
-                    else
-                    {
-                        if (normalizeEnum != NormalizeEnum.NO)
-                        {
-                            var unitState = UnitsEnum.STD_PERCENT;
-                            var token = UnitsEnumHelper.GetLocalizedDescriptionKey(unitState);
-                            baseParameter.Axis.DataUnitType = new DataUnitType((int)unitState, token);
-                            if (normalizeEnum == NormalizeEnum.NOMINAL)
-                                nominalVal = baseParameter.Axis.Nominal ?? 100;
-                        }
-
-                        foreach (var dataTimeStamp in baseParameter.Axis.DataTimeStamps)
-                        {
-                            double? pointVal = ParameterMatrix.Normalize(nominalVal, dataTimeStamp.Point);
-                            baseParameterAxis.Add(new AxisValue { Value = pointVal, TimeStempInSeconds = dataTimeStamp.DateTime.ToDateTimeOffsetInSeconds() });
-                        }                        
-                    }                    
-                }                   
             }
             else
             {
                 missings.Add(new MissingBaseParameterInfo(baseParameter.BaseParameterName, baseParameter.Axis.PQZStatus, baseParameter.Axis.PQZStatus.ToString()));
             }
 
-            string prmNameWithFeeder;
-            string prmName = MsrPrmTranslator.GetMsrPrmNameForGraphLegend(baseParameter.MeasurementParameter, true);
-            if (!string.IsNullOrEmpty(baseParameter.Feeder.CompName))
-                prmNameWithFeeder = $"{baseParameter.Feeder.CompName}, {baseParameter.Feeder.Name} - {prmName}";
-            else
-                prmNameWithFeeder = $"{baseParameter.Feeder.Name} - {prmName}";
-            var tmp = BaseParameterPrepareBaseParameterResponse(baseParameter.ScadaParameterName, prmNameWithFeeder, baseParameter.ComponentID, baseParameter.FeederId, baseParameter.DataUnitType, node.CustomParameterType, baseParameterAxis, missings);
-            response.Add(tmp);
+
+            response = BaseParameterPrepareBaseParameterResponse2222(baseParameter.ScadaParameterName, baseParameter.ComponentID, baseParameter.FeederId, baseParameter.DataUnitType, node.CustomParameterType, baseParameterAxis, missings);
         }
 
         return response;
     }
 
-    public GraphParametersComponentDtoV3 BaseParameterPrepareBaseParameterResponse(string parameterName, string prmNameToDisplay, Guid componentId, int? feaederId, DataUnitType dataUnitType, CustomParameterType customParameterType, IEnumerable<AxisValue> axises, IEnumerable<MissingBaseParameterInfo> missingBaseParameterInfos)
+    public GraphParametersComponentDtoV3 BaseParameterPrepareBaseParameterResponse2222(string parameterName, Guid componentId, int? feaederId, DataUnitType dataUnitType, CustomParameterType customParameterType,
+        IEnumerable<AxisValue> axises, IEnumerable<MissingBaseParameterInfo> missingBaseParameterInfos)
     {
+        //var feederInfo = new FeederComponentInfo
+        //{
+        //    ComponentId = componentId,
+        //    Id = int.Parse(feaederId),
+        //};
 
-        var tmp = new GraphParametersComponentDtoV3(prmNameToDisplay, [new FeederComponentInfo { ComponentId = componentId, Id = feaederId }], customParameterType.ToString(), dataUnitType, [parameterName], axises, missingBaseParameterInfos);
+        var tmp = new GraphParametersComponentDtoV3(string.Empty, [new FeederComponentInfo { ComponentId = componentId, Id = feaederId }], customParameterType.ToString(), dataUnitType, [parameterName], axises, missingBaseParameterInfos);
         return tmp;
     }
 
-    public IEnumerable<GraphParametersComponentDtoV3> RootCalculation(CustomParameterNodeCalculator node)
+    public GraphParametersComponentDtoV3 FullCalculation(CustomParameterNodeCalculator node)
     {
-        List<GraphParametersComponentDtoV3> responsess = new List<GraphParametersComponentDtoV3>();
+        GraphParametersComponentDtoV3 response = null;
 
         switch (node.CustomParameterType)
         {
             case CustomParameterType.SPMC:
 
-                var axises = GetAxisForSingleParameter(node);
-                var response = PrepareResponseForSPMCAndMPSC(node, axises);
-                responsess.Add(response);
+                var axises = CalculateExceptionOrSingleParameter(node);
+                response = PrepareResponseForSPMCAndMPSC(node, axises);
 
                 break;
 
             case CustomParameterType.MPSC:
 
-                var multiParameterAxis = GetAxisesForMultiParameter(node);
-                responsess.AddRange(multiParameterAxis);
+                var multiParameterAxis = CalculateMultiAxisses2222(node);
+                response = PrepareResponseForSPMCAndMPSC(node, multiParameterAxis);
+
                 break;
 
             case CustomParameterType.BPCP:
 
-                //if (node.BaseParameterComponents.Count() > 0)
-                //{
-                //    node.BaseParameterComponents.First().Axis != null
-                //}
-
-                var baseParameterResponse = GetAxisForBaseParameter(node);
-                responsess.AddRange(baseParameterResponse);
+                response = CalculateBaseParameter222(node);
                 break;
 
             case CustomParameterType.Exception:
+                var exceptionParameters = CalculateMultiAxisses2222(node);
+                response = PrepareResponseForSPMCAndMPSC(node, exceptionParameters);
 
-                var exceptionParameters = GetAxisesForMultiParameter(node);
-                responsess.AddRange(exceptionParameters);
+
                 break;
 
             default:
                 throw new UserFriendlyException("Tree calculation case doesnt not exist");
         }
 
-        return responsess;
+        return response;
     }
 
-
-    private IEnumerable<AxisValue> GetAxisForSingleParameter(CustomParameterNodeCalculator node)
+    private IEnumerable<AxisValue> CalculateExceptionOrSingleParameter(CustomParameterNodeCalculator node)
     {
-
-        var finalMatrix = node.FinalAggregationMatrixes.FirstOrDefault();
-        if (finalMatrix is null)
-        {
-            return [];
-        }
-
         IEnumerable<AxisValue> response = null;
-        using (var mainLogger = PqbiStopwatch.Anchor($"{nameof(GetAxisForSingleParameter)}"))
+        using (var mainLogger = PqbiStopwatch.Anchor($"{nameof(CalculateExceptionOrSingleParameter)}"))
         {
-            GroupByFunctionInput groupByOperation;
-            var resolutionInSeconds = node.WidgetResolutionAutoOrInSeconds;
             if (node.IsWidgetResolutionAuto)
             {
-                var auto = new AutoCalcFunction();
-                var numInGroup = auto.CalcNumInGroup(node.AutoWishListNumber, finalMatrix.AggregationCalculation);
-                groupByOperation = new GroupByFunctionInput(finalMatrix.AggregationCalculation, numInGroup);
-             
-                TimeSpan interval = TimeSpan.FromTicks(node.Duration.Ticks / node.AutoWishListNumber);
-                resolutionInSeconds = (int)interval.TotalSeconds;
+                response = SetAutoModeAsync(node, node.FinalAggregationMatrix.AggregatedCalculated);
             }
             else
             {
-                groupByOperation = new GroupByFunctionInput(finalMatrix.AggregationCalculation, node.WidgetResolutionAutoOrInSeconds, node.CustomParameterResolutionRecalculatedInSeconds);
-              
-            }
-            var data = _engineCalculator.CalcGroupByAsync(groupByOperation);
+                var groupByOperation = new GroupByFunctionInput { Data = node.FinalAggregationMatrix.AggregatedCalculated, ResolutionInSeconds = node.WidgetResolutionAutoOrInSeconds, SyncInSeconds = node.CustomParameterResolutionRecalculatedInSeconds };
+                var data = _engineCalculator.CalcGroupByAsync(groupByOperation);
 
-            
-            //var resolutionInSeconds = GroupByCalcFunction.ParseAndConvertToSecond(node.WidgetResolution);
-            response = CalculateQuantityFunction(node.WidgetAggragationFunction, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, data);
+                var resolutionInSeconds = node.WidgetResolutionAutoOrInSeconds;
+                //var resolutionInSeconds = GroupByCalcFunction.ParseAndConvertToSecond(node.WidgetResolution);
+                response = CalculateQuantityFunctionAsync(node.WidgetAggragationFunction, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, data);
+            }
         }
 
         return response;
     }
 
-    private IEnumerable<GraphParametersComponentDtoV3> GetAxisesForMultiParameter(CustomParameterNodeCalculator node)
+    public IEnumerable<AxisValue> SetAutoModeAsync(CustomParameterNodeCalculator node, IEnumerable<BasicValue> externalCalculated)
     {
-        List<GraphParametersComponentDtoV3> responses = new List<GraphParametersComponentDtoV3>();
-
-        var index = 0;
-        foreach (var finalMatrix in node.FinalAggregationMatrixes)
+        if (externalCalculated.IsCollectionEmpty())
         {
-            var res = new List<GraphParametersComponentDtoV3>();
-            IEnumerable<AxisValue> axis = null;
-            var resolutionInSeconds = node.WidgetResolutionAutoOrInSeconds;
-            GroupByFunctionInput groupByOperation;
-            if (node.IsWidgetResolutionAuto)
-            {
-                //axis = SetAutoModeAsync(node, finalMatrix.AggregationCalculation);
-
-                var auto = new AutoCalcFunction();
-                var numInGroup = auto.CalcNumInGroup(node.AutoWishListNumber, finalMatrix.AggregationCalculation);
-                groupByOperation = new GroupByFunctionInput(finalMatrix.AggregationCalculation, numInGroup);                                
-
-                TimeSpan interval = TimeSpan.FromTicks(node.Duration.Ticks / node.AutoWishListNumber);
-                resolutionInSeconds = (int)interval.TotalSeconds;
-            }
-            else
-            {
-                groupByOperation = new GroupByFunctionInput(finalMatrix.AggregationCalculation, resolutionInSeconds, node.CustomParameterResolutionRecalculatedInSeconds);
-                //{
-                //    Data = finalMatrix.AggregationCalculation,
-                //    NumInGroup = resolutionInSeconds / node.CustomParameterResolutionRecalculatedInSeconds
-                //    //ResolutionInSeconds = resolutionInSeconds,
-                //    //SyncInSeconds = node.CustomParameterResolutionRecalculatedInSeconds,
-                //};
-            }
-            var data = _engineCalculator.CalcGroupByAsync(groupByOperation);
-            axis = CalculateQuantityFunction(node.WidgetAggragationFunction, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, data);
-
-
-            var baseParameterAdditionalInfos = new List<MissingBaseParameterInfo>();
-            var parameterMatrix = node.ParameterMatrixes.ElementAt(index);
-            if (parameterMatrix is not null)
-            {
-                foreach (var item in parameterMatrix.InvalidParameters)
-                {
-                    if (item.Value.Status != PQZStatus.OK)
-                    {
-                        if (item.Value.BaseParameters.IsCollectionEmpty())
-                        {
-                            baseParameterAdditionalInfos.Add(new MissingBaseParameterInfo(item.Key, item.Value.Status, item.Value.Status.ToString()));
-                        }
-                    }
-                }
-            }
-
-            var graph = new GraphParametersComponentDtoV3(node.CustomParameterName, node.Feeders, node.CustomParameterType.ToString(), finalMatrix.DataUnitType, [], axis, baseParameterAdditionalInfos);
-            responses.Add(graph);
-
-            index++;
+            return [];
         }
 
-        return responses;
+        var auto = new AutoCalcFunction();
+        var data2 = auto.Calc(node.AutoWishListNumber, externalCalculated);
+        var calculated = new List<AxisValue>();
+
+        TimeSpan interval = TimeSpan.FromTicks(node.Duration.Ticks / data2.Count());
+        var resolutionInSeconds = (int)interval.TotalSeconds;
+        var response = CalculateQuantityAutoFunctionAsync(node.WidgetAggragationFunction, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, data2);
+        return response;
     }
 
-    //public IEnumerable<AxisValue> SetAutoModeAsync(CustomParameterNodeCalculator node, IEnumerable<BasicValue> externalCalculated)
-    //{
-    //    if (externalCalculated.IsCollectionEmpty())
-    //    {
-    //        return [];
-    //    }
+    private IEnumerable<AxisValue> CalculateMultiAxisses2222(CustomParameterNodeCalculator node)
+    {
+        var res = new List<GraphParametersComponentDtoV3>();
 
-    //    var auto = new AutoCalcFunction();
-    //    var data2 = auto.CalcNumInGroup(node.AutoWishListNumber, externalCalculated);
-    //    var calculated = new List<AxisValue>();
+        IEnumerable<AxisValue> response = null;
 
-    //    TimeSpan interval = TimeSpan.FromTicks(node.Duration.Ticks / data2.Count());
-    //    var resolutionInSeconds = (int)interval.TotalSeconds;
-    //    var response = CalculateQuantityAutoFunctionAsync222(node.WidgetAggragationFunction, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, data2);
-    //    return response;
-    //}
+        if (node.IsWidgetResolutionAuto)
+        {
+            response = SetAutoModeAsync(node, node.FinalAggregationMatrix.AggregatedCalculated);
+        }
+        else
+        {
+            var resolutionInSeconds = node.WidgetResolutionAutoOrInSeconds;
+            var groupByOperation = new GroupByFunctionInput
+            {
+                Data = node.FinalAggregationMatrix.AggregatedCalculated,
+                ResolutionInSeconds = resolutionInSeconds,
+                SyncInSeconds = node.CustomParameterResolutionRecalculatedInSeconds
+            };
+
+            var data = _engineCalculator.CalcGroupByAsync(groupByOperation);
+            response = CalculateQuantityFunctionAsync(node.WidgetAggragationFunction, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, data);
+        }
+        return response;
+    }
+
 
     public GraphParametersComponentDtoV3 PrepareResponseForSPMCAndMPSC(CustomParameterNodeCalculator node, IEnumerable<AxisValue> axises)
     {
         var baseParameterAdditionalInfos = new List<MissingBaseParameterInfo>();
-        var parameterMatrix = node.ParameterMatrixes.FirstOrDefault();
-        DataUnitType dataUnitType = null;
-        if (parameterMatrix is not null)
+        foreach (var item in node.ParameterMatrix222.InvalidParameters)
+        //foreach (var item in node.ParameterMatrix.InvalidParameters)
         {
-            dataUnitType = parameterMatrix.DataUnitType;
-            foreach (var item in parameterMatrix.InvalidParameters)
+            if (item.Value.Status != PQZStatus.OK)
             {
-                if (item.Value.Status != PQZStatus.OK)
+                if (item.Value.BaseParameters.IsCollectionEmpty())
                 {
-                    if (item.Value.BaseParameters.IsCollectionEmpty())
-                    {
-                        baseParameterAdditionalInfos.Add(new MissingBaseParameterInfo(item.Key, item.Value.Status, item.Value.Status.ToString()));
-                        //baseParameterAdditionalInfos.Add(new MissingBaseParameterInfo(item.Key.BaseParameterName, item.Value.Status, item.Value.Status.ToString()));
-                    }
+                    baseParameterAdditionalInfos.Add(new MissingBaseParameterInfo(item.Key.BaseParameterName, item.Value.Status, item.Value.Status.ToString()));
                 }
             }
         }
@@ -360,22 +221,48 @@ public class EngineCalculationService : IEngineCalculationService
             feeders.Add(feeder);
         }
 
-        var result = new GraphParametersComponentDtoV3(node.CustomParameterName, feeders, node.CustomParameterType.ToString(), dataUnitType, [], axises, baseParameterAdditionalInfos);
+        var result = new GraphParametersComponentDtoV3(node.CustomParameterName, feeders, node.CustomParameterType.ToString(), node.ParameterMatrix222.DataUnitType, [], axises, baseParameterAdditionalInfos);
         return result;
     }
 
-    public void CalculateFinalMatrixChildless(CustomParameterNodeCalculator node)
-    {
-        using (var mainLogger = PqbiStopwatch.Anchor($"{nameof(CalculateFinalMatrixChildless)}"))
-        {
-            node.AddFinalMaxtrixCalculationChildless();
-            node.CalculateAggregationFinalMatrixChildless();
-        }
-    }
 
-    public void AddFinalMaxtrixCalculationWithChildren(CustomParameterNodeCalculator node)
+    public IEnumerable<BasicValue> CalculateOutterAggregation(CustomParameterNodeCalculator node)
     {
-        node.AddFinalMaxtrixCalculationWithChildren();
+        IEnumerable<BasicValue> calculated = null;
+        //var matrix = node.ParameterMatrix;
+
+        node.ParameterMatrix222.DataUnitType = node.GetDataType();
+        //matrix.DataUnitType = node.GetDataType();
+
+        using (var mainLogger = PqbiStopwatch.Anchor($"{nameof(CalculateOutterAggregation)}"))
+        {
+            //calculated = matrix.CalculateAndSetOutterAggregation(nums => _engineCalculator.AggregationCalculationAsync(node.InnerAggregationFunction, nums));
+            calculated = node.ParameterMatrix222.AggregationCalculation;
+
+            if (node.InnerCustomParameter is not null)
+            {
+                var innerCustomParameter = node.InnerCustomParameter;
+                if (node.CustomParameterResolutionRecalculatedInSeconds != innerCustomParameter.Resolution)
+                {
+                    var groupByOperation = new GroupByFunctionInput { Data = calculated, ResolutionInSeconds = innerCustomParameter.Resolution, SyncInSeconds = node.CustomParameterResolutionRecalculatedInSeconds };
+                    var data = _engineCalculator.CalcGroupByAsync(groupByOperation);
+                    calculated = _engineCalculator.AggregationCalculation(data, innerCustomParameter.Quantity);
+                }
+            }
+
+            var lists = new List<IEnumerable<BasicValue>>();
+            foreach (var child in node.Children)
+            {
+                lists.Add(child.ParameterMatrix222.AggregationCalculation);
+                //lists.Add(child.ParameterMatrix.AggregationCalculation);
+            }
+
+            node.AddFinalMaxtrixCalculation(lists);
+            var Calculated2 = node.CalculateAggregationMatrix(nums => _engineCalculator.AggregationCalculationAsync(node.InnerAggregationFunction, nums));
+            calculated = Calculated2;
+        }
+
+        return calculated;
     }
 
 
@@ -437,7 +324,7 @@ public class EngineCalculationService : IEngineCalculationService
                 return points;
             }
 
-            var groupByOperation = new GroupByFunctionInput(points, resolutionResolutionInSeconds, sycResolutionInSeconds);
+            var groupByOperation = new GroupByFunctionInput { Data = points, ResolutionInSeconds = resolutionResolutionInSeconds, SyncInSeconds = sycResolutionInSeconds };
             var groupByResponse = _engineCalculator.CalcGroupByAsync(groupByOperation);
 
             var data = groupByResponse;
@@ -453,28 +340,13 @@ public class EngineCalculationService : IEngineCalculationService
         }
     }
 
-    private IEnumerable<AxisValue> CalculateQuantityFunction(string quantityAggregationFunction, long startPeriodInSeconds, int resolutionInSeconds, IEnumerable<IEnumerable<BasicValue>> data)
+    private IEnumerable<AxisValue> CalculateQuantityFunctionAsync(string quantityAggregationFunction, long startPeriodInSeconds, int resolutionInSeconds, IEnumerable<IEnumerable<BasicValue>> data)
     {
         var calculated = new List<AxisValue>();
 
         foreach (var list in data)
         {
             var tmp = _engineCalculator.AggregationCalculationAsync(quantityAggregationFunction, list);
-            calculated.Add(new AxisValue { TimeStempInSeconds = (long)startPeriodInSeconds, Value = tmp.Value });
-            startPeriodInSeconds += resolutionInSeconds;
-        }
-
-        return calculated;
-    }
-
-    private IEnumerable<AxisValue> CalculateQuantityAndNormalizeFunction(string quantityAggregationFunction, long startPeriodInSeconds, int resolutionInSeconds, IEnumerable<IEnumerable<BasicValue>> data, double nominalVal)
-    {
-        var calculated = new List<AxisValue>();
-
-        foreach (var list in data)
-        {
-            var tmp = _engineCalculator.AggregationCalculationAsync(quantityAggregationFunction, list);
-            tmp = new BasicValue(ParameterMatrix.Normalize(nominalVal, tmp.Value), tmp.DataValueStatus);
             calculated.Add(new AxisValue { TimeStempInSeconds = startPeriodInSeconds, Value = tmp.Value });
             startPeriodInSeconds += resolutionInSeconds;
         }
@@ -483,20 +355,6 @@ public class EngineCalculationService : IEngineCalculationService
     }
 
     private IEnumerable<AxisValue> CalculateQuantityAutoFunctionAsync(string quantityAggregationFunction, long startPeriodInSeconds, int resolutionInSeconds, IEnumerable<BasicValue> data)
-    {
-        var calculated = new List<AxisValue>();
-
-        foreach (var item in data)
-        {
-            calculated.Add(new AxisValue { TimeStempInSeconds = startPeriodInSeconds, Value = item.Value });
-            startPeriodInSeconds += resolutionInSeconds;
-        }
-
-        return calculated;
-    }
-
-
-    private IEnumerable<AxisValue> CalculateQuantityAutoFunctionAsync222(string quantityAggregationFunction, long startPeriodInSeconds, int resolutionInSeconds, IEnumerable<BasicValue> data)
     {
         var calculated = new List<AxisValue>();
 

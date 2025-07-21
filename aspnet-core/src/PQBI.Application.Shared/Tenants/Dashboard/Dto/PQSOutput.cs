@@ -46,7 +46,7 @@ namespace PQBI.Tenants.Dashboard.Dto
         public string ParameterName { get; }
         public double? Nominal { get; }
         public PQZStatus PQZStatus { get; }
-        public DataUnitType DataUnitType { get; set; }
+        public DataUnitType DataUnitType { get; }
         public PQBIDataTimeStampDto[] DataTimeStamps { get; }
 
         public override string ToString()

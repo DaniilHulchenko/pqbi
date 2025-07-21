@@ -14,8 +14,6 @@ export interface Parameter {
     operator?: string;
     aggregationFunction?: string;
     fromComponents?: FromComponent;
-    advancedSettings?: any;
-
 }
 
 export interface Harmonics {

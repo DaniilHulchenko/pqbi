@@ -15,12 +15,12 @@ public class BaseParameter
     public string Operator { get; set; }
 
     public string Quantity { get; set; }
-    public int? Resolution { get; set; }
+    public int Resolution { get; set; }
     public string Group { get; set; }
     public HarmonicsDto Harmonics { get; set; }
     public FeederComponentInfo FromComponents { get; set; }
     public string Phase { get; set; }
-    public string BaseResolution { get; set; }
+    public string Base { get; set; }
     public string Id { get; set; }
     public string Name { get; set; }
 
@@ -43,12 +43,7 @@ public class BaseParameter
             //    return syncInterval;
             //}
 
-            if(Resolution == null)
-            {
-                return SyncInterval.GetSyncEnum(0);
-            }
-
-            return SyncInterval.GetSyncEnum(Resolution.Value );
+            return SyncInterval.GetSyncEnum(Resolution);
         }
     }
 

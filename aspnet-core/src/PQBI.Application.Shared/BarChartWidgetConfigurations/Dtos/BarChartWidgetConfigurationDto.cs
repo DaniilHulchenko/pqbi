@@ -11,7 +11,7 @@ namespace PQBI.BarChartWidgetConfigurations.Dtos
 
         public string Components { get; set; }
 
-        public string Events { get; set; }
+        public string Configuration { get; set; }
 
         public string DateRange { get; set; }
 

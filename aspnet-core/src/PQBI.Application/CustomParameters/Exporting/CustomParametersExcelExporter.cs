@@ -38,7 +38,9 @@ base(tempFileCacheManager)
                     {
                         {"Name", customParameter.CustomParameter.Name},
                         {"AggregationFunction", customParameter.CustomParameter.AggregationFunction},
+                        {"STDPQSParametersList", customParameter.CustomParameter.STDPQSParametersList},
                         {"Type", customParameter.CustomParameter.Type},
+                        {"ResolutionInSeconds", customParameter.CustomParameter.ResolutionInSeconds},
 
                     });
         }

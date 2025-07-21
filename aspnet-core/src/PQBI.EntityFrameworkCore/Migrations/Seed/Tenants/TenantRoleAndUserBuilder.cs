@@ -42,48 +42,46 @@ namespace PQBI.Migrations.Seed.Tenants
 
         }
 
-        //private void CrateDemoUser()
-        //{
-        //    var ptr = _context.Users.ToArray();
-        //    var demoUser = _context.Users.IgnoreQueryFilters().FirstOrDefault(u => u.UserName == Demo_User_Name);
+        private void CrateDemoUser()
+        {
+            var ptr = _context.Users.ToArray();
+            var demoUser = _context.Users.IgnoreQueryFilters().FirstOrDefault(u => u.UserName == Demo_User_Name);
             
-        //    if (demoUser is null)
-        //    {
+            if (demoUser is null)
+            {
 
-        //        var email = $"demo@gmail.com";
-        //        var tenantId = 1;
-        //        var user = new User
-        //        {
-        //            EmailAddress = email,
-        //            IsActive = true,
-        //            IsLockoutEnabled = true,
-        //            IsTwoFactorEnabled = false,
-        //            Name = Demo_User_Name,
-        //            Password = Demo_User_Password,
-        //            PhoneNumber = "123456",
-        //            ShouldChangePasswordOnNextLogin = false,
-        //            Surname = "DemoSureName",
-        //            UserName = Demo_User_Name,
-        //            TenantId = tenantId,
-        //            Roles = new Collection<UserRole>(),
-        //
-        //
-        //            zedUserName = Demo_User_Name.ToUpper(),
-        //            NormalizedEmailAddress = email
-        //        };
+                var email = $"demo@gmail.com";
+                var tenantId = 1;
+                var user = new User
+                {
+                    EmailAddress = email,
+                    IsActive = true,
+                    IsLockoutEnabled = true,
+                    IsTwoFactorEnabled = false,
+                    Name = Demo_User_Name,
+                    Password = Demo_User_Password,
+                    PhoneNumber = "123456",
+                    ShouldChangePasswordOnNextLogin = false,
+                    Surname = "DemoSureName",
+                    UserName = Demo_User_Name,
+                    TenantId = tenantId,
+                    Roles = new Collection<UserRole>(),
+                    NormalizedUserName = Demo_User_Name.ToUpper(),
+                    NormalizedEmailAddress = email
+                };
 
-        //        var roles = _context.Roles.ToArray();
-        //        var viewerRole = roles.FirstOrDefault(x=>x.Id == 1); // For Admin
-        //        //var viewerRole = roles.FirstOrDefault(x => x.Id == (int)PQBIRoleEnum.Admin);
-        //        var userRole = new UserRole(tenantId,user.Id, viewerRole.Id);
-        //        user.Roles.Add(userRole);
+                var roles = _context.Roles.ToArray();
+                var viewerRole = roles.FirstOrDefault(x=>x.Id == 1); // For Admin
+                //var viewerRole = roles.FirstOrDefault(x => x.Id == (int)PQBIRoleEnum.Admin);
+                var userRole = new UserRole(tenantId,user.Id, viewerRole.Id);
+                user.Roles.Add(userRole);
 
 
-        //        _context.Users.Add(user);
+                _context.Users.Add(user);
 
-        //        _context.SaveChanges();
-        //    }
-        //}
+                _context.SaveChanges();
+            }
+        }
 
 
         private void CreateRolesAndUsers()

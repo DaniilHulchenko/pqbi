@@ -109,10 +109,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     ngOnInit() {
         this.loading = true;
-        const storedMode = localStorage.getItem('app.dashboard.editMode');
-        if (storedMode === 'true') {
-            this.editModeEnabled = true;
-        }
+
         forkJoin([
             this._dashboardCustomizationServiceProxy.getUserDashboard(
                 this.dashboardName,
@@ -299,10 +296,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     changeEditMode(): void {
         this.editModeEnabled = !this.editModeEnabled;
-        localStorage.setItem('app.dashboard.editMode', String(this.editModeEnabled));
-        if (!this.editModeEnabled) {
-            localStorage.removeItem('editMode');
-        }
         //change all gridster options
         //setTimeout for letting the DOM first update so that the edit button appears
         setTimeout(() => {

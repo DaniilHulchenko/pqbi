@@ -11,7 +11,6 @@ using PQBI.Network;
 using PQBI.Network.Base;
 using PQBI.Requests;
 using PQS.Data.Common;
-using PQS.Data.Permissions.Enums;
 
 namespace PQBI.Web.Startup;
 
@@ -67,17 +66,17 @@ public class PQSServiceExternalAuthSource : DefaultExternalAuthenticationSource<
             var user = await _userManager.FindByNameAsync(userNameOrEmailAddress);
             if (user is null)
             {
-                user = await _userManager.AddToScadaUser(userNameOrEmailAddress, "Qqaasx100!", tenant.Id);
+                //user = await _userManager.AddToScadaUser(userNameOrEmailAddress, "Qqaasx100!", tenant.Id);
             }
 
             _logger.LogInformation($"PQSServiceExternalAuthSource |  TryAuthenticateAsync session={session}");
-            if (session.IsOk())
+            if (session.IsNotEmpty())
             {
                 await _userSessionCacheRepository.SetCacheSessionAsync(user.Id, tenant.Id, session.SessionId);
-               
-                //string userRole = await _pQSServiceProxy.GetUserRole(session.SessionId, tenant.PQSServiceUrl, userNameOrEmailAddress);
+                //string userRole = PQBIRoleEnum.Admin.ToString();
+                //string userRole = await _userAppService.GetUserRole(session.SessionId, tenant.PQSServiceUrl, userNameOrEmailAddress, plainPassword);
                 //if (userRole != null)
-                //    await _userManager.UpdateUserRolesAsync(user, userRole);
+                //await _userManager.UpdateUserRolesAsync(user, userRole);
 
                 userId = user.Id;
                 result = true;

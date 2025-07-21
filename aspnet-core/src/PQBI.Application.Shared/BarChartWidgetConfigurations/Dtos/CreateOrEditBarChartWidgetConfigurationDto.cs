@@ -12,10 +12,10 @@ namespace PQBI.BarChartWidgetConfigurations.Dtos
         public BarChartType Type { get; set; }
 
         [Required]
-        public string Components { get; set; }
+        public string Configuration { get; set; }
 
         [Required]
-        public string Events { get; set; }
+        public string Components { get; set; }
 
         public string DateRange { get; set; }
 

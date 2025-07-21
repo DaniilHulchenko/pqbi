@@ -6,11 +6,6 @@
     /// </summary>
     public static class AppPermissions
     {
-        public const string Pages_Groups = "Pages.Groups";
-        public const string Pages_Groups_Create = "Pages.Groups.Create";
-        public const string Pages_Groups_Edit = "Pages.Groups.Edit";
-        public const string Pages_Groups_Delete = "Pages.Groups.Delete";
-
         public const string Pages_TrendWidgetConfigurations = "Pages.TrendWidgetConfigurations";
         public const string Pages_TrendWidgetConfigurations_Create = "Pages.TrendWidgetConfigurations.Create";
         public const string Pages_TrendWidgetConfigurations_Edit = "Pages.TrendWidgetConfigurations.Edit";

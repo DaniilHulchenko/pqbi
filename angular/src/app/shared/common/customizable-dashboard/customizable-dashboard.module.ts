@@ -58,7 +58,8 @@ import {
   DxSelectBoxModule,
   DxNumberBoxModule,
   DxCheckBoxModule,
-  DxColorBoxModule
+  DxColorBoxModule,
+  DxTagBoxModule
 } from 'devextreme-angular';
 import { WidgetPqsBarChartComponent } from './widgets/widget-pqs-bar-chart/widget-pqs-bar-chart.component';
 import { CreateOrEditBarChartConfigurationComponent } from './widgets/widget-pqs-bar-chart/create-or-edit-bar-chart-configuration/create-or-edit-bar-chart-configuration.component';
@@ -83,6 +84,7 @@ import { TablePreviewComponent } from '@app/shared/common/customizable-dashboard
 import { TableDesignOptionsComponent } from '@app/shared/common/customizable-dashboard/widgets/widget-pqs-table/create-or-edit-table-configuration/table-design-options/table-design-options.component';
 import { AdditionalParameterSelectionTabComponent } from '../components/parameter-selection-tabs/additional-parameter-selection-tab/additional-parameter-selection-tab.component';
 import { BarChartPreviewComponent } from "./widgets/widget-pqs-bar-chart/create-or-edit-bar-chart-configuration/bar-chart-preview/bar-chart-preview.component";
+import { ListboxModule } from 'primeng/listbox';
 
 @NgModule({
     imports: [
@@ -106,6 +108,7 @@ import { BarChartPreviewComponent } from "./widgets/widget-pqs-bar-chart/create-
     SubheaderModule,
     TreeSelectModule,
     OrderListModule,
+    ListboxModule,
     ScrollPanelModule,
     InputNumberModule,
     MultiSelectModule,
@@ -142,6 +145,7 @@ import { BarChartPreviewComponent } from "./widgets/widget-pqs-bar-chart/create-
     EventParameterSelectionTabComponent,
     DxLoadIndicatorModule,
     DxTextBoxModule,
+    DxTagBoxModule,
     AdditionalParameterSelectionTabComponent,
     TabsModule.forRoot(),
     BarChartPreviewComponent

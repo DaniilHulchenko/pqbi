@@ -1,13 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-	<texts>    <text name="Groups">Groups</text>
-    <text name="PQBI.Groups.Group">Group</text>
-    <text name="Subgroups">Subgroups</text>
-    <text name="GroupsHeaderInfo">Groups header info</text>
-    <text name="CreateNewGroup">Create new group</text>
-    <text name="EditGroup">Edit group</text>
-    <text name="DeleteGroup">Delete group</text>
-
+	<texts>
 
 
 		<text name="Common_UnitsEnum_STD_TIMESTAMP">Time stamp</text>
@@ -536,7 +529,7 @@
 		<text name="Timezone">Timezone</text>
 		<text name="HasOwnDatabase">Has own database</text>
 		<text name="TimeZoneSettingChangedRefreshPageNotification">Timezone setting changed. Click OK button to refresh page and changes to take effect.</text>
-		<text name="Ok">OK</text>
+		<text name="Ok">Ok</text>
 		<text name="Permission">Permission</text>
 		<text name="Role">Role</text>
 		<text name="Security">Security</text>
@@ -1506,5 +1499,9 @@
     <text name="UnsavedChangesWarning">You have unsaved changes in the dashboard. Proceed without saving?</text>
     <text name="FilterEventBy">Filter event by:</text>
     <text name="SortBy">Sort by:</text>
+    <text name="AdditionalParameters">Additional Parameters</text>
+    <text name="XUnits">X Units</text>
+    <text name="Series">Series</text>
+    <text name="SwapAxes">Swap axes</text>
 	</texts>
 </localizationDictionary>

@@ -17,8 +17,6 @@ using PQBI.Authorization.Users;
 using Abp.Domain.Uow;
 using Abp.Localization;
 using PQBI.Features;
-using PQBI.Infrastructure;
-using Microsoft.Extensions.Options;
 
 namespace PQBI.Sessions
 {
@@ -30,15 +28,13 @@ namespace PQBI.Sessions
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly EditionManager _editionManager;
         private readonly ILocalizationContext _localizationContext;
-        private readonly PQSComunication _pqsComunication;
-
+        
         public SessionAppService(
             IUiThemeCustomizerFactory uiThemeCustomizerFactory,
             ISubscriptionPaymentRepository subscriptionPaymentRepository,
             IUserDelegationConfiguration userDelegationConfiguration,
             IUnitOfWorkManager unitOfWorkManager,
-            EditionManager editionManager, ILocalizationContext localizationContext,
-           IOptions<PQSComunication> pqsComunication)
+            EditionManager editionManager, ILocalizationContext localizationContext)
         {
             _uiThemeCustomizerFactory = uiThemeCustomizerFactory;
             _subscriptionPaymentRepository = subscriptionPaymentRepository;
@@ -46,20 +42,17 @@ namespace PQBI.Sessions
             _unitOfWorkManager = unitOfWorkManager;
             _editionManager = editionManager;
             _localizationContext = localizationContext;
-            _pqsComunication = pqsComunication.Value;
         }
 
         [DisableAuditing]
         public async Task<GetCurrentLoginInformationsOutput> GetCurrentLoginInformations()
         {
-
             return await _unitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
                 var output = new GetCurrentLoginInformationsOutput
                 {
                     Application = new ApplicationInfoDto
                     {
-                        UserMetaDeta = new UserMetadata { ScadaUrl = _pqsComunication.PQSServiceRestUrl },
                         Version = AppVersionHelper.Version,
                         ReleaseDate = AppVersionHelper.ReleaseDate,
                         Features = new Dictionary<string, bool>(),
@@ -131,13 +124,13 @@ namespace PQBI.Sessions
             {
                 return tenantLoginInfo;
             }
-
+            
             var features = FeatureManager
                 .GetAll()
                 .Where(feature => (feature[FeatureMetadata.CustomFeatureKey] as FeatureMetadata)?.IsVisibleOnPricingTable ?? false);
-
+            
             var featureDictionary = features.ToDictionary(feature => feature.Name, f => f);
-
+            
             tenantLoginInfo.FeatureValues = (await _editionManager.GetFeatureValuesAsync(tenant.EditionId.Value))
                 .Where(featureValue => featureDictionary.ContainsKey(featureValue.Name))
                 .Select(fv => new NameValueDto(

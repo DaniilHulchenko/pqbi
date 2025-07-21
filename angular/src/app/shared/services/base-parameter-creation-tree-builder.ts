@@ -52,7 +52,7 @@ export class BaseParameterCreationTreeBuilder {
         });
     }
 
-    public buildAdditionalTree(componentParameterInfos: AdditionalData[]): any {
+    public buildAdditionalTree(componentId: string, componentParameterInfos: AdditionalData[]): object {
         let tree = {
             groups: [] as AdditionalParameterTreeModel[],
         };
@@ -60,19 +60,19 @@ export class BaseParameterCreationTreeBuilder {
         componentParameterInfos.forEach((parameterInfo) => {
             let groupInTree : AdditionalParameterTreeModel = null;
 
-            groupInTree = tree.groups.find(group => group.groupName === parameterInfo.propertyName);
+            groupInTree = tree.groups.find(group => group.groupName === parameterInfo.propertiesName);
             
             if (!groupInTree) {
                 groupInTree = new AdditionalParameterTreeModel();
-                groupInTree.groupName = parameterInfo.propertyName;
+                groupInTree.groupName = parameterInfo.propertiesName;
                 groupInTree.description = parameterInfo.measurmentsParameterDetails.description ||
                                  parameterInfo.measurmentsParameterDetails.name ||
-                                 parameterInfo.propertyName.substring(0, parameterInfo.propertyName.lastIndexOf('_'))
+                                 parameterInfo.propertiesName.substring(0, parameterInfo.propertiesName.lastIndexOf('_'))
                 groupInTree.bases = [];
                 tree.groups.push(groupInTree);
             }
 
-            let base = parameterInfo.base;
+            let base = parameterInfo.propertiesName.substring(parameterInfo.propertiesName.lastIndexOf('_') + 1);
             let baseInGroup = groupInTree.bases.find((baseInfo) => baseInfo.base === CalculationBase[base]);
             if (!baseInGroup) {
                 baseInGroup = { ...this.getParameterBase(base) };

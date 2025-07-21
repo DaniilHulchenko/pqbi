@@ -205,4 +205,20 @@ public class TreeBuilderController : PQBIControllerBase
 
         return response;
     }
+
+    [HttpPost]
+    [Route(PostTreeTabletIntegrationTestUrl)]
+
+    public async Task<TagTreeRootDto> GetTreeTableIntegrationTests([FromBody] PostEventstRequestTest request)
+    {
+        var tenantId = AbpSession.GetTenantId();
+        var userId = AbpSession.UserId;
+
+        var tenant = await _tenantCacheRepository.GetTenantByIdAsync(tenantId);
+
+        var session = await _PQSRestApiService.OpenSessionForUserAsync(tenant.PQSServiceUrl, request.UserNameOrEmailAddress, request.Password);
+        var response = await _pQSTreeBuilderService.GetTreeTableAsync(tenant.PQSServiceUrl, session.SessionId, request.Request);
+
+        return response;
+    }
 }

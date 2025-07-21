@@ -15,7 +15,9 @@ import { BaseParameterCreationTreeBuilder } from '@app/shared/services/base-para
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
 import { QuantityUnits } from '@app/shared/enums/quantity-units';
 import {
-    FeederComponentInfo,
+    BaseDataInfo,
+    CalculationBase,
+    GroupDataInfo,
     QuantityDataInfo,
     QuantityEnum,
 } from '@shared/service-proxies/service-proxies';
@@ -28,8 +30,6 @@ import { PopulatableForm } from '../populatable-form';
 import { UtilsModule } from '../../../../../../shared/utils/utils.module';
 import { AdvancedSettingsComponent, AdvancedSettingsConfig } from '../advanced-settings/advanced-settings.component';
 import { FormContainerComponent } from '../../form-container/form-container.component';
-import { NormalizeEnum } from '@shared/service-proxies/service-proxies';
-import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
 
 @Component({
     selector: 'additional-parameter-selection-tab',
@@ -91,13 +91,13 @@ export class AdditionalParameterSelectionTabComponent
 
     advancedSettingsConfig: AdvancedSettingsConfig;
 
-    private readonly labels: Record<QuantityEnum, string> = {
+    private readonly labels: Partial<Record<QuantityEnum, string>> = {
         [QuantityEnum.QMIN]: 'Minimum',
         [QuantityEnum.QMAX]: 'Maximum',
         [QuantityEnum.QAVG]: 'Average',
     };
 
-    private readonly quantityKeys: Record<QuantityEnum, string> = {
+    private readonly quantityKeys: Partial<Record<QuantityEnum, string>> = {
         [QuantityEnum.QMIN]: 'MIN',
         [QuantityEnum.QMAX]: 'MAX',
         [QuantityEnum.QAVG]: 'AVG',
@@ -125,21 +125,22 @@ export class AdditionalParameterSelectionTabComponent
         this.populateForm(parameter);
 
         this.advancedSettingsConfig = parameter.advancedSettings ?? {
-            normalizeValue: NormalizeEnum.NO,
-            normalizeNominalValue: 100,
-            excludeFlagged: ExcludeFlagged.None,
+            normalizeValue: 'none',
+            normalizeNominalValue: '0',
+            excludeFlagged: 'none',
             defaultFlagEvent: null,
-            setLimits: Limit.None,
-            lowerLimit: 0,
-            upperLimit: 0,
+            setLimits: 'none',
+            lowerLimit: '0',
+            upperLimit: '0',
             limitFromNominal: false,
             limitFromNormalization: false,
-            colorScheme: ColorSchema.None,
+            colorScheme: 'none',
             outOfLimitColor: '',
             gradientFromColor: '',
             gradientToColor: '',
             okColor: '',
             noDataColor: '',
+            tagValueCalculation: 'none',
             aligningIgnored: false,
             replaceAggregation: false,
             customAggregationFunc: '',
@@ -286,9 +287,7 @@ export class AdditionalParameterSelectionTabComponent
         for (let parameter of combinations) {
             event.parameter = parameter;
             event.quantity = QuantityUnits[parameter.quantity];
-            event.advancedSettings = this.advancedSettingsConfig 
-                                        ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                        : undefined,
+            event.advancedSettings = this.advancedSettingsConfig;
             this.onEditSave.emit(event);
         }
 
@@ -302,21 +301,14 @@ export class AdditionalParameterSelectionTabComponent
                     components: [component],
                     tags: null,
                     pickListState: this.componentsState.pickListState,
-                    feeders: [new FeederComponentInfo({
-                                            id: undefined,
-                                            name: undefined,
-                                            componentId: component.key.toString(),
-                                            compName: component.label,
-                                          })]
+                    feeders: null,
                 });
 
                 let event: AddBaseParameterEventCallBack = {
                     parameter: JSON.parse(JSON.stringify(this.parameter)),
                     componentsState: eventComponentState,
                     quantity: null,
-                    advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
+                    advancedSettings: this.advancedSettingsConfig,
                 };
 
                 var combinations = this._parameterCombinationsService.combineAdditionalParameters(
@@ -328,6 +320,7 @@ export class AdditionalParameterSelectionTabComponent
                 for (let parameter of combinations) {
                     event.parameter = parameter;
                     event.quantity = QuantityUnits[parameter.quantity];
+                    event.advancedSettings = this.advancedSettingsConfig;
                     this.onAdd.emit(event);
                 }
             }
@@ -336,9 +329,7 @@ export class AdditionalParameterSelectionTabComponent
                 parameter: JSON.parse(JSON.stringify(this.parameter)),
                 componentsState: null,
                 quantity: null,
-                advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
+                advancedSettings: this.advancedSettingsConfig,
             };
 
             var combinations = this._parameterCombinationsService.combineAdditionalParameters(
@@ -350,6 +341,7 @@ export class AdditionalParameterSelectionTabComponent
             for (let parameter of combinations) {
                 event.parameter = parameter;
                 event.quantity = QuantityUnits[parameter.quantity];
+                event.advancedSettings = this.advancedSettingsConfig;
                 this.onAdd.emit(event);
             }
         }
@@ -362,6 +354,7 @@ export class AdditionalParameterSelectionTabComponent
         this.componentsState?.components?.forEach((component) => {
             if (!this.trees[component.key]) {
                 this.trees[component.key] = this._baseParameterCreationTreeBuilder.buildAdditionalTree(
+                    component.key,
                     component.additionalDatas,
                 );
             }

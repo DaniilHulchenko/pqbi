@@ -160,7 +160,7 @@ namespace PQBI.Tenants.Dashboard
 
         //}
 
-        public async Task<TrendResponse> PQSTrendData(TrendCalcRequest request)
+        public async Task<TrendResponse> PQSTrendData222(TrendCalcRequest222 request)
         {
             var response = default(TrendResponse);
 
@@ -178,7 +178,7 @@ namespace PQBI.Tenants.Dashboard
 
                 try
                 {
-                    response = await _customParameterCalculationService.CalculateTrendChartAsync(tenant.PQSServiceUrl, session, request);
+                    response = await _customParameterCalculationService.CalculateTrendChartAsync222(tenant.PQSServiceUrl, session, request);
                 }
                 catch (PQBIException chattoException)
                 {
@@ -264,7 +264,7 @@ namespace PQBI.Tenants.Dashboard
             return response;
         }
 
-        public async Task<TableWidgetResponse> PQSTableWidgetDataAsync(TableWidgetRequest request)
+        public async Task<TableWidgetResponse> PQSTableWidgetData2222Async(TableWidgetRequest222 request)
         {
             TableWidgetResponse response = null;
 

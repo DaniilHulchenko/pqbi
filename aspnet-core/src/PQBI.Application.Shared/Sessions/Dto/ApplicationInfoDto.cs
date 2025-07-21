@@ -3,17 +3,8 @@ using System.Collections.Generic;
 
 namespace PQBI.Sessions.Dto
 {
-
-    public class UserMetadata
-    {
-        public string ScadaUrl { get; set; }
-    }
-
     public class ApplicationInfoDto
     {
-
-        public UserMetadata UserMetaDeta { get; set; }
-
         public string Version { get; set; }
 
         public DateTime ReleaseDate { get; set; }

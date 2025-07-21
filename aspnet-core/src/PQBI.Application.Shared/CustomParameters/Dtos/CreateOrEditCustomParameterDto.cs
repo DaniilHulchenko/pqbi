@@ -13,13 +13,13 @@ public partial class CreateOrEditCustomParameterDto : EntityDto<int?>
     [Required]
     public string AggregationFunction { get; set; }
 
+    public string STDPQSParametersList { get; set; }
+
     [Required]
     public string Type { get; set; }
 
     public string InnerCustomParameters { get; set; }
 
     public int ResolutionInSeconds { get; set; }
-
-    public string CustomBaseDataList { get; set; }
 
 }

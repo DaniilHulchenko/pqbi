@@ -15,7 +15,7 @@ public static class CalculationStaticTypes
         throw new PQBIException(new PropertyServiceError("type", $"Is not part of {nameof(CustomParameterType)}"));
     }
 
-    public static TrendWidgetParameterType GetCustomParameterTrendType(string type)
+    public static TrendWidgetParameterType GetCustomParameterType222(string type)
     {
         if (Enum.TryParse(type, true, out TrendWidgetParameterType columnParameterType))
         {

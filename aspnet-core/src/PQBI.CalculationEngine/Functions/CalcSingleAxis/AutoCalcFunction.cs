@@ -74,25 +74,23 @@ public class AutoCalcFunction : CalcFunctionBase
 
     }
 
-    public int CalcNumInGroup(int maxPoints, IEnumerable<BasicValue> input)
+    public IEnumerable<BasicValue> Calc(int maxPoints, IEnumerable<BasicValue> input)
     {
         var result = new List<BasicValue>();
         var count = input.Count();
         var numberInGroup = CalcNumberForGroup(input.Count(), maxPoints);
 
-        return numberInGroup;
+        if (numberInGroup == 1)
+        {
+            return input;
+        }
 
-        //if (numberInGroup == 1)
-        //{
-        //    return input;
-        //}
+        for (int i = 0; i < count; i += numberInGroup)
+        {
+            //how to calculate what items should I take ?????
+            result.Add(input.ElementAt(i));
+        }
 
-        //for (int i = 0; i < count; i += numberInGroup)
-        //{
-        //    //how to calculate what items should I take ?????
-        //    result.Add(input.ElementAt(i));
-        //}
-
-        //return result;
+        return result;
     }
 }

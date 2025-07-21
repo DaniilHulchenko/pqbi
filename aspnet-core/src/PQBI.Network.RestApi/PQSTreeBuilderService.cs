@@ -30,7 +30,7 @@ public interface IPQSTreeBuilderService
 
     Task<TagTreeRootDto> GetTagOmnibusTreeAsync(string url, string session);
     Task<DynamicTreeNode> GetLogicalOrChannelTreeAsync(string url, string session, string componentId);
-    //Task<TagTreeRootDto> GetTreeTableAsync(string url, string session, GetEventstRequest input);
+    Task<TagTreeRootDto> GetTreeTableAsync(string url, string session, GetEventstRequest input);
     Task<StaticTreeNode> CheckGetBaseDataTree(string url, string session, string componentId);
     IEnumerable<TagWithComponents> GetComponentByTags(GetComponentByTagsRequest request);
 }
@@ -313,22 +313,22 @@ public class PQSTreeBuilderService : PQSRestApiServiceBase, IPQSTreeBuilderServi
     }
 
 
-    //public async Task<TagTreeRootDto> GetTreeTableAsync(string url, string session, GetEventstRequest input)
-    //{
+    public async Task<TagTreeRootDto> GetTreeTableAsync(string url, string session, GetEventstRequest input)
+    {
 
-    //    var start = new PQZDateTime(input.Start);
-    //    var end = new PQZDateTime(input.End);
+        var start = new PQZDateTime(input.Start);
+        var end = new PQZDateTime(input.End);
 
-    //    var evennts = EventFactory.GetAllEvents();
+        var evennts = EventFactory.GetAllEvents();
 
-    //    var request = new PQSGetEventRequest(session, start, end, evennts, input.ComponentIds);
-    //    var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
+        var request = new PQSGetEventRequest(session, start, end, evennts, input.ComponentIds);
+        var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
 
-    //    var respose = new PQSAddEventResponse(request, pqsResponse);
-    //    var events = respose.Events;
+        var respose = new PQSAddEventResponse(request, pqsResponse);
+        var events = respose.Events;
 
 
-    //    return null;
-    //}
+        return null;
+    }
 
 }

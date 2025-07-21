@@ -14,7 +14,7 @@ import { ParameterCombinationsService } from '@app/shared/services/parameter-com
 import { BaseParameterCreationTreeBuilder } from '@app/shared/services/base-parameter-creation-tree-builder';
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
 import { QuantityUnits } from '@app/shared/enums/quantity-units';
-import { BaseDataInfo, FeederComponentInfo, GroupDataInfo, PhaseDataInfo, QuantityDataInfo } from '@shared/service-proxies/service-proxies';
+import { BaseDataInfo, GroupDataInfo, PhaseDataInfo, QuantityDataInfo } from '@shared/service-proxies/service-proxies';
 import { orderBy, uniqBy } from 'lodash-es';
 import { EditableTabComponentBaseComponent } from '../editable-tab-component-base';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
@@ -24,8 +24,6 @@ import { PopulatableForm } from '../populatable-form';
 import { UtilsModule } from '../../../../../../shared/utils/utils.module';
 import { AdvancedSettingsComponent, AdvancedSettingsConfig } from '../advanced-settings/advanced-settings.component';
 import { FormContainerComponent } from '../../form-container/form-container.component';
-import { NormalizeEnum } from '@shared/service-proxies/service-proxies';
-import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
 
 @Component({
     selector: 'channelParameterSelectionTab',
@@ -115,21 +113,22 @@ export class ChannelParameterSelectionTabComponent
         this.populateForm(parameter);
 
         this.advancedSettingsConfig = parameter.advancedSettings ?? {
-            normalizeValue: NormalizeEnum.NO,
-            normalizeNominalValue: 0,
-            excludeFlagged: ExcludeFlagged.None,
+            normalizeValue: 'none',
+            normalizeNominalValue: '0',
+            excludeFlagged: 'none',
             defaultFlagEvent: null,
-            setLimits: Limit.None,
-            lowerLimit: 0,
-            upperLimit: 0,
+            setLimits: 'none',
+            lowerLimit: '0',
+            upperLimit: '0',
             limitFromNominal: false,
             limitFromNormalization: false,
-            colorScheme: ColorSchema.None,
+            colorScheme: 'none',
             outOfLimitColor: '',
             gradientFromColor: '',
             gradientToColor: '',
             okColor: '',
             noDataColor: '',
+            tagValueCalculation: 'none',
             aligningIgnored: false,
             replaceAggregation: false,
             customAggregationFunc: ''
@@ -310,9 +309,7 @@ export class ChannelParameterSelectionTabComponent
             parameter: JSON.parse(safeStringify(this.parameter)),
             componentsState: this.disableComponentSelection ? null : this.componentsState,
             quantity: null,
-            advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
+            advancedSettings: this.advancedSettingsConfig,
         };
 
         this._parameterCombinationsService
@@ -342,21 +339,14 @@ export class ChannelParameterSelectionTabComponent
                     components: [component],
                     tags: null,
                     pickListState: this.componentsState.pickListState,
-                    feeders: [new FeederComponentInfo({
-                        id: undefined,
-                        name: undefined,
-                        componentId: component.key.toString(),
-                        compName: component.label
-                      })]
+                    feeders: null,
                 });
 
                 let event: AddBaseParameterEventCallBack = {
                     parameter: JSON.parse(JSON.stringify(this.parameter)),
                     componentsState: eventComponentState,
                     quantity: null,
-                    advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
+                    advancedSettings: this.advancedSettingsConfig,
                 };
 
                 this._parameterCombinationsService
@@ -381,9 +371,6 @@ export class ChannelParameterSelectionTabComponent
                 parameter: JSON.parse(JSON.stringify(this.parameter)),
                 componentsState: null,
                 quantity: null,
-                advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
             };
 
             this._parameterCombinationsService

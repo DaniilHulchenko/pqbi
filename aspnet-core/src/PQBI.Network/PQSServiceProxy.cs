@@ -7,7 +7,6 @@ using GrpcService1;
 using Microsoft.Extensions.Logging;
 using PQBI.Caching;
 using PQBI.Configuration;
-using PQBI.Infrastructure;
 using PQBI.Network.Base;
 using PQBI.Network.Grpc;
 using PQBI.Network.RestApi;
@@ -25,7 +24,7 @@ namespace PQBI.Network
 
         Task<string> RequestXmlAsync(long userId, string url, RequestString request);
         Task KeepAliveAsync(long userId);
-        Task<string> GetUserRole(string session, string url, string userName);
+        Task<string> GetUserRole(IPQSRestApiServiceBase apiService, string session, string url, string userName, string password);
     }
 
 
@@ -63,9 +62,10 @@ namespace PQBI.Network
         }
 
 
-        public async Task<string> GetUserRole(string session, string url, string userName)
-        {            
-            return await _pQSestApiService.GetUserRole(session, url, userName);           
+        public async Task<string> GetUserRole(IPQSRestApiServiceBase apiService, string session, string url, string userName, string password)
+        {
+            
+            return await apiService.GetUserRole(session, url, userName, password);           
         }
 
 

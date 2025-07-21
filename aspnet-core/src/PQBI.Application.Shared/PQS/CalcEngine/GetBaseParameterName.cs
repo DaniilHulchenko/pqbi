@@ -42,7 +42,7 @@ public static class BaseParameterNameSlimExtensions
             Harmonics = parameter.Harmonics,
 
             Phase = parameter.Phase,
-            BaseResolution = parameter.Base
+            Base = parameter.Base
         };
 
 

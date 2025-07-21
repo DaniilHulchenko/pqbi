@@ -8,8 +8,6 @@ import { DynamicTreeBuilderComponent } from '../dynamic-tree-builder/dynamic-tre
 import { TreeBuilderService } from '@app/shared/services/tree-builder.service';
 import { FeederComponentInfo } from '@shared/service-proxies/service-proxies';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
-import { Subscription, timer } from 'rxjs';
-
 
 @Component({
     selector: 'componentsSelector',
@@ -43,8 +41,6 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
     @Output() feederErrorChange = new EventEmitter<string>();
 
     state: ComponentsState = new ComponentsState({ components: null, tags: null, pickListState: { source: [], target: [] } });
-
-    timer: Subscription;
 
     selectedItems: any[];
 
@@ -178,23 +174,10 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
         this.state.feeders = componentsAndFeeders
             .filter((item) => item.type === TreeComponentType.Feeder)
             ?.map((feeder) => {
-                return new FeederComponentInfo({ id: feeder.id, name: feeder.label, componentId: feeder.parentKey, compName: '' });
+                return new FeederComponentInfo({ id: feeder.id, name: feeder.label, componentId: feeder.parentKey });
             });
         this.onChange(this.state);
         this.validateSelection();
-    }
-
-    onNodeUnselect(event) {
-        if (event.node.type === TreeComponentType.Feeder) {
-            if (!this.state.components.some((item) => item.key === event.node.parentKey)) {
-                this.timer = timer(50).subscribe(() => {
-                    const components = this.treeBuilderService.extractLeafNodes(this.componentsOptions);
-                    this.selectedItems.push(components.find((item) => item.key === event.node.parentKey));
-                    this.onSelectionChange(this.selectedItems);
-                    console.log('onNodeUnselect', this.state);
-                });
-            }
-        }
     }
 
     onPickListChange(newState: any) {
@@ -238,6 +221,10 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
                 .map((comp) => comp.key);
             const selectedFeederKeys = selectedFeeders.map((feeder) => feeder.componentId);
             const missingFeeders = feederRequiredComponents.some((compKey) => !selectedFeederKeys.includes(compKey));
+
+            if (missingFeeders) {
+                this.feederError = 'Select at least one Feeder.';
+            }
         }
     }
 

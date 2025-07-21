@@ -18,7 +18,7 @@ namespace PQBI.BarChartWidgetConfigurations
         public virtual string Components { get; set; }
 
         [Required]
-        public virtual string Events { get; set; }
+        public virtual string Configuration { get; set; }
 
         public virtual string DateRange { get; set; }
 

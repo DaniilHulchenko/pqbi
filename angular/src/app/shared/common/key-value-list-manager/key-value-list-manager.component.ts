@@ -1,6 +1,6 @@
 import { Component, Injector, Input } from '@angular/core';
 import { AppComponentBase } from '@shared/common/app-component-base';
-import { findIndex as _findIndex, remove as _remove, filter as _filter } from 'lodash-es';
+import { findIndex as _findIndex, remove as _remove } from 'lodash-es';
 
 @Component({
     selector: 'key-value-list-manager',
@@ -49,7 +49,7 @@ export class KeyValueListManagerComponent extends AppComponentBase {
     }
 
     removeItem(keyValueItem: { key: string; value: string }) {
-        _filter(this.items as { key: string; value: string }[], (item) => item.key === keyValueItem.key);
+        _remove(this.items, (item) => item.key === keyValueItem.key);
         this.onKeyChange();
     }
 

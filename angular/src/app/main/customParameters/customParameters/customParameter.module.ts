@@ -33,8 +33,6 @@ import { ComponentsSelectorComponent } from '@app/shared/common/components/compo
 import { QuantitySelectorComponent } from '@app/shared/common/components/quantity-selector/quantity-selector.component';
 import { CpCustomParameterSelectionTabComponent } from './cp-custom-parameter-selection-tab/cp-custom-parameter-selection-tab.component';
 import { FormContainerComponent } from "../../../shared/common/components/form-container/form-container.component";
-import { CpAdditionalParameterSelectionTabComponent } from './cp-additional-parameter-selection-tab/cp-additional-parameter-selection-tab.component';
-import { AdvancedSettingsComponent } from '@app/shared/common/components/parameter-selection-tabs/advanced-settings/advanced-settings.component';
 
 @NgModule({
     declarations: [
@@ -43,8 +41,7 @@ import { AdvancedSettingsComponent } from '@app/shared/common/components/paramet
         ViewCustomParameterModalComponent,
         ArithmeticsModalComponent,
         CpBaseParameterSelectionTabComponent,
-        CpCustomParameterSelectionTabComponent,
-        CpAdditionalParameterSelectionTabComponent,
+        CpCustomParameterSelectionTabComponent
     ],
     imports: [
     AppSharedModule,
@@ -72,8 +69,7 @@ import { AdvancedSettingsComponent } from '@app/shared/common/components/paramet
     CustomParameterSelectionTabComponent,
     ComponentsSelectorComponent,
     QuantitySelectorComponent,
-    FormContainerComponent,
-    AdvancedSettingsComponent
+    FormContainerComponent
 ],
     exports: [ArithmeticsModalComponent],
 })

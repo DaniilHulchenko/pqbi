@@ -8,18 +8,17 @@ using Grpc.Core;
 using Abp.UI;
 using PQBI.Configuration;
 using PQBI.Network.Base;
-using PQBI.Infrastructure;
 
 namespace PQBI.Network.Grpc
 {
     public class PQSGrpcServiceBase : PQSServiceBase
     {
         private readonly PQSCommunication.PQSCommunicationClient _pQSCommunicationClient;
-        protected PQSComunication PQsCommunicationConfig;
+        protected PQSComunication PQsCommunication;
 
         protected PQSGrpcServiceBase(IOptions<PQSComunication> pQsCommunicationConfig, PQSCommunication.PQSCommunicationClient pQSCommunicationClient)
         {
-            PQsCommunicationConfig = pQsCommunicationConfig.Value;
+            PQsCommunication = pQsCommunicationConfig.Value;
             _pQSCommunicationClient = pQSCommunicationClient;
         }
 
@@ -95,7 +94,7 @@ namespace PQBI.Network.Grpc
         {
             System.Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> sslCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
-            if (PQsCommunicationConfig.IsAllCertificatesTrusted == false)
+            if (PQsCommunication.IsAllCertificatesTrusted == false)
             {
                 sslCallback = (HttpRequestMessage requestMessage, X509Certificate2 certificate, X509Chain chain, SslPolicyErrors sslErrors) =>
                 {

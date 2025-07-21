@@ -17,13 +17,13 @@ public class CustomParameter : Entity, IMustHaveTenant
     [Required]
     public virtual string AggregationFunction { get; set; }
 
+    public virtual string STDPQSParametersList { get; set; }
+
     [Required]
     public virtual string Type { get; set; }
 
     public virtual string InnerCustomParameters { get; set; }
 
     public virtual int ResolutionInSeconds { get; set; }
-
-    public virtual string CustomBaseDataList { get; set; }
 
 }

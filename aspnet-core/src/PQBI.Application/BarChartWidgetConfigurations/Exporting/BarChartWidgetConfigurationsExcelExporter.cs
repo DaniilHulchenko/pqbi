@@ -37,7 +37,7 @@ namespace PQBI.BarChartWidgetConfigurations.Exporting
                     {
                         {"Type", barChartWidgetConfiguration.BarChartWidgetConfiguration.Type},
                         {"Components", barChartWidgetConfiguration.BarChartWidgetConfiguration.Components},
-                        {"Events", barChartWidgetConfiguration.BarChartWidgetConfiguration.Events},
+                        {"Events", barChartWidgetConfiguration.BarChartWidgetConfiguration.Configuration},
                         {"DateRange", barChartWidgetConfiguration.BarChartWidgetConfiguration.DateRange},
 
                     });

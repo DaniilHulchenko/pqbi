@@ -10,22 +10,6 @@ public class GroupByFunctionInput : SingleAxisInput
 {
     public int ResolutionInSeconds { get; set; }
     public int SyncInSeconds { get; set; }
-    public int NumInGroup { get; set; }
-
-    public GroupByFunctionInput(IEnumerable<BasicValue> data, int numInGroup)
-    {
-        Data = data;
-        NumInGroup = numInGroup;
-    }
-
-    public GroupByFunctionInput(IEnumerable<BasicValue> data, int resolutionInSecond, int syncInSeconds)
-    {
-        Data = data;
-        ResolutionInSeconds = resolutionInSecond;
-        SyncInSeconds = syncInSeconds;
-
-        NumInGroup = ResolutionInSeconds / SyncInSeconds;        
-    }
 }
 
 
@@ -48,10 +32,9 @@ public class GroupByCalcFunction : CalcFunctionBase
             return result;
         }
 
-        //int resolutionInSeconds = input.ResolutionInSeconds;
-        //int syncInSeconds = input.SyncInSeconds;
-        //int gVec = resolutionInSeconds / syncInSeconds;
-        int gVec = input.NumInGroup;
+        int resolutionInSeconds = input.ResolutionInSeconds;
+        int syncInSeconds = input.SyncInSeconds;
+        int gVec = resolutionInSeconds / syncInSeconds;
 
         var data = input.Data as BasicValue[] ?? input.Data.ToArray();
         int dataCount = data.Length;

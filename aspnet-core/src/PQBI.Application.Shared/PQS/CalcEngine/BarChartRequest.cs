@@ -52,18 +52,18 @@ namespace PQBI.PQS.CalcEngine
                 }
             }
 
-            //var sapphireEvents = EventFactory.GetAllEventInfos().Select(x => (ushort)x.EventClass).ToHashSet();
+            var sapphireEvents = EventFactory.GetAllEventInfos().Select(x => (ushort)x.EventClass).ToHashSet();
 
-            //foreach (var @event in Events)
-            //{
+            foreach (var @event in Events)
+            {
 
-            //    var eventClassId = (ushort)@event.EventClass;
-            //    if (sapphireEvents.Contains(eventClassId) == false)
-            //    {
-            //        context.Results.Add(new ValidationResult($"{nameof(RequestBarChartComponent)}.{nameof(BarChartEventRequest)}.{nameof(BarChartEventRequest.EventClass)} - Should be part of the {nameof(EventClass)} "));
-            //        return;
-            //    }
-            //}
+                var eventClassId = (ushort)@event.EventClass;
+                if (sapphireEvents.Contains(eventClassId) == false)
+                {
+                    context.Results.Add(new ValidationResult($"{nameof(RequestBarChartComponent)}.{nameof(BarChartEventRequest)}.{nameof(BarChartEventRequest.EventClass)} - Should be part of the {nameof(EventClass)} "));
+                    return;
+                }
+            }
         }
     }
     public class RequestBarChartComponent

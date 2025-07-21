@@ -8,7 +8,6 @@ import { PQBIInterceptor } from './pqbi-interceptor';
 
 @NgModule({
     providers: [
-        ApiServiceProxies.GroupsServiceProxy,        
         ApiServiceProxies.TrendWidgetConfigurationsServiceProxy,
         ApiServiceProxies.BarChartWidgetConfigurationsServiceProxy,
         ApiServiceProxies.TableWidgetConfigurationsServiceProxy,

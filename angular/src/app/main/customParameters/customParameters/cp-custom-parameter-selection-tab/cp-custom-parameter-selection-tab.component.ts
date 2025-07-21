@@ -7,6 +7,7 @@ import { ArrayUtils } from '@app/shared/services/array-utils.service';
 import { ResolutionService } from '@app/shared/services/resolution-service';
 import { NgForm } from '@node_modules/@angular/forms';
 import { ListboxChangeEvent } from '@node_modules/primeng/listbox';
+import { AppComponentBase } from '@shared/common/app-component-base';
 import {
     CustomParameterDto,
     CustomParametersServiceProxy,
@@ -39,7 +40,6 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
 
     selectedOperatorArgument: number | null = null;
     selectedOperator: string | null;
-    advancedSettingsConfig: any = {};
 
     _multiple = false;
 
@@ -103,7 +103,7 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
         this.customParameters = [];
         for (let type of this._customParameterTypes) {
             this._customParameterServiceProxy
-                .getAll(undefined, undefined, undefined, type, undefined, undefined, undefined, undefined, 0, 100)
+                .getAll(undefined, undefined, undefined, undefined, type, undefined, undefined, undefined, 0, 100)
                 .subscribe((result: PagedResultDtoOfGetCustomParameterForViewDto) => {
                     this.customParameters.push(...result.items.map((item) => item.customParameter));
                     this.customParameters = [...this.customParameters];
@@ -135,7 +135,7 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
     getCustomParameterUI(customParameter: CustomParameterDto) {
         const resolution = this._resolutionService.getUIRepresentationForResolutionState(
             this._resolutionService.formatFromRequest(
-                this._resolutionService.parseStateFromInt(customParameter.resolutionInSeconds, true),
+                this._resolutionService.parseStateFromInt(customParameter.resolutionInSeconds),
             ),
         );
         return customParameter.name + ' (' + resolution + ')';
@@ -144,7 +144,7 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
     onCustomParameterChange(event: ListboxChangeEvent) {
         const customParameterModel = this.customParameters.find((cp) => cp.id === event.value);
         const customParameterResolution: ResolutionState = this._resolutionService.parseStateFromInt(
-            customParameterModel.resolutionInSeconds, true);
+            customParameterModel.resolutionInSeconds);
         this.minResolution = this._resolutionService.formatFromRequest(customParameterResolution);
     }
 
@@ -242,7 +242,6 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
             resolution: this.resolutionState,
             operator: this.combineOperatorAndArgument(),
             aggregationFunction: this.combineAggregationAndArgument(),
-            advancedSettings: this.advancedSettingsConfig,
         };
 
         this.onEditSave.emit(event);
@@ -256,7 +255,6 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
                 resolution: this.resolutionState,
                 operator: this.combineOperatorAndArgument(),
                 aggregationFunction: this.combineAggregationAndArgument(),
-                advancedSettings: this.advancedSettingsConfig
             };
 
             ArrayUtils.ensureArray(this.selectedQuantities).forEach((quantity) => {
@@ -317,7 +315,6 @@ export interface AddCustomParameterToCustomParameterEventCallback {
     resolution: ResolutionState;
     operator: string;
     aggregationFunction: string;
-    advancedSettings: any; 
 }
 
 export interface EditCustomParameterEventCallBack extends AddCustomParameterToCustomParameterEventCallback {

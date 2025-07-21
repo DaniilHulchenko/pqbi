@@ -132,8 +132,7 @@ namespace PQBI.Requests
                             else
                             {
                                 MeasurmentsParameterDetails ptrr = PQZxmlReader.ReadMeasurementParameterDetails(parsedPAram.ParamDetails);
-                                string[] props = parsedPAram.ParameterName.Split('_');
-                                additionalParameters.Add(new AdditionalData { MeasurmentsParameterDetails = ptrr, PropertyName = props.FirstOrDefault(), Base = props.LastOrDefault() });
+                                additionalParameters.Add(new AdditionalData { MeasurmentsParameterDetails = ptrr, PropertiesName = parsedPAram.ParameterName });
 
                             }
                         }

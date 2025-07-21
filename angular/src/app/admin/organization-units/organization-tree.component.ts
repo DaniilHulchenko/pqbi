@@ -173,7 +173,7 @@ export class OrganizationTreeComponent extends AppComponentBase implements OnIni
         }
 
         if (!node.data.parentId) {
-            _filter(this.treeData, {
+            _remove(this.treeData, {
                 data: {
                     id: id,
                 },
@@ -185,7 +185,7 @@ export class OrganizationTreeComponent extends AppComponentBase implements OnIni
             return;
         }
 
-        _filter(parentNode.children, {
+        _remove(parentNode.children, {
             data: {
                 id: id,
             },

@@ -43,7 +43,7 @@ export class CustomParameterSelectorComponent implements OnInit, ControlValueAcc
         if (this.customParameterTypes) {
             for (let type of this.customParameterTypes) {
                 this._customParameterServiceProxy
-                    .getAll(undefined, undefined, undefined, type, undefined, undefined, undefined, undefined,0, 100)
+                    .getAll(undefined, undefined, undefined, undefined, type, undefined, undefined, undefined,0, 100)
                     .subscribe((result: PagedResultDtoOfGetCustomParameterForViewDto) => {
                         this.customParameters.push(...result.items.map((item) => item.customParameter));
                         this.customParameters = [...this.customParameters];

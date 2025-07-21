@@ -30,11 +30,6 @@ namespace PQBI.Authorization
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
 
-            var groups = pages.CreateChildPermission(AppPermissions.Pages_Groups, L("Groups"), multiTenancySides: MultiTenancySides.Tenant);
-            groups.CreateChildPermission(AppPermissions.Pages_Groups_Create, L("CreateNewGroup"), multiTenancySides: MultiTenancySides.Tenant);
-            groups.CreateChildPermission(AppPermissions.Pages_Groups_Edit, L("EditGroup"), multiTenancySides: MultiTenancySides.Tenant);
-            groups.CreateChildPermission(AppPermissions.Pages_Groups_Delete, L("DeleteGroup"), multiTenancySides: MultiTenancySides.Tenant);
-
             var trendWidgetConfigurations = pages.CreateChildPermission(AppPermissions.Pages_TrendWidgetConfigurations, L("TrendWidgetConfigurations"));
             trendWidgetConfigurations.CreateChildPermission(AppPermissions.Pages_TrendWidgetConfigurations_Create, L("CreateNewTrendWidgetConfiguration"));
             trendWidgetConfigurations.CreateChildPermission(AppPermissions.Pages_TrendWidgetConfigurations_Edit, L("EditTrendWidgetConfiguration"));

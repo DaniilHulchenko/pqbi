@@ -78,9 +78,9 @@ public static class BaseDataExtensions
             Group = trendBaseData.Group,
             Phase = trendBaseData.Phase,
             Harmonics = trendBaseData.Harmonics != null
-                ? new HarmonicsDto { Value = trendBaseData.Harmonics.Value }
+                ? new HarmonicsDto { Index = trendBaseData.Harmonics.Index }
                 : null,
-            BaseResolution = trendBaseData.BaseResolution,
+            Base = trendBaseData.BaseResolution,
             Quantity = trendBaseData.Quantity,
             //Id = trendBaseData.Id,
             //Name = trendBaseData.Name,
@@ -105,7 +105,7 @@ public class Harmonics
     public int? Index { get; set; }
 }
 
-public class TrendCalcRequest : WidgetValidationBase, ICustomValidate
+public class TrendCalcRequest222 : WidgetValidationBase, ICustomValidate
 {
     public bool IsAutoResolution { get; set; }
     public int ResolutionInSeconds { get; set; }
@@ -191,12 +191,12 @@ public class TrendCalcRequest : WidgetValidationBase, ICustomValidate
 
                                     case ParameterListItemType.Channel:
 
-                                        //if (param.Feeders.FirstOrDefault(x => x.Id is null) != null)
-                                        ////if (param.ApplyToDos.Count <= 0)
-                                        //{
-                                        //    context.Results.Add(new ValidationResult($"In BaseParameter (Channel) mode channels must be."));
-                                        //    return;
-                                        //}
+                                        if (param.Feeders.FirstOrDefault(x => x.Id is null) != null)
+                                        //if (param.ApplyToDos.Count <= 0)
+                                        {
+                                            context.Results.Add(new ValidationResult($"In BaseParameter (Channel) mode channels must be."));
+                                            return;
+                                        }
                                         break;
 
                                     case ParameterListItemType.Exception:

@@ -13,7 +13,7 @@ public static class BaseParameterComponentHelper
 
     public static MeasurementParameterBase GetCustomParameter(BaseParameter parameter, FeederComponentInfo feeder)
     {        
-        List<string> prmSectionList = [parameter.Group, parameter.SyncInterval.ToString(), parameter.BaseResolution, parameter.ScadaQuantityName];
+        List<string> prmSectionList = [parameter.Group, parameter.SyncInterval.ToString(), parameter.Base, parameter.ScadaQuantityName, parameter.Phase, feeder.Id.ToString()];
 
         return MeasurementParameterFactory.GenerateNewMesurmentParameterWithoutSplit(prmSectionList.ToArray());
     }
@@ -24,11 +24,11 @@ public static class BaseParameterComponentHelper
         if (parameter.Harmonics is not null && parameter.Harmonics.Value is not null && parameter.Harmonics.Value > 0)
         {
             var harmonicNum = parameter.Harmonics.Value.ToString();
-            prmSectionList = ["STD", parameter.Group, harmonicNum, parameter.SyncInterval.ToString(), parameter.BaseResolution, parameter.ScadaQuantityName, parameter.Phase, feederId];
+            prmSectionList = ["STD", parameter.Group, harmonicNum, parameter.SyncInterval.ToString(), parameter.Base, parameter.ScadaQuantityName, parameter.Phase, feederId];
         }
         else
         {
-            prmSectionList = ["STD", parameter.Group, parameter.SyncInterval.ToString(), parameter.BaseResolution, parameter.ScadaQuantityName, parameter.Phase, feederId];
+            prmSectionList = ["STD", parameter.Group, parameter.SyncInterval.ToString(), parameter.Base, parameter.ScadaQuantityName, parameter.Phase, feederId];
         }
 
         return MeasurementParameterFactory.GenerateNewMesurmentParameterWithoutSplit(prmSectionList.ToArray());
@@ -48,11 +48,11 @@ public static class BaseParameterComponentHelper
         {
             var harmonicNum = parameter.Harmonics.Value.ToString();
 
-            prmSectionList = ["STD", parameter.Group, harmonicNum, parameter.SyncInterval.ToString(), parameter.BaseResolution, parameter.ScadaQuantityName];
+            prmSectionList = ["STD", parameter.Group, harmonicNum, parameter.SyncInterval.ToString(), parameter.Base, parameter.ScadaQuantityName];
         }
         else
         {
-            prmSectionList = ["STD", parameter.Group, parameter.SyncInterval.ToString(), parameter.BaseResolution, parameter.ScadaQuantityName];
+            prmSectionList = ["STD", parameter.Group, parameter.SyncInterval.ToString(), parameter.Base, parameter.ScadaQuantityName];
         }
 
         prmSectionList.AddRange(parameter.Phase.Split("_"));

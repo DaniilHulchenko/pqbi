@@ -24,10 +24,6 @@ export class AppNavigationService {
             new AppMenuItem('Tenants', 'Pages.Tenants', 'flaticon-list-3', '/app/admin/tenants'),
             new AppMenuItem('CustomParameters', 'Pages.CustomParameters', 'flaticon-more', '/app/main/customParameters'),
             new AppMenuItem('Editions', 'Pages.Editions', 'flaticon-app', '/app/admin/editions'),
-            new AppMenuItem('Groups', 'Pages.Groups', 'flaticon-more', '/app/main/groups/groups'),
-           
-            
-           
 
             new AppMenuItem(
                 'Administration',
