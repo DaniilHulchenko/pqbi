@@ -18,7 +18,7 @@ export class DashboardComponent extends AppComponentBase {
     }
 
     canDeactivate(): boolean {
-        if (this.child.hasPendingChanges) {
+        if (this.child.editModeEnabled) {
           return confirm(this.l('UnsavedChangesWarning'));
         }
         return true;

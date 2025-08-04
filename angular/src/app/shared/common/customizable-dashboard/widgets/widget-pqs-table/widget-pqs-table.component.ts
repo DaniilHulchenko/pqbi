@@ -51,8 +51,10 @@ import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selec
 import { TableDesignOptions } from './create-or-edit-table-configuration/table-design-options/table-design-options.component';
 import { AdvancedSettingsConfig } from '@app/shared/common/components/parameter-selection-tabs/advanced-settings/advanced-settings.component';
 import { ArrayUtils } from '@app/shared/services/array-utils.service';
-import { ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
+import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
 import { ParameterCombinationsService } from '@app/shared/services/parameter-combinations-service';
+import { EditModeService } from '@app/shared/services/edit-mode-service.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 
 interface TreeWidgetParametersColumn extends WidgetParametersColumn {
@@ -75,6 +77,8 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     @ViewChild('createOrEditModal') createOrEditModal: CreateOrEditTableConfigurationComponent;
     @ViewChild('renameWidgetModal') renameModal: RenameWidgetModalComponent;
     @Output() widgetRefresh: EventEmitter<any> = new EventEmitter();
+
+    editState: boolean = false;
 
     isLoading = false;
 
@@ -103,8 +107,15 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         private _treeBuilderServiceProxy: TreeBuilderServiceProxy,
         elementReference: ElementRef,
         dateRangeService: DateRangeService,
+        private editModeService: EditModeService,
     ) {
         super(injector, elementReference, dateRangeService);
+
+        this.editState = this.editModeService.getEditModeValue();
+        this.editModeService.getEditMode().subscribe((enabled) => {
+            this.editState = enabled;
+        });
+
         this._defaultWidgetName = this.l('WidgetPQSTable');
         const saved = localStorage.getItem('tableSortMode');
         if (saved === 'value' || saved === 'color') {
@@ -136,6 +147,19 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     ngOnInit(): void {
         super.ngOnInit();
+        if (!this.isNew) {
+        this.editModeService.setEditMode(false);
+        }
+        this.editState = this.editModeService.getEditModeValue();
+
+        this.editModeService.getEditMode().subscribe((enabled) => {
+            this.editState = enabled;
+        });
+
+        abp.event.on('app.dashboardEdit.onEditStateChange', (enabled: boolean) => {
+            this.editState = enabled;
+        });
+
         if (this.isNew) {
             this.runDelayed(() => this.edit());
         }
@@ -751,8 +775,11 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                         span.innerText = value != null ? value.toString() : '';
 
                         const bg = getBackgroundColor(value, settings);
-                        if (bg) {
-                            container.style.backgroundColor = bg;
+                        if (settings) {
+                            const bg = getBackgroundColor(value, settings);
+                            if (bg) {
+                                container.style.backgroundColor = bg;
+                            }
                         }
 
                             container.appendChild(span);
@@ -904,15 +931,70 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     }
 }
 function getBackgroundColor(value: number | null | undefined, settings: AdvancedSettingsConfig): string | null {
-  if (!settings || value == null) return null;
+  if (!settings) return null;
 
-  if (settings.colorScheme === 'Gradient' && settings.gradientFromColor && settings.gradientToColor) {
-    const normalized = normalizeValue(value, settings.lowerLimit, settings.upperLimit);
-    return interpolateColor(settings.gradientFromColor, settings.gradientToColor, normalized);
+  const isNoData = 
+    value === null ||
+    value === undefined ||
+    (typeof value === 'string' && ['DB_OUT_OF_RANGE', 'NO_DATA', 'N/A', ''].includes((value as string).trim()));
+
+  const {
+    lowerLimit,
+    upperLimit,
+    okColor,
+    noDataColor,
+    showOkColor,
+    showNoDataColor,
+    colorScheme,
+    gradientFromColor,
+    gradientToColor,
+    outOfLimitColor
+  } = settings;
+
+  if (isNoData && showNoDataColor && noDataColor) {
+    return noDataColor;
+  }
+
+  if (
+    showOkColor &&
+    lowerLimit != null &&
+    upperLimit != null &&
+    value != null &&
+    value >= lowerLimit &&
+    value <= upperLimit &&
+    okColor
+  ) {
+    return okColor;
+  }
+
+  if (colorScheme === ColorSchema.None) {
+    return null;
+  }
+
+  if (
+    colorScheme === ColorSchema.Gradient &&
+    gradientFromColor &&
+    gradientToColor &&
+    lowerLimit != null &&
+    upperLimit != null
+  ) {
+    const normalized = normalizeValue(value, lowerLimit, upperLimit);
+    return interpolateColor(gradientFromColor, gradientToColor, normalized);
+  }
+
+  if (
+    colorScheme === ColorSchema.OutOfLimit &&
+    outOfLimitColor &&
+    lowerLimit != null &&
+    upperLimit != null &&
+    (value < lowerLimit || value > upperLimit)
+  ) {
+    return outOfLimitColor;
   }
 
   return null;
 }
+
 function normalizeValue(value: number, min: number, max: number): number {
   if (max === min) return 1; 
   return (value - min) / (max - min); 

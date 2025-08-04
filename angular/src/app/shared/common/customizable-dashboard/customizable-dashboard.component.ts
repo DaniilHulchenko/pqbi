@@ -42,6 +42,7 @@ import { Subject, forkJoin } from 'rxjs';
 import { GuidGeneratorService } from '@shared/utils/guid-generator.service';
 import { LocalStorageService } from '@shared/utils/local-storage.service';
 import safeStringify from 'fast-safe-stringify';
+import { EditModeService } from '@app/shared/services/edit-mode-service.service';
 
 export const WIDGETONRESIZEEVENTHANDLERTOKEN = new InjectionToken<WidgetOnResizeEventHandler>(
     'WidgetOnResizeEventHandlerToken',
@@ -66,10 +67,13 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     @ViewChild('dropdownRenamePage') dropdownRenamePage: BsDropdownDirective;
     @ViewChild('dropdownAddPage') dropdownAddPage: BsDropdownDirective;
 
+    
     loading = true;
     busy = true;
     editModeEnabled = false;
-    hasPendingChanges = false;
+
+
+
 
     //gridster options. all gridster needs its options. In our scenario, they are all same.
     options: GridsterConfig[] = [];
@@ -103,6 +107,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         private _widgetConfigurationsServiceProxy: WidgetConfigurationsServiceProxy,
         private _guidGenerator: GuidGeneratorService,
         private _localStorageService: LocalStorageService,
+        private editModeService: EditModeService
     ) {
         super(_injector);
     }
@@ -110,6 +115,9 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     ngOnInit() {
         this.loading = true;
 
+        this.editModeService.getEditMode().subscribe((enabled) => {
+            this.editModeEnabled = enabled;
+        });
         forkJoin([
             this._dashboardCustomizationServiceProxy.getUserDashboard(
                 this.dashboardName,
@@ -171,10 +179,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             pages: userDashboardResultFromServer.pages.map((page) => {
                 //gridster should has its own options
                 const cfg = this.getGridsterConfig();
-                cfg.itemChangeCallback = () => this.markDirty();
-                cfg.itemResizeCallback = () => this.markDirty();
-                cfg.itemRemovedCallback = () => this.markDirty();
-                cfg.itemInitCallback = () => this.markDirty();
                 this.options.push(cfg);
 
                 if (!page.widgets) {
@@ -236,7 +240,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                 }
             }
         );
-        this.markDirty();
     }
 
     addWidget(widgetId: any): void {
@@ -290,12 +293,12 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                 this.busy = false;
                 this.notify.success(this.l('SavedSuccessfully'));
             });
-
-            this.markDirty();
     }
 
     changeEditMode(): void {
         this.editModeEnabled = !this.editModeEnabled;
+        this.editModeService.setEditMode(this.editModeEnabled);
+
         //change all gridster options
         //setTimeout for letting the DOM first update so that the edit button appears
         setTimeout(() => {
@@ -312,10 +315,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                 option.api.optionsChanged();
             });
         }
-    }
-
-    onWidgetRefresh(event: any) {
-        console.log(event);
     }
 
     openAddWidgetModal(): void {
@@ -361,8 +360,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             });
 
         this.dropdownAddPage.hide();
-
-        this.markDirty();
     }
 
     selectPageTab(pageId: string): void {
@@ -382,6 +379,11 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
         if (!this.loadedTabs[pageId]) {
             this.loadedTabs[pageId] = true;
+            if (this.editModeEnabled) {
+                setTimeout(() => {
+                abp.event.trigger('app.dashboardEdit.onEditStateChange', this.editModeEnabled);
+                }, 0);
+            }
         }
 
         //when tab change gridster should redraw because if a tab is not active gridster think that its height is 0 and do not draw it.
@@ -420,8 +422,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             });
 
         this.dropdownRenamePage.hide();
-
-        this.markDirty();
     }
 
     deletePage(): void {
@@ -455,8 +455,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                     });
             }
         });
-
-        this.markDirty();
     }
 
     activateFirstPage() {
@@ -475,7 +473,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     savePage(): void {
         this.busy = true;
-        this.hasPendingChanges = false;
 
         let savePageInput = new SavePageInput({
             dashboardName: this.dashboardName,
@@ -558,18 +555,11 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             injector: Injector.create({
                 providers: [
                     { provide: WIDGETONRESIZEEVENTHANDLERTOKEN, useValue: handler },
-                    { provide: 'widgetRefresh', useValue: (event: any) => this.onWidgetRefresh(event) },
+                    { provide: 'widgetRefresh', useValue: (event: any) => {} },
                 ],
                 parent: this._injector,
             }),
         };
-    }
-
-    private markDirty() {
-        if (!this.hasPendingChanges) {
-            this.hasPendingChanges = true;
-            abp.event.trigger('app.dashboardEdit.onDirtyStateChange', true);
-        }
     }
 
     private getWidgetViewDefinition(id: string): WidgetViewDefinition {

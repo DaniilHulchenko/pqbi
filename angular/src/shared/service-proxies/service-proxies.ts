@@ -21421,183 +21421,15 @@ export interface IAuthenticateResultModel {
     c: string | undefined;
 }
 
-export class BarCharComponentResponse implements IBarCharComponentResponse {
-    guid!: string;
-    name!: string | undefined;
-    feeders!: number[] | undefined;
-    events!: BarChartEventResponse[] | undefined;
-
-    constructor(data?: IBarCharComponentResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.guid = _data["guid"];
-            this.name = _data["name"];
-            if (Array.isArray(_data["feeders"])) {
-                this.feeders = [] as any;
-                for (let item of _data["feeders"])
-                    this.feeders!.push(item);
-            }
-            if (Array.isArray(_data["events"])) {
-                this.events = [] as any;
-                for (let item of _data["events"])
-                    this.events!.push(BarChartEventResponse.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): BarCharComponentResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new BarCharComponentResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["guid"] = this.guid;
-        data["name"] = this.name;
-        if (Array.isArray(this.feeders)) {
-            data["feeders"] = [];
-            for (let item of this.feeders)
-                data["feeders"].push(item);
-        }
-        if (Array.isArray(this.events)) {
-            data["events"] = [];
-            for (let item of this.events)
-                data["events"].push(item.toJSON());
-        }
-        return data;
-    }
-}
-
-export interface IBarCharComponentResponse {
-    guid: string;
-    name: string | undefined;
-    feeders: number[] | undefined;
-    events: BarChartEventResponse[] | undefined;
-}
-
-export class BarChartEventRequest implements IBarChartEventRequest {
-    type!: string | undefined;
-    name!: string | undefined;
-    header!: string | undefined;
-    aggregationFunc!: string | undefined;
-    eventClass!: number;
-
-    constructor(data?: IBarChartEventRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.type = _data["type"];
-            this.name = _data["name"];
-            this.header = _data["header"];
-            this.aggregationFunc = _data["aggregationFunc"];
-            this.eventClass = _data["eventClass"];
-        }
-    }
-
-    static fromJS(data: any): BarChartEventRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new BarChartEventRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["type"] = this.type;
-        data["name"] = this.name;
-        data["header"] = this.header;
-        data["aggregationFunc"] = this.aggregationFunc;
-        data["eventClass"] = this.eventClass;
-        return data;
-    }
-}
-
-export interface IBarChartEventRequest {
-    type: string | undefined;
-    name: string | undefined;
-    header: string | undefined;
-    aggregationFunc: string | undefined;
-    eventClass: number;
-}
-
-export class BarChartEventResponse implements IBarChartEventResponse {
-    type!: string | undefined;
-    name!: string | undefined;
-    header!: string | undefined;
-    aggregationFunc!: string | undefined;
-    eventClass!: number;
-    data!: number;
-
-    constructor(data?: IBarChartEventResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.type = _data["type"];
-            this.name = _data["name"];
-            this.header = _data["header"];
-            this.aggregationFunc = _data["aggregationFunc"];
-            this.eventClass = _data["eventClass"];
-            this.data = _data["data"];
-        }
-    }
-
-    static fromJS(data: any): BarChartEventResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new BarChartEventResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["type"] = this.type;
-        data["name"] = this.name;
-        data["header"] = this.header;
-        data["aggregationFunc"] = this.aggregationFunc;
-        data["eventClass"] = this.eventClass;
-        data["data"] = this.data;
-        return data;
-    }
-}
-
-export interface IBarChartEventResponse {
-    type: string | undefined;
-    name: string | undefined;
-    header: string | undefined;
-    aggregationFunc: string | undefined;
-    eventClass: number;
-    data: number;
-}
-
 export class BarChartRequest implements IBarChartRequest {
-    components!: RequestBarChartComponent[] | undefined;
-    events!: BarChartEventRequest[] | undefined;
     startDate!: DateTime;
     endDate!: DateTime;
+    widgetName!: string | undefined;
+    userTimeZone!: number;
+    category!: DimensionSelector;
+    seriesBy!: DimensionSelector;
+    feeders!: FeederComponentInfo[] | undefined;
+    barPrmList!: BarParameter[] | undefined;
 
     constructor(data?: IBarChartRequest) {
         if (data) {
@@ -21610,18 +21442,22 @@ export class BarChartRequest implements IBarChartRequest {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["components"])) {
-                this.components = [] as any;
-                for (let item of _data["components"])
-                    this.components!.push(RequestBarChartComponent.fromJS(item));
-            }
-            if (Array.isArray(_data["events"])) {
-                this.events = [] as any;
-                for (let item of _data["events"])
-                    this.events!.push(BarChartEventRequest.fromJS(item));
-            }
             this.startDate = _data["startDate"] ? DateTime.fromISO(_data["startDate"].toString()) : <any>undefined;
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
+            this.widgetName = _data["widgetName"];
+            this.userTimeZone = _data["userTimeZone"];
+            this.category = _data["category"] ? DimensionSelector.fromJS(_data["category"]) : <any>undefined;
+            this.seriesBy = _data["seriesBy"] ? DimensionSelector.fromJS(_data["seriesBy"]) : <any>undefined;
+            if (Array.isArray(_data["feeders"])) {
+                this.feeders = [] as any;
+                for (let item of _data["feeders"])
+                    this.feeders!.push(FeederComponentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["barPrmList"])) {
+                this.barPrmList = [] as any;
+                for (let item of _data["barPrmList"])
+                    this.barPrmList!.push(BarParameter.fromJS(item));
+            }
         }
     }
 
@@ -21634,33 +21470,40 @@ export class BarChartRequest implements IBarChartRequest {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.components)) {
-            data["components"] = [];
-            for (let item of this.components)
-                data["components"].push(item.toJSON());
-        }
-        if (Array.isArray(this.events)) {
-            data["events"] = [];
-            for (let item of this.events)
-                data["events"].push(item.toJSON());
-        }
         data["startDate"] = this.startDate ? this.startDate.toString() : <any>undefined;
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
+        data["widgetName"] = this.widgetName;
+        data["userTimeZone"] = this.userTimeZone;
+        data["category"] = this.category ? this.category.toJSON() : <any>undefined;
+        data["seriesBy"] = this.seriesBy ? this.seriesBy.toJSON() : <any>undefined;
+        if (Array.isArray(this.feeders)) {
+            data["feeders"] = [];
+            for (let item of this.feeders)
+                data["feeders"].push(item.toJSON());
+        }
+        if (Array.isArray(this.barPrmList)) {
+            data["barPrmList"] = [];
+            for (let item of this.barPrmList)
+                data["barPrmList"].push(item.toJSON());
+        }
         return data;
     }
 }
 
 export interface IBarChartRequest {
-    components: RequestBarChartComponent[] | undefined;
-    events: BarChartEventRequest[] | undefined;
     startDate: DateTime;
     endDate: DateTime;
+    widgetName: string | undefined;
+    userTimeZone: number;
+    category: DimensionSelector;
+    seriesBy: DimensionSelector;
+    feeders: FeederComponentInfo[] | undefined;
+    barPrmList: BarParameter[] | undefined;
 }
 
 export class BarChartResponse implements IBarChartResponse {
-    components!: BarCharComponentResponse[] | undefined;
-    startDate!: DateTime;
-    endDate!: DateTime;
+    dataUnitType!: DataUnitType;
+    groups!: BarGroup[] | undefined;
 
     constructor(data?: IBarChartResponse) {
         if (data) {
@@ -21673,13 +21516,12 @@ export class BarChartResponse implements IBarChartResponse {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["components"])) {
-                this.components = [] as any;
-                for (let item of _data["components"])
-                    this.components!.push(BarCharComponentResponse.fromJS(item));
+            this.dataUnitType = _data["dataUnitType"] ? DataUnitType.fromJS(_data["dataUnitType"]) : <any>undefined;
+            if (Array.isArray(_data["groups"])) {
+                this.groups = [] as any;
+                for (let item of _data["groups"])
+                    this.groups!.push(BarGroup.fromJS(item));
             }
-            this.startDate = _data["startDate"] ? DateTime.fromISO(_data["startDate"].toString()) : <any>undefined;
-            this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
         }
     }
 
@@ -21692,21 +21534,19 @@ export class BarChartResponse implements IBarChartResponse {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.components)) {
-            data["components"] = [];
-            for (let item of this.components)
-                data["components"].push(item.toJSON());
+        data["dataUnitType"] = this.dataUnitType ? this.dataUnitType.toJSON() : <any>undefined;
+        if (Array.isArray(this.groups)) {
+            data["groups"] = [];
+            for (let item of this.groups)
+                data["groups"].push(item.toJSON());
         }
-        data["startDate"] = this.startDate ? this.startDate.toString() : <any>undefined;
-        data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
         return data;
     }
 }
 
 export interface IBarChartResponse {
-    components: BarCharComponentResponse[] | undefined;
-    startDate: DateTime;
-    endDate: DateTime;
+    dataUnitType: DataUnitType;
+    groups: BarGroup[] | undefined;
 }
 
 export enum BarChartType {
@@ -21765,6 +21605,170 @@ export interface IBarChartWidgetConfigurationDto {
     components: string | undefined;
     configuration: string | undefined;
     dateRange: string | undefined;
+}
+
+export class BarGroup implements IBarGroup {
+    category!: string | undefined;
+    bars!: BarItem[] | undefined;
+
+    constructor(data?: IBarGroup) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.category = _data["category"];
+            if (Array.isArray(_data["bars"])) {
+                this.bars = [] as any;
+                for (let item of _data["bars"])
+                    this.bars!.push(BarItem.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): BarGroup {
+        data = typeof data === 'object' ? data : {};
+        let result = new BarGroup();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["category"] = this.category;
+        if (Array.isArray(this.bars)) {
+            data["bars"] = [];
+            for (let item of this.bars)
+                data["bars"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IBarGroup {
+    category: string | undefined;
+    bars: BarItem[] | undefined;
+}
+
+export class BarItem implements IBarItem {
+    seriesName!: string | undefined;
+    value!: number | undefined;
+    dataUnitType!: DataUnitType;
+    status!: PqbiDataValueStatus;
+
+    constructor(data?: IBarItem) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.seriesName = _data["seriesName"];
+            this.value = _data["value"];
+            this.dataUnitType = _data["dataUnitType"] ? DataUnitType.fromJS(_data["dataUnitType"]) : <any>undefined;
+            this.status = _data["status"];
+        }
+    }
+
+    static fromJS(data: any): BarItem {
+        data = typeof data === 'object' ? data : {};
+        let result = new BarItem();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["seriesName"] = this.seriesName;
+        data["value"] = this.value;
+        data["dataUnitType"] = this.dataUnitType ? this.dataUnitType.toJSON() : <any>undefined;
+        data["status"] = this.status;
+        return data;
+    }
+}
+
+export interface IBarItem {
+    seriesName: string | undefined;
+    value: number | undefined;
+    dataUnitType: DataUnitType;
+    status: PqbiDataValueStatus;
+}
+
+export class BarParameter implements IBarParameter {
+    parameterType!: string | undefined;
+    excludeFlagged!: EventClass[] | undefined;
+    isExcludeFlaggedData!: boolean;
+    customData!: CustomWidgetTableData;
+    baseData!: string | undefined;
+    tableEvent!: TableWidgetEvent;
+    parameterName!: string | undefined;
+
+    constructor(data?: IBarParameter) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.parameterType = _data["parameterType"];
+            if (Array.isArray(_data["excludeFlagged"])) {
+                this.excludeFlagged = [] as any;
+                for (let item of _data["excludeFlagged"])
+                    this.excludeFlagged!.push(item);
+            }
+            this.isExcludeFlaggedData = _data["isExcludeFlaggedData"];
+            this.customData = _data["customData"] ? CustomWidgetTableData.fromJS(_data["customData"]) : <any>undefined;
+            this.baseData = _data["baseData"];
+            this.tableEvent = _data["tableEvent"] ? TableWidgetEvent.fromJS(_data["tableEvent"]) : <any>undefined;
+            this.parameterName = _data["parameterName"];
+        }
+    }
+
+    static fromJS(data: any): BarParameter {
+        data = typeof data === 'object' ? data : {};
+        let result = new BarParameter();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["parameterType"] = this.parameterType;
+        if (Array.isArray(this.excludeFlagged)) {
+            data["excludeFlagged"] = [];
+            for (let item of this.excludeFlagged)
+                data["excludeFlagged"].push(item);
+        }
+        data["isExcludeFlaggedData"] = this.isExcludeFlaggedData;
+        data["customData"] = this.customData ? this.customData.toJSON() : <any>undefined;
+        data["baseData"] = this.baseData;
+        data["tableEvent"] = this.tableEvent ? this.tableEvent.toJSON() : <any>undefined;
+        data["parameterName"] = this.parameterName;
+        return data;
+    }
+}
+
+export interface IBarParameter {
+    parameterType: string | undefined;
+    excludeFlagged: EventClass[] | undefined;
+    isExcludeFlaggedData: boolean;
+    customData: CustomWidgetTableData;
+    baseData: string | undefined;
+    tableEvent: TableWidgetEvent;
+    parameterName: string | undefined;
 }
 
 export class BaseData implements IBaseData {
@@ -25002,6 +25006,57 @@ export class DelegatedImpersonateInput implements IDelegatedImpersonateInput {
 
 export interface IDelegatedImpersonateInput {
     userDelegationId: number;
+}
+
+export class DimensionSelector implements IDimensionSelector {
+    type!: DimensionType;
+    id!: number | undefined;
+    name!: string | undefined;
+
+    constructor(data?: IDimensionSelector) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.type = _data["type"];
+            this.id = _data["id"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): DimensionSelector {
+        data = typeof data === 'object' ? data : {};
+        let result = new DimensionSelector();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["type"] = this.type;
+        data["id"] = this.id;
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface IDimensionSelector {
+    type: DimensionType;
+    id: number | undefined;
+    name: string | undefined;
+}
+
+export enum DimensionType {
+    Dates = 0,
+    Parameters = 1,
+    Feeders = 2,
+    CustomGroup = 3,
 }
 
 export class DynamicEntityPropertyDto implements IDynamicEntityPropertyDto {
@@ -31258,11 +31313,7 @@ export interface IGroupDto {
 }
 
 export class HarmonicsDto implements IHarmonicsDto {
-    harmonicNums!: number[] | undefined;
-    range!: string | undefined;
-    rangeOn!: string | undefined;
     value!: number | undefined;
-    index!: number | undefined;
 
     constructor(data?: IHarmonicsDto) {
         if (data) {
@@ -31275,15 +31326,7 @@ export class HarmonicsDto implements IHarmonicsDto {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["harmonicNums"])) {
-                this.harmonicNums = [] as any;
-                for (let item of _data["harmonicNums"])
-                    this.harmonicNums!.push(item);
-            }
-            this.range = _data["range"];
-            this.rangeOn = _data["rangeOn"];
             this.value = _data["value"];
-            this.index = _data["index"];
         }
     }
 
@@ -31296,25 +31339,13 @@ export class HarmonicsDto implements IHarmonicsDto {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.harmonicNums)) {
-            data["harmonicNums"] = [];
-            for (let item of this.harmonicNums)
-                data["harmonicNums"].push(item);
-        }
-        data["range"] = this.range;
-        data["rangeOn"] = this.rangeOn;
         data["value"] = this.value;
-        data["index"] = this.index;
         return data;
     }
 }
 
 export interface IHarmonicsDto {
-    harmonicNums: number[] | undefined;
-    range: string | undefined;
-    rangeOn: string | undefined;
     value: number | undefined;
-    index: number | undefined;
 }
 
 export class HostBillingSettingsEditDto implements IHostBillingSettingsEditDto {
@@ -37950,46 +37981,6 @@ export interface IRenamePageInput {
     id: string | undefined;
     name: string | undefined;
     application: string | undefined;
-}
-
-export class RequestBarChartComponent implements IRequestBarChartComponent {
-    guid!: string | undefined;
-    name!: string | undefined;
-
-    constructor(data?: IRequestBarChartComponent) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.guid = _data["guid"];
-            this.name = _data["name"];
-        }
-    }
-
-    static fromJS(data: any): RequestBarChartComponent {
-        data = typeof data === 'object' ? data : {};
-        let result = new RequestBarChartComponent();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["guid"] = this.guid;
-        data["name"] = this.name;
-        return data;
-    }
-}
-
-export interface IRequestBarChartComponent {
-    guid: string | undefined;
-    name: string | undefined;
 }
 
 export class ResetPasswordInput implements IResetPasswordInput {

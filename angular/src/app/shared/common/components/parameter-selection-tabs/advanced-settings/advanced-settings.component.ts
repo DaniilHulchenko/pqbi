@@ -83,6 +83,7 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
     ];
 
     colorSchemaOptions = [
+        { value: ColorSchema.None, text: 'No color highlight' },
         { value: ColorSchema.OutOfLimit, text: 'Out-of-limit color' },
         { value: ColorSchema.Gradient, text: 'Out of limits gradient - from:   to:' },
     ];
@@ -124,6 +125,8 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
             this.aligningIgnored = c.aligningIgnored;
             this.replaceAggregation = c.replaceAggregation;
             this.customAggregationFunc = c.customAggregationFunc;
+            this.useOkColor = !!this.okColor;
+            this.useNoDataColor = !!this.noDataColor;
         }
     }
 
@@ -169,8 +172,8 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
             aligningIgnored: this.aligningIgnored,
             replaceAggregation: this.replaceAggregation,
             customAggregationFunc: this.customAggregationFunc,
-            showOkColor: this.showOkColor,
-            showNoDataColor: this.showNoDataColor,
+            showOkColor: this.useOkColor,
+            showNoDataColor: this.useNoDataColor,
         };
         this.configChange.emit(config);
         this.hide();

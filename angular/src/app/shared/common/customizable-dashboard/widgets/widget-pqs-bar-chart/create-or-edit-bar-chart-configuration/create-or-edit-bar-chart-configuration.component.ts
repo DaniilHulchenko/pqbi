@@ -295,7 +295,7 @@ export class CreateOrEditBarChartConfigurationComponent
             ...p,
             resolution: p.resolution ?? 0,
         }));
-         const config = {
+        const config = {
             xUnit: this.selectedXUnit,
             series: this.selectedSeries,
             isAutoResolution: this.isAutoResolution,

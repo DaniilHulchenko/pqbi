@@ -1,39 +1,50 @@
-import { Injectable, Injector } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Injectable, Injector, NgZone } from '@angular/core';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { AbpHttpConfigurationService, AbpHttpInterceptor, TokenService } from 'abp-ng2-module';
 import { blobToText } from './service-proxies';
 import { Router } from '@angular/router';
-import notify from 'devextreme/ui/notify';
+import { AppAuthService } from '@app/shared/common/auth/app-auth.service';
 
 @Injectable()
 export class PQBIInterceptor extends AbpHttpInterceptor {
-    private _criticalIssueCode = 1;
+    private readonly _criticalIssueCode = 1;
 
-    constructor(configuration: AbpHttpConfigurationService, injector: Injector, private tokenService: TokenService, private _router: Router) {
-        super(configuration, injector);
-    }
+  constructor(
+    private abpHttpConfiguration: AbpHttpConfigurationService,
+    injector: Injector,
+    private authService: AppAuthService
+  ) {
+    super(abpHttpConfiguration, injector);
+  }
 
-    intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        return super.intercept(request, next).pipe(
-            tap({
-                next: (event) => event,
-                error: (error) => {
-                    blobToText(error.error).subscribe(err => {
-                        let errorModel = JSON.parse(err);
-                        if (errorModel.error.code === this._criticalIssueCode) {
-                            abp.message.confirm(errorModel.error.message, 'Error', (isConfirmed) => {
-                                this.tokenService.clearToken();
-                                this._router.navigateByUrl('/account/login');
-                            }, {
-                                showCancelButton: false,
-                                icon: 'error'
-                            });
-                        }
-                    });
-                },
-            }),
-        );
-    }
+  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    return super.intercept(request, next).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.error instanceof Blob && error.error.type === 'application/json') {
+          return blobToText(error.error).pipe(
+            switchMap(text => {
+              let errorModel;
+              try {
+                errorModel = JSON.parse(text);
+              } catch {
+                return throwError(() => error);
+              }
+
+              const code = errorModel?.error?.code;
+
+              if (code === this._criticalIssueCode) {
+                this.authService.logout(true);
+              }
+
+              return throwError(() => error);
+            })
+          );
+        }
+
+        return throwError(() => error);
+      })
+    );
+  }
 }
