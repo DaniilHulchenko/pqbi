@@ -175,7 +175,9 @@ export class EventParameterSelectionTabComponent extends EditableTabComponentBas
                 polyphase: this.polyphase,
                 aggregation: this.aggregation,
                 quantity: this.quantity,
-                advancedSettings: this.eventAdvancedSettingsConfig,
+                advancedSettings: this.eventAdvancedSettingsConfig 
+                                    ? JSON.parse(JSON.stringify(this.eventAdvancedSettingsConfig)) 
+                                    : undefined,
             };
 
             if (this.polyphase) {

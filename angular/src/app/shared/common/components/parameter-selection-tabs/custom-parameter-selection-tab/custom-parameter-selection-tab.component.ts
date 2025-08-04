@@ -149,7 +149,9 @@ export class CustomParameterSelectionTabComponent
             componentsState: this.componentsState,
             customParameterId: this.customParameterId,
             quantity: this.quantity,
-            advancedSettings: this.advancedSettingsConfig,
+            advancedSettings: this.advancedSettingsConfig 
+                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
+                                    : undefined,
         };
 
         this.onEditSave.emit(editSaveEvent);
@@ -184,6 +186,8 @@ export class CustomParameterSelectionTabComponent
             customParameterId: customParameterId,
             quantity: quantity,
             advancedSettings: advancedSettings
+                                    ? JSON.parse(JSON.stringify(advancedSettings)) 
+                                    : undefined,
         });
     }
 }

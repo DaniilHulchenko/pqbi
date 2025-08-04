@@ -74,6 +74,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
     modalVisible = false;
 
     isVertical = true;
+    designOptionsModalVisible = false;
 
     tableWidgetConfiguration: CreateOrEditTableWidgetConfigurationDto;
     designOptionsObj: TableDesignOptions = {
@@ -85,7 +86,9 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
         cellFontFamily: 'Arial, sans-serif'
     };
 
-    tabs = [
+    tabs: any[] = [];
+
+    private _allTabs = [
         {
             ID: 1,
             name: 'Custom',
@@ -124,6 +127,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
         private _customParameterServiceProxy: CustomParametersServiceProxy,
     ) {
         super(injector);
+        this.tabs = this._allTabs;
     }
 
     isFormValid(): boolean {
@@ -153,6 +157,18 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
 
     onComponentsStateChange() {
         this.componentsState = { ...this.componentsState };
+
+        if (this.componentsState.feeders === undefined || this.componentsState.feeders === null || this.componentsState.feeders.length === 0) {
+            this.parameters = this.parameters.filter(
+                (p) =>
+                    p.type === ColumnType.Event ||
+                    (p.type === ColumnType.BaseParameter &&
+                        (JSON.parse(p.data.toString()).type === BaseParameterType.Channel ||
+                        JSON.parse(p.data.toString()).type === BaseParameterType.Additional)),
+            );
+        }
+
+        this.updatePossibleTabs();
     }
 
     onDateRangeChanged(dateRangeState: DateRangeState) {
@@ -208,7 +224,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
 
     onAddEvent(event: AddEventParameterEventCallBack) {
         const phaseNames = event.phases.map((phase) => phase).join(', ');
-        const formattedName = `${event.event.description} (${phaseNames}) ${event.parameter}`;
+        const formattedName = `${event.event.name} (${phaseNames}) ${event.parameter}`;
 
         const newItem = {
             id: Guid.newGuid().toString(),
@@ -278,7 +294,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
         if (!tableParameter) return;
 
         const phaseNames = event.phases.map((phase) => phase).join(', ');
-        tableParameter.name = `${event.event.description} (${phaseNames}) ${event.parameter}`;
+        tableParameter.name = `${event.event.name} (${phaseNames}) ${event.parameter}`;
         tableParameter.quantity = event.quantity;
         tableParameter.data = safeStringify({
             event: event.event,
@@ -346,6 +362,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
                     this.dateRangeSelectionState = DateRangeState.fromJSON(result.tableWidgetConfiguration.dateRange);
                     this.componentsState = JSON.parse(result.tableWidgetConfiguration.components);
                     this.parameters = JSON.parse(result.tableWidgetConfiguration.configuration);
+                    this.updatePossibleTabs();
                     if (this.tableWidgetConfiguration.designOptions) {
                         try {
                             this.designOptionsObj = JSON.parse(this.tableWidgetConfiguration.designOptions);
@@ -404,6 +421,12 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
         this.handleParameter(parameter, 'duplicate');
     };
 
+    private updatePossibleTabs() {
+        this.tabs =  this.componentsState?.feeders && this.componentsState.feeders.length > 0
+            ? this._allTabs
+            : this._allTabs.filter(t => t.ID === 3 || t.ID === 4 || t.ID === 5);
+    }
+
     private handleParameter(data: WidgetParametersColumn, action: 'edit' | 'duplicate') {
         const populateOrEdit = (tab: any) => {
             if (action === 'edit') {
@@ -418,7 +441,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
 
         switch (data.type) {
             case ColumnType.CustomParameter:
-                this.tabPanel.selectedIndex = 0;
+                this.tabPanel.selectedIndex = this.tabs.findIndex(t => t.ID === 1);
                 populateOrEdit(this.customParameterSelectionTab);
                 break;
 
@@ -427,15 +450,15 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
                 if (parameter?.type) {
                     switch (parameter.type) {
                         case BaseParameterType.Logical:
-                            this.tabPanel.selectedIndex = 1;
+                            this.tabPanel.selectedIndex = this.tabs.findIndex(t => t.ID === 2);
                             populateOrEdit(this.logicalParameterSelectionTab);
                             break;
                         case BaseParameterType.Channel:
-                            this.tabPanel.selectedIndex = 2;
+                            this.tabPanel.selectedIndex = this.tabs.findIndex(t => t.ID === 3);
                             populateOrEdit(this.channelParameterSelectionTab);
                             break;
                         case BaseParameterType.Additional:
-                            this.tabPanel.selectedIndex = 3;
+                            this.tabPanel.selectedIndex = this.tabs.findIndex(t => t.ID === 4);
                             populateOrEdit(this.additionalParameterSelectionTab);
                             break;
                     }
@@ -448,7 +471,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
             //     break;
 
             case ColumnType.Event:
-                this.tabPanel.selectedIndex = 5;
+                this.tabPanel.selectedIndex = this.tabs.findIndex(t => t.ID === 5);
                 populateOrEdit(this.eventParameterSelectionTab);
                 break;
         }

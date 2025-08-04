@@ -17,7 +17,6 @@ import { BaseUnits } from '../enums/base-units';
     providedIn: 'root',
 })
 export class ResolutionService {
-
     readonly _unitDisplayNames: Record<CustomResolutionUnits, string> = {
         [CustomResolutionUnits.MS]: 'Millisecond',
         [CustomResolutionUnits.SEC]: 'Second',
@@ -40,80 +39,52 @@ export class ResolutionService {
     constructor(
         private _customResolutionUnitsComparer: CustomResolutionUnitsComparer,
         private _customParameterServiceProxy: CustomParametersServiceProxy,
-    ) { }
-
+    ) {}
 
     getResolutionUnits(seconds: number): [ResolutionUnits, number] {
-        // if(seconds > 3600)
-        // {
-        //     //hour
-        //     if(seconds % 60 === 0)
-        //     {
-        //             //
-        //     }
-        // }
         switch (seconds) {
             case 1:
-                return [ResolutionUnits.IS1SEC, 1];         // 1 second
+                return [ResolutionUnits.IS1SEC, 1]; // 1 second
             case 10:
-                return [ResolutionUnits.IS10SEC, 10];       // 10 seconds
+                return [ResolutionUnits.IS10SEC, 10]; // 10 seconds
             case 60:
-                return [ResolutionUnits.IS1MIN, 1];         // 1 minute
+                return [ResolutionUnits.IS1MIN, 1]; // 1 minute
             case 600:
-                return [ResolutionUnits.IS10MIN, 10];       // 10 minutes
+                return [ResolutionUnits.IS10MIN, 10]; // 10 minutes
             case 3600:
-                return [ResolutionUnits.IS1HOUR, 1];        // 1 hour
+                return [ResolutionUnits.IS1HOUR, 1]; // 1 hour
             default:
-                return [ResolutionUnits.CUSTOM, seconds];   // fallback to custom
+                return [ResolutionUnits.CUSTOM, seconds]; // fallback to custom
         }
     }
 
-    parseStateFromInt(seconds: number): ResolutionState {
-        if (seconds <= 0) {
-            return new ResolutionState({
-                resolutionUnit: ResolutionUnits.AUTO,
-                customResolutionValue: 1,
-            });
+    parseStateFromInt(seconds: number, parseToCustomState: boolean = false): ResolutionState {
+        const unitMappings: { unit: CustomResolutionUnits; inSeconds: number }[] = [
+            { unit: CustomResolutionUnits.WEEK, inSeconds: 7 * 24 * 60 * 60 },
+            { unit: CustomResolutionUnits.DAY, inSeconds: 24 * 60 * 60 },
+            { unit: CustomResolutionUnits.HOUR, inSeconds: 60 * 60 },
+            { unit: CustomResolutionUnits.MIN, inSeconds: 60 },
+            { unit: CustomResolutionUnits.SEC, inSeconds: 1 }
+        ];
+
+        for (const { unit, inSeconds } of unitMappings) {
+            if (seconds % inSeconds === 0) {
+                let result = new ResolutionState({
+                    resolutionUnit: ResolutionUnits.CUSTOM,
+                    customResolutionValue: seconds / inSeconds,
+                    customResolutionUnit: unit,
+                });
+
+                if (result.toString() in ResolutionUnits && !parseToCustomState) {
+                    return new ResolutionState({ resolutionUnit: ResolutionUnits[result.toString()] });
+                }
+
+                return result;
+            }
         }
-    
-        if (seconds >= 3600) {
-            return new ResolutionState({
-                resolutionUnit: ResolutionUnits.IS1HOUR,
-                customResolutionValue: seconds / 3600,
-            });
-        }
-    
-        if (seconds >= 600) {
-            return new ResolutionState({
-                resolutionUnit: ResolutionUnits.IS10MIN,
-                customResolutionValue: seconds / 600,
-            });
-        }
-    
-        if (seconds >= 60) {
-            return new ResolutionState({
-                resolutionUnit: ResolutionUnits.IS1MIN,
-                customResolutionValue: seconds / 60,
-            });
-        }
-    
-        if (seconds >= 10) {
-            return new ResolutionState({
-                resolutionUnit: ResolutionUnits.IS10SEC,
-                customResolutionValue: seconds / 10,
-            });
-        }
-    
-        if (seconds >= 1) {
-            return new ResolutionState({
-                resolutionUnit: ResolutionUnits.IS1SEC,
-                customResolutionValue: seconds,
-            });
-        }
-    
-        throw new Error("Invalid resolution seconds value: " + seconds);
+
+        throw new Error(`Unsupported resolution value: ${seconds} seconds`);
     }
-    
 
     parseStateFromString(valueStr: string, parseToCustomState: boolean = false): ResolutionState {
         if (valueStr in ResolutionUnits && !parseToCustomState) {
@@ -250,9 +221,9 @@ export class ResolutionService {
         return this._customParameterServiceProxy.getCustomParameterForView(id).pipe(
             switchMap((response: GetCustomParameterForViewDto) => {
                 let customParameter: CustomParameterDto = response.customParameter;
-                let baseParameters: Parameter[] = JSON.parse(customParameter.stdpqsParametersList);
+                let baseParameters: Parameter[] = JSON.parse(customParameter.customBaseDataList);
                 let resolutions: ResolutionState[] = baseParameters.map((parameter: Parameter) =>
-                    this.parseStateFromInt(parameter.resolution),
+                    this.parseStateFromInt(parameter.resolution, true),
                 );
                 let result: ResolutionState = this.findMaxResolution(resolutions);
                 return of(result);
@@ -286,7 +257,9 @@ export class ResolutionService {
             customResolution = resolution;
         }
 
-        result = customResolution.customResolutionValue * ResolutionState.getSecondCustomParameterUnits(customResolution.customResolutionUnit);
+        result =
+            customResolution.customResolutionValue *
+            ResolutionState.getSecondCustomParameterUnits(customResolution.customResolutionUnit);
         return result;
     }
 
@@ -339,29 +312,10 @@ export class ResolutionService {
     }
 
     getDisplayNameForCustomResolution(unit: CustomResolutionUnits): string {
-        // const unitDisplayNames: Record<CustomResolutionUnits, string> = {
-        //     [CustomResolutionUnits.MS]: 'Millisecond',
-        //     [CustomResolutionUnits.SEC]: 'Second',
-        //     [CustomResolutionUnits.MIN]: 'Minute',
-        //     [CustomResolutionUnits.HOUR]: 'Hour',
-        //     [CustomResolutionUnits.DAY]: 'Day',
-        //     [CustomResolutionUnits.WEEK]: 'Week',
-        // };
-
         return this._unitDisplayNames[unit] || unit;
     }
 
     getDisplayNameForResolution(unit: ResolutionUnits): string {
-        // const resolutionDisplayNames: Record<ResolutionUnits, string> = {
-        //     [ResolutionUnits.AUTO]: 'Auto',
-        //     [ResolutionUnits.CUSTOM]: 'Custom Resolution',
-        //     [ResolutionUnits.IS1SEC]: '1 Second',
-        //     [ResolutionUnits.IS10SEC]: '10 Seconds',
-        //     [ResolutionUnits.IS1MIN]: '1 Minute',
-        //     [ResolutionUnits.IS10MIN]: '10 Minutes',
-        //     [ResolutionUnits.IS1HOUR]: '1 Hour',
-        // };
-
         return this._resolutionDisplayNames[unit] || unit;
     }
 
@@ -395,24 +349,6 @@ export class ResolutionService {
         return newResolution.toString();
     }
 
-    // formatForRequest222(resolutionState: ResolutionState): number {
-
-    //     const seconds =  ResolutionState.getSecondCustomParameterUnits(resolutionState.customResolutionUnit);
-    //     return seconds;
-    // }
-
-    // calculateTotalSeconds(resolutionState: ResolutionState): number {
-
-    //     return resolutionState.calculateTotalSeconds();
-    //     if(!resolutionState.customResolutionUnit)
-    //     {
-    //         throw new Error(`CustomResolutionUnits missing.`)
-    //     }
-
-    //     const seconds =  ResolutionState.getSecondCustomParameterUnits(resolutionState.customResolutionUnit);
-    //     return  seconds * (resolutionState.customResolutionValue ?? 1);
-    // }
-
     // formatFromRequest func is needed to support resolution units which are not present on BE (such as DAY WEEK).
     // it transforms from hour into unsupported on BE resolution units (Day, Week)
     formatFromRequest(request: ResolutionState) {
@@ -429,7 +365,7 @@ export class ResolutionService {
         if (newResolution.customResolutionUnit === CustomResolutionUnits.HOUR) {
             if (newResolution.customResolutionValue % (24 * 7) === 0) {
                 newResolution.customResolutionUnit = CustomResolutionUnits.WEEK;
-                newResolution.customResolutionValue /= (24 * 7);
+                newResolution.customResolutionValue /= 24 * 7;
             } else if (newResolution.customResolutionValue % 24 === 0) {
                 newResolution.customResolutionUnit = CustomResolutionUnits.DAY;
                 newResolution.customResolutionValue /= 24;
@@ -462,24 +398,4 @@ export class ResolutionService {
                 return 0;
         }
     }
-
-
-    // getCustomUnitValue222(unit: CustomResolutionUnits): number {
-    //     switch (unit) {
-    //         case CustomResolutionUnits.MS:
-    //         case CustomResolutionUnits.SEC:
-    //             return 1;
-    //         case CustomResolutionUnits.MIN:
-    //             return 60;
-    //         case CustomResolutionUnits.HOUR:
-    //             return 60 * 60;
-    //         case CustomResolutionUnits.DAY:
-    //             return 60 * 60 * 24;
-    //         case CustomResolutionUnits.WEEK:
-    //             return 60 * 60 * 24 * 7;
-    //         default:
-    //             return 0;
-    //     }
-    // }
-
 }

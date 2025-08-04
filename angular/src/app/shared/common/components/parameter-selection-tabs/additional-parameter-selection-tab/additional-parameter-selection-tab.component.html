@@ -103,8 +103,8 @@
 <ng-container *ngIf="isInsideTable">
     <advanced-settings
         #advancedSettingsModal
-        (advancedSettingsChanged)="onAdvancedSettingsChanged($event)"
-        [initialConfig]="advancedSettingsConfig"
+        (configChange)="onAdvancedSettingsChanged($event)"
+        [config]="advancedSettingsConfig"
         [isBaseParameter]="true"
     ></advanced-settings>
 </ng-container>

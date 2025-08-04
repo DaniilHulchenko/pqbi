@@ -5,7 +5,7 @@
                 <span *ngIf="appSession.tenant && appSession.tenant.edition && appSession.tenant.edition.displayName">
                     {{ appSession.tenant.edition.displayName }}
                 </span>
-                | API: v{{ appSession.application.version }} | Client: v{{ webAppGuiVersion }} [{{ releaseDate }}]
+                | API: v{{ appSession.application.version }} | Client: v{{ webAppGuiVersion }} [{{ releaseDate }}] | Scada [{{appSession.application.userMetaDeta.scadaUrl}}]
             </span>
         </div>
         <ul class="menu menu-gray-600 menu-hover-primary fw-bold order-1">

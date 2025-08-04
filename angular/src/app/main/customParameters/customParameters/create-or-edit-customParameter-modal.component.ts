@@ -25,8 +25,7 @@ import { InnerCustomParameter } from './table-parameters/models/InnerCustomParam
 import { DxDataGridTypes } from '@node_modules/devextreme-angular/ui/data-grid';
 import { DxTabPanelComponent } from '@node_modules/devextreme-angular';
 import { CpBaseParameterSelectionTabComponent } from './cp-base-parameter-selection-tab/cp-base-parameter-selection-tab.component';
-import { ComponentsState } from '@app/shared/models/components-state';
-import { ConsoleLogger } from '@node_modules/@microsoft/signalr/dist/esm/Utils';
+import { CpAdditionalParameterSelectionTabComponent } from './cp-additional-parameter-selection-tab/cp-additional-parameter-selection-tab.component';
 
 @Component({
     selector: 'createOrEditCustomParameterModal',
@@ -42,6 +41,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
     @ViewChild('cpCustomParameterSelectionTab') cpCustomParameterSelectionTab: CpCustomParameterSelectionTabComponent;
     @ViewChild('cpLogicalParameterSelectionTab') cpLogicalParameterSelectionTab: CpBaseParameterSelectionTabComponent;
     @ViewChild('cpChannelParameterSelectionTab') cpChannelParameterSelectionTab: CpBaseParameterSelectionTabComponent;
+    @ViewChild('cpAdditionalParameterSelectionTab') cpAdditionalParameterSelectionTab: CpAdditionalParameterSelectionTabComponent;
     @ViewChild('tabPanel') tabPanel: DxTabPanelComponent;
 
     @Output() modalSave: EventEmitter<any> = new EventEmitter<any>();
@@ -232,7 +232,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
             quantity: event.quantity,
             type: event.parameter.type,
             data: safestringify(event.parameter),
-            resolution: this._resolutionService.parseStateFromInt( event.parameter.resolution).toString(),
+            resolution: this._resolutionService.parseStateFromInt(event.parameter.resolution).toString(),
             operator: event.parameter.operator,
             innerAggregation: event.parameter.aggregationFunction,
         });
@@ -256,7 +256,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
         tableParameter.name = event.parameter.name;
         tableParameter.quantity = event.quantity;
         tableParameter.type = event.parameter.type;
-        tableParameter.resolution = this._resolutionService.parseStateFromInt( event.parameter.resolution).toString();
+        tableParameter.resolution = this._resolutionService.parseStateFromInt(event.parameter.resolution).toString();
         tableParameter.operator = event.parameter.operator;
         tableParameter.innerAggregation = event.parameter.aggregationFunction;
         tableParameter.data = safestringify(event.parameter);
@@ -357,7 +357,6 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
             this.selectedAggregationFunctionArgument = '';
         }
         this.customParameter.aggregationFunction = this.combinedAggregationFunctionValues;
-        console.log(this.selectedAggregationFunction);
     }
 
     updateAggregationArgumentValue(newValue: number) {
@@ -366,7 +365,6 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
     }
     onFocus(){
 
-        console.log(this.selectedAggregationArgument_InNumber)
     }
 
     deleteAllParameters() {
@@ -423,7 +421,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
             this._customParametersServiceProxy.getCustomParameterForEdit(customParameterId).subscribe((result) => {
                 this.customParameter = result.customParameter;
 
-                this.baseParameters = JSON.parse(this.customParameter.stdpqsParametersList);
+                this.baseParameters = JSON.parse(this.customParameter.customBaseDataList);
                 this._resolutionService.parseStateFromString("",true)
                 this.baseParameters?.forEach((bp) => {
                     this.parameters.push({
@@ -432,7 +430,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
                         type: bp.type,
                         quantity: bp.quantity,
                         data: safestringify(bp),
-                        resolution: this._resolutionService.parseStateFromInt(bp.resolution).toString(),
+                        resolution: this._resolutionService.parseStateFromInt(bp.resolution, true).toString(),
                         operator: bp.operator,
                         innerAggregation: bp.aggregationFunction,
                     });
@@ -449,13 +447,13 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
                                     result.customParameter.name +
                                     ' (' +
                                     this._resolutionService.getUIRepresentationForResolutionState(
-                                        this._resolutionService.parseStateFromInt(result.customParameter.resolutionInSeconds),
+                                        this._resolutionService.parseStateFromInt(result.customParameter.resolutionInSeconds, true),
                                     ) +
                                     ')',
                                 type: this._customParameterType,
                                 quantity: icp.quantity,
                                 data: safestringify(result.customParameter),
-                                resolution: this._resolutionService.parseStateFromInt(icp.Resolution).toString(),
+                                resolution: this._resolutionService.parseStateFromInt(icp.Resolution, true).toString(),
 
                                 // resolution: this._resolutionService
                                 //     .formatFromRequest(
@@ -473,7 +471,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
                 this.combinedAggregationFunctionValues = this.customParameter.aggregationFunction;
                 this.selectedType = this.customParameter.type;
                 this.selectedResolution = this._resolutionService.formatFromRequest(
-                    this._resolutionService.parseStateFromInt(this.customParameter.resolutionInSeconds),
+                    this._resolutionService.parseStateFromInt(this.customParameter.resolutionInSeconds, true),
                 );
                 this.active = true;
                 this.isPopupVisible = true;
@@ -525,7 +523,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
 
         this.customParameter.aggregationFunction = this.combinedAggregationFunctionValues;
         this.customParameter.innerCustomParameters = safestringify(this.innerCustomParameters);
-        this.customParameter.stdpqsParametersList = safestringify(this.baseParameters);
+        this.customParameter.customBaseDataList = safestringify(this.baseParameters);
 
         this._customParametersServiceProxy
             .createOrEdit(this.customParameter)
@@ -600,6 +598,10 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
             case 'CHANNEL':
                 this.tabPanel.selectedIndex = 2 - (this.selectedType === 'EXCEPTION' ? 1 : 0);
                 populateOrEdit(this.cpChannelParameterSelectionTab);
+                break;
+            case 'Additional':
+                this.tabPanel.selectedIndex = 3 - (this.selectedType === 'EXCEPTION' ? 1 : 0);
+                populateOrEdit(this.cpAdditionalParameterSelectionTab);
                 break;
         }
     }

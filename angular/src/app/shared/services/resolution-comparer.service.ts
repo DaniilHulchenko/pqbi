@@ -89,7 +89,7 @@ export class ResolutionComparerService {
       return this._customParameterServiceProxy.getCustomParameterForView(id).pipe(
           map((response: GetCustomParameterForViewDto) => {
               let customParameter: CustomParameterDto = response.customParameter;
-              let baseParameters: Parameter[] = JSON.parse(customParameter.stdpqsParametersList);
+              let baseParameters: Parameter[] = JSON.parse(customParameter.customBaseDataList);
               let resolutions: number[] = baseParameters.map((parameter: Parameter) => parameter.resolution);
               return resolutions;
           }),

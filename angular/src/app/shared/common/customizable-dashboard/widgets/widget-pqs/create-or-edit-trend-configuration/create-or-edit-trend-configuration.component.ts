@@ -189,7 +189,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                 resolution:0
             });
             this.parameterResolutions.push(
-                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds),
+                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds, true),
             );
             this.minAllowedResolution = this._resolutionService.findMaxResolution(this.parameterResolutions);
         });
@@ -207,7 +207,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                 resolution:0
             });
             this.parameterResolutions.push(
-                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds),
+                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds, true),
             );
             this.minAllowedResolution = this._resolutionService.findMaxResolution(this.parameterResolutions);
         });
@@ -228,7 +228,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             tableParameter.advancedSettings = event.advancedSettings;
 
             this.parameterResolutions.push(
-                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds),
+                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds, true),
             );
             this.minAllowedResolution = this._resolutionService.findMaxResolution(this.parameterResolutions);
         });
@@ -257,7 +257,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             tableParameter.data = event.customParameterId;
 
             this.parameterResolutions.push(
-                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds),
+                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds, true),
             );
             this.minAllowedResolution = this._resolutionService.findMaxResolution(this.parameterResolutions);
         });
@@ -326,7 +326,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                         this._customParameterService.getCustomParameterForView(+parameter.data).subscribe((cp) => {
                             parameter.name = cp.customParameter.name;
                             this.parameterResolutions.push(
-                                this._resolutionService.parseStateFromInt(cp.customParameter.resolutionInSeconds),
+                                this._resolutionService.parseStateFromInt(cp.customParameter.resolutionInSeconds, true),
                             );
                             this.minAllowedResolution = this._resolutionService.findMaxResolution(
                                 this.parameterResolutions,

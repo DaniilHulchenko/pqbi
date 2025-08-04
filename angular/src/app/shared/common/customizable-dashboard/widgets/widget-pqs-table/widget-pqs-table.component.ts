@@ -20,7 +20,7 @@ import {
     GetComponentByTagsRequest,
     GetComponentSlimInfosRequest,
     PQZStatus,
-    TableWidgetRequest222,
+    TableWidgetRequest,
     ColumnWidgetTable,
     CustomWidgetTableData,
     RowWidgetTable,
@@ -28,6 +28,7 @@ import {
     ITableWidgetResponseItem,
     DataUnitType,
     TableWidgetEvent,
+    EventClass,
 } from '@shared/service-proxies/service-proxies';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
 import { CreateOrEditTableConfigurationComponent } from './create-or-edit-table-configuration/create-or-edit-table-configuration.component';
@@ -49,6 +50,9 @@ import { BaseUnits } from '@app/shared/enums/base-units';
 import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selection-units';
 import { TableDesignOptions } from './create-or-edit-table-configuration/table-design-options/table-design-options.component';
 import { AdvancedSettingsConfig } from '@app/shared/common/components/parameter-selection-tabs/advanced-settings/advanced-settings.component';
+import { ArrayUtils } from '@app/shared/services/array-utils.service';
+import { ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
+import { ParameterCombinationsService } from '@app/shared/services/parameter-combinations-service';
 
 
 interface TreeWidgetParametersColumn extends WidgetParametersColumn {
@@ -74,7 +78,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     isLoading = false;
 
-    pqsTableConfigRequest: TableWidgetRequest222;
+    pqsTableConfigRequest: TableWidgetRequest;
     pqsTableDataResponse: TableWidgetResponse;
     selectedDateRange: any;
     files: any;
@@ -149,11 +153,12 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     }
 
     createTableWidgetEvent(json: string, quantity: string): TableWidgetEvent {
-
         const event = JSON.parse(json);
         const tableWidgetEvent = new TableWidgetEvent({
             phases: event.phases,
-            eventId: event.event.eventClass,
+            eventId: event.event.confID,
+            eventClass: event.event.eventClass,
+            isShared: event.event.isShared,
             parameter: event.parameter,
             isPolyphase: event.isPolyphase,
             aggregationInSeconds: event.aggregationInSeconds,
@@ -173,11 +178,11 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         let tableWidgetConfigurationComponents = this.tableWidgetConfiguration?.components?.components ?? [];
         let formattedComponents = tableWidgetConfigurationComponents
             .filter(c => !formattedFeeders.some(f => f.componentId === c.key))
-            .map(c => new FeederComponentInfo({ componentId: c.key, id: null, name: null }));
+            .map(c => new FeederComponentInfo({ componentId: c.key, id: null, name: null, compName: c.label }));
 
         let tagsList = this.tableWidgetConfiguration.components?.tags ?? [];
 
-        this.pqsTableConfigRequest = new TableWidgetRequest222({
+        this.pqsTableConfigRequest = new TableWidgetRequest({
             widgetName: this.widgetName,
             rows: new RowWidgetTable({
                 feeders: [...formattedFeeders, ...formattedComponents],
@@ -186,7 +191,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                     return new TagTableWidget({
                         id: key,
                         name: value,
-                        feeders: this.getFeedersByTagModel(t),
+                        feeders: this.getFeedersByTagModel(t, formattedFeeders),
                     });
                 }),
             }),
@@ -219,22 +224,16 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
                 return new ColumnWidgetTable({
                     parameterType: column.type,
-                    flaggingEvents: [],
-                    excludeFlagged: false,
+                    normalize: column.advancedSettings?.normalizeValue,
+                    normalValue: column.advancedSettings?.normalizeNominalValue,
+                    excludeFlagged: this.prepareExcludedFlagged(column.advancedSettings?.excludeFlagged, ArrayUtils.ensureArray(column.advancedSettings?.defaultFlagEvent)),
+                    ignoreAligningFunction: column.advancedSettings?.aligningIgnored,
+                    replaceAggregationWith: column.advancedSettings?.customAggregationFunc,
                     baseData,
-                    // baseData: column.type === 'BaseParameter'
-                    //     ? this.prepareParameterForRequest(column.type, column.data)
-                    //     : null,
                     customData,
-                    // column.type === 'CustomParameter' || column.type === 'Exception'
-                    //     ? new CustomWidgetTableData({ id: Number.parseInt(column.data.toString()), ignoreAlignment: false, quantity: column.quantity })
-                    //     : null,
                     tableEvent,
-
-                    // eventData: column.type === 'Event'
-                    // ? column.data.toString()
-                    // : null,
-                    parameterName: column.name
+                    parameterName: column.name,
+                    isExcludeFlaggedData: column.advancedSettings?.excludeFlagged === ExcludeFlagged.DefaultEvents
                 });
             }),
             startDate: range[0],
@@ -332,7 +331,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         }
     }
 
-    getPQSTableData = (input: TableWidgetRequest222) => {
+    getPQSTableData = (input: TableWidgetRequest) => {
         let extractedTags;
         const originalComponentTagsMap = new Map<string, string[]>();
         this.tableWidgetConfiguration.components.components.forEach(comp => {
@@ -341,13 +340,20 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
             }
         });
         this._tenantDashboardService
-            .pQSTableWidgetData2222(input)
+            .pQSTableWidgetData(input)
             .pipe(
                 catchError(error => {
                     this.isLoading = false;
                     return throwError(() => error);
                 }),
                 switchMap((response: TableWidgetResponse) => {
+                    this._tableWidgetDataSourseBuilder.formatParameterNames(response.items);
+                    this.tableWidgetConfiguration.parameters.forEach((param) => {
+                        if (!param.name.endsWith(param.quantity)) {
+                            param.name += ` ${param.quantity}`;
+                        }
+                    });
+
                     this.pqsTableDataResponse = response;
 
                     extractedTags = input.rows.tags.map(t => `${t.id}`);
@@ -382,7 +388,8 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                                 componentsByIds.flatMap(c => c.feeders.map(f => new FeederComponentInfo({
                                     id: f.id,
                                     name: f.name,
-                                    componentId: c.componentId
+                                    componentId: c.componentId,
+                                    compName: c.componentName
                                 })));
                             return this.pqsTableDataResponse;
                         })
@@ -394,6 +401,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                     this.tableWidgetConfiguration.components,
                     response.items
                 );
+
                 const treeData = this.buildTreeData(transformedItems, extractedTags);
 
                 const emptyTagIds = new Set<string>(
@@ -508,8 +516,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     }
 
 
-    private
-    createNode(id: string, parentId: string | null, name: string, dataUnitType: DataUnitType): any {
+    private createNode(id: string, parentId: string | null, name: string, dataUnitType: DataUnitType): any {
 
         // name = `${name}_XX`;
         return {
@@ -534,9 +541,9 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     private calculateSeverity(value: number, cfg: AdvancedSettingsConfig): number {
         // only applies when fixed limits are in use
-        if (cfg.setLimits === 'fixed') {
-            const lower = parseFloat(cfg.lowerLimit);
-            const upper = parseFloat(cfg.upperLimit);
+        if (cfg.setLimits === Limit.Fixed) {
+            const lower = cfg.lowerLimit;
+            const upper = cfg.upperLimit;
 
             if (upper > 0 && value > upper) {
                 return ((value - upper) / upper) * 100;
@@ -559,8 +566,10 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
             node[field] = raw;
             node[field + '_severity'] = this.calculateSeverity(
                 typeof raw === 'number' ? raw : parseFloat(raw as any),
-                param.advancedSettings || { setLimits: 'none', lowerLimit: '0', upperLimit: '0' }
+                param.advancedSettings || { setLimits: Limit.None, lowerLimit: 0, upperLimit: 0 }
             );
+            if (!node.advancedSettings) node.advancedSettings = {};
+            node.advancedSettings[field] = param.advancedSettings;
         });
     }
 
@@ -616,22 +625,44 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                 if (feederCount > 1) {
                     const feederKey = `feeder_${transformedItem.feederName}_${transformedItem.componentName}`;
                     if (!treeMap.has(feederKey)) {
-                        const feederNode = this.createNode(feederKey, componentKey, transformedItem.feederName, transformedItem.dataUnitType);
+                        const feederNode = this.createNode(feederKey, transformedItems.some(i => i.componentId === transformedItem.componentId && !i.feederId) ? componentKey : parentId, transformedItem.feederName, transformedItem.dataUnitType);
                         treeData.push(feederNode);
                         treeMap.set(feederKey, feederNode);
                     }
                     const feederNode = treeMap.get(feederKey);
                     this.processParameters(feederNode, (item, field) =>
                         item.feederId === transformedItem.feederId &&
+                        item.componentId === transformedItem.componentId &&
                         item.parameterName === field
                     );
                 } else {
                     const componentNode = treeMap.get(componentKey);
                     if (componentNode) {
-                        this.processParameters(componentNode, (item, field) =>
-                            item.feederId === transformedItem.feederId &&
-                            item.parameterName === field
+                        this.processParameters(
+                            componentNode,
+                            (item, field) =>
+                                item.feederId === transformedItem.feederId &&
+                                item.componentId === transformedItem.componentId &&
+                                item.parameterName === field,
                         );
+                    } else {
+                        const componentKey = `comp_${transformedItem.componentName}`;
+                        if (!treeMap.has(componentKey)) {
+                            const componentNode = this.createNode(
+                                componentKey,
+                                parentId,
+                                transformedItem.componentName,
+                                transformedItem.dataUnitType,
+                            );
+                            this.processParameters(
+                                componentNode,
+                                (item, field) =>
+                                    item.componentId === transformedItem.componentId &&
+                                    item.parameterName === field,
+                            );
+                            treeData.push(componentNode);
+                            treeMap.set(componentKey, componentNode);
+                        }
                     }
                 }
             }
@@ -675,7 +706,9 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
                 let caption = '';
 
-                if (param.columnDataUnitTypeName) {
+                if (param.columnDataUnitTypeName?.toLowerCase() === 'count') {
+                    caption = `${param.name} - Count`;
+                } else if (param.columnDataUnitTypeName) {
                     caption = `${param.name} [${param.columnDataUnitTypeName}]`;
                 }
                 else {
@@ -708,7 +741,22 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                             ? rowData[param.name + '_severity']
                             : rowData[param.name],
                     sortOrder: this.sortMode === 'color' ? 'desc' : undefined,
-                    sortIndex: this.sortMode === 'color' ? 0 : undefined
+                    sortIndex: this.sortMode === 'color' ? 0 : undefined,
+                    cellTemplate: (container, options) => {
+                        const field = options.column.dataField;
+                        const value = options.value;
+                        const settings = options.data?.advancedSettings?.[field];
+
+                        const span = document.createElement('span');
+                        span.innerText = value != null ? value.toString() : '';
+
+                        const bg = getBackgroundColor(value, settings);
+                        if (bg) {
+                            container.style.backgroundColor = bg;
+                        }
+
+                            container.appendChild(span);
+                        }
                 };
                 if (param.type === ColumnType.Event) {
                     return {
@@ -821,7 +869,20 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         }
     }
 
-    private getFeedersByTagModel(tag: any): FeederComponentInfo[] {
+    prepareExcludedFlagged(excludeFlagged: ExcludeFlagged, selectedEvents: EventClass[]): EventClass[] {
+        switch (excludeFlagged) {
+            case ExcludeFlagged.None:
+                return [];
+            case ExcludeFlagged.DefaultEvents:
+                return [];
+            case ExcludeFlagged.UserSelected:
+                return selectedEvents;
+            default:
+                return [];
+        }
+    }
+
+    private getFeedersByTagModel(tag: any, allFeeders: FeederComponentInfo[]): FeederComponentInfo[] {
         if (!tag || !tag) {
             return [];
         }
@@ -830,14 +891,64 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
         for (let child of tag.children?.filter(c => typeof (c) === 'object') ?? []) {
             if (child.type === 'Feeder') {
-                result.push(new FeederComponentInfo({ id: child.id, name: child.label, componentId: child.parentKey }));
+                if (!allFeeders.some(f => f.id === child.id && f.componentId === child.parentKey)) {
+                    continue;
+                }
+                result.push(new FeederComponentInfo({ id: child.id, name: child.label, componentId: child.parentKey, compName: '' }));
             } else {
-                result.push(...this.getFeedersByTagModel(child));
+                result.push(...this.getFeedersByTagModel(child, allFeeders));
             }
         }
 
         return result;
     }
+}
+function getBackgroundColor(value: number | null | undefined, settings: AdvancedSettingsConfig): string | null {
+  if (!settings || value == null) return null;
+
+  if (settings.colorScheme === 'Gradient' && settings.gradientFromColor && settings.gradientToColor) {
+    const normalized = normalizeValue(value, settings.lowerLimit, settings.upperLimit);
+    return interpolateColor(settings.gradientFromColor, settings.gradientToColor, normalized);
+  }
+
+  return null;
+}
+function normalizeValue(value: number, min: number, max: number): number {
+  if (max === min) return 1; 
+  return (value - min) / (max - min); 
+}
+
+
+function interpolateColor(from: string, to: string, ratio: number): string {
+  const f = hexToRgb(from);
+  const t = hexToRgb(to);
+  if (!f || !t) return from;
+
+  const r = Math.round(lerp(f.r, t.r, ratio));
+  const g = Math.round(lerp(f.g, t.g, ratio));
+  const b = Math.round(lerp(f.b, t.b, ratio));
+
+  const alpha = 0.6;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function lerp(a: number, b: number, t: number): number {
+  if (t < 0) return a;     
+  if (t > 1.5) return b;  
+  return a + (b - a) * Math.min(t, 1); 
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const clean = hex.replace('#', '');
+  const bigint = parseInt(clean, 16);
+  if (clean.length === 6) {
+    return {
+      r: (bigint >> 16) & 255,
+      g: (bigint >> 8) & 255,
+      b: bigint & 255,
+    };
+  }
+  return null;
 }
 
 interface TableWidgetConfigurationModel {

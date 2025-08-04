@@ -5,7 +5,7 @@ import { ArrayToTreeConverterService } from '@shared/utils/array-to-tree-convert
 import { TreeDataHelperService } from '@shared/utils/tree-data-helper.service';
 import { FlatPermissionDto } from '@shared/service-proxies/service-proxies';
 import { TreeNode } from 'primeng/api';
-import { forEach as _forEach, remove as _remove } from 'lodash-es';
+import { forEach as _forEach, remove as _remove, filter as _filter } from 'lodash-es';
 
 @Component({
     selector: 'permission-tree',
@@ -16,7 +16,7 @@ export class PermissionTreeComponent extends AppComponentBase {
     @Input() disableCascade: boolean;
 
     treeData: any;
-    selectedPermissions: TreeNode[] = [];
+    selectedPermissions: TreeNode<any>[] = [];
     filter = '';
 
     constructor(
@@ -115,7 +115,7 @@ export class PermissionTreeComponent extends AppComponentBase {
             data: { name: event.node.data.name },
         });
         childrenNodes.push(event.node.data.name);
-        _remove(this.selectedPermissions, (x) => childrenNodes.indexOf(x.data.name) !== -1);
+        _filter(this.selectedPermissions, (x) => childrenNodes.indexOf(x.data.name) !== -1);
     }
 
     filterPermissions(event): void {

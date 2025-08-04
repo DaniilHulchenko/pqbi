@@ -1,7 +1,7 @@
 <dx-popup
     [hideOnOutsideClick]="false"
     [showCloseButton]="true"
-    [(visible)]="modalVisible"
+    [visible]="modalVisible"
     [dragEnabled]="false"
     title="Base/Custom Parameter Advanced Settings"
     height="80vh"
@@ -11,53 +11,65 @@
         <div style="margin: 20px; display: flex; gap: 40px;">
             <div style="flex: 1; min-width: 300px;">
                 <h5>Normalize Values:</h5>
-                <dx-radio-group
-                    [(value)]="normalizeValue"
-                    [items]="normalizationOptions"
-                    displayExpr="text"
-                    valueExpr="value"
-                ></dx-radio-group>
+                <div *ngFor="let opt of normalizationOptions" style="margin-bottom: 4px;">
+                <p-checkbox
+                    [binary]="true"
+                    [label]="opt.text"
+                    [value]="opt.value"
+                    [ngModel]="normalizeValue === opt.value"
+                    (onChange)="onSelectNormalize(opt.value)"
+                ></p-checkbox>
+                </div>
+
                 <dx-number-box
-                    *ngIf="normalizeValue === 'other'"
+                    *ngIf="normalizeValue === normalizeTypes.VALUE"
                     [(value)]="normalizeNominalValue"
                     placeholder="Normalization Value"
                     [min]="0"
                 ></dx-number-box>
 
                 <h5 style="margin-top: 24px;">Exclude Flagged:</h5>
-                <dx-radio-group
-                    [(value)]="excludeFlagged"
-                    [items]="[
-                        { value: 'none',           text: 'No selection – default' },
-                        { value: 'defaultEvents',  text: 'Yes – with default events (Dip, Swell, Interrupt)' },
-                        { value: 'userSelected',   text: 'Yes – with user selected flagging events' }
-                    ]"
-                    displayExpr="text"
-                    valueExpr="value"
-                ></dx-radio-group>
-                <div *ngIf="excludeFlagged === 'userSelected'" style="margin-top: 12px;">
-                    <dx-select-box
-                        [(value)]="defaultFlagEvent"
-                        [items]="flaggingEvents"
-                        displayExpr="description"
-                        valueExpr="eventClass"
-                        placeholder="Select event"
-                    ></dx-select-box>
+                <div *ngFor="let opt of excludeFlaggedOptions" style="margin-bottom: 4px;">
+                <p-checkbox
+                    [binary]="true"
+                    [label]="opt.text"
+                    [ngModel]="excludeFlagged === opt.value"
+                    (onChange)="onSelectExcludeFlagged(opt.value)"
+                ></p-checkbox>
+                </div>
+
+                <div *ngIf="excludeFlagged === excludeFlaggedTypes.UserSelected" style="margin-top: 12px;">
+                <p-multiSelect
+                    [options]="flaggingEvents"
+                    [(ngModel)]="selectedFlagEvents"
+                    optionLabel="description"
+                    optionValue="eventClass"
+                    placeholder="Select events"
+                    display="chip"
+                    [showClear]="true"
+                    [filter]="true"
+                    [style]="{width: '100%'}"
+                ></p-multiSelect>
                 </div>
 
                 <h5 style="margin-top: 24px;">Tag Value Calculation:</h5>
-                <dx-radio-group
-                    [(value)]="tagValueCalculation"
-                    [items]="[
-                        { value: 'none',   text: 'No selection - default' },
-                        { value: 'ignore', text: 'Ignore aligning function' },
-                        { value: 'replace', text: 'Replace the parameter’s Aggregation with <Func>' }
-                    ]"
-                    displayExpr="text"
-                    valueExpr="value"
-                ></dx-radio-group>
+                <div style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="'Ignore aligning function'"
+                        [(ngModel)]="aligningIgnored"
+                    ></p-checkbox>
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="'Replace the parameter’s Aggregation with'"
+                        [(ngModel)]="replaceAggregation"
+                        (onChange)="onSelectReplaceAggregation()"
+                    ></p-checkbox>
+                </div>
                 <dx-select-box
-                    *ngIf="tagValueCalculation === 'replace'"
+                    *ngIf="replaceAggregation"
                     [(value)]="customAggregationFunc"
                     [items]="aggregationFuncOptions"
                     displayExpr="text"
@@ -68,43 +80,58 @@
 
             <div style="flex: 1; min-width: 300px;">
                 <h5>Set Lower and Upper Limits:</h5>
-                <dx-radio-group
-                    [(value)]="setLimits"
-                    [items]="[
-                        { value: 'none', text: 'No selection - default' },
-                        { value: 'fixed', text: 'Yes – with fixed values' },
-                        { value: 'percentNominal', text: 'Yes – % from nominal' },
-                        { value: 'percentNormalization', text: 'Yes – % from Normalization Values' }
-                    ]"
-                    displayExpr="text"
-                    valueExpr="value"
-                ></dx-radio-group>
-                <div *ngIf="setLimits !== 'none'" style="margin-top: 12px; display: flex; gap: 12px;">
+                <div *ngFor="let opt of limitOptions" style="margin-bottom: 4px;">
+                    <p-checkbox
+                        [binary]="true"
+                        [label]="opt.text"
+                        [ngModel]="setLimits === opt.value"
+                        (onChange)="onSelectLimitType(opt.value)"
+                    ></p-checkbox>
+                </div>
+                <div *ngIf="setLimits" style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
                     <dx-number-box [(value)]="lowerLimit" placeholder="Lower Limit" [min]="0"></dx-number-box>
                     <dx-number-box [(value)]="upperLimit" placeholder="Upper Limit" [min]="0"></dx-number-box>
                 </div>
 
                 <h5 style="margin-top: 24px;">Set Color Schemes:</h5>
-                <dx-radio-group
-                    [(value)]="colorScheme"
-                    [items]="[
-                        { value: 'none', text: 'No selection - default' },
-                        { value: 'outLimit', text: 'Out-of-limit color' },
-                        { value: 'gradient', text: 'Two-color color scheme' }
-                    ]"
-                    displayExpr="text"
-                    valueExpr="value"
-                ></dx-radio-group>
-                <div *ngIf="colorScheme === 'outLimit'" style="margin-top: 12px;">
+                <h6>Select Out of Limit Mode:</h6>
+                <p-radioButton
+                    name="colorMode"
+                    [value]="colorSchemaTypes.OutOfLimit"
+                    [(ngModel)]="colorScheme"
+                    label="Out of limits color"
+                ></p-radioButton>
+                <p-radioButton
+                    name="colorMode"
+                    [value]="colorSchemaTypes.Gradient"
+                    [(ngModel)]="colorScheme"
+                    label="Out of limits gradient"
+                ></p-radioButton>
+
+
+
+                <h6 style="margin-top: 16px;">Additional colors:</h6>
+                <p-checkbox
+                    [(ngModel)]="useOkColor"
+                    binary="true"
+                    label="Ok color"
+                ></p-checkbox>
+                <p-checkbox
+                    [(ngModel)]="useNoDataColor"
+                    binary="true"
+                    label="No data color"
+                ></p-checkbox>
+
+                <div style="margin-top: 12px; display: flex; gap: 12px;" *ngIf="useOkColor || useNoDataColor">
+                    <dx-color-box *ngIf="useOkColor" [(value)]="okColor" placeholder="OK Color"></dx-color-box>
+                    <dx-color-box *ngIf="useNoDataColor" [(value)]="noDataColor" placeholder="No Data Color"></dx-color-box>
+                </div>
+                <div *ngIf="colorScheme === colorSchemaTypes.OutOfLimit" style="margin-top: 12px;">
                     <dx-color-box [(value)]="outOfLimitColor" placeholder="Out-of-limit Color"></dx-color-box>
                 </div>
-                <div *ngIf="colorScheme === 'gradient'" style="margin-top: 12px; display: flex; gap: 12px;">
-                    <dx-color-box [(value)]="gradientFromColor" placeholder="From Color"></dx-color-box>
-                    <dx-color-box [(value)]="gradientToColor" placeholder="To Color"></dx-color-box>
-                </div>
-                <div style="margin-top: 12px; display: flex; gap: 12px;">
-                    <dx-color-box [(value)]="okColor" placeholder="OK Color"></dx-color-box>
-                    <dx-color-box [(value)]="noDataColor" placeholder="No Data Color"></dx-color-box>
+                <div *ngIf="colorScheme === colorSchemaTypes.Gradient" style="margin-top: 12px; display: flex; gap: 12px;">
+                    <dx-color-box [(value)]="gradientFromColor" placeholder="From Color" (onClosed)="onColorClosed('from')" ></dx-color-box>
+                    <dx-color-box [(value)]="gradientToColor" placeholder="To Color" (onClosed)="onColorClosed('to')"></dx-color-box>
                 </div>
             </div>
         </div>

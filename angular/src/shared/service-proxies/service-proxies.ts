@@ -2362,16 +2362,16 @@ export class CustomParametersServiceProxy {
      * @param filter (optional) 
      * @param nameFilter (optional) 
      * @param aggregationFunctionFilter (optional) 
-     * @param sTDPQSParametersListFilter (optional) 
      * @param typeFilter (optional) 
      * @param maxResolutionInSecondsFilter (optional) 
      * @param minResolutionInSecondsFilter (optional) 
+     * @param customBaseDataListFilter (optional) 
      * @param sorting (optional) 
      * @param skipCount (optional) 
      * @param maxResultCount (optional) 
      * @return Success
      */
-    getAll(filter: string | undefined, nameFilter: string | undefined, aggregationFunctionFilter: string | undefined, sTDPQSParametersListFilter: string | undefined, typeFilter: string | undefined, maxResolutionInSecondsFilter: number | undefined, minResolutionInSecondsFilter: number | undefined, sorting: string | undefined, skipCount: number | undefined, maxResultCount: number | undefined): Observable<PagedResultDtoOfGetCustomParameterForViewDto> {
+    getAll(filter: string | undefined, nameFilter: string | undefined, aggregationFunctionFilter: string | undefined, typeFilter: string | undefined, maxResolutionInSecondsFilter: number | undefined, minResolutionInSecondsFilter: number | undefined, customBaseDataListFilter: string | undefined, sorting: string | undefined, skipCount: number | undefined, maxResultCount: number | undefined): Observable<PagedResultDtoOfGetCustomParameterForViewDto> {
         let url_ = this.baseUrl + "/api/services/app/CustomParameters/GetAll?";
         if (filter === null)
             throw new Error("The parameter 'filter' cannot be null.");
@@ -2385,10 +2385,6 @@ export class CustomParametersServiceProxy {
             throw new Error("The parameter 'aggregationFunctionFilter' cannot be null.");
         else if (aggregationFunctionFilter !== undefined)
             url_ += "AggregationFunctionFilter=" + encodeURIComponent("" + aggregationFunctionFilter) + "&";
-        if (sTDPQSParametersListFilter === null)
-            throw new Error("The parameter 'sTDPQSParametersListFilter' cannot be null.");
-        else if (sTDPQSParametersListFilter !== undefined)
-            url_ += "STDPQSParametersListFilter=" + encodeURIComponent("" + sTDPQSParametersListFilter) + "&";
         if (typeFilter === null)
             throw new Error("The parameter 'typeFilter' cannot be null.");
         else if (typeFilter !== undefined)
@@ -2401,6 +2397,10 @@ export class CustomParametersServiceProxy {
             throw new Error("The parameter 'minResolutionInSecondsFilter' cannot be null.");
         else if (minResolutionInSecondsFilter !== undefined)
             url_ += "MinResolutionInSecondsFilter=" + encodeURIComponent("" + minResolutionInSecondsFilter) + "&";
+        if (customBaseDataListFilter === null)
+            throw new Error("The parameter 'customBaseDataListFilter' cannot be null.");
+        else if (customBaseDataListFilter !== undefined)
+            url_ += "CustomBaseDataListFilter=" + encodeURIComponent("" + customBaseDataListFilter) + "&";
         if (sorting === null)
             throw new Error("The parameter 'sorting' cannot be null.");
         else if (sorting !== undefined)
@@ -2683,13 +2683,13 @@ export class CustomParametersServiceProxy {
      * @param filter (optional) 
      * @param nameFilter (optional) 
      * @param aggregationFunctionFilter (optional) 
-     * @param sTDPQSParametersListFilter (optional) 
      * @param typeFilter (optional) 
      * @param maxResolutionInSecondsFilter (optional) 
      * @param minResolutionInSecondsFilter (optional) 
+     * @param customBaseDataListFilter (optional) 
      * @return Success
      */
-    getCustomParametersToExcel(filter: string | undefined, nameFilter: string | undefined, aggregationFunctionFilter: string | undefined, sTDPQSParametersListFilter: string | undefined, typeFilter: string | undefined, maxResolutionInSecondsFilter: number | undefined, minResolutionInSecondsFilter: number | undefined): Observable<FileDto> {
+    getCustomParametersToExcel(filter: string | undefined, nameFilter: string | undefined, aggregationFunctionFilter: string | undefined, typeFilter: string | undefined, maxResolutionInSecondsFilter: number | undefined, minResolutionInSecondsFilter: number | undefined, customBaseDataListFilter: string | undefined): Observable<FileDto> {
         let url_ = this.baseUrl + "/api/services/app/CustomParameters/GetCustomParametersToExcel?";
         if (filter === null)
             throw new Error("The parameter 'filter' cannot be null.");
@@ -2703,10 +2703,6 @@ export class CustomParametersServiceProxy {
             throw new Error("The parameter 'aggregationFunctionFilter' cannot be null.");
         else if (aggregationFunctionFilter !== undefined)
             url_ += "AggregationFunctionFilter=" + encodeURIComponent("" + aggregationFunctionFilter) + "&";
-        if (sTDPQSParametersListFilter === null)
-            throw new Error("The parameter 'sTDPQSParametersListFilter' cannot be null.");
-        else if (sTDPQSParametersListFilter !== undefined)
-            url_ += "STDPQSParametersListFilter=" + encodeURIComponent("" + sTDPQSParametersListFilter) + "&";
         if (typeFilter === null)
             throw new Error("The parameter 'typeFilter' cannot be null.");
         else if (typeFilter !== undefined)
@@ -2719,6 +2715,10 @@ export class CustomParametersServiceProxy {
             throw new Error("The parameter 'minResolutionInSecondsFilter' cannot be null.");
         else if (minResolutionInSecondsFilter !== undefined)
             url_ += "MinResolutionInSecondsFilter=" + encodeURIComponent("" + minResolutionInSecondsFilter) + "&";
+        if (customBaseDataListFilter === null)
+            throw new Error("The parameter 'customBaseDataListFilter' cannot be null.");
+        else if (customBaseDataListFilter !== undefined)
+            url_ += "CustomBaseDataListFilter=" + encodeURIComponent("" + customBaseDataListFilter) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -6694,6 +6694,381 @@ export class FriendshipServiceProxy {
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+@Injectable()
+export class GroupsServiceProxy {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @param filter (optional) 
+     * @param nameFilter (optional) 
+     * @param subgroupsFilter (optional) 
+     * @param sorting (optional) 
+     * @param skipCount (optional) 
+     * @param maxResultCount (optional) 
+     * @return Success
+     */
+    getAll(filter: string | undefined, nameFilter: string | undefined, subgroupsFilter: string | undefined, sorting: string | undefined, skipCount: number | undefined, maxResultCount: number | undefined): Observable<PagedResultDtoOfGetGroupForViewDto> {
+        let url_ = this.baseUrl + "/api/services/app/Groups/GetAll?";
+        if (filter === null)
+            throw new Error("The parameter 'filter' cannot be null.");
+        else if (filter !== undefined)
+            url_ += "Filter=" + encodeURIComponent("" + filter) + "&";
+        if (nameFilter === null)
+            throw new Error("The parameter 'nameFilter' cannot be null.");
+        else if (nameFilter !== undefined)
+            url_ += "NameFilter=" + encodeURIComponent("" + nameFilter) + "&";
+        if (subgroupsFilter === null)
+            throw new Error("The parameter 'subgroupsFilter' cannot be null.");
+        else if (subgroupsFilter !== undefined)
+            url_ += "SubgroupsFilter=" + encodeURIComponent("" + subgroupsFilter) + "&";
+        if (sorting === null)
+            throw new Error("The parameter 'sorting' cannot be null.");
+        else if (sorting !== undefined)
+            url_ += "Sorting=" + encodeURIComponent("" + sorting) + "&";
+        if (skipCount === null)
+            throw new Error("The parameter 'skipCount' cannot be null.");
+        else if (skipCount !== undefined)
+            url_ += "SkipCount=" + encodeURIComponent("" + skipCount) + "&";
+        if (maxResultCount === null)
+            throw new Error("The parameter 'maxResultCount' cannot be null.");
+        else if (maxResultCount !== undefined)
+            url_ += "MaxResultCount=" + encodeURIComponent("" + maxResultCount) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetAll(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetAll(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<PagedResultDtoOfGetGroupForViewDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<PagedResultDtoOfGetGroupForViewDto>;
+        }));
+    }
+
+    protected processGetAll(response: HttpResponseBase): Observable<PagedResultDtoOfGetGroupForViewDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PagedResultDtoOfGetGroupForViewDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    getGroupForView(id: string | undefined): Observable<GetGroupForViewDto> {
+        let url_ = this.baseUrl + "/api/services/app/Groups/GetGroupForView?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetGroupForView(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetGroupForView(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetGroupForViewDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetGroupForViewDto>;
+        }));
+    }
+
+    protected processGetGroupForView(response: HttpResponseBase): Observable<GetGroupForViewDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetGroupForViewDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    getGroupForEdit(id: string | undefined): Observable<GetGroupForEditOutput> {
+        let url_ = this.baseUrl + "/api/services/app/Groups/GetGroupForEdit?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetGroupForEdit(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetGroupForEdit(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetGroupForEditOutput>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetGroupForEditOutput>;
+        }));
+    }
+
+    protected processGetGroupForEdit(response: HttpResponseBase): Observable<GetGroupForEditOutput> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetGroupForEditOutput.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    createOrEdit(body: CreateOrEditGroupDto | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/services/app/Groups/CreateOrEdit";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCreateOrEdit(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCreateOrEdit(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processCreateOrEdit(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    delete(id: string | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/services/app/Groups/Delete?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("delete", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processDelete(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processDelete(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processDelete(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param filter (optional) 
+     * @param nameFilter (optional) 
+     * @param subgroupsFilter (optional) 
+     * @return Success
+     */
+    getGroupsToExcel(filter: string | undefined, nameFilter: string | undefined, subgroupsFilter: string | undefined): Observable<FileDto> {
+        let url_ = this.baseUrl + "/api/services/app/Groups/GetGroupsToExcel?";
+        if (filter === null)
+            throw new Error("The parameter 'filter' cannot be null.");
+        else if (filter !== undefined)
+            url_ += "Filter=" + encodeURIComponent("" + filter) + "&";
+        if (nameFilter === null)
+            throw new Error("The parameter 'nameFilter' cannot be null.");
+        else if (nameFilter !== undefined)
+            url_ += "NameFilter=" + encodeURIComponent("" + nameFilter) + "&";
+        if (subgroupsFilter === null)
+            throw new Error("The parameter 'subgroupsFilter' cannot be null.");
+        else if (subgroupsFilter !== undefined)
+            url_ += "SubgroupsFilter=" + encodeURIComponent("" + subgroupsFilter) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetGroupsToExcel(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetGroupsToExcel(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<FileDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<FileDto>;
+        }));
+    }
+
+    protected processGetGroupsToExcel(response: HttpResponseBase): Observable<FileDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = FileDto.fromJS(resultData200);
+            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -14739,8 +15114,8 @@ export class TenantDashboardServiceProxy {
      * @param body (optional) 
      * @return Success
      */
-    pQSTrendData222(body: TrendCalcRequest222 | undefined): Observable<TrendResponse> {
-        let url_ = this.baseUrl + "/api/services/app/TenantDashboard/PQSTrendData222";
+    pQSTrendData(body: TrendCalcRequest | undefined): Observable<TrendResponse> {
+        let url_ = this.baseUrl + "/api/services/app/TenantDashboard/PQSTrendData";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -14756,11 +15131,11 @@ export class TenantDashboardServiceProxy {
         };
 
         return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processPQSTrendData222(response_);
+            return this.processPQSTrendData(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processPQSTrendData222(response_ as any);
+                    return this.processPQSTrendData(response_ as any);
                 } catch (e) {
                     return _observableThrow(e) as any as Observable<TrendResponse>;
                 }
@@ -14769,7 +15144,7 @@ export class TenantDashboardServiceProxy {
         }));
     }
 
-    protected processPQSTrendData222(response: HttpResponseBase): Observable<TrendResponse> {
+    protected processPQSTrendData(response: HttpResponseBase): Observable<TrendResponse> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -14851,8 +15226,8 @@ export class TenantDashboardServiceProxy {
      * @param body (optional) 
      * @return Success
      */
-    pQSTableWidgetData2222(body: TableWidgetRequest222 | undefined): Observable<TableWidgetResponse> {
-        let url_ = this.baseUrl + "/api/services/app/TenantDashboard/PQSTableWidgetData2222";
+    pQSTableWidgetData(body: TableWidgetRequest | undefined): Observable<TableWidgetResponse> {
+        let url_ = this.baseUrl + "/api/services/app/TenantDashboard/PQSTableWidgetData";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -14868,11 +15243,11 @@ export class TenantDashboardServiceProxy {
         };
 
         return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processPQSTableWidgetData2222(response_);
+            return this.processPQSTableWidgetData(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processPQSTableWidgetData2222(response_ as any);
+                    return this.processPQSTableWidgetData(response_ as any);
                 } catch (e) {
                     return _observableThrow(e) as any as Observable<TableWidgetResponse>;
                 }
@@ -14881,7 +15256,7 @@ export class TenantDashboardServiceProxy {
         }));
     }
 
-    protected processPQSTableWidgetData2222(response: HttpResponseBase): Observable<TableWidgetResponse> {
+    protected processPQSTableWidgetData(response: HttpResponseBase): Observable<TableWidgetResponse> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -16882,62 +17257,6 @@ export class TreeBuilderServiceProxy {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result200 = GetComponentSlimInfosResponse.fromJS(resultData200);
-            return _observableOf(result200);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
-     * @param body (optional) 
-     * @return Success
-     */
-    getTreeTableIntegrationTest(body: PostEventstRequestTest | undefined): Observable<TagTreeRootDto> {
-        let url_ = this.baseUrl + "/api/services/app/TreeBuilder/GetTreeTableIntegrationTest";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_ : any = {
-            body: content_,
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Content-Type": "application/json",
-                "Accept": "text/plain"
-            })
-        };
-
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processGetTreeTableIntegrationTest(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processGetTreeTableIntegrationTest(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<TagTreeRootDto>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<TagTreeRootDto>;
-        }));
-    }
-
-    protected processGetTreeTableIntegrationTest(response: HttpResponseBase): Observable<TagTreeRootDto> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = TagTreeRootDto.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -20406,7 +20725,8 @@ export interface IAddWidgetInput {
 }
 
 export class AdditionalData implements IAdditionalData {
-    propertiesName!: string | undefined;
+    propertyName!: string | undefined;
+    base!: string | undefined;
     measurmentsParameterDetails!: MeasurmentsParameterDetails;
 
     constructor(data?: IAdditionalData) {
@@ -20420,7 +20740,8 @@ export class AdditionalData implements IAdditionalData {
 
     init(_data?: any) {
         if (_data) {
-            this.propertiesName = _data["propertiesName"];
+            this.propertyName = _data["propertyName"];
+            this.base = _data["base"];
             this.measurmentsParameterDetails = _data["measurmentsParameterDetails"] ? MeasurmentsParameterDetails.fromJS(_data["measurmentsParameterDetails"]) : <any>undefined;
         }
     }
@@ -20434,15 +20755,22 @@ export class AdditionalData implements IAdditionalData {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["propertiesName"] = this.propertiesName;
+        data["propertyName"] = this.propertyName;
+        data["base"] = this.base;
         data["measurmentsParameterDetails"] = this.measurmentsParameterDetails ? this.measurmentsParameterDetails.toJSON() : <any>undefined;
         return data;
     }
 }
 
 export interface IAdditionalData {
-    propertiesName: string | undefined;
+    propertyName: string | undefined;
+    base: string | undefined;
     measurmentsParameterDetails: MeasurmentsParameterDetails;
+}
+
+export enum AggregationEnum {
+    NotAggregated = 0,
+    Aggregated = 1,
 }
 
 export class AppSettingsJsonDto implements IAppSettingsJsonDto {
@@ -20498,6 +20826,7 @@ export interface IAppSettingsJsonDto {
 }
 
 export class ApplicationInfoDto implements IApplicationInfoDto {
+    userMetaDeta!: UserMetadata;
     version!: string | undefined;
     releaseDate!: DateTime;
     currency!: string | undefined;
@@ -20518,6 +20847,7 @@ export class ApplicationInfoDto implements IApplicationInfoDto {
 
     init(_data?: any) {
         if (_data) {
+            this.userMetaDeta = _data["userMetaDeta"] ? UserMetadata.fromJS(_data["userMetaDeta"]) : <any>undefined;
             this.version = _data["version"];
             this.releaseDate = _data["releaseDate"] ? DateTime.fromISO(_data["releaseDate"].toString()) : <any>undefined;
             this.currency = _data["currency"];
@@ -20544,6 +20874,7 @@ export class ApplicationInfoDto implements IApplicationInfoDto {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["userMetaDeta"] = this.userMetaDeta ? this.userMetaDeta.toJSON() : <any>undefined;
         data["version"] = this.version;
         data["releaseDate"] = this.releaseDate ? this.releaseDate.toString() : <any>undefined;
         data["currency"] = this.currency;
@@ -20563,6 +20894,7 @@ export class ApplicationInfoDto implements IApplicationInfoDto {
 }
 
 export interface IApplicationInfoDto {
+    userMetaDeta: UserMetadata;
     version: string | undefined;
     releaseDate: DateTime;
     currency: string | undefined;
@@ -22293,8 +22625,12 @@ export interface ICleanValuesInput {
 
 export class ColumnWidgetTable implements IColumnWidgetTable {
     parameterType!: string | undefined;
-    flaggingEvents!: number[] | undefined;
-    excludeFlagged!: boolean;
+    normalize!: NormalizeEnum;
+    normalValue!: number | undefined;
+    excludeFlagged!: EventClass[] | undefined;
+    isExcludeFlaggedData!: boolean;
+    ignoreAligningFunction!: boolean;
+    replaceAggregationWith!: string | undefined;
     customData!: CustomWidgetTableData;
     baseData!: string | undefined;
     tableEvent!: TableWidgetEvent;
@@ -22312,12 +22648,16 @@ export class ColumnWidgetTable implements IColumnWidgetTable {
     init(_data?: any) {
         if (_data) {
             this.parameterType = _data["parameterType"];
-            if (Array.isArray(_data["flaggingEvents"])) {
-                this.flaggingEvents = [] as any;
-                for (let item of _data["flaggingEvents"])
-                    this.flaggingEvents!.push(item);
+            this.normalize = _data["normalize"];
+            this.normalValue = _data["normalValue"];
+            if (Array.isArray(_data["excludeFlagged"])) {
+                this.excludeFlagged = [] as any;
+                for (let item of _data["excludeFlagged"])
+                    this.excludeFlagged!.push(item);
             }
-            this.excludeFlagged = _data["excludeFlagged"];
+            this.isExcludeFlaggedData = _data["isExcludeFlaggedData"];
+            this.ignoreAligningFunction = _data["ignoreAligningFunction"];
+            this.replaceAggregationWith = _data["replaceAggregationWith"];
             this.customData = _data["customData"] ? CustomWidgetTableData.fromJS(_data["customData"]) : <any>undefined;
             this.baseData = _data["baseData"];
             this.tableEvent = _data["tableEvent"] ? TableWidgetEvent.fromJS(_data["tableEvent"]) : <any>undefined;
@@ -22335,12 +22675,16 @@ export class ColumnWidgetTable implements IColumnWidgetTable {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["parameterType"] = this.parameterType;
-        if (Array.isArray(this.flaggingEvents)) {
-            data["flaggingEvents"] = [];
-            for (let item of this.flaggingEvents)
-                data["flaggingEvents"].push(item);
+        data["normalize"] = this.normalize;
+        data["normalValue"] = this.normalValue;
+        if (Array.isArray(this.excludeFlagged)) {
+            data["excludeFlagged"] = [];
+            for (let item of this.excludeFlagged)
+                data["excludeFlagged"].push(item);
         }
-        data["excludeFlagged"] = this.excludeFlagged;
+        data["isExcludeFlaggedData"] = this.isExcludeFlaggedData;
+        data["ignoreAligningFunction"] = this.ignoreAligningFunction;
+        data["replaceAggregationWith"] = this.replaceAggregationWith;
         data["customData"] = this.customData ? this.customData.toJSON() : <any>undefined;
         data["baseData"] = this.baseData;
         data["tableEvent"] = this.tableEvent ? this.tableEvent.toJSON() : <any>undefined;
@@ -22351,8 +22695,12 @@ export class ColumnWidgetTable implements IColumnWidgetTable {
 
 export interface IColumnWidgetTable {
     parameterType: string | undefined;
-    flaggingEvents: number[] | undefined;
-    excludeFlagged: boolean;
+    normalize: NormalizeEnum;
+    normalValue: number | undefined;
+    excludeFlagged: EventClass[] | undefined;
+    isExcludeFlaggedData: boolean;
+    ignoreAligningFunction: boolean;
+    replaceAggregationWith: string | undefined;
     customData: CustomWidgetTableData;
     baseData: string | undefined;
     tableEvent: TableWidgetEvent;
@@ -23179,10 +23527,10 @@ export class CreateOrEditCustomParameterDto implements ICreateOrEditCustomParame
     id!: number | undefined;
     name!: string;
     aggregationFunction!: string;
-    stdpqsParametersList!: string | undefined;
     type!: string;
     innerCustomParameters!: string | undefined;
     resolutionInSeconds!: number;
+    customBaseDataList!: string | undefined;
 
     constructor(data?: ICreateOrEditCustomParameterDto) {
         if (data) {
@@ -23198,10 +23546,10 @@ export class CreateOrEditCustomParameterDto implements ICreateOrEditCustomParame
             this.id = _data["id"];
             this.name = _data["name"];
             this.aggregationFunction = _data["aggregationFunction"];
-            this.stdpqsParametersList = _data["stdpqsParametersList"];
             this.type = _data["type"];
             this.innerCustomParameters = _data["innerCustomParameters"];
             this.resolutionInSeconds = _data["resolutionInSeconds"];
+            this.customBaseDataList = _data["customBaseDataList"];
         }
     }
 
@@ -23217,10 +23565,10 @@ export class CreateOrEditCustomParameterDto implements ICreateOrEditCustomParame
         data["id"] = this.id;
         data["name"] = this.name;
         data["aggregationFunction"] = this.aggregationFunction;
-        data["stdpqsParametersList"] = this.stdpqsParametersList;
         data["type"] = this.type;
         data["innerCustomParameters"] = this.innerCustomParameters;
         data["resolutionInSeconds"] = this.resolutionInSeconds;
+        data["customBaseDataList"] = this.customBaseDataList;
         return data;
     }
 }
@@ -23229,10 +23577,10 @@ export interface ICreateOrEditCustomParameterDto {
     id: number | undefined;
     name: string;
     aggregationFunction: string;
-    stdpqsParametersList: string | undefined;
     type: string;
     innerCustomParameters: string | undefined;
     resolutionInSeconds: number;
+    customBaseDataList: string | undefined;
 }
 
 export class CreateOrEditDefaultValueDto implements ICreateOrEditDefaultValueDto {
@@ -23277,6 +23625,50 @@ export interface ICreateOrEditDefaultValueDto {
     id: number | undefined;
     name: string;
     value: string;
+}
+
+export class CreateOrEditGroupDto implements ICreateOrEditGroupDto {
+    id!: string | undefined;
+    name!: string;
+    subgroups!: string;
+
+    constructor(data?: ICreateOrEditGroupDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.subgroups = _data["subgroups"];
+        }
+    }
+
+    static fromJS(data: any): CreateOrEditGroupDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateOrEditGroupDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["subgroups"] = this.subgroups;
+        return data;
+    }
+}
+
+export interface ICreateOrEditGroupDto {
+    id: string | undefined;
+    name: string;
+    subgroups: string;
 }
 
 export class CreateOrEditTableWidgetConfigurationDto implements ICreateOrEditTableWidgetConfigurationDto {
@@ -24174,9 +24566,9 @@ export class CustomParameterDto implements ICustomParameterDto {
     id!: number;
     name!: string | undefined;
     aggregationFunction!: string | undefined;
-    stdpqsParametersList!: string | undefined;
     type!: string | undefined;
     resolutionInSeconds!: number;
+    customBaseDataList!: string | undefined;
 
     constructor(data?: ICustomParameterDto) {
         if (data) {
@@ -24192,9 +24584,9 @@ export class CustomParameterDto implements ICustomParameterDto {
             this.id = _data["id"];
             this.name = _data["name"];
             this.aggregationFunction = _data["aggregationFunction"];
-            this.stdpqsParametersList = _data["stdpqsParametersList"];
             this.type = _data["type"];
             this.resolutionInSeconds = _data["resolutionInSeconds"];
+            this.customBaseDataList = _data["customBaseDataList"];
         }
     }
 
@@ -24210,9 +24602,9 @@ export class CustomParameterDto implements ICustomParameterDto {
         data["id"] = this.id;
         data["name"] = this.name;
         data["aggregationFunction"] = this.aggregationFunction;
-        data["stdpqsParametersList"] = this.stdpqsParametersList;
         data["type"] = this.type;
         data["resolutionInSeconds"] = this.resolutionInSeconds;
+        data["customBaseDataList"] = this.customBaseDataList;
         return data;
     }
 }
@@ -24221,9 +24613,9 @@ export interface ICustomParameterDto {
     id: number;
     name: string | undefined;
     aggregationFunction: string | undefined;
-    stdpqsParametersList: string | undefined;
     type: string | undefined;
     resolutionInSeconds: number;
+    customBaseDataList: string | undefined;
 }
 
 export class CustomWidgetTableData implements ICustomWidgetTableData {
@@ -26094,7 +26486,10 @@ export enum EventClass {
 
 export class EventClassDescription implements IEventClassDescription {
     eventClass!: EventClass;
-    alias!: string | undefined;
+    confID!: number;
+    isShared!: boolean;
+    name!: string | undefined;
+    aggregationEnum!: AggregationEnum;
     description!: string | undefined;
 
     constructor(data?: IEventClassDescription) {
@@ -26109,7 +26504,10 @@ export class EventClassDescription implements IEventClassDescription {
     init(_data?: any) {
         if (_data) {
             this.eventClass = _data["eventClass"];
-            this.alias = _data["alias"];
+            this.confID = _data["confID"];
+            this.isShared = _data["isShared"];
+            this.name = _data["name"];
+            this.aggregationEnum = _data["aggregationEnum"];
             this.description = _data["description"];
         }
     }
@@ -26124,7 +26522,10 @@ export class EventClassDescription implements IEventClassDescription {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["eventClass"] = this.eventClass;
-        data["alias"] = this.alias;
+        data["confID"] = this.confID;
+        data["isShared"] = this.isShared;
+        data["name"] = this.name;
+        data["aggregationEnum"] = this.aggregationEnum;
         data["description"] = this.description;
         return data;
     }
@@ -26132,7 +26533,10 @@ export class EventClassDescription implements IEventClassDescription {
 
 export interface IEventClassDescription {
     eventClass: EventClass;
-    alias: string | undefined;
+    confID: number;
+    isShared: boolean;
+    name: string | undefined;
+    aggregationEnum: AggregationEnum;
     description: string | undefined;
 }
 
@@ -26696,6 +27100,7 @@ export class FeederComponentInfo implements IFeederComponentInfo {
     id!: number | undefined;
     name!: string | undefined;
     componentId!: string;
+    compName!: string | undefined;
 
     constructor(data?: IFeederComponentInfo) {
         if (data) {
@@ -26711,6 +27116,7 @@ export class FeederComponentInfo implements IFeederComponentInfo {
             this.id = _data["id"];
             this.name = _data["name"];
             this.componentId = _data["componentId"];
+            this.compName = _data["compName"];
         }
     }
 
@@ -26726,6 +27132,7 @@ export class FeederComponentInfo implements IFeederComponentInfo {
         data["id"] = this.id;
         data["name"] = this.name;
         data["componentId"] = this.componentId;
+        data["compName"] = this.compName;
         return data;
     }
 }
@@ -26734,6 +27141,7 @@ export interface IFeederComponentInfo {
     id: number | undefined;
     name: string | undefined;
     componentId: string;
+    compName: string | undefined;
 }
 
 export class FeederDescriptionDto implements IFeederDescriptionDto {
@@ -29054,6 +29462,78 @@ export interface IGetGeneralStatsOutput {
     bouncePercent: number;
 }
 
+export class GetGroupForEditOutput implements IGetGroupForEditOutput {
+    group!: CreateOrEditGroupDto;
+
+    constructor(data?: IGetGroupForEditOutput) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.group = _data["group"] ? CreateOrEditGroupDto.fromJS(_data["group"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetGroupForEditOutput {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetGroupForEditOutput();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["group"] = this.group ? this.group.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetGroupForEditOutput {
+    group: CreateOrEditGroupDto;
+}
+
+export class GetGroupForViewDto implements IGetGroupForViewDto {
+    group!: GroupDto;
+
+    constructor(data?: IGetGroupForViewDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.group = _data["group"] ? GroupDto.fromJS(_data["group"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetGroupForViewDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetGroupForViewDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["group"] = this.group ? this.group.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetGroupForViewDto {
+    group: GroupDto;
+}
+
 export class GetIncomeStatisticsDataOutput implements IGetIncomeStatisticsDataOutput {
     incomeStatistics!: IncomeStastistic[] | undefined;
 
@@ -30731,6 +31211,50 @@ export interface IGroupDataInfo {
     groupName: string | undefined;
     description: string | undefined;
     isHarmonic: boolean;
+}
+
+export class GroupDto implements IGroupDto {
+    id!: string;
+    name!: string | undefined;
+    subgroups!: string | undefined;
+
+    constructor(data?: IGroupDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.subgroups = _data["subgroups"];
+        }
+    }
+
+    static fromJS(data: any): GroupDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new GroupDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["subgroups"] = this.subgroups;
+        return data;
+    }
+}
+
+export interface IGroupDto {
+    id: string;
+    name: string | undefined;
+    subgroups: string | undefined;
 }
 
 export class HarmonicsDto implements IHarmonicsDto {
@@ -33948,6 +34472,12 @@ export interface INameValueOfString {
     value: string | undefined;
 }
 
+export enum NormalizeEnum {
+    NO = 0,
+    NOMINAL = 1,
+    VALUE = 2,
+}
+
 export class NotificationData implements INotificationData {
     readonly type!: string | undefined;
     properties!: { [key: string]: any; } | undefined;
@@ -34571,7 +35101,7 @@ export interface IPQSCalculationChartBarRequestTest {
 export class PQSCalculationRequestTest implements IPQSCalculationRequestTest {
     userNameOrEmailAddress!: string | undefined;
     password!: string | undefined;
-    request!: TrendCalcRequest222;
+    request!: TrendCalcRequest;
 
     constructor(data?: IPQSCalculationRequestTest) {
         if (data) {
@@ -34586,7 +35116,7 @@ export class PQSCalculationRequestTest implements IPQSCalculationRequestTest {
         if (_data) {
             this.userNameOrEmailAddress = _data["userNameOrEmailAddress"];
             this.password = _data["password"];
-            this.request = _data["request"] ? TrendCalcRequest222.fromJS(_data["request"]) : <any>undefined;
+            this.request = _data["request"] ? TrendCalcRequest.fromJS(_data["request"]) : <any>undefined;
         }
     }
 
@@ -34609,13 +35139,13 @@ export class PQSCalculationRequestTest implements IPQSCalculationRequestTest {
 export interface IPQSCalculationRequestTest {
     userNameOrEmailAddress: string | undefined;
     password: string | undefined;
-    request: TrendCalcRequest222;
+    request: TrendCalcRequest;
 }
 
 export class PQSCalculationRequestTest222 implements IPQSCalculationRequestTest222 {
     userNameOrEmailAddress!: string | undefined;
     password!: string | undefined;
-    request!: TableWidgetRequest222;
+    request!: TableWidgetRequest;
 
     constructor(data?: IPQSCalculationRequestTest222) {
         if (data) {
@@ -34630,7 +35160,7 @@ export class PQSCalculationRequestTest222 implements IPQSCalculationRequestTest2
         if (_data) {
             this.userNameOrEmailAddress = _data["userNameOrEmailAddress"];
             this.password = _data["password"];
-            this.request = _data["request"] ? TableWidgetRequest222.fromJS(_data["request"]) : <any>undefined;
+            this.request = _data["request"] ? TableWidgetRequest.fromJS(_data["request"]) : <any>undefined;
         }
     }
 
@@ -34653,7 +35183,7 @@ export class PQSCalculationRequestTest222 implements IPQSCalculationRequestTest2
 export interface IPQSCalculationRequestTest222 {
     userNameOrEmailAddress: string | undefined;
     password: string | undefined;
-    request: TableWidgetRequest222;
+    request: TableWidgetRequest;
 }
 
 export class PQSCalculationResponse implements IPQSCalculationResponse {
@@ -35591,6 +36121,54 @@ export class PagedResultDtoOfGetDefaultValueForViewDto implements IPagedResultDt
 
 export interface IPagedResultDtoOfGetDefaultValueForViewDto {
     items: GetDefaultValueForViewDto[] | undefined;
+    totalCount: number;
+}
+
+export class PagedResultDtoOfGetGroupForViewDto implements IPagedResultDtoOfGetGroupForViewDto {
+    items!: GetGroupForViewDto[] | undefined;
+    totalCount!: number;
+
+    constructor(data?: IPagedResultDtoOfGetGroupForViewDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(GetGroupForViewDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+        }
+    }
+
+    static fromJS(data: any): PagedResultDtoOfGetGroupForViewDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PagedResultDtoOfGetGroupForViewDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item.toJSON());
+        }
+        data["totalCount"] = this.totalCount;
+        return data;
+    }
+}
+
+export interface IPagedResultDtoOfGetGroupForViewDto {
+    items: GetGroupForViewDto[] | undefined;
     totalCount: number;
 }
 
@@ -36932,10 +37510,10 @@ export enum QuantityEnum {
     QMIN = 0,
     QMAX = 1,
     QAVG = 2,
-    QSAMPLE = 3,
-    QSUM = 4,
-    QCOUNTER = 5,
-    NONE = 6,
+    // QSAMPLE = 3,
+    // QSUM = 4,
+    // QCOUNTER = 5,
+    // NONE = 6,
 }
 
 export class RecentTenant implements IRecentTenant {
@@ -39391,6 +39969,8 @@ export interface ITableWidgetConfigurationDto {
 export class TableWidgetEvent implements ITableWidgetEvent {
     phases!: string[] | undefined;
     eventId!: number;
+    eventClass!: EventClass;
+    isShared!: boolean;
     parameter!: WidgetTableParameterType;
     isPolyphase!: boolean;
     aggregationInSeconds!: number | undefined;
@@ -39413,6 +39993,8 @@ export class TableWidgetEvent implements ITableWidgetEvent {
                     this.phases!.push(item);
             }
             this.eventId = _data["eventId"];
+            this.eventClass = _data["eventClass"];
+            this.isShared = _data["isShared"];
             this.parameter = _data["parameter"];
             this.isPolyphase = _data["isPolyphase"];
             this.aggregationInSeconds = _data["aggregationInSeconds"];
@@ -39435,6 +40017,8 @@ export class TableWidgetEvent implements ITableWidgetEvent {
                 data["phases"].push(item);
         }
         data["eventId"] = this.eventId;
+        data["eventClass"] = this.eventClass;
+        data["isShared"] = this.isShared;
         data["parameter"] = this.parameter;
         data["isPolyphase"] = this.isPolyphase;
         data["aggregationInSeconds"] = this.aggregationInSeconds;
@@ -39446,13 +40030,15 @@ export class TableWidgetEvent implements ITableWidgetEvent {
 export interface ITableWidgetEvent {
     phases: string[] | undefined;
     eventId: number;
+    eventClass: EventClass;
+    isShared: boolean;
     parameter: WidgetTableParameterType;
     isPolyphase: boolean;
     aggregationInSeconds: number | undefined;
     quantity: string | undefined;
 }
 
-export class TableWidgetRequest222 implements ITableWidgetRequest222 {
+export class TableWidgetRequest implements ITableWidgetRequest {
     startDate!: DateTime;
     endDate!: DateTime;
     widgetName!: string | undefined;
@@ -39460,7 +40046,7 @@ export class TableWidgetRequest222 implements ITableWidgetRequest222 {
     rows!: RowWidgetTable;
     columnWidgetTables!: ColumnWidgetTable[] | undefined;
 
-    constructor(data?: ITableWidgetRequest222) {
+    constructor(data?: ITableWidgetRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -39484,9 +40070,9 @@ export class TableWidgetRequest222 implements ITableWidgetRequest222 {
         }
     }
 
-    static fromJS(data: any): TableWidgetRequest222 {
+    static fromJS(data: any): TableWidgetRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new TableWidgetRequest222();
+        let result = new TableWidgetRequest();
         result.init(data);
         return result;
     }
@@ -39507,7 +40093,7 @@ export class TableWidgetRequest222 implements ITableWidgetRequest222 {
     }
 }
 
-export interface ITableWidgetRequest222 {
+export interface ITableWidgetRequest {
     startDate: DateTime;
     endDate: DateTime;
     widgetName: string | undefined;
@@ -39562,7 +40148,7 @@ export interface ITableWidgetResponse {
 
 export class TableWidgetResponseItem implements ITableWidgetResponseItem {
     componentId!: string | undefined;
-    feederId!: string | undefined;
+    feederId!: number | undefined;
     tag!: Tag;
     parameterName!: string | undefined;
     calculated!: number | undefined;
@@ -39618,7 +40204,7 @@ export class TableWidgetResponseItem implements ITableWidgetResponseItem {
 
 export interface ITableWidgetResponseItem {
     componentId: string | undefined;
-    feederId: string | undefined;
+    feederId: number | undefined;
     tag: Tag;
     parameterName: string | undefined;
     calculated: number | undefined;
@@ -41010,7 +41596,7 @@ export interface ITopStatsData {
     dashboardPlaceholder2: number;
 }
 
-export class TrendCalcRequest222 implements ITrendCalcRequest222 {
+export class TrendCalcRequest implements ITrendCalcRequest {
     startDate!: DateTime;
     endDate!: DateTime;
     isAutoResolution!: boolean;
@@ -41019,7 +41605,7 @@ export class TrendCalcRequest222 implements ITrendCalcRequest222 {
     userTimeZone!: number;
     parameters!: TrendParameter[] | undefined;
 
-    constructor(data?: ITrendCalcRequest222) {
+    constructor(data?: ITrendCalcRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -41044,9 +41630,9 @@ export class TrendCalcRequest222 implements ITrendCalcRequest222 {
         }
     }
 
-    static fromJS(data: any): TrendCalcRequest222 {
+    static fromJS(data: any): TrendCalcRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new TrendCalcRequest222();
+        let result = new TrendCalcRequest();
         result.init(data);
         return result;
     }
@@ -41068,7 +41654,7 @@ export class TrendCalcRequest222 implements ITrendCalcRequest222 {
     }
 }
 
-export interface ITrendCalcRequest222 {
+export interface ITrendCalcRequest {
     startDate: DateTime;
     endDate: DateTime;
     isAutoResolution: boolean;
@@ -43399,6 +43985,42 @@ export interface IUserLoginInfoDto {
     userName: string | undefined;
     emailAddress: string | undefined;
     profilePictureId: string | undefined;
+}
+
+export class UserMetadata implements IUserMetadata {
+    scadaUrl!: string | undefined;
+
+    constructor(data?: IUserMetadata) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.scadaUrl = _data["scadaUrl"];
+        }
+    }
+
+    static fromJS(data: any): UserMetadata {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserMetadata();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["scadaUrl"] = this.scadaUrl;
+        return data;
+    }
+}
+
+export interface IUserMetadata {
+    scadaUrl: string | undefined;
 }
 
 export class UserNotification implements IUserNotification {

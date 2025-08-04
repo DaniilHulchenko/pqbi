@@ -4,7 +4,7 @@ import { NameValueDto, OrganizationUnitDto } from '@shared/service-proxies/servi
 import { ArrayToTreeConverterService } from '@shared/utils/array-to-tree-converter.service';
 import { TreeDataHelperService } from '@shared/utils/tree-data-helper.service';
 import { TreeNode } from 'primeng/api';
-import { forEach as _forEach, remove as _remove } from 'lodash-es';
+import { forEach as _forEach, remove as _remove, filter as _filter } from 'lodash-es';
 
 export interface IOrganizationUnitsTreeComponentData {
     allOrganizationUnits: OrganizationUnitDto[];
@@ -40,7 +40,7 @@ export class OrganizationUnitsTreeComponent extends AppComponentBase {
     @Output() onChange: EventEmitter<any> = new EventEmitter<any>();
 
     treeData: any;
-    selectedOus: TreeNode[] = [];
+    selectedOus: TreeNode<any>[] = [];
     filter = '';
 
     private _allOrganizationUnits: OrganizationUnitDto[];
@@ -171,7 +171,7 @@ export class OrganizationUnitsTreeComponent extends AppComponentBase {
     }
 
     onNodeUnselect(event) {
-        _remove(this.selectedOus, (x) => x.data.id === event.node.data.id);
+        _filter(this.selectedOus, (x) => x.data.id === event.node.data.id);
         this.onChange.emit();
     }
 }

@@ -2,7 +2,7 @@ import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { QuantityUnits } from '@app/shared/enums/quantity-units';
 import { CommonModule } from '@node_modules/@angular/common';
-import { DxTooltipModule } from '@node_modules/devextreme-angular';
+import { DxTooltipModule } from 'devextreme-angular';
 import { ListboxModule } from 'primeng/listbox';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
 

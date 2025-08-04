@@ -148,8 +148,13 @@
                                 [min]="0.01" [max]="0.99" [step]="0.01" [minFractionDigits]="0" [maxFractionDigits]="2"
                                 [disabled]="isAggregationSelectionDisabled" 
                                 [showButtons]="true" [showClear]="true" [required]="!isAggregationSelectionDisabled" >
-                            </p-inputNumber>
+                            </p-inputNumber>  
                         </ng-container>
+                        <advanced-settings
+                            [config]="advancedSettingsConfig"
+                            (configChange)="advancedSettingsConfig = $event"
+                            [config]="advancedSettingsConfig"
+                        ></advanced-settings>
                     </div>
                 </div>
             </div>

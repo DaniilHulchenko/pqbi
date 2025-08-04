@@ -88,6 +88,8 @@ export class CreateOrEditBarChartConfigurationComponent
     seriesOptions = [];
     selectedXUnit: string = null;
     selectedSeries: string[] = [];
+    isAutoResolution = false;
+    resolutionInSeconds = 0;
 
     dateRangeSelectionState: DateRangeState = new DateRangeState({ rangeOption: null, startDate: null, endDate: null });
 
@@ -287,9 +289,23 @@ export class CreateOrEditBarChartConfigurationComponent
     save() {
         this.saving = true;
         this.barChartWidgetConfiguration.dateRange    = this.dateRangeSelectionState.toJSON();
-        this.barChartWidgetConfiguration.configuration = safeStringify(this.parameters);
-        this.barChartWidgetConfiguration.components    = safeStringify(this.componentsState);
+        this.barChartWidgetConfiguration.components   = safeStringify(this.componentsState);
 
+        const params = this.parameters.map(p => ({
+            ...p,
+            resolution: p.resolution ?? 0,
+        }));
+         const config = {
+            xUnit: this.selectedXUnit,
+            series: this.selectedSeries,
+            isAutoResolution: this.isAutoResolution,
+            resolutionInSeconds: this.resolutionInSeconds,
+            parameters: params,
+            componentsState: this.componentsState,
+            dateRangeSelectionState: this.dateRangeSelectionState,
+        };
+        this.barChartWidgetConfiguration.configuration = safeStringify(config);
+        console.debug('Saving BarChartWidgetConfiguration', this.barChartWidgetConfiguration);
         if (this.barChartWidgetConfiguration.id) {
             this._barChartConfigurationService
                 .createOrEdit(this.barChartWidgetConfiguration)
@@ -311,6 +327,7 @@ export class CreateOrEditBarChartConfigurationComponent
                     }),
                 )
                 .subscribe((result) => {
+                    console.debug('createAndGetId result', result);
                     this.barChartWidgetConfiguration.id = result;
                     this.close();
                     this.onSave.emit(this.barChartWidgetConfiguration);
@@ -325,23 +342,40 @@ export class CreateOrEditBarChartConfigurationComponent
                 .getBarChartWidgetConfigurationForEdit(+configuration.configuration)
                 .subscribe(result => {
                     this.barChartWidgetConfiguration = result.barChartWidgetConfiguration;
-                    this.dateRangeSelectionState = DateRangeState.fromJSON(this.barChartWidgetConfiguration.dateRange);
-                    this.componentsState = JSON.parse(this.barChartWidgetConfiguration.components);
-                    this.parameters = JSON.parse(this.barChartWidgetConfiguration.configuration);
+try {
+                        const cfg = JSON.parse(this.barChartWidgetConfiguration.configuration);
+                        console.debug('Loaded BarChartWidgetConfiguration', cfg);
 
-                    const comps = JSON.parse(this.barChartWidgetConfiguration.components) as any[];
-                    const params = this.parameters;
+                        this.selectedXUnit = cfg.xUnit;
+                        this.selectedSeries = cfg.series ?? [];
+                        this.isAutoResolution = cfg.isAutoResolution ?? false;
+                        this.resolutionInSeconds = cfg.resolutionInSeconds ?? 0;
+                        this.parameters = (cfg.parameters ?? []).map((p: any) => ({
+                            ...p,
+                            resolution: p.resolution ?? 0,
+                        }));
+                        this.componentsState = cfg.componentsState;
+                        this.dateRangeSelectionState = DateRangeState.fromJSON(cfg.dateRangeSelectionState);
+                    } catch {
+                        this.dateRangeSelectionState = DateRangeState.fromJSON(this.barChartWidgetConfiguration.dateRange);
+                        this.componentsState = JSON.parse(this.barChartWidgetConfiguration.components);
+                        this.parameters = JSON.parse(this.barChartWidgetConfiguration.configuration).map((p: any) => ({
+                            ...p,
+                            resolution: p.resolution ?? 0,
+                        }));
+                        const comps = JSON.parse(this.barChartWidgetConfiguration.components) as any[];
+                        const params = this.parameters;
 
-                    if (this.barChartWidgetConfiguration.dateRange && params.length === 0) {
-                        this.selectedXUnit = 'time';
-                        this.selectedSeries = comps.length > 1 ? ['components'] : ['parameters'];
-                    } else if (comps.length > 1 && params.length === 1) {
-                        this.selectedXUnit = 'components';
-                        this.selectedSeries = ['parameters'];
-                    } else if (params.length > 1 && comps.length === 1) {
-                        this.selectedXUnit = 'parameters';
-                        this.selectedSeries = ['components'];
-                    }
+                        if (this.barChartWidgetConfiguration.dateRange && params.length === 0) {
+                            this.selectedXUnit = 'time';
+                            this.selectedSeries = comps.length > 1 ? ['components'] : ['parameters'];
+                        } else if (comps.length > 1 && params.length === 1) {
+                            this.selectedXUnit = 'components';
+                            this.selectedSeries = ['parameters'];
+                        } else if (params.length > 1 && comps.length === 1) {
+                            this.selectedXUnit = 'parameters';
+                            this.selectedSeries = ['components'];
+                        }                    }
 
                     this.onXUnitChange(this.selectedXUnit);
                     this.onSeriesChange(this.selectedSeries);
@@ -351,6 +385,10 @@ export class CreateOrEditBarChartConfigurationComponent
             this.dateRangeSelectionState = new DateRangeState({ rangeOption: null, startDate: null, endDate: null });
             this.componentsState = null;
             this.parameters = [];
+            this.selectedXUnit = null;
+            this.selectedSeries = [];
+            this.isAutoResolution = false;
+            this.resolutionInSeconds = 0;
         }
     }
 

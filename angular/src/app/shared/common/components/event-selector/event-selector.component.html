@@ -4,6 +4,6 @@
 <div [style]="scrollHeight">
     <dx-scroll-view direction="vertical">
         <p-listbox id="event" name="event" [(ngModel)]="selectedEvent" (ngModelChange)="onSelectionChange()" [options]="events"
-            optionLabel="description" [filter]="true" [virtualScroll]="false" [scrollHeight]="9999" required />
+            optionLabel="name" [filter]="true" [virtualScroll]="false" [scrollHeight]="9999" required />
     </dx-scroll-view>
 </div>

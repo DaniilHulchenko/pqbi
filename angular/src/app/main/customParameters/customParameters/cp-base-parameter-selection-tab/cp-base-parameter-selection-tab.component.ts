@@ -6,7 +6,6 @@ import {
     EditBaseParameterEventCallBack,
 } from '@app/shared/interfaces/base-parameter-event-callbacks';
 import { ComponentsState } from '@app/shared/models/components-state';
-import { AppComponentBase } from '@shared/common/app-component-base';
 import {
     BaseDataInfo,
     GroupDataInfo,
@@ -23,7 +22,7 @@ import { ResolutionState } from '@app/shared/models/resolution-state';
 import { ArrayUtils } from '@app/shared/services/array-utils.service';
 import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selection-units';
 import { ResolutionService } from '@app/shared/services/resolution-service';
-import { ListboxChangeEvent } from '@node_modules/primeng/listbox';
+import { ListboxChangeEvent } from 'primeng/listbox';
 import { BaseParserService } from '@app/shared/services/base-parser.service';
 import { BaseState } from '@app/shared/models/base-state';
 import safeStringify from 'fast-safe-stringify';
@@ -170,7 +169,6 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
 
         if (!this.dynamicSelection) {
             this._pqsRestApiServiceProxy.getStaticData().subscribe((response) => {
-            // this._pqsRestApiServiceProxy.getStaticData().subscribe((response) => {
                 this.parameterOptions = response.staticTreeNode.children.find(
                     (child) => child.value.toLowerCase() === this.baseParameterType.toLowerCase(),
                 );
@@ -218,8 +216,7 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
             ? ArrayUtils.ensureArray(this.parameter.quantity)
             : this.parameter.quantity;
 
-        this.resolutionState = this._resolutionService.parseStateFromInt(this.parameter.resolution);
-        // this.resolutionState = this._resolutionService.parseStateFromString(this.parameter.resolution, true);
+        this.resolutionState = this._resolutionService.parseStateFromInt(this.parameter.resolution, true);
 
         let operatorParsed;
         if (this.parameter.operator) {
@@ -232,16 +229,12 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
             this.selectedOperatorArgument = operatorParsed.value;
         }
 
-        // const aggregationParsed =
-        //     this.parameter.aggregationFunction === 'PERCENTILE'
-        //         ? this.parseOperator(this.parameter.aggregationFunction)
-        //         : { name: this.parameter.aggregationFunction, value: null };
+        if (this.parameter.aggregationFunction) {
+            const aggregationParsed = this.parseOperator(this.parameter.aggregationFunction);
 
-        const aggregationParsed = this.parseOperator(this.parameter.aggregationFunction);
-
-        this.selectedAggregationFunction = aggregationParsed.name;
-        this.selectedAggregationArgument = aggregationParsed.value;
-        console.log('populating');
+            this.selectedAggregationFunction = aggregationParsed.name;
+            this.selectedAggregationArgument = aggregationParsed.value;
+        }
     }
 
     getHarmonicsRange(range: string, delimiter: string | undefined = ':'): any[] {
@@ -454,10 +447,6 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
             isValid = false;
         }
 
-        // if (!this.selectedOperatorArgument) {
-        //     isValid = false;
-        // }
-
         if (!this.selectedAggregationFunction && !this.isAggregationSelectionDisabled) {
             isValid = false;
         }
@@ -554,7 +543,7 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
                     if (result) {
                         event.parameter = result;
                         event.quantity = QuantityUnits[result.quantity];
-                        // event.parameter.resolution =  resolutions[0];
+                        event.parameter.resolution =  resolutions[0];
                         this.onAdd.emit(event);
                         this.resetDependentSelections();
                     }
@@ -565,7 +554,6 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
             const bases = ArrayUtils.ensureArray(this.selectedBases);
             const quantities = ArrayUtils.ensureArray(this.selectedQuantities);
             const harmonics = ArrayUtils.ensureArray(this.selectedHarmonics);
-            // const resolutions = ArrayUtils.ensureArray(this.resolutionState.calculateTotalSeconds());
             const resolutions = ArrayUtils.ensureArray(this.resolutionState.calculateTotalSeconds());
             const operator = ArrayUtils.ensureArray(this.combineOperatorAndArgument());
             const aggregationFunctions = ArrayUtils.ensureArray(this.combineAggregationAndArgument());
@@ -716,7 +704,6 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
 
                 let phases = [];
 
-                // if (this.baseParameterType === BaseParameterType.Channel) {
                 if (this.baseParameterType === BaseParameterType.Channel) {
                     phases =
                         this.trees[component.key]?.groups.find((group) => group.groupName === this.parameter.group)
