@@ -57,6 +57,10 @@
     font-family: var(--header-font-family, "Arial, sans-serif");
 }
 
+::ng-deep .pqs-table .dx-header-row .dx-treelist-text-content {
+    white-space: pre-line;
+}
+
 ::ng-deep .dx-treelist .dx-icon-filter-operation-default::before,
 .dx-treelist-container .dx-icon-filter-operation-default::before {
     font-family: "FontAwesome";

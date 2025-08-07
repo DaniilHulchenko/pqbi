@@ -29,6 +29,7 @@ import { EditExceptionEventCallBack } from '@app/shared/common/components/parame
 import { DxDataGridTypes } from '@node_modules/devextreme-angular/ui/data-grid';
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
 import { Parameter } from '@app/main/customParameters/customParameters/table-parameters/models/parameter';
+import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
 
 @Component({
     selector: 'createOrEditBarChartConfiguration',
@@ -76,11 +77,13 @@ export class CreateOrEditBarChartConfigurationComponent
         { label: 'Base', value: 'base' },
     ];
 
-    chartTypeOptions = [
-        { label: this.l('Plain'),    value: 1, disabled: () => this.totalSeriesCount !== 1 },
-        { label: this.l('Stacked'),  value: 2, disabled: () => this.selectedSeries.length < 2 },
-        { label: this.l('Clustered'),value: 3, disabled: () => this.selectedSeries.length < 2 },
-    ];
+    get chartTypeOptions() {
+        return [
+            { label: this.l('Plain'), value: 1, disabled: this.totalSeriesCount !== 1 },
+            { label: this.l('Stacked'), value: 2, disabled: this.selectedSeries.length < 2 },
+            { label: this.l('Clustered'), value: 3, disabled: this.selectedSeries.length < 2 },
+        ];
+    }
 
     showComponentSelector = true;
     showParameterTabs = true;
@@ -91,8 +94,11 @@ export class CreateOrEditBarChartConfigurationComponent
     isAutoResolution = false;
     resolutionInSeconds = 0;
 
-    dateRangeSelectionState: DateRangeState = new DateRangeState({ rangeOption: null, startDate: null, endDate: null });
-
+    dateRangeSelectionState: DateRangeState = new DateRangeState({
+        rangeOption: DateRangeUnits.LAST_7_DAYS,
+        startDate: null,
+        endDate: null,
+    });
     constructor(
         injector: Injector,
         private _barChartConfigurationService: BarChartWidgetConfigurationsServiceProxy,
@@ -342,12 +348,16 @@ export class CreateOrEditBarChartConfigurationComponent
                 .getBarChartWidgetConfigurationForEdit(+configuration.configuration)
                 .subscribe(result => {
                     this.barChartWidgetConfiguration = result.barChartWidgetConfiguration;
+                    let loadedSeries: string[] = [];
+
 try {
                         const cfg = JSON.parse(this.barChartWidgetConfiguration.configuration);
                         console.debug('Loaded BarChartWidgetConfiguration', cfg);
 
                         this.selectedXUnit = cfg.xUnit;
                         this.selectedSeries = cfg.series ?? [];
+                        loadedSeries = cfg.series ?? [];
+
                         this.isAutoResolution = cfg.isAutoResolution ?? false;
                         this.resolutionInSeconds = cfg.resolutionInSeconds ?? 0;
                         this.parameters = (cfg.parameters ?? []).map((p: any) => ({
@@ -368,16 +378,16 @@ try {
 
                         if (this.barChartWidgetConfiguration.dateRange && params.length === 0) {
                             this.selectedXUnit = 'time';
-                            this.selectedSeries = comps.length > 1 ? ['components'] : ['parameters'];
-                        } else if (comps.length > 1 && params.length === 1) {
+                            loadedSeries = comps.length > 1 ? ['components'] : ['parameters'];                        } else if (comps.length > 1 && params.length === 1) {
                             this.selectedXUnit = 'components';
-                            this.selectedSeries = ['parameters'];
+                            loadedSeries = ['parameters'];
                         } else if (params.length > 1 && comps.length === 1) {
                             this.selectedXUnit = 'parameters';
-                            this.selectedSeries = ['components'];
+                            loadedSeries = ['components'];
                         }                    }
 
                     this.onXUnitChange(this.selectedXUnit);
+                    this.selectedSeries = loadedSeries;
                     this.onSeriesChange(this.selectedSeries);
                 });
         } else {

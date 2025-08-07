@@ -421,6 +421,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                 })
             )
             .subscribe((response: TableWidgetResponse) => {
+                console.log('🔍 RESPONSE ITEMS:', response.items);
                 const transformedItems = this._tableWidgetDataSourseBuilder.convertComponentsTagsArrayToProps(
                     this.tableWidgetConfiguration.components,
                     response.items
@@ -456,11 +457,16 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                     !(n.id.startsWith('tag_') && emptyTagIds.has(n.id))
                 );
 
-                const parameters = this.createcolumnDataUnitTypeName(this.tableWidgetConfiguration.parameters, treeData);
+                const parameters = this.createcolumnDataUnitTypeName(
+                    this.tableWidgetConfiguration.parameters,
+                    response.items
+                );
                 this.columns = this.buildColumns(parameters);
                 // this.columns = this.buildColumns(this.tableWidgetConfiguration.parameters);
                 this.dataSource = cleaned;
             });
+
+            
     };
 
     onContentReady() {
@@ -695,30 +701,23 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         return treeData;
     }
 
-    private createcolumnDataUnitTypeName(parameters: WidgetParametersColumn[], treeData: any[]): TreeWidgetParametersColumn[] {
+    private createcolumnDataUnitTypeName(
+        parameters: WidgetParametersColumn[],
+        responseItems: ITableWidgetResponseItem[]
+    ): TreeWidgetParametersColumn[] {
 
         const result: TreeWidgetParametersColumn[] = [];
 
         parameters.forEach(param => {
+            const responseItem = responseItems?.find(item => item.parameterName === param.name);
 
-            const name = param["name"];
-            let isPresent = false;
-
-            for (const treeItem of treeData) {
-                if (name in treeItem) // if name is a key of property in treeItem 
-                {
-                    const token = this.l(treeItem.dataUnitType.tokenCode);
-                    result.push({ ...param, columnDataUnitTypeName: token });
-                    isPresent = true;
-                    break;
-                }
+            if (responseItem?.dataUnitType?.tokenCode) {
+                const token = this.l(responseItem.dataUnitType.tokenCode);
+                result.push({ ...param, columnDataUnitTypeName: token });
+            } else {
+                result.push({ ...param, columnDataUnitTypeName: '' });
             }
-
-            if (!isPresent) {
-                result.push({ ...param, columnDataUnitTypeName: "" });
-            }
-
-        })
+        });
 
         return result;
     }
@@ -731,11 +730,10 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                 let caption = '';
 
                 if (param.columnDataUnitTypeName?.toLowerCase() === 'count') {
-                    caption = `${param.name} - Count`;
+                    caption = `${param.name}\n${this.l('Count')}`;
                 } else if (param.columnDataUnitTypeName) {
-                    caption = `${param.name} [${param.columnDataUnitTypeName}]`;
-                }
-                else {
+                    caption = `${param.name}\n[${param.columnDataUnitTypeName}]`;
+                } else {
                     caption = param.name;
                 }
 

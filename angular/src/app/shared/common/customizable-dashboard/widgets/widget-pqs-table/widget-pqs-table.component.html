@@ -53,6 +53,7 @@
                         <p>{{'LoadingData' | localize }}</p>
                     </div>
                     <dx-tree-list
+                        class="pqs-table"
                         *ngIf="dataSource && columns"
                         [dataSource]="dataSource"
                         [columns]="columns"

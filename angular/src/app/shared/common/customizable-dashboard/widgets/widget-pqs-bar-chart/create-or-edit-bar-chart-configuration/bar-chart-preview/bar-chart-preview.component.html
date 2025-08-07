@@ -1,0 +1,31 @@
+<div [ngSwitch]="type">
+    <div *ngSwitchCase="barChartType.Plain">
+        <dx-chart [dataSource]="plainData">
+            <dxi-series
+                [argumentField]="plainArgumentField"
+                valueField="eventCount"
+                type="bar">
+            </dxi-series>
+        </dx-chart>
+    </div>
+    <div *ngSwitchCase="barChartType.Stacked">
+        <dx-chart [dataSource]="multiSeriesData">
+            <dxo-common-series-settings
+                argumentField="componentName"
+                valueField="eventCount"
+                type="stackedBar">
+            </dxo-common-series-settings>
+            <dxo-series-template nameField="eventName"></dxo-series-template>
+        </dx-chart>
+    </div>
+    <div *ngSwitchCase="barChartType.Clustered">
+        <dx-chart [dataSource]="multiSeriesData">
+            <dxo-common-series-settings
+                argumentField="componentName"
+                valueField="eventCount"
+                type="bar">
+            </dxo-common-series-settings>
+            <dxo-series-template nameField="eventName"></dxo-series-template>
+        </dx-chart>
+    </div>
+</div>

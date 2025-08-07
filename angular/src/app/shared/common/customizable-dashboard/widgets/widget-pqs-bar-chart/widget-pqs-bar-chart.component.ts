@@ -26,6 +26,8 @@ import { ColumnType } from '@app/shared/enums/column-type';
 import safeStringify from 'fast-safe-stringify';
 import { ExcludeFlagged } from '@app/shared/enums/advanced-settings-options';
 import { ArrayUtils } from '@app/shared/services/array-utils.service';
+import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
+
 
 @Component({
     selector: 'widgetPqsBarChart',
@@ -40,7 +42,6 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     barChartConfiguration: BarChartWidgetConfigurationDto;
     barChartType = BarChartType;
     dataSource: any;
-    plainArgumentField: 'componentName' | 'eventName' = 'componentName';
 
     constructor(
         injector: Injector,
@@ -54,7 +55,7 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     }
 
     customizeTooltip = ({ valueText, seriesName }) => ({
-        text: `${seriesName}: ${valueText}`,
+        text: seriesName ? `${seriesName}: ${valueText}` : `${valueText}`,
     });
 
     ngOnInit(): void {
@@ -69,19 +70,33 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     }
 
     fetch(): void {
-        const state: DateRangeState = DateRangeState.fromJSON(this.barChartConfiguration.dateRange);
-        const range: [DateTime, DateTime] = this._dateRangeService.getDateRangeFromState(state);
+        const state: DateRangeState = this.barChartConfiguration?.dateRange
+            ? DateRangeState.fromJSON(this.barChartConfiguration.dateRange)
+            : new DateRangeState({ rangeOption: DateRangeUnits.LAST_7_DAYS, startDate: null, endDate: null });
 
-        var config = JSON.parse(this.barChartConfiguration.configuration);
+        let [startDate, endDate] = this._dateRangeService.getDateRangeFromState(state);
 
-        var seriesBy = this.mapSerieses(config.series[0]);
-        var category = this.mapSerieses(config.xUnit);
+if (!startDate || !endDate || startDate >= endDate) {
+            [startDate, endDate] = this._dateRangeService.getDateRangeFromUnit(DateRangeUnits.LAST_7_DAYS);
+        }
 
-        var componentsState: ComponentsState = JSON.parse(this.barChartConfiguration.components);
-        let formattedFeeders = componentsState?.feeders?.map((f) => new FeederComponentInfo(f)) ?? [];
-        let tableWidgetConfigurationComponents = componentsState?.components ?? [];
-        let formattedComponents = tableWidgetConfigurationComponents
-            .filter((c) => !formattedFeeders.some((f) => f.componentId === c.key))
+        // Ensure UTC and log range
+        startDate = startDate.toUTC();
+        endDate = endDate.toUTC();
+        console.log('Bar chart date range', {
+            startDate: startDate.toISO(),
+            endDate: endDate.toISO(),
+        });
+
+const config = JSON.parse(this.barChartConfiguration.configuration);
+
+        const seriesBy = this.mapSerieses(config.series[0]);
+        const category = this.mapSerieses(config.xUnit);
+
+        const componentsState: ComponentsState = JSON.parse(this.barChartConfiguration.components);
+        const formattedFeeders = componentsState?.feeders?.map((f) => new FeederComponentInfo(f)) ?? [];
+        const tableWidgetConfigurationComponents = componentsState?.components ?? [];
+        const formattedComponents = tableWidgetConfigurationComponents            .filter((c) => !formattedFeeders.some((f) => f.componentId === c.key))
             .map((c) => new FeederComponentInfo({ componentId: c.key, id: null, name: null, compName: c.label }));
 
         this.barChartRequest = new BarChartRequest({
@@ -131,21 +146,28 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
             }),
             feeders: [...formattedFeeders, ...formattedComponents],
             widgetName: this.widgetName,
-            startDate: range[0],
-            endDate: range[1],
+            startDate: startDate,
+            endDate: endDate,
             userTimeZone: 1,
         });
 
-        this._tenantDashboardService
-            .pQSBarChartWidgetData(this.barChartRequest)
-            .subscribe((response: BarChartResponse) => {
-                // const comps = response.components;
-                // if (this.barChartConfiguration.type === BarChartType.Plain) {
-                //     this.dataSource = this.getPlainData(comps);
-                // } else {
-                //     this.dataSource = this.transformData(comps);
-                // }
-            });
+        console.log('Bar chart request', this.barChartRequest);
+
+        this._tenantDashboardService.pQSBarChartWidgetData(this.barChartRequest).subscribe({
+            next: (response: BarChartResponse) => {
+                console.log('Bar chart response', response);
+                const groups = response?.groups || [];
+                if (this.barChartConfiguration?.type === BarChartType.Plain) {
+                    this.dataSource = this.getPlainData(groups);
+                } else {
+                    this.dataSource = this.transformData(groups);
+                }
+                console.log('Bar chart data source', this.dataSource);
+            },
+            error: (err) => {
+                console.error('Bar chart data load failed', err);
+            },
+        });
     }
 
     edit(): void {
@@ -170,40 +192,29 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
         }
     }
 
-    private getPlainData(components: any[]): any[] {
-        const totalComponents = components.length;
-        const totalEvents = components.reduce((sum, c) => sum + (c.events?.length || 0), 0);
-
-        if (totalComponents === 1 && totalEvents > 1) {
-            this.plainArgumentField = 'eventName';
-            return components[0].events.map((e) => ({
-                eventName: e.name,
-                eventCount: e.data,
-            }));
-        }
-
-        this.plainArgumentField = 'componentName';
-        return components.map((c) => ({
-            componentName: c.name,
-            eventCount: c.events[0]?.data ?? 0,
+private getPlainData(groups: any[]): any[] {
+        return groups.map((g) => ({
+            category: g.category,
+            value: g.bars?.[0]?.value ?? 0,
+            seriesName: g.bars?.[0]?.seriesName,
         }));
     }
 
-    private transformData(components: any[]): any[] {
+    private transformData(groups: any[]): any[] {
         const transformed: any[] = [];
-        components.forEach((component) => {
-            (component.events || []).forEach((event) => {
+        groups.forEach((g) => {
+            (g.bars || []).forEach((bar) => {
                 transformed.push({
-                    componentName: component.name,
-                    eventName: event.name,
-                    eventCount: event.data,
+                    category: g.category,
+                    seriesName: bar.seriesName,
+                    value: bar.value,
                 });
             });
-            if (!component.events?.length) {
+            if (!g.bars?.length) {
                 transformed.push({
-                    componentName: component.name,
-                    eventName: 'No Events',
-                    eventCount: 0,
+                    category: g.category,
+                    seriesName: 'No Data',
+                    value: 0,
                 });
             }
         });

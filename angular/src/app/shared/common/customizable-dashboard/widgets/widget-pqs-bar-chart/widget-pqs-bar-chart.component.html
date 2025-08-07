@@ -22,27 +22,27 @@
                         <div *ngSwitchCase="barChartType.Plain">
                             <dx-chart id="chart" [dataSource]="dataSource">
                                 <dxi-series
-                                    [argumentField]="plainArgumentField"
-                                    valueField="eventCount"
+                                    argumentField="category"
+                                    valueField="value"
                                     type="bar">
                                 </dxi-series>
                                 <dxo-export [enabled]="true"></dxo-export>
+                                <dxo-tooltip [enabled]="true" [customizeTooltip]="customizeTooltip"></dxo-tooltip>
                             </dx-chart>
                         </div>
                         <div *ngSwitchCase="barChartType.Stacked">
                             <dx-chart id="chart" title="Component(s) Event(s) Count Stacked Bar"
                                       [dataSource]="dataSource">
                                 <dxo-common-series-settings
-                                    argumentField="componentName"
-                                    valueField="eventCount"
+                                    argumentField="category"
+                                    valueField="value"
                                     type="stackedBar"
                                     hoverMode="allArgumentPoints"
                                     selectionMode="allArgumentPoints">
                                     <dxo-label [visible]="true" [format]="{ type: 'fixedPoint', precision: '2' }">
                                     </dxo-label>
                                 </dxo-common-series-settings>
-                                <dxo-series-template nameField="eventName"></dxo-series-template>
-                                <dxo-legend verticalAlignment="bottom" horizontalAlignment="center"></dxo-legend>
+                                <dxo-series-template nameField="seriesName"></dxo-series-template>                                <dxo-legend verticalAlignment="bottom" horizontalAlignment="center"></dxo-legend>
                                 <dxo-export [enabled]="true"></dxo-export>
                                 <dxo-tooltip [enabled]="true" location="edge" [customizeTooltip]="customizeTooltip">
                                 </dxo-tooltip>
@@ -52,14 +52,13 @@
                             <dx-chart id="chart" title="Component(s) Event(s) Count Clustered Bar"
                                       [dataSource]="dataSource">
                                 <dxo-common-series-settings
-                                    argumentField="componentName"
-                                    valueField="eventCount"
+                                    argumentField="category"
+                                    valueField="value"
                                     type="bar">
                                     <dxo-label [visible]="true" [format]="{ type: 'fixedPoint', precision: '2' }">
                                     </dxo-label>
                                 </dxo-common-series-settings>
-                                <dxo-series-template nameField="eventName"></dxo-series-template>
-                                <dxo-legend verticalAlignment="bottom"
+                                <dxo-series-template nameField="seriesName"></dxo-series-template>                                <dxo-legend verticalAlignment="bottom"
                                             horizontalAlignment="center"
                                             itemTextPosition="top">
                                 </dxo-legend>
