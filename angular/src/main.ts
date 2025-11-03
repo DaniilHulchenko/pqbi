@@ -4,9 +4,9 @@ import { environment } from './environments/environment';
 import { hmrBootstrap } from './hmr';
 import { RootModule } from './root.module';
 
-// import { licenseKey } from 'devextreme-license';
-// import config from 'devextreme/core/config';
-// config({licenseKey});
+import { licenseKey } from './devextreme-license';
+import config from 'devextreme/core/config';
+config({licenseKey});
 
 if (environment.production) {
     enableProdMode();

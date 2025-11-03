@@ -11,7 +11,8 @@
                 {{ 'Filter' | localize }}
             </button>
 
-            <label class="form-check form-check-custom form-check-solid form-switch"  *ngIf="isGranted('Pages.Tenant.Dashboard.Edit')">
+            <strong>
+                <label class="form-check form-check-custom form-check-solid form-switch"  *ngIf="isGranted('Pages.Tenant.Dashboard.Edit')">
                 <input
                     type="checkbox"
                     class="form-check-input"
@@ -22,6 +23,7 @@
                     {{ 'EditMode' | localize }}
                 </span>
             </label>
+            </strong>
         </div>
     </sub-header>
 
@@ -41,13 +43,17 @@
                         heading="{{ page.name }}"
                         (selectTab)="selectPageTab(page.id)"
                     >
-                        <ng-container *ngIf="loadedTabs[page.id]">
+                        <ng-container *ngIf="selectedPage.id === page.id">
                             <gridster [options]="options[i]" perfectScrollbar [perfectScrollOptions]="{ wheelPropagation: false }" [ngClass]="{ 'no-tab': !moreThanOnePage()}">
                                 <gridster-item
+                                    [ngStyle]="{'background-color' : bgColor, 'padding': '10px', 'border-radius': '10px'}"
                                     *ngFor="let widget of page.widgets"
                                     [item]="widget.gridInformation"
+                                    [attr.data-id]="widget.configurationId"
                                     [attr.data-guid]="widget.guid"
                                     [attr.data-isNew]="widget.isNew"
+                                    [attr.data-configuration]="widget.configuration"
+                                    [attr.data-displayName]="widget.displayName"
                                     (itemResize)="onGridSterItemResize(widget)"
                                 >
                                     <ng-container
@@ -59,7 +65,7 @@
                                     <button
                                         class="btn btn-sm bg-danger deleteWidgetButton"
                                         *ngIf="editModeEnabled"
-                                        (click)="removeItem(widget)"
+                                        (click)="removeItem(widget.guid, widget.id, false)"
                                     >
                                         <i class="la la-times text-white"></i>
                                     </button>

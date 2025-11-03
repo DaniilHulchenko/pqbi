@@ -27,6 +27,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class EventAdvancedSettingsComponent implements OnInit, OnChanges {
   @Input() initialConfig: AdvancedSettingsConfig | null = null;
+  @Input() chartType: string | null;
   @Output() settingsChanged = new EventEmitter<AdvancedSettingsConfig>();
   modalVisible = false;
 

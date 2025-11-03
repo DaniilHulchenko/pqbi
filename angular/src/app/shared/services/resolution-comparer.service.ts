@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Parameter } from '@app/main/customParameters/customParameters/table-parameters/models/parameter';
-import { CustomParameterDto, CustomParametersServiceProxy, GetCustomParameterForViewDto } from '@shared/service-proxies/service-proxies';
+import { CustomParameterDto, GetCustomParameterForViewDto } from '@shared/service-proxies/service-proxies';
 import { map, Observable } from 'rxjs';
+import { CustomParameterService } from './custom-parameter-service.service';
 
 @Injectable({
     providedIn: 'root',
 })
 export class ResolutionComparerService {
 
-    constructor(private _customParameterServiceProxy: CustomParametersServiceProxy) {}
+    constructor(private _customParameterService: CustomParameterService) {}
 
     /**
      * Function to convert a time period string to milliseconds
@@ -86,10 +87,9 @@ export class ResolutionComparerService {
      * @returns {Observable<string[]>}
      */
     getResolutionsFromCustomParameter(id: number): Observable<number[]> {
-      return this._customParameterServiceProxy.getCustomParameterForView(id).pipe(
-          map((response: GetCustomParameterForViewDto) => {
-              let customParameter: CustomParameterDto = response.customParameter;
-              let baseParameters: Parameter[] = JSON.parse(customParameter.customBaseDataList);
+      return this._customParameterService.getById(id).pipe(
+          map((response: CustomParameterDto) => {
+              let baseParameters: Parameter[] = JSON.parse(response.customBaseDataList);
               let resolutions: number[] = baseParameters.map((parameter: Parameter) => parameter.resolution);
               return resolutions;
           }),

@@ -10,10 +10,8 @@ import {
     EventEmitter,
 } from '@angular/core';
 import {
-    ComponentDto,
     CreateOrEditTrendWidgetConfigurationDto,
     FeederComponentInfo,
-    FeederDescriptionDto,
     TrendParameter,
     PQSRestApiServiceProxy,
     TenantDashboardServiceProxy,
@@ -21,26 +19,27 @@ import {
     TrendWidgetConfigurationsServiceProxy,
     TrendCustomWidgetData,
     BaseData,
-    EmailSettingsEditDto,
     CalculatedDataItem,
     TrendResponse,
 } from '@shared/service-proxies/service-proxies';
 import { DashboardChartBase } from '../dashboard-chart-base';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
 import { TreeDragDropService } from 'primeng/api';
-import { Subject, catchError, forkJoin, takeUntil, throwError, timer } from 'rxjs';
+import { Subject, Subscription, catchError, takeUntil, throwError, timer } from 'rxjs';
 import { CreateOrEditTrendConfigurationComponent } from './create-or-edit-trend-configuration/create-or-edit-trend-configuration.component';
 import { Guid } from 'guid-ts';
 import { DateRangeService } from '@app/shared/services/date-range-service';
 import { DateRangeState } from '@app/shared/models/date-range-state';
 import { ResolutionService } from '@app/shared/services/resolution-service';
-import { DxChartComponent, DxTextBoxComponent } from 'devextreme-angular';
+import { DxChartComponent } from 'devextreme-angular';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
 import { DateTime } from 'luxon';
 import { ResolutionUnits } from '@app/shared/enums/resolution-selection-units';
 import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
 import { RenameWidgetModalComponent } from '../../rename-widget-modal/rename-widget-modal.component';
 import { ColumnType } from '@app/shared/enums/column-type';
+import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
+import { TrendWidgetConfigurationService } from '@app/shared/services/widget-configurations/trend-widget-configuration.service';
 
 type LineLegendType = {
     name: string,
@@ -185,15 +184,17 @@ class LineChart extends DashboardChartBase {
     // }
 
     customizeTooltip(object: any) {
+        const parsed = parseFloat(object.originalValue);
+        const res = isNaN(parsed) ? object.originalValue : parsed.toFixed(2);
         return {
-            text: `${object.seriesName}<br/>${object.originalValue}`,
+            text: `${object.seriesName}<br/>${res}`,
         };
     }
 
     reload(input: TrendCalcRequest) {
         this.showLoading();
 
-        this._dashboardService.pQSTrendData(input)
+        var sub = this._dashboardService.pQSTrendData(input)
             .pipe(
                 catchError((error) => {
                     this.hideLoading();
@@ -214,6 +215,7 @@ class LineChart extends DashboardChartBase {
                     this.init222(result);
                 }
                 this.hideLoading();
+                sub.unsubscribe();
             });
     }
 }
@@ -242,18 +244,22 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     trendWidgetConfiguration: CreateOrEditTrendWidgetConfigurationDto;
     chartWidth: number;
 
+    chartHeight: number = 300; // default value
+
     protected _defaultWidgetName;
+    private subs: Subscription[] = [];
 
     constructor(
         injector: Injector,
         private _tenantdashboardService: TenantDashboardServiceProxy,
-        private _trendWidgetConfigurationService: TrendWidgetConfigurationsServiceProxy,
+        private _trendWidgetConfigurationService: TrendWidgetConfigurationService,
         private _pqsRestApiServiceProxy: PQSRestApiServiceProxy,
-        elementReference: ElementRef,
+        public elementRef: ElementRef,
         dateRangeService: DateRangeService,
         private _resolutionService: ResolutionService,
+        private _configurationVersionService: ConfigurationVersionService,
     ) {
-        super(injector, elementReference, dateRangeService);
+        super(injector, elementRef, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSTrend');
         this.lineChart = new LineChart(this._tenantdashboardService, this._pqsRestApiServiceProxy, (error) => {
             this.errorMessage = error;
@@ -274,17 +280,21 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     edit() {
-        this.createOrEditModal.show(this.widgetConfigurationInDB);
+        this.isEditModalInitialized = true;
+        this._configurationVersionService.refreshVersion().subscribe();
+        setTimeout(() => {
+            this.createOrEditModal.show(this.widgetConfigurationInDB);
+        }, 0);
     }
 
     onNameEdit() {
-        this.renameModal.show(this.widgetName);
+        this.renameModal.show(this.widgetConfigurationInDB?.name);
     }
 
     refreshWidget(): void {
         if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
-            this._trendWidgetConfigurationService
-                .getTrendWidgetConfigurationForView(+this.widgetConfigurationInDB.configuration)
+            var sub = this._trendWidgetConfigurationService
+                .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.trendWidgetConfiguration = result.trendWidgetConfiguration;
                     let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
@@ -292,7 +302,12 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                         let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
                         let resulutionValueInMs = 0;
 
-                        if (isAutoResolution && (rangeOption.startsWith('Last') || rangeOption.startsWith('This') || rangeOption === 'Today')) {
+                        if (
+                            isAutoResolution &&
+                            (rangeOption.startsWith('Last') ||
+                                rangeOption.startsWith('This') ||
+                                rangeOption === 'Today')
+                        ) {
                             resulutionValueInMs = this.calculateAutoResolution().toRefresh;
                         } else {
                             resulutionValueInMs = this._resolutionService.resolutionValueInMs(
@@ -326,6 +341,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                         }
                     }
                 });
+            this.subs.push(sub);
         }
     }
 
@@ -345,37 +361,41 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         dateRangeInMs = dateRange[1].toMillis() - dateRange[0].toMillis();
 
         this.chartWidth = this.chartComponent?.instance.element().clientWidth ?? this.chartWidth;
-        return { toServer: Math.floor(this.chartWidth * 0.75), toRefresh: Math.floor((dateRangeInMs / this.chartWidth) * 0.75) };
+        return {
+            toServer: Math.floor(this.chartWidth * 0.75),
+            toRefresh: Math.floor((dateRangeInMs / this.chartWidth) * 0.75),
+        };
     }
 
-    formatRequest(): TrendCalcRequest| null {
+    onEditModelClose(isSaved) {
+        if (!isSaved && !this.widgetConfigurationInDB?.configuration) {
+            abp.event.trigger('app.dashboard.removeWidget', this.widgetConfigurationInDB.widgetGuid, 'Widgets_Tenant_PQSTrend');
+        }
+    }
+
+    formatRequest(): TrendCalcRequest | null {
         try {
             let dateRange = this._dateRangeService.getDateRangeFromState(
                 DateRangeState.fromJSON(this.trendWidgetConfiguration.dateRange),
             );
 
-            const state = this._resolutionService.parseStateFromString(
-                this.trendWidgetConfiguration.resolution,
-                true,
-            );
+            const state = this._resolutionService.parseStateFromString(this.trendWidgetConfiguration.resolution, true);
 
             let resolutionInSeconds = 0;
             const isAutoResolution = state.isAuto;
 
             if (isAutoResolution) {
                 resolutionInSeconds = this.calculateAutoResolution().toServer;
-            }
-            else {
+            } else {
                 resolutionInSeconds = this._resolutionService.resolutionValueInSeconds(state);
             }
-
 
             let parameters: WidgetParametersColumn[] = JSON.parse(this.trendWidgetConfiguration.parameters);
             let request: TrendCalcRequest = new TrendCalcRequest({
                 isAutoResolution,
                 resolutionInSeconds,
                 userTimeZone: 1,
-                widgetName: this.widgetName,
+                widgetName: this.widgetConfigurationInDB?.name,
                 startDate: dateRange[0],
                 endDate: dateRange[1],
                 // resolution:
@@ -388,17 +408,15 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 //             ),
                 //         ),
                 parameters: parameters.map((parameter) => {
-
                     let customData: TrendCustomWidgetData = null;
                     let baseData: BaseData = null;
 
                     switch (parameter.type) {
                         case ColumnType.CustomParameter:
-
                             customData = TrendCustomWidgetData.fromJS({
                                 id: Number(parameter.data),
                                 ignoreAlignment: false,
-                                quantity: parameter.quantity
+                                quantity: parameter.quantity,
                             });
 
                             break;
@@ -414,7 +432,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                             customData = TrendCustomWidgetData.fromJS({
                                 id: Number(parameter.data),
                                 ignoreAlignment: false,
-                                quantity: parameter.quantity
+                                quantity: parameter.quantity,
                             });
                             break;
 
@@ -429,11 +447,16 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                         // data: parameter.data.toString(),
                         // quantity: parameter.quantity,
                         type: parameter.type,
-                        feeders: parameter.componentsState?.feeders?.map(
-                            (feeder) => {
-                                return new FeederComponentInfo({id: feeder.id, componentId: feeder.componentId, name: feeder.name, compName: parameter.componentsState?.components?.find(c => c.key === feeder.componentId)?.label});
-                            }
-                        ),
+                        feeders: parameter.componentsState?.feeders?.map((feeder) => {
+                            return new FeederComponentInfo({
+                                id: feeder.id,
+                                componentId: feeder.componentId,
+                                name: feeder.name,
+                                compName: parameter.componentsState?.components?.find(
+                                    (c) => c.key === feeder.componentId,
+                                )?.label,
+                            });
+                        }),
                     });
 
                     return trendParameter;
@@ -451,6 +474,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();
+        this.subs.forEach(sub => sub.unsubscribe());
     }
 
     save(configuration: CreateOrEditTrendWidgetConfigurationDto) {

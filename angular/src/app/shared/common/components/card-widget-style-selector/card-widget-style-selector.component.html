@@ -1,0 +1,6 @@
+<label class="form-label">{{'CardWidgetStyle' | localize }} *</label>
+<dx-select-box name="quickSelect" [(ngModel)]="selectedValue" (ngModelChange)="onChange(selectedValue)" [dataSource]="options" displayExpr="label"
+    valueExpr="value" [showClearButton]="true" placeholder="Select widget style" [class.is-invalid]="!isStyleValid()"
+    required>
+</dx-select-box>
+<small *ngIf="!isStyleValid()" class="text-danger">{{'StyleRequired' | localize }}</small>

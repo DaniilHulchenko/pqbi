@@ -1,5 +1,4 @@
 import { AppComponentBase } from '@shared/common/app-component-base';
-import { PopulatableForm } from './populatable-form';
 
 export class EditableTabComponentBaseComponent extends AppComponentBase {
     isEdit = false;
@@ -14,7 +13,12 @@ export class EditableTabComponentBaseComponent extends AppComponentBase {
         this.isEdit = false;
         this.editObjectId = null;
         this.reset();
+        this.cancelEdit();
     }
 
     reset() {}
+    isFormValid(): boolean {
+        return false;
+    }
+    protected cancelEdit() {}
 }

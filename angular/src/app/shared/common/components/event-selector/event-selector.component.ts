@@ -4,6 +4,7 @@ import { EventClassDescription, PQSRestApiServiceProxy } from '@shared/service-p
 import { DxScrollViewModule } from 'devextreme-angular';
 import { ListboxModule } from 'primeng/listbox';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
+import { EventService } from '@app/shared/services/event-service.service';
 
 @Component({
     selector: 'eventSelector',
@@ -25,14 +26,14 @@ export class EventSelectorComponent implements ControlValueAccessor, OnInit {
     selectedEvent: EventClassDescription;
     events: EventClassDescription[] = [];
 
-    constructor(private _pqsRestApiServiceProxy: PQSRestApiServiceProxy) {}
+    constructor(private _eventService: EventService) {}
 
     get scrollHeight() {
         return this.height ? `height: ${this.height};` : '';
     }
 
     ngOnInit(): void {
-        this._pqsRestApiServiceProxy.pQSEvents().subscribe((result: EventClassDescription[]) => {
+        this._eventService.pqsEvents().subscribe((result: EventClassDescription[]) => {
             this.events = result;
         });
     }

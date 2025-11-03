@@ -1,0 +1,7 @@
+.font-section .font-row,
+.link-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}

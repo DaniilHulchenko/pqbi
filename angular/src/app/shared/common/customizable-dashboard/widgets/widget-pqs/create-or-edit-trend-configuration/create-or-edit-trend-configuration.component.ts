@@ -6,7 +6,7 @@ import {
     ViewChild,
     EventEmitter,
     ViewEncapsulation,
-    ChangeDetectorRef,
+    OnDestroy,
 } from '@angular/core';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import {
@@ -35,7 +35,7 @@ import { DateRangeState } from '@app/shared/models/date-range-state';
 import { ResolutionState } from '@app/shared/models/resolution-state';
 import safeStringify from 'fast-safe-stringify';
 import { ResolutionService } from '@app/shared/services/resolution-service';
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 import { ResolutionUnits } from '@app/shared/enums/resolution-selection-units';
 import { ColumnType } from '@app/shared/enums/column-type';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
@@ -49,6 +49,8 @@ import { Parameter } from '@app/main/customParameters/customParameters/table-par
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
 import { DxScrollViewComponent, DxTabPanelComponent } from '@node_modules/devextreme-angular';
 import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/additional-parameter-selection-tab/additional-parameter-selection-tab.component';
+import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
+import { TrendWidgetConfigurationService } from '@app/shared/services/widget-configurations/trend-widget-configuration.service';
 
 @Component({
     selector: 'createOrEditTrendConfiguration',
@@ -56,7 +58,7 @@ import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/com
     styleUrl: './create-or-edit-trend-configuration.component.css',
     encapsulation: ViewEncapsulation.None,
 })
-export class CreateOrEditTrendConfigurationComponent extends AppComponentBase implements OnInit {
+export class CreateOrEditTrendConfigurationComponent extends AppComponentBase implements OnInit, OnDestroy {
     @ViewChild('pqsForm') pqsForm: NgForm;
     @ViewChild('customParameterSelectionTab') customParameterSelectionTab: CustomParameterSelectionTabComponent;
     @ViewChild('logicalParameterSelectionTab') logicalParameterSelectionTab: LogicalParameterSelectionTabComponent;
@@ -69,6 +71,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     @ViewChild('grid') grid: DxDataGridComponent;
     @Output() onSave: EventEmitter<CreateOrEditTrendWidgetConfigurationDto> =
         new EventEmitter<CreateOrEditTrendWidgetConfigurationDto>();
+    @Output() onClose = new EventEmitter<boolean>();
 
     saving = false;
     popupVisible = false;
@@ -113,10 +116,13 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
 
     selectedTabIndex: number | null = 0;
 
+    private subs: Subscription[] = [];
+
     constructor(
         injector: Injector,
-        private _customParameterService: CustomParametersServiceProxy,
-        private _trendWidgetConfigurationService: TrendWidgetConfigurationsServiceProxy,
+        private _customParameterService: CustomParameterService,
+        private _trendWidgetConfigurationService: TrendWidgetConfigurationService,
+        private _trendWidgetConfigurationServiceProxy: TrendWidgetConfigurationsServiceProxy,
         private _resolutionService: ResolutionService,
     ) {
         super(injector);
@@ -170,44 +176,47 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             type: ColumnType.BaseParameter,
             data: safeStringify(event.parameter),
             advancedSettings: event.advancedSettings,
-            resolution:0
+            resolution:0,
+            style: null
         });
         this.grid.instance.pageIndex(this.grid.instance.pageCount());
         this.scrollDown();
     }
 
     onAddCustomParameter(event: AddCustomParameterEventCallBack) {
-        this._customParameterService.getCustomParameterForView(event.customParameterId).subscribe((parameter) => {
+        this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
             this.parameters.unshift({
                 id: Guid.newGuid().toString(),
                 componentsState: event.componentsState,
-                name: parameter.customParameter.name,
+                name: parameter.name,
                 quantity: event.quantity,
                 type: ColumnType.CustomParameter,
                 data: event.customParameterId,
                 advancedSettings: event.advancedSettings,
-                resolution:0
+                resolution:0,
+                style: null
             });
             this.parameterResolutions.push(
-                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds, true),
+                this._resolutionService.parseStateFromInt(parameter.resolutionInSeconds, true),
             );
             this.minAllowedResolution = this._resolutionService.findMaxResolution(this.parameterResolutions);
         });
     }
 
     onAddException(event: AddExceptionEventCallBack) {
-        this._customParameterService.getCustomParameterForView(event.customParameterId).subscribe((parameter) => {
+        this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
             this.parameters.unshift({
                 id: Guid.newGuid().toString(),
                 componentsState: null,
-                name: parameter.customParameter.name,
+                name: parameter.name,
                 quantity: event.quantity,
                 type: ColumnType.Exception,
                 data: event.customParameterId,
-                resolution:0
+                resolution:0,
+                style: null
             });
             this.parameterResolutions.push(
-                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds, true),
+                this._resolutionService.parseStateFromInt(parameter.resolutionInSeconds, true),
             );
             this.minAllowedResolution = this._resolutionService.findMaxResolution(this.parameterResolutions);
         });
@@ -220,15 +229,15 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             return;
         }
 
-        this._customParameterService.getCustomParameterForView(event.customParameterId).subscribe((parameter) => {
+        this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
             tableParameter.componentsState = event.componentsState;
-            tableParameter.name = parameter.customParameter.name;
+            tableParameter.name = parameter.name;
             tableParameter.quantity = event.quantity;
             tableParameter.data = event.customParameterId;
             tableParameter.advancedSettings = event.advancedSettings;
 
             this.parameterResolutions.push(
-                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds, true),
+                this._resolutionService.parseStateFromInt(parameter.resolutionInSeconds, true),
             );
             this.minAllowedResolution = this._resolutionService.findMaxResolution(this.parameterResolutions);
         });
@@ -251,13 +260,13 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             return;
         }
 
-        this._customParameterService.getCustomParameterForView(event.customParameterId).subscribe((parameter) => {
-            tableParameter.name = parameter.customParameter.name;
+        this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
+            tableParameter.name = parameter.name;
             tableParameter.quantity = event.quantity;
             tableParameter.data = event.customParameterId;
 
             this.parameterResolutions.push(
-                this._resolutionService.parseStateFromInt(parameter.customParameter.resolutionInSeconds, true),
+                this._resolutionService.parseStateFromInt(parameter.resolutionInSeconds, true),
             );
             this.minAllowedResolution = this._resolutionService.findMaxResolution(this.parameterResolutions);
         });
@@ -278,7 +287,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
         this.configuration.parameters = safeStringify(this.parameters);
 
         if (this.configuration.id) {
-            this._trendWidgetConfigurationService
+            var sub = this._trendWidgetConfigurationServiceProxy
                 .createOrEdit(this.configuration)
                 .pipe(
                     finalize(() => {
@@ -286,11 +295,13 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                     }),
                 )
                 .subscribe(() => {
-                    this.hide();
+                    this._trendWidgetConfigurationService.update(this.configuration);
+                    this.hide(true);
                     this.onSave.emit(this.configuration);
                 });
+            this.subs.push(sub);
         } else {
-            this._trendWidgetConfigurationService
+            var sub = this._trendWidgetConfigurationServiceProxy
                 .createAndGetId(this.configuration)
                 .pipe(
                     finalize(() => {
@@ -299,9 +310,11 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                 )
                 .subscribe((id: number) => {
                     this.configuration.id = id;
-                    this.hide();
+                    this._trendWidgetConfigurationService.update(this.configuration);
+                    this.hide(true);
                     this.onSave.emit(this.configuration);
                 });
+            this.subs.push(sub);
         }
     }
 
@@ -310,8 +323,8 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
         this.popupVisible = true;
 
         if (configuration && configuration.configuration) {
-            this._trendWidgetConfigurationService
-                .getTrendWidgetConfigurationForEdit(+configuration.configuration)
+            var sub = this._trendWidgetConfigurationService
+                .getForEdit(+configuration.configuration)
                 .subscribe((configuration: GetTrendWidgetConfigurationForEditOutput) => {
                     this.configuration = configuration.trendWidgetConfiguration;
 
@@ -323,21 +336,19 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                         (parameter) =>
                             parameter.type === ColumnType.CustomParameter || parameter.type === ColumnType.Exception,
                     )) {
-                        this._customParameterService.getCustomParameterForView(+parameter.data).subscribe((cp) => {
-                            parameter.name = cp.customParameter.name;
+                        var subCP = this._customParameterService.getById(+parameter.data).subscribe((cp) => {
+                            parameter.name = cp.name;
                             this.parameterResolutions.push(
-                                this._resolutionService.parseStateFromInt(cp.customParameter.resolutionInSeconds, true),
+                                this._resolutionService.parseStateFromInt(cp.resolutionInSeconds, true),
                             );
                             this.minAllowedResolution = this._resolutionService.findMaxResolution(
                                 this.parameterResolutions,
                             );
                         });
+                        this.subs.push(subCP);
                     }
-
-                    setTimeout(() => {
-                        this.scrollDown()
-                    }, 100)
                 });
+            this.subs.push(sub);
         } else {
             this.parameters = [];
             this.resolutionState = new ResolutionState({ resolutionUnit: ResolutionUnits.AUTO });
@@ -351,12 +362,13 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
         }
     }
 
-    hide(): void {
+    hide(isSaved: boolean): void {
         this.customParameterSelectionTab.finishEdit();
         this.logicalParameterSelectionTab.finishEdit();
         this.channelParameterSelectionTab.finishEdit();
         this.exceptionParameterSelectionTab.finishEdit();
         this.popupVisible = false;
+        this.onClose.emit(isSaved);
     }
 
     // eslint-disable-next-line @typescript-eslint/member-ordering
@@ -438,5 +450,9 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
 
     private scrollDown(){
         this.scrollView.instance.scrollTo(10000);
+    }
+
+    ngOnDestroy(): void {
+        this.subs.forEach(sub => sub.unsubscribe());
     }
 }

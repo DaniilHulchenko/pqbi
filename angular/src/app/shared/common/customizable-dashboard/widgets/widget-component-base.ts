@@ -11,9 +11,8 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
     timer: Subscription;
     editState = false;
     protected widgetConfigurationInDB: CreateOrEditWidgetConfigurationDto;
-    protected widgetName: string;
-    protected widgetGuid: string;
     protected isNew: boolean;
+    protected isEditModalInitialized = false;
     protected _defaultWidgetName: string;
 
     private widgetConfigurationServiceProxy: WidgetConfigurationsServiceProxy;
@@ -24,38 +23,24 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
     }
 
     ngOnInit(): void {
-        this.widgetName = this.elementRef.nativeElement.parentElement.dataset.name;
-        this.widgetGuid = this.elementRef.nativeElement.parentElement.dataset.guid;
         this.isNew = this.elementRef.nativeElement.parentElement.dataset.isnew;
+
+        this.widgetConfigurationInDB = new CreateOrEditWidgetConfigurationDto();
+        this.widgetConfigurationInDB.id = this.elementRef.nativeElement.parentElement.dataset.id;
+        this.widgetConfigurationInDB.widgetGuid = this.elementRef.nativeElement.parentElement.dataset.guid;
+        this.widgetConfigurationInDB.name = this.elementRef.nativeElement.parentElement.dataset.displayname;
+        this.widgetConfigurationInDB.configuration = this.elementRef.nativeElement.parentElement.dataset.configuration;
 
         if (this.isNew) {
             this.editState = true;
-            this.widgetName = this._defaultWidgetName;
+            this.widgetConfigurationInDB.name = this._defaultWidgetName;
         }
 
         abp.event.on('app.dashboardEdit.onEditStateChange', (editState) => {
-            this.editState = editState;
+            setTimeout(() => {this.editState = editState; this.isEditModalInitialized = false;},0);
         });
 
-        this.widgetConfigurationServiceProxy
-            .getWidgetConfigurationForEditByWidgetId(this.widgetGuid)
-            .subscribe((result) => {
-                if (result.widgetConfiguration) {
-                    this.widgetConfigurationInDB = result.widgetConfiguration;
-                } else {
-                    this.widgetConfigurationInDB = new CreateOrEditWidgetConfigurationDto();
-                    this.widgetConfigurationInDB.widgetGuid = this.widgetGuid;
-                }
-
-                if (!this.widgetConfigurationInDB.name) {
-                    this.widgetConfigurationInDB.name = this._defaultWidgetName;
-                    this.widgetName = this._defaultWidgetName;
-                } else {
-                    this.widgetName = this.widgetConfigurationInDB.name;
-                }
-
-                this.refreshWidget();
-            });
+        this.refreshWidget();
     }
 
     /**
@@ -76,7 +61,7 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
         let requestBody: CreateOrEditWidgetConfigurationDto = new CreateOrEditWidgetConfigurationDto({
             id: this.widgetConfigurationInDB?.id,
             name: this.widgetConfigurationInDB?.name,
-            widgetGuid: this.widgetGuid,
+            widgetGuid: this.widgetConfigurationInDB.widgetGuid,
             configuration: configuration,
             lastModifiedOn: DateTime.now(),
         });
@@ -93,9 +78,9 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
     }
 
     saveName(newName: string){
-        this.widgetName = newName;
         this.widgetConfigurationInDB.name = newName;
         this.saveConfiguration(this.widgetConfigurationInDB.configuration);
+        abp.event.trigger('app.dashboard.renameWidget', this.widgetConfigurationInDB.widgetGuid, newName);
     }
 
     //This method should be overriten for refreshing widget

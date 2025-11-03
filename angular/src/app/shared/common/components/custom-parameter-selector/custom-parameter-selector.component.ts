@@ -8,6 +8,7 @@ import {
 import { DxScrollViewModule } from 'devextreme-angular';
 import { ListboxModule } from 'primeng/listbox';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
+import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 
 @Component({
     selector: 'customParameterSelector',
@@ -32,31 +33,33 @@ export class CustomParameterSelectorComponent implements OnInit, ControlValueAcc
 
     customParameters!: CustomParameterDto[];
 
-    constructor(private _customParameterServiceProxy: CustomParametersServiceProxy) {}
+    constructor(private _customParameterService: CustomParameterService) {}
 
     get scrollHeight() {
         return this.height ? `height: ${this.height};` : '';
     }
 
+    get customParameterOptions() {
+        return this.customParameters.filter((cp) => !this.customParameterTypes || this.customParameterTypes.includes(cp.type));
+    }
+
     ngOnInit(): void {
         this.customParameters = [];
         if (this.customParameterTypes) {
-            for (let type of this.customParameterTypes) {
-                this._customParameterServiceProxy
-                    .getAll(undefined, undefined, undefined, type, undefined, undefined, undefined, undefined,0, 100)
-                    .subscribe((result: PagedResultDtoOfGetCustomParameterForViewDto) => {
-                        this.customParameters.push(...result.items.map((item) => item.customParameter));
+                this._customParameterService
+                    .getAll(this.customParameterTypes)
+                    .subscribe((result: CustomParameterDto[]) => {
+                        this.customParameters = result;
                         this.customParameters = [...this.customParameters];
                         if(this.selectedCustomParameter) {
                             this.updateModelEmit()
                         }
                     });
-            }
         } else {
-            this._customParameterServiceProxy
-                    .getAll(undefined, undefined, undefined, undefined, undefined, undefined, undefined,  undefined, 0, 100)
-                    .subscribe((result: PagedResultDtoOfGetCustomParameterForViewDto) => {
-                        this.customParameters = result.items.map((item) => item.customParameter);
+            this._customParameterService
+                    .getAll()
+                    .subscribe((result: CustomParameterDto[]) => {
+                        this.customParameters = result;
                         if(this.selectedCustomParameter) {
                             this.updateModelEmit()
                         }

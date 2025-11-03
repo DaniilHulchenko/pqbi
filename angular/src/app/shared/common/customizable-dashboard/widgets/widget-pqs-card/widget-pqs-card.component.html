@@ -1,0 +1,157 @@
+<div class="kt-portlet kt-portlet--height-fluid">
+    <div class="kt-portlet__head">
+        <div class="kt-portlet__head-label">
+            <h3 class="kt-portlet__head-title">
+                {{ widgetConfigurationInDB?.name }}
+                <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
+                    <i class="fa fa-edit"></i>
+                </button>
+                
+                <button class="btn btn-primary btn-sm" *ngIf="editState" (click)="edit()">{{ 'Edit' | localize }}</button>
+            </h3>
+        </div>
+    </div>
+    <div class="kt-portlet__body" id="outerScroll" style="width: 98%; height: 500px; overflow-y: auto;">
+        <div [ngSwitch]="cardWidgetConfiguration?.styleType">
+            <div *ngSwitchCase="1">
+                <div class="gauge-container">
+                    <div class="gauge-arc">
+                        <svg viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" stroke="#3b82f6" stroke-width="6" fill="transparent"
+                                stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="70" />
+                        </svg>
+                        <div class="gauge-text">
+                            <div class="fw-bold" [ngStyle]="{
+                                                'font-size': valueFontSize,
+                                                'color': valueFontColor,
+                                                'font-family': valueFontFamily,
+                                                'line-height': '1',
+                                                'margin': '8px 0 0 0'
+                                                }">
+                                {{ value }}
+                            </div>
+                            <div class="fw-bold" [ngStyle]="{
+                                                'font-size': valueFontSize,
+                                                'color': valueFontColor,
+                                                'font-family': valueFontFamily,
+                                                'margin-top': '2px'
+                                                }">
+                                {{ unit }}
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="isIconVisible">
+                        <div *ngIf="parameter?.cardWidgetAdvancedSettings?.icon?.file; else defaultImage">
+                            <img [src]="parameter?.cardWidgetAdvancedSettings?.icon?.file" style="width: 15%;" />
+                        </div>
+                        <ng-template #defaultImage>
+                            <i class="fa fa-bolt" [ngStyle]="{'color': iconColor}"
+                                style="font-size:3em; margin-top:8px;"></i>
+                        </ng-template>
+                    </div>
+                    <div class="fw-bold" [ngStyle]="{
+                    'font-size': titleFontSize,
+                    'color': titleFontColor,
+                    'font-family': titleFontFamily,
+                    }">
+                        {{ title }}
+                    </div>
+                </div>
+            </div>
+            <div *ngSwitchCase="2">
+                <div class="card text-center p-2" style="min-width:120px;">
+                    <div class="fw-bold" [ngStyle]="{
+                    'font-size': titleFontSize,
+                    'color': titleFontColor,
+                    'font-family': titleFontFamily,
+                    }">
+                        {{ title }}
+                    </div>
+                    <div class="fw-bold" [ngStyle]="{
+                    'font-size': valueFontSize,
+                    'color': valueFontColor,
+                    'font-family': valueFontFamily,
+                    'line-height': '1',
+                    'margin': '8px 0 0 0'
+                    }">
+                        {{ value }}
+                    </div>
+                    <div class="fw-bold" [ngStyle]="{
+                    'font-size': valueFontSize,
+                    'color': valueFontColor,
+                    'font-family': valueFontFamily,
+                    'margin-top': '2px'
+                    }">
+                        {{ unit }}
+                    </div>
+                    <div *ngIf="isIconVisible">
+                        <div *ngIf="parameter?.cardWidgetAdvancedSettings?.icon?.file; else defaultImage">
+                            <img [src]="parameter?.cardWidgetAdvancedSettings?.icon?.file" style="width: 5%;" />
+                        </div>
+                        <ng-template #defaultImage>
+                            <i class="fa fa-bolt" [ngStyle]="{'color': iconColor}"
+                                style="font-size:3em; margin-top:8px;"></i>
+                        </ng-template>
+                    </div>
+                </div>
+            </div>
+            <div *ngSwitchCase="3" class="card text-center p-2" style="min-width:120px;">
+                <div class="fw-bold" [ngStyle]="{
+                'font-size': valueFontSize,
+                'color': valueFontColor,
+                'font-family': valueFontFamily,
+                'line-height': '1',
+                'margin': '8px 0 0 0'
+                }">
+                    {{ value }} {{ unit }}
+                </div>
+                <div class="fw-bold" [ngStyle]="{
+                'font-size': titleFontSize,
+                'color': titleFontColor,
+                'font-family': titleFontFamily,
+                'margin-top': '8px'
+                }">
+                    {{ title }}
+                </div>
+            </div>
+            <div *ngSwitchCase="4" class="card text-center p-2" style="min-width:120px;">
+                <div *ngIf="isIconVisible">
+                    <div *ngIf="parameter?.cardWidgetAdvancedSettings?.icon?.file; else defaultImage">
+                        <img [src]="parameter?.cardWidgetAdvancedSettings?.icon?.file" style="width: 5%;" />
+                    </div>
+                    <ng-template #defaultImage>
+                        <i class="fa fa-bolt" [ngStyle]="{'color': iconColor}"
+                            style="font-size:3em; margin-top:8px;"></i>
+                    </ng-template>
+                </div>
+                <div class="fw-bold" [ngStyle]="{
+                        'font-size': valueFontSize,
+                        'color': valueFontColor,
+                        'font-family': valueFontFamily,
+                        'line-height': '1',
+                        'margin': '8px 0 0 0'
+                        }">
+                    {{ value }} {{ unit }}
+                </div>
+                <div class="fw-bold" [ngStyle]="{
+                'font-size': titleFontSize,
+                'color': titleFontColor,
+                'font-family': titleFontFamily,
+                'margin-top': '8px'
+                }">
+                    {{ title }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-container *ngIf="isEditModalInitialized">
+    <createOrEditCardConfiguration #createOrEditModal (onSave)="onConfigurationChange($event)"
+        (onClose)="onEditModelClose($event)">
+    </createOrEditCardConfiguration>
+</ng-container>
+
+<ng-container *ngIf="editState">
+    <rename-widget-modal #renameWidgetModal (onSave)="saveName($event)"></rename-widget-modal>
+</ng-container>

@@ -3,7 +3,6 @@ import {
     AdditionalData,
     BaseDataInfo,
     CalculationBase,
-    GetComponentSlimInfosRequest,
     Group,
     GroupDataInfo,
     PhaseDataInfo,
@@ -11,11 +10,10 @@ import {
     PQSRestApiServiceProxy,
     QuantityDataInfo,
     QuantityEnum,
-    TreeBuilderServiceProxy,
 } from '@shared/service-proxies/service-proxies';
 import { BaseParameterType } from '../enums/base-parameter-type';
-import { map, Observable, ReplaySubject } from 'rxjs'
 import { AdditionalParameterTreeModel } from '../models/additional-parameter';
+import { MeasurementsService } from './measurements-service.service';
 
 @Injectable({
     providedIn: 'root',
@@ -34,20 +32,20 @@ export class BaseParameterCreationTreeBuilder {
     private readonly _parameterInfoSeparator = '_';
     private readonly _parameterQuantitiesSeparator = '#';
 
-    constructor(private _pqsRestApiServiceProxy: PQSRestApiServiceProxy) {
-        this._pqsRestApiServiceProxy.measurementsGroups().subscribe((result: GroupDataInfo[]) => {
+    constructor(private _measurementsService: MeasurementsService) {
+        _measurementsService.groupMeasurements.subscribe((result: GroupDataInfo[]) => {
             this._groupMeasurements = result;
         });
 
-        this._pqsRestApiServiceProxy.measurementsPhases().subscribe((result: PhaseDataInfo[]) => {
+        _measurementsService.phaseMeasurements.subscribe((result: PhaseDataInfo[]) => {
             this._phaseMeasurements = result;
         });
 
-        this._pqsRestApiServiceProxy.measurementsBases().subscribe((result: BaseDataInfo[]) => {
+        _measurementsService.baseMeasurements.subscribe((result: BaseDataInfo[]) => {
             this._baseMeasurements = result;
         });
 
-        this._pqsRestApiServiceProxy.measurementsQunatities().subscribe((result: QuantityDataInfo[]) => {
+        _measurementsService.quantityMeasurements.subscribe((result: QuantityDataInfo[]) => {
             this._quantityMeasurements = result;
         });
     }

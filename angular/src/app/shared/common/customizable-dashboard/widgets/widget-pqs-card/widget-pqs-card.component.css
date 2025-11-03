@@ -1,0 +1,75 @@
+ body {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     height: 100vh;
+     margin: 0;
+     font-family: Arial, sans-serif;
+     background: #fff;
+ }
+
+ .gauge-container {
+     text-align: center;
+     width: 80%;
+     min-width: 100px;
+     max-width: 300px;
+     position: relative;
+     margin: auto;
+ }
+
+ .gauge-arc {
+     position: relative;
+     width: 100%;
+ }
+
+ svg {
+     width: 100%;
+     height: auto;
+     display: block;
+     transform: rotate(-225deg);
+ }
+
+ .gauge-text {
+     position: absolute;
+     top: 60%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     text-align: center;
+ }
+
+ .value {
+     font-size: 2vw;
+     font-weight: bold;
+     color: #0f172a;
+ }
+
+ .unit {
+     font-size: 1.2vw;
+     color: #0f172a;
+ }
+
+ .icon {
+     width: 15%;
+     margin: 10px auto;
+     display: block;
+ }
+
+ .label {
+     font-size: 1.2vw;
+     font-weight: bold;
+     color: #0f172a;
+ }
+
+ @media (max-width: 600px) {
+     .value {
+         font-size: 5vw;
+     }
+
+     .unit {
+         font-size: 3vw;
+     }
+
+     .label {
+         font-size: 3vw;
+     }
+ }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, Injector, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Injector, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
 import {
     BarChartRequest,
@@ -9,16 +9,17 @@ import {
     BarParameter,
     CreateOrEditBarChartWidgetConfigurationDto,
     CustomWidgetTableData,
+    DataUnitType,
     DimensionSelector,
     DimensionType,
     EventClass,
     FeederComponentInfo,
+    GroupsServiceProxy,
     TableWidgetEvent,
     TenantDashboardServiceProxy,
 } from '@shared/service-proxies/service-proxies';
 import { CreateOrEditBarChartConfigurationComponent } from './create-or-edit-bar-chart-configuration/create-or-edit-bar-chart-configuration.component';
 import { DateRangeService } from '@app/shared/services/date-range-service';
-import { DateTime } from 'luxon';
 import { DateRangeState } from '@app/shared/models/date-range-state';
 import { RenameWidgetModalComponent } from '../../rename-widget-modal/rename-widget-modal.component';
 import { ComponentsState } from '@app/shared/models/components-state';
@@ -27,6 +28,11 @@ import safeStringify from 'fast-safe-stringify';
 import { ExcludeFlagged } from '@app/shared/enums/advanced-settings-options';
 import { ArrayUtils } from '@app/shared/services/array-utils.service';
 import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
+import { Guid } from '@node_modules/guid-ts/lib';
+import { Observable, of, forkJoin, Subscription } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
+import { BarchartWidgetConfigurationService } from '@app/shared/services/widget-configurations/barchart-widget-configuration.service';
 
 
 @Component({
@@ -34,7 +40,7 @@ import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
     templateUrl: './widget-pqs-bar-chart.component.html',
     styleUrl: './widget-pqs-bar-chart.component.css',
 })
-export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent implements OnInit {
+export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent implements OnInit, OnDestroy {
     @ViewChild('createOrEditModal') createOrEditModal: CreateOrEditBarChartConfigurationComponent;
     @ViewChild('renameWidgetModal') renameModal: RenameWidgetModalComponent;
 
@@ -42,13 +48,18 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     barChartConfiguration: BarChartWidgetConfigurationDto;
     barChartType = BarChartType;
     dataSource: any;
+    dataUnitType: DataUnitType;
+
+    private subs: Subscription[] = [];
 
     constructor(
         injector: Injector,
-        private _barChartWidgetConfigurationsServiceProxy: BarChartWidgetConfigurationsServiceProxy,
+        private _barChartWidgetConfigurationService: BarchartWidgetConfigurationService,
         private _tenantDashboardService: TenantDashboardServiceProxy,
+        private _groupService: GroupsServiceProxy,
         elementReference: ElementRef,
         dateRangeService: DateRangeService,
+        private _configurationVersionService: ConfigurationVersionService,
     ) {
         super(injector, elementReference, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSBarChart');
@@ -66,7 +77,19 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     }
 
     onNameEdit(): void {
-        this.renameModal.show(this.widgetName);
+        this.renameModal.show(this.widgetConfigurationInDB?.name);
+    }
+
+    customizeLabelText = (e: any) => {
+        if (this.dataUnitType && this.dataUnitType.id) {
+            const token = this.getToken(this.dataUnitType);
+            return `${e.valueText} ${token}`;
+        }
+        return e.valueText;
+    };
+
+    getToken(dataUnitType: DataUnitType): string{
+        return dataUnitType?.id !== 41 && dataUnitType?.id !== 255 && dataUnitType?.tokenCode ? this.l(dataUnitType.tokenCode) : '';
     }
 
     fetch(): void {
@@ -76,102 +99,120 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
 
         let [startDate, endDate] = this._dateRangeService.getDateRangeFromState(state);
 
-if (!startDate || !endDate || startDate >= endDate) {
+        if (!startDate || !endDate || startDate >= endDate) {
             [startDate, endDate] = this._dateRangeService.getDateRangeFromUnit(DateRangeUnits.LAST_7_DAYS);
         }
 
-        // Ensure UTC and log range
         startDate = startDate.toUTC();
         endDate = endDate.toUTC();
-        console.log('Bar chart date range', {
-            startDate: startDate.toISO(),
-            endDate: endDate.toISO(),
+
+        const config = JSON.parse(this.barChartConfiguration.configuration);
+
+        var sub = forkJoin({
+            seriesBy: this.mapSerieses(config.series),
+            category: this.mapSerieses(config.xUnit),
+        }).subscribe(({ seriesBy, category }) => {
+            const componentsState: ComponentsState = JSON.parse(this.barChartConfiguration.components);
+            const formattedFeeders =
+                componentsState?.feeders?.map((f) => {
+                    const c = componentsState?.components?.find((c) => c.key === f.componentId);
+                    return new FeederComponentInfo({
+                        componentId: f.componentId,
+                        id: f.id,
+                        name: f.name,
+                        compName: c.label,
+                    });
+                }) ?? [];
+            const tableWidgetConfigurationComponents = componentsState?.components ?? [];
+            const formattedComponents = tableWidgetConfigurationComponents
+                .filter((c) => !formattedFeeders.some((f) => f.componentId === c.key))
+                .map((c) => new FeederComponentInfo({ componentId: c.key, id: null, name: null, compName: c.label }));
+
+            this.barChartRequest = new BarChartRequest({
+                seriesBy: seriesBy,
+                category: category,
+                barPrmList: config.parameters.map((p) => {
+                    let baseData: string = null;
+                    let customData: CustomWidgetTableData = null;
+                    let tableEvent: TableWidgetEvent = null;
+
+                    switch (p.type) {
+                        case ColumnType.CustomParameter:
+                            customData = new CustomWidgetTableData({
+                                id: Number.parseInt(p.data.toString()),
+                                ignoreAlignment: false,
+                                quantity: p.quantity,
+                            });
+                            break;
+
+                        case ColumnType.Exception:
+                        case ColumnType.BaseParameter:
+                            baseData = this.prepareParameterForRequest(p.type, p.data);
+                            break;
+
+                        case ColumnType.Event:
+                            tableEvent = this.createTableWidgetEvent(p.data.toString(), p.quantity);
+                            break;
+
+                        default:
+                            // optionally handle unknown types
+                            console.warn('Unknown column type:', p.type);
+                            break;
+                    }
+
+                    return new BarParameter({
+                        parameterType: p.type,
+                        excludeFlagged: this.prepareExcludedFlagged(
+                            p.advancedSettings?.excludeFlagged,
+                            ArrayUtils.ensureArray(p.advancedSettings?.defaultFlagEvent),
+                        ),
+                        baseData,
+                        customData,
+                        tableEvent,
+                        parameterName: p.name,
+                        isExcludeFlaggedData: p.advancedSettings?.excludeFlagged === ExcludeFlagged.DefaultEvents,
+                    });
+                }),
+                feeders: [...formattedFeeders, ...formattedComponents],
+                widgetName: this.widgetConfigurationInDB?.name,
+                startDate: startDate,
+                endDate: endDate,
+                userTimeZone: 1,
+            });
+
+            var subGetData = this._tenantDashboardService.pQSBarChartWidgetData(this.barChartRequest).subscribe({
+                next: (response: BarChartResponse) => {
+                    const groups = response?.groups || [];
+                    this.dataUnitType = response?.dataUnitType;
+                    if (this.barChartConfiguration?.type === BarChartType.Plain) {
+                        this.dataSource = this.getPlainData(groups);
+                    } else {
+                        this.dataSource = this.transformData(groups);
+                    }
+                },
+                error: (err) => {
+                    console.error('Bar chart data load failed', err);
+                },
+            });
+            this.subs.push(subGetData);
         });
-
-const config = JSON.parse(this.barChartConfiguration.configuration);
-
-        const seriesBy = this.mapSerieses(config.series[0]);
-        const category = this.mapSerieses(config.xUnit);
-
-        const componentsState: ComponentsState = JSON.parse(this.barChartConfiguration.components);
-        const formattedFeeders = componentsState?.feeders?.map((f) => new FeederComponentInfo(f)) ?? [];
-        const tableWidgetConfigurationComponents = componentsState?.components ?? [];
-        const formattedComponents = tableWidgetConfigurationComponents            .filter((c) => !formattedFeeders.some((f) => f.componentId === c.key))
-            .map((c) => new FeederComponentInfo({ componentId: c.key, id: null, name: null, compName: c.label }));
-
-        this.barChartRequest = new BarChartRequest({
-            seriesBy: new DimensionSelector({ type: seriesBy, id: null, name: null }),
-            category: new DimensionSelector({ type: category, id: null, name: null }),
-            barPrmList: config.parameters.map((p) => {
-                let baseData: string = null;
-                let customData: CustomWidgetTableData = null;
-                let tableEvent: TableWidgetEvent = null;
-
-                switch (p.type) {
-                    case ColumnType.CustomParameter:
-                        customData = new CustomWidgetTableData({
-                            id: Number.parseInt(p.data.toString()),
-                            ignoreAlignment: false,
-                            quantity: p.quantity,
-                        });
-                        break;
-
-                    case ColumnType.Exception:
-                    case ColumnType.BaseParameter:
-                        baseData = this.prepareParameterForRequest(p.type, p.data);
-                        break;
-
-                    case ColumnType.Event:
-                        tableEvent = this.createTableWidgetEvent(p.data.toString(), p.quantity);
-                        break;
-
-                    default:
-                        // optionally handle unknown types
-                        console.warn('Unknown column type:', p.type);
-                        break;
-                }
-
-                return new BarParameter({
-                    parameterType: p.type,
-                    excludeFlagged: this.prepareExcludedFlagged(
-                        p.advancedSettings?.excludeFlagged,
-                        ArrayUtils.ensureArray(p.advancedSettings?.defaultFlagEvent),
-                    ),
-                    baseData,
-                    customData,
-                    tableEvent,
-                    parameterName: p.name,
-                    isExcludeFlaggedData: p.advancedSettings?.excludeFlagged === ExcludeFlagged.DefaultEvents,
-                });
-            }),
-            feeders: [...formattedFeeders, ...formattedComponents],
-            widgetName: this.widgetName,
-            startDate: startDate,
-            endDate: endDate,
-            userTimeZone: 1,
-        });
-
-        console.log('Bar chart request', this.barChartRequest);
-
-        this._tenantDashboardService.pQSBarChartWidgetData(this.barChartRequest).subscribe({
-            next: (response: BarChartResponse) => {
-                console.log('Bar chart response', response);
-                const groups = response?.groups || [];
-                if (this.barChartConfiguration?.type === BarChartType.Plain) {
-                    this.dataSource = this.getPlainData(groups);
-                } else {
-                    this.dataSource = this.transformData(groups);
-                }
-                console.log('Bar chart data source', this.dataSource);
-            },
-            error: (err) => {
-                console.error('Bar chart data load failed', err);
-            },
-        });
+        this.subs.push(sub);
     }
 
     edit(): void {
-        this.createOrEditModal.show(this.widgetConfigurationInDB);
+        this.isEditModalInitialized = true;
+        var sub = this._configurationVersionService.refreshVersion().subscribe();
+        this.subs.push(sub);
+        setTimeout(() => {
+            this.createOrEditModal.show(this.widgetConfigurationInDB);
+        }, 50);
+    }
+
+    onEditModelClose(isSaved) {
+        if (!isSaved && !this.widgetConfigurationInDB?.configuration)
+        {
+            abp.event.trigger('app.dashboard.removeWidget', this.widgetConfigurationInDB.widgetGuid, 'Widgets_Tenant_PQSBarChart');
+        }
     }
 
     onConfigurationChange(newConfig: CreateOrEditBarChartWidgetConfigurationDto): void {
@@ -181,18 +222,18 @@ const config = JSON.parse(this.barChartConfiguration.configuration);
 
     refreshWidget(): void {
         if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
-            this._barChartWidgetConfigurationsServiceProxy
-                .getBarChartWidgetConfigurationForView(+this.widgetConfigurationInDB.configuration)
+            var sub = this._barChartWidgetConfigurationService.getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.barChartConfiguration = result.barChartWidgetConfiguration;
                     if (this.barChartConfiguration) {
                         this.fetch();
                     }
                 });
+            this.subs.push(sub);
         }
     }
 
-private getPlainData(groups: any[]): any[] {
+    private getPlainData(groups: any[]): any[] {
         return groups.map((g) => ({
             category: g.category,
             value: g.bars?.[0]?.value ?? 0,
@@ -221,16 +262,43 @@ private getPlainData(groups: any[]): any[] {
         return transformed;
     }
 
-    private mapSerieses(seriesBy: string): DimensionType {
-        switch (seriesBy) {
-            case 'components':
-                return DimensionType.Feeders;
-            case 'parameters':
-                return DimensionType.Parameters;
-            case 'groups':
-                return DimensionType.CustomGroup;
-            case 'time':
-                return DimensionType.Dates;
+    private mapSerieses(seriesBy: string): Observable<DimensionSelector> {
+        const result = new DimensionSelector({
+            name: '',
+            type: null,
+            id: null,
+        });
+
+        if (Guid.isValid(seriesBy)) {
+            result.type = DimensionType.CustomGroup;
+            result.id = seriesBy;
+            return  this._groupService.getGroupForView(seriesBy).pipe(
+                map((response) => {
+                    if (response.group) {
+                        result.name = response.group.name;
+                    } else {
+                        result.name = 'Unknown Group';
+                    }
+                    return result;
+                }),
+                catchError(() => {
+                    result.name = 'Unknown Group';
+                    return of(result);
+                }),
+            );
+        } else {
+            switch (seriesBy) {
+                case 'components':
+                    result.type = DimensionType.Feeders;
+                    break;
+                case 'parameters':
+                    result.type = DimensionType.Parameters;
+                    break;
+                case 'time':
+                    result.type = DimensionType.Dates;
+                    break;
+            }
+            return of(result);
         }
     }
 
@@ -275,9 +343,13 @@ private getPlainData(groups: any[]): any[] {
             parameter: event.parameter,
             isPolyphase: event.isPolyphase,
             aggregationInSeconds: event.aggregationInSeconds,
-            quantity
+            quantity,
         });
 
         return tableWidgetEvent;
+    }
+
+    ngOnDestroy(): void {
+        this.subs.forEach(sub => sub.unsubscribe());
     }
 }

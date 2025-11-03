@@ -45,21 +45,24 @@ import { DynamicTreeBuilderComponent } from '../components/dynamic-tree-builder/
 import { WidgetPQSTableComponent } from './widgets/widget-pqs-table/widget-pqs-table.component';
 import { TreeTableModule } from 'primeng/treetable';
 import {
-  DxChartModule,
-  DxPivotGridModule,
-  DxRadioGroupModule,
-  DxPopupModule,
-  DxScrollViewModule,
-  DxButtonModule,
-  DxDataGridModule,
-  DxTabPanelModule,
-  DxLoadIndicatorModule, DxTextBoxModule,
-  DxTreeListModule,
-  DxSelectBoxModule,
-  DxNumberBoxModule,
-  DxCheckBoxModule,
-  DxColorBoxModule,
-  DxTagBoxModule
+    DxChartModule,
+    DxPivotGridModule,
+    DxRadioGroupModule,
+    DxPopupModule,
+    DxScrollViewModule,
+    DxButtonModule,
+    DxDataGridModule,
+    DxTabPanelModule,
+    DxLoadIndicatorModule,
+    DxTextBoxModule,
+    DxTreeListModule,
+    DxSelectBoxModule,
+    DxNumberBoxModule,
+    DxCheckBoxModule,
+    DxColorBoxModule,
+    DxTagBoxModule,
+    DxCircularGaugeModule,
+    DxLinearGaugeModule,
 } from 'devextreme-angular';
 import { WidgetPqsBarChartComponent } from './widgets/widget-pqs-bar-chart/widget-pqs-bar-chart.component';
 import { CreateOrEditBarChartConfigurationComponent } from './widgets/widget-pqs-bar-chart/create-or-edit-bar-chart-configuration/create-or-edit-bar-chart-configuration.component';
@@ -77,14 +80,32 @@ import { ExceptionParameterSelectionTabComponent } from '../components/parameter
 import { LogicalParameterSelectionTabComponent } from '../components/parameter-selection-tabs/logical-parameter-selection-tab/logical-parameter-selection-tab.component';
 import { ChannelParameterSelectionTabComponent } from '../components/parameter-selection-tabs/channel-parameter-selection-tab/channel-parameter-selection-tab.component';
 import { EventParameterSelectionTabComponent } from '../components/parameter-selection-tabs/event-parameter-selection-tab/event-parameter-selection-tab.component';
-import {
-    RenameWidgetModalComponent
-} from '@app/shared/common/customizable-dashboard/rename-widget-modal/rename-widget-modal.component';
+import { RenameWidgetModalComponent } from '@app/shared/common/customizable-dashboard/rename-widget-modal/rename-widget-modal.component';
 import { TablePreviewComponent } from '@app/shared/common/customizable-dashboard/widgets/widget-pqs-table/create-or-edit-table-configuration/table-preview/table-preview.component';
 import { TableDesignOptionsComponent } from '@app/shared/common/customizable-dashboard/widgets/widget-pqs-table/create-or-edit-table-configuration/table-design-options/table-design-options.component';
 import { AdditionalParameterSelectionTabComponent } from '../components/parameter-selection-tabs/additional-parameter-selection-tab/additional-parameter-selection-tab.component';
-import { BarChartPreviewComponent } from "./widgets/widget-pqs-bar-chart/create-or-edit-bar-chart-configuration/bar-chart-preview/bar-chart-preview.component";
+import { BarChartPreviewComponent } from './widgets/widget-pqs-bar-chart/create-or-edit-bar-chart-configuration/bar-chart-preview/bar-chart-preview.component';
 import { ListboxModule } from 'primeng/listbox';
+import { WidgetPqsCardComponent } from './widgets/widget-pqs-card/widget-pqs-card.component';
+import { CreateOrEditCardConfigurationComponent } from './widgets/widget-pqs-card/create-or-edit-card-configuration/create-or-edit-card-configuration.component';
+import { CardWidgetStyleSelectorComponent } from "@app/shared/common/components/card-widget-style-selector/card-widget-style-selector.component";
+import { WidgetRefreshSelectorComponent } from "@app/shared/common/components/widget-refresh-selector/widget-refresh-selector.component";
+import { CardWidgetAdditionalParameterSelectionTabComponent } from '../components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-additional-parameter-selection-tab/card-widget-additional-parameter-selection-tab.component';
+import { CardWidgetChannelParameterSelectionTabComponent } from '../components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-channel-parameter-selection-tab/card-widget-channel-parameter-selection-tab.component';
+import { CardWidgetCustomParameterSelectionTabComponent } from '../components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-custom-parameter-selection-tab/card-widget-custom-parameter-selection-tab.component';
+import { CardWidgetEventParameterSelectionTabComponent } from '../components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-event-parameter-selection-tab/card-widget-event-parameter-selection-tab.component';
+import { CardWidgetExceptionParameterSelectionTabComponent } from '../components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-exception-parameter-selection-tab/card-widget-exception-parameter-selection-tab.component';
+import { CardWidgetLogicalParameterSelectionTabComponent } from '../components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-logical-parameter-selection-tab/card-widget-logical-parameter-selection-tab.component';
+import { LimitedComponentsSelectorComponent } from '../components/limited-components-selector/limited-components-selector.component';
+import { WidgetPqsGaugeComponent } from './widgets/widget-pqs-gauge/widget-pqs-gauge.component';
+import { CreateOrEditGaugeConfigurationComponent } from './widgets/widget-pqs-gauge/create-or-edit-gauge-configuration/create-or-edit-gauge-configuration.component';
+import { GaugeWidgetAdditionalParameterSelectionTabComponent } from '../components/parameter-selection-tabs/gauge-widget-selection-tabs/gauge-widget-additional-parameter-selection-tab/gauge-widget-additional-parameter-selection-tab.component';
+import { GaugeWidgetChannelParameterSelectionTabComponent } from '../components/parameter-selection-tabs/gauge-widget-selection-tabs/gauge-widget-channel-parameter-selection-tab/gauge-widget-channel-parameter-selection-tab.component';
+import { GaugeWidgetCustomParameterSelectionTabComponent } from '../components/parameter-selection-tabs/gauge-widget-selection-tabs/gauge-widget-custom-parameter-selection-tab/gauge-widget-custom-parameter-selection-tab.component';
+import { GaugeWidgetEventParameterSelectionTabComponent } from '../components/parameter-selection-tabs/gauge-widget-selection-tabs/gauge-widget-event-parameter-selection-tab/gauge-widget-event-parameter-selection-tab.component';
+import { GaugeWidgetExceptionParameterSelectionTabComponent } from '../components/parameter-selection-tabs/gauge-widget-selection-tabs/gauge-widget-exception-parameter-selection-tab/gauge-widget-exception-parameter-selection-tab.component';
+import { GaugeWidgetLogicalParameterSelectionTabComponent } from '../components/parameter-selection-tabs/gauge-widget-selection-tabs/gauge-widget-logical-parameter-selection-tab/gauge-widget-logical-parameter-selection-tab.component';
+import { GaugeWidgetStyleSelectorComponent } from "@app/shared/common/components/gauge-widget-style-selector/gauge-widget-style-selector.component";
 
 @NgModule({
     imports: [
@@ -146,9 +167,28 @@ import { ListboxModule } from 'primeng/listbox';
     DxLoadIndicatorModule,
     DxTextBoxModule,
     DxTagBoxModule,
+    DxCircularGaugeModule,
+    DxLinearGaugeModule,
     AdditionalParameterSelectionTabComponent,
     TabsModule.forRoot(),
-    BarChartPreviewComponent
+    BarChartPreviewComponent,
+    CardWidgetStyleSelectorComponent,
+    CardWidgetStyleSelectorComponent,
+    WidgetRefreshSelectorComponent,
+    CardWidgetAdditionalParameterSelectionTabComponent,
+    CardWidgetChannelParameterSelectionTabComponent,
+    CardWidgetCustomParameterSelectionTabComponent,
+    CardWidgetEventParameterSelectionTabComponent,
+    CardWidgetExceptionParameterSelectionTabComponent,
+    CardWidgetLogicalParameterSelectionTabComponent,
+    LimitedComponentsSelectorComponent,
+    GaugeWidgetAdditionalParameterSelectionTabComponent,
+    GaugeWidgetChannelParameterSelectionTabComponent,
+    GaugeWidgetCustomParameterSelectionTabComponent,
+    GaugeWidgetEventParameterSelectionTabComponent,
+    GaugeWidgetExceptionParameterSelectionTabComponent,
+    GaugeWidgetLogicalParameterSelectionTabComponent,
+    GaugeWidgetStyleSelectorComponent,
 ],
 
     declarations: [
@@ -178,6 +218,10 @@ import { ListboxModule } from 'primeng/listbox';
         RenameWidgetModalComponent,
         TablePreviewComponent,
         TableDesignOptionsComponent,
+        WidgetPqsCardComponent,
+        CreateOrEditCardConfigurationComponent,
+        WidgetPqsGaugeComponent,
+        CreateOrEditGaugeConfigurationComponent
     ],
 
     providers: [DashboardViewConfigurationService],
@@ -202,9 +246,13 @@ import { ListboxModule } from 'primeng/listbox';
         WidgetPQSComponent,
         WidgetPQSTableComponent,
         WidgetPqsBarChartComponent,
+        WidgetPqsCardComponent,
+        WidgetPqsGaugeComponent,
         CreateOrEditTrendConfigurationComponent,
         CreateOrEditBarChartConfigurationComponent,
         CreateOrEditTableConfigurationComponent,
+        CreateOrEditCardConfigurationComponent,
+        CreateOrEditGaugeConfigurationComponent,
         RenameWidgetModalComponent,
         TablePreviewComponent,
     ],

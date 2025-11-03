@@ -1,0 +1,154 @@
+<dx-popup
+  [hideOnOutsideClick]="false"
+  [showCloseButton]="true"
+  [(visible)]="modalVisible"
+  [dragEnabled]="false"
+  title="Event Parameter Advanced Settings"
+  height="80vh"
+  width="80vw"
+>
+  <dx-scroll-view>
+    <div style="margin: 20px; display: flex; gap: 40px; flex-wrap: wrap">
+      <div style="flex: 1; min-width: 300px;">
+        <h5>Normalize Values:</h5>
+        <div *ngFor="let opt of normalizationOptions" class="mb-2">
+          <p-checkbox
+            [binary]="true"
+            [label]="opt.text"
+            [value]="opt.value"
+            [ngModel]="normalizeValue === opt.value"
+            (onChange)="onSelectNormalize(opt.value)"
+          ></p-checkbox>
+        </div>
+
+        <dx-number-box
+          *ngIf="normalizeValue === normalizeTypes.VALUE"
+          [(value)]="normalizeNominalValue"
+          placeholder="Normalization Value"
+          [min]="0"
+          class="mt-2"
+        ></dx-number-box>
+
+        <h5 class="mt-4">Exclude Flagged:</h5>
+        <div *ngFor="let opt of excludeFlaggedOptions" class="mb-2">
+          <p-checkbox
+            [binary]="true"
+            [label]="opt.text"
+            [ngModel]="excludeFlagged === opt.value"
+            (onChange)="onSelectExcludeFlagged(opt.value)"
+          ></p-checkbox>
+        </div>
+
+        <div *ngIf="excludeFlagged === excludeFlaggedTypes.UserSelected" class="mt-3">
+          <p-multiSelect
+            [options]="flaggingEvents"
+            [(ngModel)]="selectedFlagEvents"
+            optionLabel="description"
+            optionValue="eventClass"
+            placeholder="Select events"
+            display="chip"
+            [showClear]="true"
+            [filter]="true"
+            styleClass="w-100"
+          ></p-multiSelect>
+        </div>
+
+        <h6 class="mt-3">Decimal points:</h6>
+        <dx-select-box class="w-25" [(value)]="decimalPoints" [items]="decimalPointOptions"
+          placeholder="Select decimal points"></dx-select-box>
+      </div>
+
+      <!-- right block -->
+      <div style="flex: 1; min-width: 300px;">
+        <h5>Fonts</h5>
+        <div class="font-section">
+          <div class="font-row">
+            <label>Title</label>
+            <dx-select-box [items]="fontFamilies" [(value)]="titleFont.family" placeholder="font family">
+            </dx-select-box>
+
+            <dx-number-box [(value)]="titleFont.size" placeholder="font size" [min]="8" [max]="50">
+            </dx-number-box>
+
+            <div class="font-color">
+              <label>font color</label>
+              <dx-radio-group [items]="colorOptions" displayExpr="text" valueExpr="id" [(value)]="titleFont.colorMode">
+              </dx-radio-group>
+
+              <dx-color-box *ngIf="titleFont.colorMode === 'custom'" [(value)]="titleFont.customColor" [editAlphaChannel]="true">
+              </dx-color-box>
+            </div>
+          </div>
+
+          <div class="font-row">
+            <label>Value</label>
+            <dx-select-box [items]="fontFamilies" [(value)]="valueFont.family" placeholder="font family">
+            </dx-select-box>
+
+            <dx-number-box [(value)]="valueFont.size" placeholder="font size" [min]="8" [max]="50">
+            </dx-number-box>
+
+            <div class="font-color">
+              <label>font color</label>
+              <dx-radio-group [items]="colorOptions" displayExpr="text" valueExpr="id" [(value)]="valueFont.colorMode">
+              </dx-radio-group>
+
+              <dx-color-box *ngIf="valueFont.colorMode === 'custom'" [(value)]="valueFont.customColor" [editAlphaChannel]="true">
+              </dx-color-box>
+            </div>
+          </div>
+        </div>
+
+        <!-- Icon Section -->
+        <h5>Icon</h5>
+        <div class="icon-section">
+          <label>file</label>
+          <dx-file-uploader selectButtonText="select file" [multiple]="false" [allowedFileExtensions]="['.svg']" (onValueChanged)="onFileChanged($event)">
+          </dx-file-uploader>
+
+          <div>
+            <label>appearance</label>
+            <dx-radio-group [items]="appearanceOptions" displayExpr="text" valueExpr="id" [(value)]="icon.appearance">
+            </dx-radio-group>
+          </div>
+
+          <div>
+            <label>color</label>
+            <dx-radio-group [items]="colorOptions" displayExpr="text" valueExpr="id" [(value)]="icon.colorMode">
+            </dx-radio-group>
+
+            <dx-color-box class="w-25" *ngIf="icon.colorMode === 'custom'" [(value)]="icon.customColor" [editAlphaChannel]="true">
+            </dx-color-box>
+          </div>
+        </div>
+
+        <!-- Link Section -->
+        <h5>Link</h5>
+        <div class="link-section">
+          <label>select PQBI page</label>
+          <dx-select-box [items]="pqbiPages" [(value)]="link.page" placeholder="Select PQBI page">
+          </dx-select-box>
+        </div>
+      </div>
+    </div>
+
+    <!-- buttons -->
+    <div class="d-flex justify-content-center mt-4 mb-3 gap-4">
+      <dx-button
+        text="Cancel"
+        (onClick)="hide()"
+        stylingMode="contained"
+        [width]="140"
+        [height]="48"
+      ></dx-button>
+      <dx-button
+        text="OK"
+        type="success"
+        (onClick)="save()"
+        stylingMode="contained"
+        [width]="140"
+        [height]="48"
+      ></dx-button>
+    </div>
+  </dx-scroll-view>
+</dx-popup>

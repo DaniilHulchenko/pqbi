@@ -2,7 +2,7 @@
     <div class="row flex-grow-1" style="align-items: center">
         <ng-container *ngIf="!disableComponentSelection">
             <form-container wrapperClass="col-2 pe-0 h-100">
-                <componentsSelector id="componentsState" name="componentsState" [height]="'335px'"
+                <cpComponentsSelector id="componentsState" name="componentsState" [height]="'335px'"
                         [(ngModel)]="componentsState" [isFeederSelectionEnabled]="isFeederSelectionEnabled"
                         (ngModelChange)="onComponentsChange()" required />
             </form-container>

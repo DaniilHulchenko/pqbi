@@ -1,0 +1,67 @@
+<div class="row">
+  <div class="col-auto">
+    <label class="form-label">{{'GaugeWidgetStyle' | localize }} *</label>
+    <dx-select-box [items]="styleOptions" displayExpr="text" valueExpr="id" [(value)]="styleModel.style" (onValueChanged)="onStyleChanged()">
+    </dx-select-box>
+    <small *ngIf="!isStyleValid" class="text-danger">{{'GaugeStyleRequired' | localize }}</small>
+  </div>
+
+  <div *ngIf="isLinear" class="col-3">
+    <label class="form-label">{{'CardWidgetOrientation' | localize }} *</label>
+    <dx-select-box [items]="orientationOptions" displayExpr="text" valueExpr="id" [(value)]="styleModel.orientation" (onValueChanged)="invokeOnChange()">
+    </dx-select-box>
+    <small *ngIf="!isGaugeOrientationValid" class="text-danger">{{'OrientationRequired' | localize }}</small>
+  </div>
+  <div *ngIf="isLinear" class="col-2">
+    <label class="form-label">{{'InvertScale' | localize }}</label>
+    <div>
+      <dx-check-box [text]="l('InvertScale')" [(value)]="styleModel.isInvertScale" (onValueChanged)="invokeOnChange()">
+      </dx-check-box>
+    </div>
+    <small *ngIf="!isInvertScaleValid" class="text-danger">{{'TrackWidthRequired' | localize }}</small>
+  </div>
+  <div *ngIf="isLinear" class="col-3">
+    <label class="form-label">{{'TrackWidth' | localize }} *</label>
+    <dx-number-box [(value)]="styleModel.trackWidth" [min]="4" [max]="60" format="# px" [placeholder]="l('TrackWidth')"
+      [showSpinButtons]="true" [showClearButton]="true" (onValueChanged)="invokeOnChange()">
+    </dx-number-box>
+    <small *ngIf="!isTrackWidthValid" class="text-danger">{{'TrackWidthRequired' | localize }}</small>
+  </div>
+
+  <div *ngIf="isCircular" class="col-2">
+    <label class="form-label">{{'ArcWidth' | localize }} *</label>
+    <dx-number-box [(value)]="styleModel.arcWidth" [min]="4" [max]="60" format="# px" [placeholder]="l('ArcWidth')"
+      [showSpinButtons]="true" [showClearButton]="true" (onValueChanged)="invokeOnChange()">
+    </dx-number-box>
+    <small *ngIf="!isArcWidthValid" class="text-danger">{{'ArcWidthRequired' | localize }}</small>
+  </div>
+  <div *ngIf="isCircular" class="col-3">
+    <label class="form-label">{{'ArcAngle' | localize }} *</label>
+    <dx-select-box [items]="arcAngleOptions" displayExpr="text" valueExpr="id" [(value)]="styleModel.arcAngle"
+      (onValueChanged)="onArcAngleChange()" itemTemplate="selectedItem" fieldTemplate="displayItem">
+      <div class="d-flex justify-content-between" *dxTemplate="let data of 'selectedItem'">
+        <span>{{data.text}}</span>
+        <img style="height: 25px;" [src]="getIconSrc(data.id)" />
+      </div>
+      <div class="d-flex justify-content-between" *dxTemplate="let data of 'displayItem'">
+        <dx-text-box [readOnly]="true" stylingMode="filled" [value]="data?.text"></dx-text-box>
+        <img style="height: 25px; margin-top: 6px;" [src]="getIconSrc(data?.id)" />
+      </div>
+    </dx-select-box>
+    <small *ngIf="!isArcAngleValid" class="text-danger">{{'ArcAngleRequired' | localize }}</small>
+  </div>
+  <div *ngIf="isCustomArc" class="col-2">
+    <label class="form-label">{{'StartAngle' | localize }} *</label>
+    <dx-number-box [(value)]="styleModel.startAngle" [min]="0" [max]="360" format="# °" (onValueChanged)="invokeOnChange()"
+      [placeholder]="l('StartAngle')" [showSpinButtons]="true" [showClearButton]="true">
+    </dx-number-box>
+    <small *ngIf="!isStartAngleValid" class="text-danger">{{'StartAngleRequired' | localize }}</small>
+  </div>
+  <div *ngIf="isCustomArc" class="col-2">
+    <label class="form-label">{{'EndAngle' | localize }} *</label>
+    <dx-number-box [(value)]="styleModel.endAngle" [min]="0" [max]="360" format="# °" (onValueChanged)="invokeOnChange()"
+      [placeholder]="l('EndAngle')" [showSpinButtons]="true" [showClearButton]="true">
+    </dx-number-box>
+    <small *ngIf="!isEndAngleValid" class="text-danger">{{'EndAngleRequired' | localize }}</small>
+  </div>
+</div>

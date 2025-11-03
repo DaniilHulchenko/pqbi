@@ -1,0 +1,23 @@
+.font-section .font-row,
+.link-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.segmentation {
+  display: flex;
+  gap: 2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.table {
+  flex: 1;
+}

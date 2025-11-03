@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { uniqBy } from 'lodash-es';
+import { EventService } from '@app/shared/services/event-service.service';
 
 @Component({
     standalone: true,
@@ -33,7 +34,7 @@ import { uniqBy } from 'lodash-es';
 })
 export class AdvancedSettingsComponent implements OnInit, OnChanges {
     @Input() isBaseParameter = false;
-    @Output() advancedSettingsChanged = new EventEmitter<AdvancedSettingsConfig>();
+    @Input() chartType: string | null;
     @Input() config: AdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<AdvancedSettingsConfig>();
 
@@ -94,11 +95,11 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
         { value: 'MIN', text: 'Minimum' },
     ];
 
-    constructor(private _pqsApi: PQSRestApiServiceProxy) {}
+    constructor(private _eventService: EventService) {}
 
     ngOnInit() {
         this.normalizationOptions = this.getNormalizationOptions();
-        this._pqsApi.pQSEvents().subscribe((evts) => {
+        this._eventService.pqsEvents().subscribe((evts) => {
             this.flaggingEvents = evts;
             this.flaggingEvents = uniqBy(this.flaggingEvents, (x) => x.eventClass);
         });
@@ -149,7 +150,6 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
     }
 
     onSelectReplaceAggregation(){
-        console.log('Replace aggregation selected', this.replaceAggregation);
     }
 
     save() {

@@ -191,7 +191,6 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
                     const components = this.treeBuilderService.extractLeafNodes(this.componentsOptions);
                     this.selectedItems.push(components.find((item) => item.key === event.node.parentKey));
                     this.onSelectionChange(this.selectedItems);
-                    console.log('onNodeUnselect', this.state);
                 });
             }
         }

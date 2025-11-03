@@ -35,6 +35,7 @@ import { CpCustomParameterSelectionTabComponent } from './cp-custom-parameter-se
 import { FormContainerComponent } from "../../../shared/common/components/form-container/form-container.component";
 import { CpAdditionalParameterSelectionTabComponent } from './cp-additional-parameter-selection-tab/cp-additional-parameter-selection-tab.component';
 import { AdvancedSettingsComponent } from '@app/shared/common/components/parameter-selection-tabs/advanced-settings/advanced-settings.component';
+import { CpComponentsSelectorComponent } from './cp-components-selector/cp-components-selector.component';
 
 @NgModule({
     declarations: [
@@ -70,10 +71,10 @@ import { AdvancedSettingsComponent } from '@app/shared/common/components/paramet
     DxPopupModule,
     DxDataGridModule,
     CustomParameterSelectionTabComponent,
-    ComponentsSelectorComponent,
     QuantitySelectorComponent,
     FormContainerComponent,
-    AdvancedSettingsComponent
+    AdvancedSettingsComponent,
+    CpComponentsSelectorComponent,
 ],
     exports: [ArithmeticsModalComponent],
 })

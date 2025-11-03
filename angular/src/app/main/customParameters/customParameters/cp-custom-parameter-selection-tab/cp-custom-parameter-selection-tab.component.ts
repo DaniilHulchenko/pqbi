@@ -9,12 +9,12 @@ import { NgForm } from '@node_modules/@angular/forms';
 import { ListboxChangeEvent } from '@node_modules/primeng/listbox';
 import {
     CustomParameterDto,
-    CustomParametersServiceProxy,
     PagedResultDtoOfGetCustomParameterForViewDto,
 } from '@shared/service-proxies/service-proxies';
 import { sortBy } from 'lodash-es';
 import { GridDataItem } from '../create-or-edit-customParameter-modal.component';
 import { EditableTabComponentBaseComponent } from '@app/shared/common/components/parameter-selection-tabs/editable-tab-component-base';
+import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 
 @Component({
     selector: 'cpCustomParameterSelectionTab',
@@ -72,7 +72,7 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
 
     constructor(
         injector: Injector,
-        private _customParameterServiceProxy: CustomParametersServiceProxy,
+        private _customParameterService: CustomParameterService,
         private _resolutionService: ResolutionService,
     ) {
         super(injector);
@@ -101,14 +101,11 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
     ngOnInit(): void {
         this.minResolution = this._defaultMinResolution;
         this.customParameters = [];
-        for (let type of this._customParameterTypes) {
-            this._customParameterServiceProxy
-                .getAll(undefined, undefined, undefined, type, undefined, undefined, undefined, undefined, 0, 100)
-                .subscribe((result: PagedResultDtoOfGetCustomParameterForViewDto) => {
-                    this.customParameters.push(...result.items.map((item) => item.customParameter));
-                    this.customParameters = [...this.customParameters];
+            this._customParameterService
+                    .getAll(this._customParameterTypes)
+                    .subscribe((result: CustomParameterDto[]) => {
+                    this.customParameters = result;
                 });
-        }
     }
 
     populateForm(parameter: GridDataItem): void {

@@ -3,7 +3,7 @@
 
         <ng-container *ngIf="!disableComponentSelection">
             <form-container wrapperClass="col-4 pe-0 h-100">
-                <componentsSelector id="componentsState" name="componentsState" [height]="'382px'"
+                <cpComponentsSelector id="componentsState" name="componentsState" [height]="'382px'"
                     [(ngModel)]="componentsState" (ngModelChange)="onComponentsChange()" required />
             </form-container>
         </ng-container>

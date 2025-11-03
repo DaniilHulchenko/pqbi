@@ -1,0 +1,222 @@
+<dx-popup
+  [hideOnOutsideClick]="false"
+  [showCloseButton]="true"
+  [(visible)]="modalVisible"
+  [dragEnabled]="false"
+  title="Event Parameter Advanced Settings"
+  height="80vh"
+  width="80vw"
+>
+  <dx-scroll-view>
+    <div style="margin: 20px; display: flex; gap: 40px; flex-wrap: wrap">
+      <!-- Left block -->
+      <div style="flex: 1; min-width: 300px;">
+        <h5>Normalize Values:</h5>
+        <div *ngFor="let opt of normalizationOptions" class="mb-2">
+          <p-checkbox
+            [binary]="true"
+            [label]="opt.text"
+            [value]="opt.value"
+            [ngModel]="normalizeValue === opt.value"
+            (onChange)="onSelectNormalize(opt.value)"
+          ></p-checkbox>
+        </div>
+
+        <dx-number-box
+          *ngIf="normalizeValue === normalizeTypes.VALUE"
+          [(value)]="normalizeNominalValue"
+          placeholder="Normalization Value"
+          [min]="0"
+          class="mt-2"
+        ></dx-number-box>
+
+        <h5 class="mt-4">Set Color Schemes:</h5>
+        <h6>Select Out of Limit Mode:</h6>
+
+        <div class="d-flex flex-column gap-1 mb-2">
+          <p-radioButton name="colorMode" [value]="colorSchemaTypes.None" [(ngModel)]="colorScheme"
+            label="No color highlight"></p-radioButton>
+        
+          <p-radioButton name="colorMode" [value]="colorSchemaTypes.OutOfLimit" [(ngModel)]="colorScheme"
+            label="Out of limits color"></p-radioButton>
+        </div>
+        
+        <div *ngIf="colorScheme === colorSchemaTypes.OutOfLimit" class="mt-2">
+          <dx-color-box [(value)]="outOfLimitColor" placeholder="Out-of-limit Color"></dx-color-box>
+        </div>
+
+        <h5>Fonts</h5>
+        <div class="font-section">
+          <div class="font-row">
+            <label>Title</label>
+            <dx-select-box [items]="fontFamilies" [(value)]="titleFont.family" placeholder="font family">
+            </dx-select-box>
+
+            <dx-number-box [(value)]="titleFont.size" placeholder="font size" [min]="8" [max]="50">
+            </dx-number-box>
+
+            <div class="font-color">
+              <label>font color</label>
+              <dx-radio-group [items]="colorOptions" displayExpr="text" valueExpr="id" [(value)]="titleFont.colorMode">
+              </dx-radio-group>
+
+              <dx-color-box *ngIf="titleFont.colorMode === 'custom'" [(value)]="titleFont.customColor"
+                [editAlphaChannel]="true">
+              </dx-color-box>
+            </div>
+          </div>
+
+          <div class="font-row">
+            <label>Value</label>
+            <dx-select-box [items]="fontFamilies" [(value)]="valueFont.family" placeholder="font family">
+            </dx-select-box>
+
+            <dx-number-box [(value)]="valueFont.size" placeholder="font size" [min]="8" [max]="50">
+            </dx-number-box>
+
+            <div class="font-color">
+              <label>font color</label>
+              <dx-radio-group [items]="colorOptions" displayExpr="text" valueExpr="id" [(value)]="valueFont.colorMode">
+              </dx-radio-group>
+
+              <dx-color-box *ngIf="valueFont.colorMode === 'custom'" [(value)]="valueFont.customColor"
+                [editAlphaChannel]="true">
+              </dx-color-box>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit Section -->
+        <h5>Units</h5>
+        <div class="">
+          <dx-radio-group [(value)]="unitType" [items]="unitOptions" layout="vertical" valueExpr="value"
+            displayExpr="text">
+          </dx-radio-group>
+
+          <div *ngIf="unitType === 'selection'" class="w-25">
+            <dx-select-box [items]="unitSelectionOptions" [(value)]="selectedUnit" placeholder="Select unit...">
+            </dx-select-box>
+          </div>
+        </div>
+
+        <!-- Markers Section -->
+        <h5>Markers</h5>
+        <div class="row mb-3">
+          <div class="col-2">
+            <label>Marker1:</label>
+            <dx-select-box [items]="markerOptions" [(value)]="marker1" valueExpr="value" displayExpr="text">
+            </dx-select-box>
+          </div>
+
+          <div class="col-2">
+            <label>Marker2:</label>
+            <dx-select-box [items]="markerOptions" [(value)]="marker2" valueExpr="value" displayExpr="text">
+            </dx-select-box>
+          </div>
+        </div>
+
+        <!-- Link Section -->
+        <h5>Link</h5>
+        <div class="link-section">
+          <label>select PQBI page</label>
+          <dx-select-box [items]="pqbiPages" [(value)]="link.page" placeholder="Select PQBI page">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <!-- right block -->
+      <div style="flex: 1; min-width: 300px;">
+        <h5>Set Lower and Upper Limits for Scale Values:</h5>
+        <div *ngFor="let opt of limitOptions" class="mb-2">
+          <p-checkbox [binary]="true" [label]="opt.text" [ngModel]="setLimits === opt.value"
+            (onChange)="onSelectLimitType(opt.value)"></p-checkbox>
+        </div>
+
+        <div *ngIf="setLimits" class="mt-3 d-flex flex-column gap-2">
+          <dx-number-box [(value)]="lowerLimit" placeholder="Lower Limit" [min]="0"></dx-number-box>
+          <dx-number-box [(value)]="upperLimit" placeholder="Upper Limit" [min]="0"></dx-number-box>
+        </div>
+
+        <h3>Segmentation:</h3>
+        <div class="segmentation">
+          <div class="form">
+            <dx-text-box [(value)]="name" placeholder="Name"></dx-text-box>
+            <dx-number-box [(value)]="from" placeholder="Start Value"></dx-number-box>
+            <dx-number-box [(value)]="to" placeholder="End Value"></dx-number-box>
+
+            <div class="mt-2">
+              <dx-radio-group [(value)]="colorMode" [items]="[
+                      { text: 'use color scheme', value: 'scheme' },
+                      { text: 'set color', value: 'custom' }
+                    ]" layout="vertical" valueExpr="value" displayExpr="text">
+              </dx-radio-group>
+            </div>
+
+            <div *ngIf="colorMode === 'custom'" class="mt-2">
+              <dx-color-box [(value)]="color"></dx-color-box>
+            </div>
+
+            <dx-button *ngIf="!isEditingSegment" text="+ Add" type="default" stylingMode="contained" (onClick)="addSegment()">
+            </dx-button>
+            <dx-button *ngIf="isEditingSegment" text="Save" type="default" stylingMode="contained" (onClick)="saveEditedSegment()">
+            </dx-button>
+            <dx-button *ngIf="isEditingSegment" text="Cancel" type="danger" stylingMode="contained" (onClick)="cancelEditedSegment()">
+            </dx-button>
+          </div>
+
+          <div class="table mt-4">
+            <dx-data-grid [dataSource]="segments" [showBorders]="true">
+
+              <dxi-column dataField="name" caption="Name"></dxi-column>
+              <dxi-column dataField="from" caption="From"></dxi-column>
+              <dxi-column dataField="to" caption="To"></dxi-column>
+
+              <dxi-column caption="Color" [cellTemplate]="'colorCell'"></dxi-column>
+              <dxi-column caption="Actions" [cellTemplate]="'actionsCell'"></dxi-column>
+
+              <div *dxTemplate="let data of 'colorCell'">
+                <div *ngIf="data.data.useScheme; else customColor" style="font-style: italic;">
+                  Scheme
+                </div>
+                <ng-template #customColor>
+                  <div [style.background]="data.data.color" style="width:20px;height:20px;border:1px solid #000;">
+                  </div>
+                </ng-template>
+              </div>
+
+              <div *dxTemplate="let data of 'actionsCell'">
+                <dx-button icon="edit" stylingMode="text" (onClick)="editSegment(data.data)"></dx-button>
+                <dx-button icon="trash" stylingMode="text" (onClick)="deleteSegment(data.rowIndex)">
+                </dx-button>
+              </div>
+            </dx-data-grid>
+          </div>
+        </div>
+
+        <h6 class="mt-3">Decimal points:</h6>
+        <dx-select-box class="w-25" [(value)]="decimalPoints" [items]="decimalPointOptions"
+          placeholder="Select decimal points"></dx-select-box>
+
+      </div>
+    </div>
+
+    <!-- buttons -->
+    <div class="d-flex justify-content-center mt-4 mb-3 gap-4">
+      <dx-button
+        text="Cancel"
+        (onClick)="hide()"
+        stylingMode="contained"
+        [width]="140"
+        [height]="48"
+      ></dx-button>
+      <dx-button
+        text="OK"
+        type="success"
+        (onClick)="save()"
+        stylingMode="contained"
+        [width]="140"
+        [height]="48"
+      ></dx-button>
+    </div>
+  </dx-scroll-view>
+</dx-popup>

@@ -5,9 +5,7 @@ import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
 import { DateTime } from 'luxon';
 import { DateRangeState } from '@app/shared/models/date-range-state';
 import { DxSelectBoxModule, DxDateBoxModule } from 'devextreme-angular';
-import { map } from 'rxjs';
 import { KeyValuePair } from '@app/shared/models/key-value-pair';
-import { key } from 'localforage';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
 
 @Component({

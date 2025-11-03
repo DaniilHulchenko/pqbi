@@ -22,7 +22,7 @@
                         <div class="col-4">
                             <dx-radio-group [dataSource]="widgets" [(value)]="selectedWidgetId" valueExpr="id" itemTemplate="radio">
                                 <div class="radio" *dxTemplate="let widget of 'radio'">
-                                    {{ widget.name | localize }}
+                                    {{ widget.name }}
                                 </div>
                             </dx-radio-group>
                         </div>

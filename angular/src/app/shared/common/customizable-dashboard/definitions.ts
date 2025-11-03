@@ -4,7 +4,7 @@ export class WidgetViewDefinition {
     defaultWidth: number;
     defaultHeight: number;
 
-    constructor(id: string, component: any, defaultWidth: number = 6, defaultHeight: number = 15, config: string = undefined) {
+    constructor(id: string, component: any, defaultWidth: number = 12, defaultHeight: number = 15, config: string = undefined) {
         this.id = id;
         this.component = component;
         this.defaultWidth = defaultWidth;

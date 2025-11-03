@@ -38,6 +38,7 @@ import { FormContainerComponent } from "../../form-container/form-container.comp
 })
 export class EventParameterSelectionTabComponent extends EditableTabComponentBaseComponent implements PopulatableForm<WidgetParametersColumn> {
     @Input() isInsideTable = false;
+    @Input() chartType: string | null;
     @Output() onAdd: EventEmitter<AddEventParameterEventCallBack> = new EventEmitter();
     @Output() onEditSave: EventEmitter<EditEventParameterEventCallBack> = new EventEmitter();
     @ViewChild('pqsForm') pqsForm: NgForm;

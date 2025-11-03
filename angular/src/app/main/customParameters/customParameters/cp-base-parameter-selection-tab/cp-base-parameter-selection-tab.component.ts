@@ -8,6 +8,7 @@ import {
 import { ComponentsState } from '@app/shared/models/components-state';
 import {
     BaseDataInfo,
+    FeederComponentInfo,
     GroupDataInfo,
     PhaseDataInfo,
     PQSRestApiServiceProxy,
@@ -102,6 +103,8 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
     componentPhaseArrays: any[][];
     componentBaseArrays: any[][];
 
+    private editParameter: GridDataItem | null = null;
+
     private _outerResolutionState: ResolutionState;
 
     private trees = {};
@@ -190,12 +193,28 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
 
     edit(parameter: GridDataItem) {
         super.startEdit(parameter.id);
-        this.populateForm(parameter);
+
+        this.parameter = JSON.parse(parameter.data.toString()) as Parameter;
+        
+        if (this.parameter.fromComponents)
+        {
+            this.componentsState = new ComponentsState({
+                tags: [],
+                feeders: this.parameter.fromComponents.id 
+                    ? this.getFeederModel()
+                    : [],
+                pickListState: null,
+                components: this.parameter.fromComponents.componentId 
+                    ? this.getComponentModel()
+                    : [],
+            });
+            this.editParameter = parameter;
+        } else {
+            this.populateForm();
+        }
     }
 
-    populateForm(parameter: GridDataItem): void {
-        this.parameter = JSON.parse(parameter.data.toString());
-
+    populateForm(): void {
         this.selectedGroup = this.groupOptions.find((option) => option.groupName === this.parameter.group);
 
         this.updatePhaseOptions();
@@ -246,6 +265,11 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
     }
 
     onComponentsChange() {
+        if (this.editParameter) {
+            this.populateExceptionParameterForm();
+            return;
+        }
+
         this.resetDependentSelections();
         this.updateGroupOptions();
         this.updatePhaseOptions();
@@ -468,6 +492,72 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
         this.setDefaultFormState();
     }
 
+    private populateExceptionParameterForm() {
+        this.parameter = JSON.parse(this.editParameter.data.toString()) as Parameter;
+
+        this.updateGroupOptions();
+        
+        this.selectedGroup = this.groupOptions.find((option) => option.groupName === this.parameter.group);
+
+        this.updatePhaseOptions();
+
+        if (this.isHarmonicsGroupSelected()) {
+            this.harmonicOptions = this.getHarmonicsRange(this.selectedGroup.range);
+            this.selectedHarmonics = this._multiple
+                ? ArrayUtils.ensureArray(this.parameter.harmonics.value)
+                : this.parameter.harmonics.value;
+        }
+
+        this.selectedPhases = this._multiple ? ArrayUtils.ensureArray(this.parameter.phase) : this.parameter.phase;
+
+        this.updateBaseOptions();
+        this.selectedBases = this._multiple ? ArrayUtils.ensureArray(this.parameter.baseResolution) : this.parameter.baseResolution;
+
+        this.selectedQuantities = this._multiple
+            ? ArrayUtils.ensureArray(this.parameter.quantity)
+            : this.parameter.quantity;
+
+        this.resolutionState = this._resolutionService.parseStateFromInt(this.parameter.resolution, true);
+
+        let operatorParsed;
+        if (this.parameter.operator) {
+            operatorParsed =
+                this.parameter.operator === 'ABSOLUTE'
+                    ? { name: 'ABSOLUTE', value: null }
+                    : this.parseOperator(this.parameter.operator);
+
+            this.selectedOperator = operatorParsed.name;
+            this.selectedOperatorArgument = operatorParsed.value;
+        }
+
+        if (this.parameter.aggregationFunction) {
+            const aggregationParsed = this.parseOperator(this.parameter.aggregationFunction);
+
+            this.selectedAggregationFunction = aggregationParsed.name;
+            this.selectedAggregationArgument = aggregationParsed.value;
+        }
+        this.editParameter = null;
+    }
+
+    private getFeederModel(): FeederComponentInfo[]
+    {
+        return ArrayUtils.ensureArray(
+            new FeederComponentInfo({
+                id: this.parameter.fromComponents.id,
+                componentId: this.parameter.fromComponents.componentId,
+                name: this.parameter.fromComponents.name,
+                compName: this.parameter.fromComponents.compName,
+            }),
+        );
+    }
+
+    private getComponentModel(): any[]
+    {
+        return ArrayUtils.ensureArray({
+            key: this.parameter.fromComponents.componentId,
+        });
+    }
+
     private editSave() {
 
         if (
@@ -573,7 +663,7 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
                 if (this.baseParameterType === BaseParameterType.Logical) {
                     this.componentsState.feeders?.forEach(feeder => {
                         event = JSON.parse(safeStringify(event));
-                        event.parameter.fromComponents = { componentId: feeder.componentId, feederId: feeder.id};
+                        event.parameter.fromComponents = JSON.parse(safeStringify(feeder));
                         processParameter(event);
                     })
                 } else if (this.baseParameterType === BaseParameterType.Channel) {

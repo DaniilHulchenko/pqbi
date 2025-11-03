@@ -1,13 +1,12 @@
-import { Component, EventEmitter, HostBinding, Injector, Output, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, EventEmitter, Injector, OnDestroy, Output, ViewChild, ViewEncapsulation } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import {
     CreateOrEditTableWidgetConfigurationDto,
     CreateOrEditWidgetConfigurationDto,
-    CustomParametersServiceProxy,
     TableWidgetConfigurationsServiceProxy,
 } from '@shared/service-proxies/service-proxies';
 import safeStringify from 'fast-safe-stringify';
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 import { DateRangeState } from '@app/shared/models/date-range-state';
 import { ComponentsState } from '@app/shared/models/components-state';
 import {
@@ -22,9 +21,7 @@ import {
     EditBaseParameterEventCallBack,
 } from '@app/shared/interfaces/base-parameter-event-callbacks';
 import {
-    AddExceptionEventCallBack,
     EditExceptionEventCallBack,
-    ExceptionParameterSelectionTabComponent,
 } from '@app/shared/common/components/parameter-selection-tabs/exception-parameter-selection-tab/exception-parameter-selection-tab.component';
 import {
     AddEventParameterEventCallBack,
@@ -41,8 +38,9 @@ import { ChannelParameterSelectionTabComponent } from '@app/shared/common/compon
 import { DxScrollViewComponent, DxTabPanelComponent } from '@node_modules/devextreme-angular';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import { TableDesignOptions } from './table-design-options/table-design-options.component';
-import { AdvancedSettingsConfig } from '@app/shared/common/components/parameter-selection-tabs/advanced-settings/advanced-settings.component';
 import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/additional-parameter-selection-tab/additional-parameter-selection-tab.component';
+import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
+import { TableWidgetConfigurationService } from '@app/shared/services/widget-configurations/table-widget-configuration.service';
 
 @Component({
     selector: 'createOrEditTableConfiguration',
@@ -50,7 +48,7 @@ import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/com
     styleUrl: './create-or-edit-table-configuration.component.css',
     encapsulation: ViewEncapsulation.None,
 })
-export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
+export class CreateOrEditTableConfigurationComponent extends AppComponentBase implements OnDestroy {
 
     @ViewChild('tableWidgetConfigurationForm') pqsForm: NgForm;
     @ViewChild('customParameterSelectionTab') customParameterSelectionTab: CustomParameterSelectionTabComponent;
@@ -63,6 +61,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
     @ViewChild('scrollView') scrollView: DxScrollViewComponent;
     @ViewChild('grid') grid: DxDataGridComponent;
     @Output() onSave = new EventEmitter<CreateOrEditTableWidgetConfigurationDto>();
+    @Output() onClose = new EventEmitter<boolean>();
 
     saving = false;
     expandTags = true;
@@ -121,10 +120,13 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
         },
     ];
 
+    private subs: Subscription[] = [];
+
     constructor(
         injector: Injector,
         private _tableWidgetConfigurationsServiceProxy: TableWidgetConfigurationsServiceProxy,
-        private _customParameterServiceProxy: CustomParametersServiceProxy,
+        private _tableWidgetConfigurationService: TableWidgetConfigurationService,
+        private _customParameterService: CustomParameterService,
     ) {
         super(injector);
         this.tabs = this._allTabs;
@@ -158,15 +160,15 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
     onComponentsStateChange() {
         this.componentsState = { ...this.componentsState };
 
-        if (this.componentsState.feeders === undefined || this.componentsState.feeders === null || this.componentsState.feeders.length === 0) {
-            this.parameters = this.parameters.filter(
-                (p) =>
-                    p.type === ColumnType.Event ||
-                    (p.type === ColumnType.BaseParameter &&
-                        (JSON.parse(p.data.toString()).type === BaseParameterType.Channel ||
-                        JSON.parse(p.data.toString()).type === BaseParameterType.Additional)),
-            );
-        }
+        // if (this.componentsState.feeders === undefined || this.componentsState.feeders === null || this.componentsState.feeders.length === 0) {
+        //     this.parameters = this.parameters.filter(
+        //         (p) =>
+        //             p.type === ColumnType.Event ||
+        //             (p.type === ColumnType.BaseParameter &&
+        //                 (JSON.parse(p.data.toString()).type === BaseParameterType.Channel ||
+        //                 JSON.parse(p.data.toString()).type === BaseParameterType.Additional)),
+        //     );
+        // }
 
         this.updatePossibleTabs();
     }
@@ -176,18 +178,20 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
     }
 
     onAddCustomParameter(event: AddCustomParameterEventCallBack) {
-        this._customParameterServiceProxy.getCustomParameterForView(event.customParameterId).subscribe((parameter) => {
+        var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
             const newItem = {
                 id: Guid.newGuid().toString(),
-                name: parameter.customParameter.name,
+                name: parameter.name,
                 quantity: event.quantity,
                 type: ColumnType.CustomParameter,
                 data: event.customParameterId,
                 advancedSettings: event.advancedSettings,
-                resolution:0
+                resolution:0,
+                style: null
             };
             this.parameters = [newItem, ...this.parameters];
         });
+        this.subs.push(sub);
     }
 
     onAddBaseParameter(event: AddBaseParameterEventCallBack) {
@@ -198,7 +202,8 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
             type: ColumnType.BaseParameter,
             data: safeStringify(event.parameter),
             advancedSettings: event.advancedSettings,
-            resolution:0
+            resolution:0,
+            style: null
         };
 
         this.parameters = [...this.parameters, newItem];
@@ -239,7 +244,8 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
                 isPolyphase: event.polyphase,
                 aggregationInSeconds: event.aggregation.aggregationValue,
             }),
-            advancedSettings: event.advancedSettings
+            advancedSettings: event.advancedSettings,
+            style: null
         };
 
         this.parameters = [...this.parameters, newItem];
@@ -257,12 +263,13 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
             return;
         }
 
-        this._customParameterServiceProxy.getCustomParameterForView(event.customParameterId).subscribe((parameter) => {
-            tableParameter.name = parameter.customParameter.name;
+        var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
+            tableParameter.name = parameter.name;
             tableParameter.quantity = event.quantity;
             tableParameter.data = event.customParameterId;
             tableParameter.advancedSettings = event.advancedSettings;
         });
+        this.subs.push(sub);
     }
 
     onEditBaseParameter(event: EditBaseParameterEventCallBack) {
@@ -282,11 +289,12 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
             return;
         }
 
-        this._customParameterServiceProxy.getCustomParameterForView(event.customParameterId).subscribe((parameter) => {
-            tableParameter.name = parameter.customParameter.name;
+        var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
+            tableParameter.name = parameter.name;
             tableParameter.quantity = event.quantity;
             tableParameter.data = event.customParameterId;
         });
+        this.subs.push(sub);
     }
 
     onEditEvent(event: EditEventParameterEventCallBack) {
@@ -310,7 +318,6 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
     onDesignOptionsChange(newDesignOptions: TableDesignOptions) {
         this.designOptionsObj = { ...newDesignOptions };
         this.tableWidgetConfiguration.designOptions = JSON.stringify(this.designOptionsObj);
-        console.log(this.designOptionsObj);
     }
 
     onRowRemoved() {
@@ -325,7 +332,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
         this.tableWidgetConfiguration.designOptions = JSON.stringify(this.designOptionsObj);
 
         if (this.tableWidgetConfiguration.id) {
-            this._tableWidgetConfigurationsServiceProxy
+            var sub = this._tableWidgetConfigurationsServiceProxy
                 .createOrEdit(this.tableWidgetConfiguration)
                 .pipe(
                     finalize(() => {
@@ -333,11 +340,13 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
                     }),
                 )
                 .subscribe((result) => {
-                    this.hide();
+                    this._tableWidgetConfigurationService.update(this.tableWidgetConfiguration);
+                    this.hide(true);
                     this.onSave.emit(this.tableWidgetConfiguration);
                 });
+            this.subs.push(sub);
         } else {
-            this._tableWidgetConfigurationsServiceProxy
+            var sub = this._tableWidgetConfigurationsServiceProxy
                 .createAndGetId(this.tableWidgetConfiguration)
                 .pipe(
                     finalize(() => {
@@ -346,17 +355,19 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
                 )
                 .subscribe((result) => {
                     this.tableWidgetConfiguration.id = result;
-                    this.hide();
+                    this._tableWidgetConfigurationService.update(this.tableWidgetConfiguration);
+                    this.hide(true);
                     this.onSave.emit(this.tableWidgetConfiguration);
                 });
         }
+        this.subs.push(sub);
     }
 
     show(configuration: CreateOrEditWidgetConfigurationDto) {
         this.modalVisible = true;
         if (configuration && configuration.configuration) {
-            this._tableWidgetConfigurationsServiceProxy
-                .getTableWidgetConfigurationForEdit(+configuration.configuration)
+            var sub = this._tableWidgetConfigurationService
+                .getForEdit(+configuration.configuration)
                 .subscribe((result) => {
                     this.tableWidgetConfiguration = result.tableWidgetConfiguration;
                     this.dateRangeSelectionState = DateRangeState.fromJSON(result.tableWidgetConfiguration.dateRange);
@@ -381,6 +392,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
                         this.scrollDown();
                     }, 100);
                 });
+            this.subs.push(sub);
         } else {
             this.tableWidgetConfiguration = new CreateOrEditTableWidgetConfigurationDto();
             this.dateRangeSelectionState = new DateRangeState({
@@ -401,7 +413,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
         }
     }
 
-    hide(): void {
+    hide(isSaved: boolean): void {
         this.customParameterSelectionTab.finishEdit();
         this.logicalParameterSelectionTab.finishEdit();
         this.channelParameterSelectionTab.finishEdit();
@@ -409,6 +421,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
         // this.exceptionParameterSelectionTab.finishEdit();
         this.eventParameterSelectionTab.finishEdit();
         this.modalVisible = false;
+        this.onClose.emit(isSaved);
     }
 
     updateParameter(event: DxDataGridTypes.EditingStartEvent) {
@@ -479,5 +492,9 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase {
 
     private scrollDown() {
         this.scrollView.instance.scrollTo(10000);
+    }
+
+    ngOnDestroy(): void {
+        this.subs.forEach(x => x.unsubscribe());
     }
 }

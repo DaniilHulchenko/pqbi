@@ -1,4 +1,10 @@
 /* You can add global styles to this file, and also import other style files */
+
+.dx-datagrid-rowsview .dx-row {
+    height: 30px;
+    line-height: 30px;
+}
+
 .margin-left-5 {
     margin-left: 5px !important;
 }
@@ -306,10 +312,58 @@ ul {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.8);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 10; 
 }
+
+:root {
+    --custom-light-bg-color: #F1F1F1;
+    --custom-dark-bg-color: #1e1e2f;
+}
+
+[data-bs-theme=light] .dx-popup-normal.dx-overlay-content
+{
+    background-color: var(--custom-light-bg-color) !important;
+}
+
+[data-bs-theme=dark] .dx-overlay-content
+{
+    background-color: var(--custom-dark-bg-color) !important;
+}
+
+.dx-texteditor,
+.dx-treelist-content,
+.dx-treelist-table,
+.dx-datagrid-content,
+.dx-datagrid-content,
+.dx-tabpanel-tabs,
+.dx-tabpanel-container
+{
+    background-color: var(--bs-body-bg) !important;
+}
+
+/* [data-bs-theme=light] .p-listbox,
+[data-bs-theme=light] .p-listbox .p-listbox-header,
+[data-bs-theme=light] .p-listbox-filter,
+[data-bs-theme=light] .p-tree,
+[data-bs-theme=light] .p-tree-filter */
+/* {
+    background: var(--custom-light-bg-color) !important;
+} */
+
+/* [data-bs-theme=dark] .p-listbox,
+[data-bs-theme=dark] .p-listbox .p-listbox-header,
+[data-bs-theme=dark] .p-listbox-filter,
+[data-bs-theme=dark] .p-tree,
+[data-bs-theme=dark] .p-tree-filter
+{
+    background: var(--custom-dark-bg-color) !important;
+} */
+
+.dx-tabs-wrapper, .dx-tab {
+    background-color: transparent;
+}
+

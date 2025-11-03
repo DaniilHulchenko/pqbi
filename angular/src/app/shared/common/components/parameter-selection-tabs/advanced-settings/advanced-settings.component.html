@@ -54,21 +54,15 @@
           ></p-multiSelect>
         </div>
 
-        <h5 class="mt-4">Tag Value Calculation:</h5>
-        <div class="mb-2">
-          <p-checkbox
-            [binary]="true"
-            label="Ignore aligning function"
-            [(ngModel)]="aligningIgnored"
-          ></p-checkbox>
-        </div>
-        <div class="mb-2">
-          <p-checkbox
-            [binary]="true"
-            label="Replace the parameter’s Aggregation with"
-            [(ngModel)]="replaceAggregation"
-            (onChange)="onSelectReplaceAggregation()"
-          ></p-checkbox>
+        <div *ngIf="chartType!=='barchart'">
+          <h5 class="mt-4">Tag Value Calculation:</h5>
+          <div class="mb-2">
+            <p-checkbox [binary]="true" label="Ignore aligning function" [(ngModel)]="aligningIgnored"></p-checkbox>
+          </div>
+          <div class="mb-2">
+            <p-checkbox [binary]="true" label="Replace the parameter’s Aggregation with" [(ngModel)]="replaceAggregation"
+              (onChange)="onSelectReplaceAggregation()"></p-checkbox>
+          </div>
         </div>
 
         <dx-select-box

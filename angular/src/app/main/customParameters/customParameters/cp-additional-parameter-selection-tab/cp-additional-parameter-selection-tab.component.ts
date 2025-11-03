@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Injector, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { EditableTabComponentBaseComponent } from '@app/shared/common/components/parameter-selection-tabs/editable-tab-component-base';
 import { ComponentsState } from '@app/shared/models/components-state';
-import { AdditionalData, PQSRestApiServiceProxy, QuantityDataInfo, QuantityEnum } from '@shared/service-proxies/service-proxies';
+import { PQSRestApiServiceProxy, QuantityDataInfo, QuantityEnum } from '@shared/service-proxies/service-proxies';
 import { orderBy, sortBy, uniqBy } from 'lodash-es';
 import { Parameter } from '../table-parameters/models/parameter';
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
@@ -102,6 +102,8 @@ export class CpAdditionalParameterSelectionTabComponent extends EditableTabCompo
         customResolutionValue: 1,
         customResolutionUnit: CustomResolutionUnits.MS,
     });
+
+    private editParameter: GridDataItem | null = null;
 
     private trees = {};
 
@@ -204,6 +206,11 @@ export class CpAdditionalParameterSelectionTabComponent extends EditableTabCompo
     }
 
     onComponentsChange() {
+        if (this.editParameter) {
+            this.populateExceptionParameterForm();
+            return;
+        }
+
         this.resetDependentSelections();
         this.updateAdditionalOptions();
 
@@ -326,6 +333,41 @@ export class CpAdditionalParameterSelectionTabComponent extends EditableTabCompo
         if (!this.disableComponentSelection) {
             this.componentsState = null;
         }
+    }
+
+    private populateExceptionParameterForm() {
+        this.parameter = JSON.parse(this.editParameter.data.toString()) as Parameter;
+
+        this.updateAdditionalOptions();
+        
+        this.selectedAdditional = this.additionalOptions.find((ad) => ad.groupName === name);
+        this.updateBaseOptions();
+        this.selectedBases = this._multiple ? ArrayUtils.ensureArray(this.parameter.baseResolution) : this.parameter.baseResolution;
+
+        this.selectedQuantities = this._multiple
+            ? ArrayUtils.ensureArray(this.parameter.quantity)
+            : this.parameter.quantity;
+
+        this.resolutionState = this._resolutionService.parseStateFromInt(this.parameter.resolution, true);
+
+        let operatorParsed;
+        if (this.parameter.operator) {
+            operatorParsed =
+                this.parameter.operator === 'ABSOLUTE'
+                    ? { name: 'ABSOLUTE', value: null }
+                    : this.parseOperator(this.parameter.operator);
+
+            this.selectedOperator = operatorParsed.name;
+            this.selectedOperatorArgument = operatorParsed.value;
+        }
+
+        if (this.parameter.aggregationFunction) {
+            const aggregationParsed = this.parseOperator(this.parameter.aggregationFunction);
+
+            this.selectedAggregationFunction = aggregationParsed.name;
+            this.selectedAggregationArgument = aggregationParsed.value;
+        }
+        this.editParameter = null;
     }
 
     private editSave() {

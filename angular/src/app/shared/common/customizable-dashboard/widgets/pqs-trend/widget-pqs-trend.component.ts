@@ -7,6 +7,8 @@ import { CustomParametersServiceProxy } from '@shared/service-proxies/service-pr
 import { NgForm } from '@angular/forms';
 import { BsDatepickerConfig } from 'ngx-bootstrap/datepicker';
 import { Subject, interval, switchMap, takeUntil, timer } from 'rxjs';
+import { DateRangeService } from '@app/shared/services/date-range-service';
+import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 
 @Component({
   selector: 'app-widget-pqs-trend',
@@ -74,9 +76,10 @@ selectedFunctions: any;
 
   constructor(injector: Injector,
     private _tenantDashboardService: TenantDashboardServiceProxy,
-    private _CustomParametersServiceProxy: CustomParametersServiceProxy,
-    private elementReference: ElementRef) {
-    super(injector, elementReference);
+    private _customParametersService: CustomParameterService,
+    private elementReference: ElementRef,
+    private dateRangeService: DateRangeService) {
+    super(injector, elementReference, dateRangeService);
     // Object.assign(this, { multi });
   }
 
@@ -108,10 +111,10 @@ selectedFunctions: any;
   }
 
   getAllCustomParameters() {
-    this._CustomParametersServiceProxy.getAll(undefined,undefined, undefined, undefined, undefined, undefined, undefined, undefined)
+    this._customParametersService.getAll(undefined,undefined, undefined, undefined, undefined, undefined, undefined, undefined,0,100)
     .subscribe(result => {
       this.customParameterOptions = result.items.map(item => {
-        const parsedParameterList = JSON.parse(item.customParameter.stdpqsParametersList);
+        const parsedParameterList = JSON.parse(item.customParameter.customBaseDataList);
         return {
           name: item.customParameter.name,
           value: {
@@ -144,7 +147,6 @@ selectedFunctions: any;
   // }
 
   onSubmit(form: any) {
-    console.log('onSubmit:',form);
   }
 
   // reload() {
@@ -234,8 +236,6 @@ selectedFunctions: any;
 
       return acc;
     }, { name: '', series: {}, result: [{name: '', value: 0.0}] });
-      console.log('combined:', combined);
-
 
     // Return the final structured result
     return [{ name: combined.name, series: combined.result }];

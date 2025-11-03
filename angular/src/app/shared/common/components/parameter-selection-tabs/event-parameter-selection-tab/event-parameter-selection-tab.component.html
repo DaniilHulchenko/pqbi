@@ -94,6 +94,6 @@
 
 <ng-container *ngIf="isInsideTable">
     <event-advanced-settings #eventAdvancedSettingsModal (settingsChanged)="onEventAdvancedSettingsChanged($event)"
-        [initialConfig]="eventAdvancedSettingsConfig"
+        [initialConfig]="eventAdvancedSettingsConfig" [chartType]="chartType"
     ></event-advanced-settings>
 </ng-container>

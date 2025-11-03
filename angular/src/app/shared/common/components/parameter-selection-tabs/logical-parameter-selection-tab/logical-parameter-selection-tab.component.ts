@@ -16,7 +16,7 @@ import { BaseParameterCreationTreeBuilder } from '@app/shared/services/base-para
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
 import { QuantityUnits } from '@app/shared/enums/quantity-units';
 import { orderBy, uniqBy } from 'lodash-es';
-import { BaseDataInfo, GroupDataInfo, NormalizeEnum, PhaseDataInfo, QuantityDataInfo, Tag } from '@shared/service-proxies/service-proxies';
+import { BaseDataInfo, FeederComponentInfo, GroupDataInfo, NormalizeEnum, PhaseDataInfo, QuantityDataInfo, Tag } from '@shared/service-proxies/service-proxies';
 import { EditableTabComponentBaseComponent } from '../editable-tab-component-base';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
 import safeStringify from 'fast-safe-stringify';
@@ -49,6 +49,7 @@ export class LogicalParameterSelectionTabComponent
     extends EditableTabComponentBaseComponent
     implements PopulatableForm<WidgetParametersColumn>{
     @Input() disableComponentSelection = false;
+    @Input() chartType: string | null;
     @Input() isInsideTable = false;
     @Output() onAdd: EventEmitter<AddBaseParameterEventCallBack> = new EventEmitter();
     @Output() onEditSave: EventEmitter<EditBaseParameterEventCallBack> = new EventEmitter();
@@ -168,6 +169,9 @@ export class LogicalParameterSelectionTabComponent
     }
 
     populateComponentsFromTab(tab: any) {
+        if (!tab || !tab.componentsState) {
+            return;
+        }
         const state = JSON.parse(safeStringify(tab.componentsState));
         this.componentsState = state;
         this.componentsState.feeders = state.feeders.filter((feeder) =>
@@ -390,7 +394,7 @@ export class LogicalParameterSelectionTabComponent
                                     : undefined,
             };
 
-            event.parameter.fromComponents = { feederId: this.componentsState.feeders[0].id, componentId: this.componentsState.feeders[0].componentId};
+            event.parameter.fromComponents = new FeederComponentInfo({ id: this.componentsState.feeders[0].id, componentId: this.componentsState.feeders[0].componentId, name: this.componentsState.feeders[0].name, compName: ''});
 
             this._parameterCombinationsService
                 .combineParameters(

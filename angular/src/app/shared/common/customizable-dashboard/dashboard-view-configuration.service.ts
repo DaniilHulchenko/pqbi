@@ -17,6 +17,8 @@ import { WidgetTopStatsComponent } from './widgets/widget-top-stats/widget-top-s
 import { WidgetPQSComponent } from './widgets/widget-pqs/widget-pqs.component';
 import { WidgetPQSTableComponent } from './widgets/widget-pqs-table/widget-pqs-table.component';
 import { WidgetPqsBarChartComponent } from './widgets/widget-pqs-bar-chart/widget-pqs-bar-chart.component';
+import { WidgetPqsCardComponent } from './widgets/widget-pqs-card/widget-pqs-card.component';
+import { WidgetPqsGaugeComponent } from './widgets/widget-pqs-gauge/widget-pqs-gauge.component';
 
 @Injectable({
     providedIn: 'root',
@@ -88,6 +90,16 @@ export class DashboardViewConfigurationService {
             DashboardCustomizationConst.widgets.tenant.PQSTable,
             WidgetPQSTableComponent
         );
+
+        let pqsCard = new WidgetViewDefinition(
+            DashboardCustomizationConst.widgets.tenant.PQSCard,
+            WidgetPqsCardComponent
+        );
+
+        let pqsGauge = new WidgetViewDefinition(
+            DashboardCustomizationConst.widgets.tenant.PQSGauge,
+            WidgetPqsGaugeComponent
+        );
         //add your tenant side widgets here
 
         let incomeStatistics = new WidgetViewDefinition(
@@ -131,5 +143,7 @@ export class DashboardViewConfigurationService {
         this.WidgetViewDefinitions.push(pqsTrend);
         this.WidgetViewDefinitions.push(pqsTable);
         this.WidgetViewDefinitions.push(pqsBarChart);
+        this.WidgetViewDefinitions.push(pqsCard);
+        this.WidgetViewDefinitions.push(pqsGauge);
     }
 }

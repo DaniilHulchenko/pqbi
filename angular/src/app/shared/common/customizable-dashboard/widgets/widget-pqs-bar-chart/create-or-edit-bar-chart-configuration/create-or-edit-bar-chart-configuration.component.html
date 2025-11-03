@@ -1,4 +1,4 @@
-<dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="modalVisible" [dragAndResizeArea]="false"
+<dx-popup [hideOnOutsideClick]="false" (onHidden)="hide(false)" [showCloseButton]="true" [(visible)]="modalVisible" [dragAndResizeArea]="false"
     [dragEnabled]="false" title="Edit Bar Chart Widget Configuration" height="90vh" width="90vw">
 
     <form class="d-flex flex-column h-100" #barChartWidgetConfigurationForm="ngForm" novalidate autocomplete="off">
@@ -16,46 +16,37 @@
                         style="flex: 1; max-width: 200px;"
                     />
                 <div style="border: 1px solid #ccc; padding: 1rem; display: flex; gap: 1rem;">
-                    
-                    <p-listbox
-                        name="xUnit"
-                        [(ngModel)]="selectedXUnit"
-                        [options]="xUnitOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        style="width: 150px; height: 200px;"
-                        (onChange)="onXUnitChange($event.value)"
-                    ></p-listbox>
-                    <p-listbox
-                        name="series"
-                        [(ngModel)]="selectedSeries"
-                        [options]="seriesOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        multiple="true"
-                        style="width: 150px; height: 200px;"
-                        (onChange)="onSeriesChange($event.value)"
-                    ></p-listbox>
+                    <div>
+                        Select X-unit
+                        <p-listbox name="xUnit" [(ngModel)]="selectedXUnit" [options]="xUnitOptions" optionLabel="label" optionValue="value"
+                            style="width: 150px; height: 200px;" (onChange)="onXUnitChange($event.value)"></p-listbox>
+                    </div>
+                    <div>
+                        Select series
+                        <p-listbox name="series" [(ngModel)]="selectedSeries" [options]="seriesOptions" optionLabel="label"
+                            optionValue="value" style="width: 150px; height: 200px;" (onChange)="onSeriesChange($event.value)"></p-listbox>
+                    </div>
                 </div>
             </div>
             <div class="d-flex flex-column align-items-center" style="gap: 0.25rem;">
 
+                {{ 'XUnits' | localize }}
                 <div style="border:1px solid #ccc; padding:0.5rem; width:150px; text-align:center;">
-                    {{ 'XUnits' | localize }}
+                    {{ xUnitLabel }}
                 </div>
 
                 <dx-button
                     type="button"
                     class="btn btn-outline-secondary"
                     (onClick)="swapXUnitSeries()"
-                    [disabled]="selectedSeries.length !== 1"
                     title="{{ 'SwapAxes' | localize }}"
                 >
                 <i class="pi pi-arrows-v"></i>
                 </dx-button>
 
+                {{ 'Series' | localize }}
                 <div style="border:1px solid #ccc; padding:0.5rem; width:150px; text-align:center;">
-                    {{ 'Series' | localize }}
+                    {{ seriesLabel }}
                 </div>
 
                 <label style="padding: 0.5rem;">
@@ -64,7 +55,8 @@
 
                 <p-listbox
                     name="chartType"
-                    [(ngModel)]="barChartWidgetConfiguration.type"
+                    [ngModel]="barChartWidgetConfiguration.type"
+                    (ngModelChange)="onChartTypeChange($event)"
                     [options]="chartTypeOptions"
                     optionLabel="label"
                     optionValue="value"
@@ -76,7 +68,7 @@
             </div>
             <div style="flex: 1; border: 1px solid #eee; padding: 1rem;"
                 class="container flex-grow-1">
-                <bar-chart-preview [type]="barChartWidgetConfiguration.type"></bar-chart-preview>        
+                <bar-chart-preview [type]="barChartWidgetConfiguration.type" [data]="previewData"></bar-chart-preview>            
             </div>
             </div>
 
@@ -110,6 +102,7 @@
                             #customParameterSelectionTab
                             [disableComponentSelection]="true"
                             [isInsideTable]="true"
+                            [chartType]="'barchart'"
                             [customParameterTypes]="['SPMC','MPSC']"
                             (onAdd)="onAddCustomParameter($event)"
                             (onEditSave)="onEditCustomParameter($event)"
@@ -120,6 +113,7 @@
                             #logicalParameterSelectionTab
                             [disableComponentSelection]="true"
                             [isInsideTable]="true"
+                            [chartType]="'barchart'"
                             [outerComponentsState]="componentsState"
                             (onAdd)="onAddBaseParameter($event)"
                             (onEditSave)="onEditBaseParameter($event)"
@@ -130,6 +124,7 @@
                             #channelParameterSelectionTab
                             [disableComponentSelection]="true"
                             [isInsideTable]="true"
+                            [chartType]="'barchart'"
                             [outerComponentsState]="componentsState"
                             (onAdd)="onAddBaseParameter($event)"
                             (onEditSave)="onEditBaseParameter($event)"
@@ -140,6 +135,7 @@
                             #additionalParameterSelectionTab
                             [disableComponentSelection]="true"
                             [isInsideTable]="true"
+                            [chartType]="'barchart'"
                             [outerComponentsState]="componentsState"
                             (onAdd)="onAddBaseParameter($event)"
                             (onEditSave)="onEditBaseParameter($event)"
@@ -149,6 +145,7 @@
                         <eventParameterSelectionTab
                             #eventParameterSelectionTab
                             [isInsideTable]="true"
+                            [chartType]="'barchart'"
                             (onAdd)="onAddEvent($event)"
                             (onEditSave)="onEditEvent($event)"
                         />
@@ -189,7 +186,7 @@
     
 
 <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
-            <button type="button" class="btn btn-light-primary fw-bold" (click)="close()" [disabled]="saving">
+            <button type="button" class="btn btn-light-primary fw-bold" (click)="hide(false)" [disabled]="saving">
                 {{ 'Cancel' | localize }}
             </button>
             <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving || !isFormValid()" (click)="save()">

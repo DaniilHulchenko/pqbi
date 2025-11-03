@@ -68,6 +68,10 @@ export abstract class AppComponentBase implements OnDestroy {
         return this.appSession.theme;
     }
 
+    get bgColor() {
+        return this.appSession.theme.baseSettings.layout.darkMode ? '#1e1e2f' : '#F1F1F1';
+    }
+
     get appLogoSkin(): string {
         if (this.currentTheme.isTopMenuUsed || this.currentTheme.isTabMenuUsed) {
             return this.currentTheme.baseSettings.layout.darkMode ? 'light' : 'dark';

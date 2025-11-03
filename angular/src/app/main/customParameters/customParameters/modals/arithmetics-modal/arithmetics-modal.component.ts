@@ -108,7 +108,6 @@ export class ArithmeticsModalComponent extends AppComponentBase implements OnIni
         this.resultBuffer.push(value);
         this.result = this.resultBuffer.join('');
         this.updateButtonsAvailability(value);
-        console.log(this.openParenthesesCount);
     }
 
     deleteLastAction() {

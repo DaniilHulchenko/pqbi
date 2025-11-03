@@ -1,0 +1,65 @@
+<div class="kt-portlet kt-portlet--height-fluid widget-full-height">
+    <div class="kt-portlet__head">
+        <div class="kt-portlet__head-label">
+            <h3 class="kt-portlet__head-title">
+                {{ widgetConfigurationInDB?.name }}
+                <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button class="btn btn-primary btn-sm" *ngIf="editState" (click)="edit()">{{ 'Edit' | localize }}</button>
+            </h3>
+        </div>
+    </div>
+    <div class="kt-portlet__body gauge-body-flex" id="outerScroll">
+       <div [ngSwitch]="style?.style" class="w-100 h-75">
+            <!--Circle widget-->
+            <div *ngSwitchCase="1" class="gauge-chart-container flex-grow-1">
+                <dx-circular-gauge class="w-100 h-100" [value]="value" [rangeContainer]="{ranges: ranges}"
+                    [subvalues]="subvalues">
+                    <dxo-title [text]="title"
+                        [font]="{ size: titleFontSize, color: titleFontColor, family: titleFontFamily }">
+                        <dxo-font [size]="titleFontSize" [color]="titleFontColor" [family]="titleFontFamily"></dxo-font>
+                        <dxo-subtitle [text]="formattedValueWithUnit"
+                            [font]="{ size: valueFontSize, color: valueFontColor, family: valueFontFamily }"></dxo-subtitle>
+                    </dxo-title>
+                    <dxo-geometry [startAngle]="style.startAngle" [endAngle]="style.endAngle"></dxo-geometry>
+                    <dxo-range-container [width]="style.arcWidth"></dxo-range-container>
+                    <dxo-scale [startValue]="lowerLimit" [endValue]="upperLimit">
+                        <dxo-label [indentFromTick]="style.arcWidth"></dxo-label>
+                    </dxo-scale>
+                    <dxo-tooltip [enabled]="true" [customizeTooltip]="customizeTooltip"></dxo-tooltip>
+                    <dxo-animation [enabled]="false"></dxo-animation>
+                </dx-circular-gauge>
+            </div>
+
+            <!--Line widget-->
+            <div *ngSwitchCase="2" class="gauge-chart-container flex-grow-1">
+                <dx-linear-gauge class="w-100 h-100" [value]="value" [rangeContainer]="{ranges: ranges}"
+                    [subvalues]="subvalues">
+                    <dxo-title [text]="title"
+                        [font]="{ size: titleFontSize, color: titleFontColor, family: titleFontFamily }">
+                        <dxo-font [size]="titleFontSize" [color]="titleFontColor" [family]="titleFontFamily"></dxo-font>
+                        <dxo-subtitle [text]="formattedValueWithUnit"
+                            [font]="{ size: valueFontSize, color: valueFontColor, family: valueFontFamily }"></dxo-subtitle>
+                    </dxo-title>
+                    <dxo-geometry [orientation]="orientation"></dxo-geometry>
+                    <dxo-range-container [width]="style.trackWidth"></dxo-range-container>
+                    <dxo-scale [startValue]="lowerLimit" [endValue]="upperLimit">
+                    </dxo-scale>
+                    <dxo-tooltip [enabled]="true" [customizeTooltip]="customizeTooltip"></dxo-tooltip>
+                    <dxo-animation [enabled]="false"></dxo-animation>
+                </dx-linear-gauge>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-container *ngIf="isEditModalInitialized">
+    <createOrEditGaugeConfiguration #createOrEditModal (onSave)="onConfigurationChange($event)"
+        (onClose)="onEditModelClose($event)">
+    </createOrEditGaugeConfiguration>
+</ng-container>
+
+<ng-container *ngIf="editState">
+    <rename-widget-modal #renameWidgetModal (onSave)="saveName($event)"></rename-widget-modal>
+</ng-container>

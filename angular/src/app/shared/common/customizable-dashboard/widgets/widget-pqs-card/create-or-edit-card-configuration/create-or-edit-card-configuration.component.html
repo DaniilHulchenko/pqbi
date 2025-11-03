@@ -1,0 +1,88 @@
+<dx-popup [hideOnOutsideClick]="false" (onHidden)="hide(false)" [showCloseButton]="true" [(visible)]="modalVisible" [dragAndResizeArea]="false"
+    [dragEnabled]="false" title="Edit Card Widget Configuration" height="90vh" width="90vw">
+    <dx-scroll-view #scrollView [showScrollbar]="true">
+        <form class="d-flex flex-column h-100" #cardWidgetConfigurationForm="ngForm" novalidate autocomplete="off">
+            <div class="w-25">
+                <cardWidgetStyleSelector [(ngModel)]="selectedCardStyle" name="style" required>
+                </cardWidgetStyleSelector>
+            </div>
+            <div class="row my-3">
+                <div class="col-auto">
+                    <datetimeRangeSelector name="dateRange" [(ngModel)]="dateRangeSelectionState" (ngModelChange)="onDateRangeChanged($event)" required
+                        style="flex: 1; max-width: 50%;" />
+                </div>
+                <div class="col-6">
+                    <widgetRefreshSelector name="refreshRate" [(ngModel)]="refreshRateSelectionState" required />
+                </div>
+            </div>
+
+            <div class="d-flex flex-column mb-3" style="width: 100%;">
+                <dx-tab-panel #tabPanel [dataSource]="tabs" [selectedIndex]="selectedTabIndex" [loop]="false"
+                    [animationEnabled]="true" [deferRendering]="false" [swipeEnabled]="true" [disabled]="isParameterSelectionDisabled"
+                    class="trend-custom-styles" (onSelectionChanging)="onTabSelectionChanging($event)" (onSelectionChanged)="onTabSelectionChanged($event)">
+                    <div *dxTemplate="let option of 'title'">
+                        <i class="fa" [ngClass]="getIconClass(option.ID)"></i>
+                        <span>{{option.name}}</span>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'customTemplate'">
+                        <cardWidgetCustomParameterSelectionTab #customParameterSelectionTab
+                            [customParameterTypes]="['SPMC','MPSC']" (onAdd)="onAddCustomParameter($event)" (onEditCancel)="disableEditMode()"
+                            (onEditSave)="onEditCustomParameter($event)" (onEditDelete)="onEditDeleteObject($event)"
+                            /> 
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'logicalTemplate'">
+                        <cardWidgetLogicalParameterSelectionTab #logicalParameterSelectionTab (onAdd)="onAddBaseParameter($event)"
+                            (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)" (onEditCancel)="disableEditMode()"/>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'channelTemplate'">
+                        <cardWidgetChannelParameterSelectionTab #channelParameterSelectionTab (onAdd)="onAddBaseParameter($event)"
+                            (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)" (onEditCancel)="disableEditMode()"/>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'additionalTemplate'">
+                        <cardWidgetAdditionalParameterSelectionTab #additionalParameterSelectionTab
+                            (onAdd)="onAddBaseParameter($event)" (onEditSave)="onEditBaseParameter($event)" (onEditDelete)="onEditDeleteObject($event)" (onEditCancel)="disableEditMode()"/>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'exceptionTemplate'">
+                        <cardWidgetExceptionParameterSelectionTab #exceptionParameterSelectionTab (onAdd)="onAddException($event)"
+                            (onEditSave)="onEditException($event)" (onEditCancel)="disableEditMode()"/>
+                    </div>
+                    <div class="h-450px" *dxTemplate="let option of 'eventTemplate'">
+                        <cardWidgetEventParameterSelectionTab #eventParameterSelectionTab (onAdd)="onAddEvent($event)"
+                            (onEditSave)="onEditEvent($event)" (onEditCancel)="disableEditMode()"/>
+                    </div> 
+                </dx-tab-panel>
+            </div>
+
+            <div class="d-flex flex-column" style="width: 100%;">
+                <dx-data-grid name="components" [dataSource]="parameters" (onEditingStart)="updateParameter($event)" (onRowRemoving)="finishEdit()"
+                    [showBorders]="true" style="width: 100%;">
+                    <dxi-column caption="Name" dataField="name"></dxi-column>
+                    <dxi-column caption="Type" dataField="type"></dxi-column>
+                    <dxi-column caption="Components" dataField="component"
+                        cellTemplate="componentsTemplate"></dxi-column>
+                    <dxi-column caption="Quantity" dataField="quantity"></dxi-column>
+                    <dxo-editing [useIcons]="true" [allowUpdating]="true" [allowDeleting]="true"></dxo-editing>
+                    <dxi-column type="buttons">
+                        <!-- <dxi-button name="edit"></dxi-button> -->
+                        <dxi-button name="delete"></dxi-button>                        
+                    </dxi-column>
+
+                    <div *dxTemplate="let context of 'componentsTemplate'">
+                        {{ componentsToString(context.data.componentsState) }}
+                    </div>
+                </dx-data-grid>
+            </div>
+
+        </form>
+    </dx-scroll-view>
+
+    <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
+        <button type="button" class="btn btn-light-primary fw-bold" (click)="hide(false)" [disabled]="saving">
+            {{ 'Cancel' | localize }}
+        </button>
+        <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving || !isFormValid()" (click)="save()">
+            <i class="fa fa-save"></i>
+            <span>{{ 'Save' | localize }}</span>
+        </button>
+    </dxi-popup-toolbar-item>
+</dx-popup>

@@ -5,30 +5,24 @@ import {
     Input,
     ViewChild,
     OnDestroy,
-    AfterViewInit,
     Injectable,
     InjectionToken,
-    ViewChildren,
-    QueryList,
 } from '@angular/core';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import { DashboardViewConfigurationService } from './dashboard-view-configuration.service';
 import { appModuleAnimation } from '@shared/animations/routerTransition';
-import { GridsterConfig, GridsterItem } from 'angular-gridster2';
+import { GridsterConfig } from 'angular-gridster2';
 import {
     DashboardCustomizationServiceProxy,
     DashboardOutput,
     AddNewPageInput,
     AddNewPageOutput,
-    AddWidgetInput,
     RenamePageInput,
     SavePageInput,
     Page,
     Widget,
     WidgetFilterOutput,
-    WidgetOutput,
     Dashboard,
-    IWidget,
     WidgetConfigurationsServiceProxy,
 } from '@shared/service-proxies/service-proxies';
 import { TabsetComponent } from 'ngx-bootstrap/tabs';
@@ -40,9 +34,8 @@ import { ModalDirective } from 'ngx-bootstrap/modal';
 import * as rtlDetect from 'rtl-detect';
 import { Subject, forkJoin } from 'rxjs';
 import { GuidGeneratorService } from '@shared/utils/guid-generator.service';
-import { LocalStorageService } from '@shared/utils/local-storage.service';
-import safeStringify from 'fast-safe-stringify';
 import { EditModeService } from '@app/shared/services/edit-mode-service.service';
+import { max } from 'lodash-es'
 
 export const WIDGETONRESIZEEVENTHANDLERTOKEN = new InjectionToken<WidgetOnResizeEventHandler>(
     'WidgetOnResizeEventHandlerToken',
@@ -71,9 +64,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     loading = true;
     busy = true;
     editModeEnabled = false;
-
-
-
 
     //gridster options. all gridster needs its options. In our scenario, they are all same.
     options: GridsterConfig[] = [];
@@ -106,7 +96,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         private _dashboardCustomizationServiceProxy: DashboardCustomizationServiceProxy,
         private _widgetConfigurationsServiceProxy: WidgetConfigurationsServiceProxy,
         private _guidGenerator: GuidGeneratorService,
-        private _localStorageService: LocalStorageService,
         private editModeService: EditModeService
     ) {
         super(_injector);
@@ -115,9 +104,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     ngOnInit() {
         this.loading = true;
 
-        this.editModeService.getEditMode().subscribe((enabled) => {
-            this.editModeEnabled = enabled;
-        });
         forkJoin([
             this._dashboardCustomizationServiceProxy.getUserDashboard(
                 this.dashboardName,
@@ -144,29 +130,50 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             this.initializeUserDashboardDefinition(userDashboardResultFromServer, dashboardDefinitionResult);
             this.initializeUserDashboardFilters();
 
-            this.userDashboard.pages.forEach(page => {
-                page.widgets.forEach(widget => {
-                    this._widgetConfigurationsServiceProxy
-                        .getWidgetConfigurationForEditByWidgetId(widget.guid)
-                        .subscribe(cfg => {
-                            widget.displayName = cfg.widgetConfiguration?.name || widget.id;
-                        });
-                });
-            });
+            var widgetIds: string[] = this.userDashboard.pages
+                .flatMap(page => page.widgets.map(widget => widget.guid));
 
-            if (this.userDashboard.pages?.length) {
-                this.selectedPage = {
-                    id: this.userDashboard.pages[0].id,
-                    name: this.userDashboard.pages[0].name,
-                };
-                this.selectPageTab(this.userDashboard.pages[0].id);
+            if (widgetIds.length === 0) {
+                this.loading = false;
+                this.busy = false;
+                return;
             }
 
-            this.loading = false;
-            this.busy = false;
+            this._widgetConfigurationsServiceProxy
+                .getWidgetConfigurationBatchesByWidgetIds(widgetIds)
+                .subscribe((cfg) => {
+                    this.userDashboard.pages.forEach((page) => {
+                        page.widgets.forEach((widget) => {
+                            var config = cfg.find((c) => c.widgetConfiguration.widgetGuid === widget.guid);
+                            widget.displayName = config?.widgetConfiguration?.name || widget.id;
+                            widget.configuration = config?.widgetConfiguration?.configuration;
+                            widget.configurationId = config?.widgetConfiguration?.id;
+                        });
+                    });
+
+                    this.loading = false;
+                    this.busy = false;
+
+                    this.selectedPage = {
+                        id: this.userDashboard.pages[0].id,
+                        name: this.userDashboard.pages[0].name,
+                    };
+                    this.selectPageTab(this.userDashboard.pages[0].id);
+                });
+
+            this.subscribeToEvent('app.dashboard.removeWidget', (widgetGuid, widgetId) => this.removeItem(widgetGuid, widgetId, true));
         });
 
         this.subscribeToEvent('app.kt_aside_toggler.onClick', this.onMenuToggle);
+        this.subscribeToEvent('app.dashboard.renameWidget', (widgetId, newName) => {
+            const widget = this.userDashboard.pages
+                .flatMap((page) => page.widgets)
+                .find((widget) => widget.guid === widgetId);
+
+            if (widget) {
+                widget.displayName = newName;
+            }
+        });
     }
 
     initializeUserDashboardDefinition(
@@ -220,26 +227,35 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         this.createWidgetSubjects();
     }
 
-    removeItem(item: GridsterItem) {
+    removeItem(widgetGuid: string, widgetId: string, isConfirmed: boolean) {
         const page = this.userDashboard.pages.find(p => p.id === this.selectedPage.id);
-        const widget = page.widgets.find(w => w.guid === item.guid);
-        const widgetDefinition = this.dashboardDefinition.widgets.find(wd => wd.id === item.id);
+        const widget = page.widgets.find(w => w.guid === widgetGuid);
+        const widgetDefinition = this.dashboardDefinition.widgets.find(wd => wd.id === widgetId);
 
         if (!widget || !widgetDefinition) {
             return;
         }
 
-        const nameToShow = widget.displayName || widgetDefinition.id;
-        this.message.confirm(
-            this.l('WidgetDeleteWarningMessage', nameToShow, this.selectedPage.name),
-            this.l('AreYouSure'),
-            isConfirmed => {
-                if (isConfirmed) {
-                    page.widgets.splice(page.widgets.indexOf(widget), 1);
-                    this.refreshAllGrids();
-                }
-            }
-        );
+        function removeFromDashboardAndUpdate()
+        {
+            page.widgets.splice(page.widgets.indexOf(widget), 1);
+        }
+
+        if (isConfirmed) {
+            removeFromDashboardAndUpdate();
+        } else
+        {
+            const nameToShow = widget.displayName || widgetDefinition.id;
+            this.message.confirm(
+                this.l('WidgetDeleteWarningMessage', nameToShow, this.selectedPage.name),
+                this.l('AreYouSure'),
+                (isConfirmed) => {
+                    if (isConfirmed) {
+                        removeFromDashboardAndUpdate();
+                    }
+                },
+            );
+        }
     }
 
     addWidget(widgetId: any): void {
@@ -257,54 +273,66 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
         this.busy = true;
 
-        this._dashboardCustomizationServiceProxy
-            .addWidget(
-                new AddWidgetInput({
-                    widgetId: widgetId,
-                    widgetGuid: this._guidGenerator.guid(),
-                    pageId: this.selectedPage.id,
-                    dashboardName: this.dashboardName,
-                    width: widgetViewConfiguration.defaultWidth,
-                    height: widgetViewConfiguration.defaultHeight,
-                    application: DashboardCustomizationConst.Applications.Angular,
-                }),
-            )
-            .subscribe((addedWidget) => {
-                const newWidget = {
+        const widgetWidth = widgetId === 'Widgets_Tenant_PQSCard'|| widgetId === 'Widgets_Tenant_PQSGauge'
+            ? 2
+            : widgetViewConfiguration.defaultWidth
+
+
+        // this._dashboardCustomizationServiceProxy
+        //     .addWidget(
+        //         new AddWidgetInput({
+        //             widgetId: widgetId,
+        //             widgetGuid: this._guidGenerator.guid(),
+        //             pageId: this.selectedPage.id,
+        //             dashboardName: this.dashboardName,
+        //             width: widgetWidth,
+        //             height: widgetViewConfiguration.defaultHeight,
+        //             application: DashboardCustomizationConst.Applications.Angular,
+        //         }),
+        //     )
+        //     .subscribe((addedWidget) => {
+
+            const y =
+                max(
+                    this.userDashboard.pages
+                        .find((page) => page.id === this.selectedPage.id)
+                        .widgets?.map((w) => w.gridInformation.x + w.gridInformation.rows),
+                ) ?? 0;
+
+            const newWidget = {
+                id: widgetId,
+                guid: this._guidGenerator.guid(),
+                isNew: true,
+                component: widgetViewConfiguration.component,
+                gridInformation: {
                     id: widgetId,
-                    guid: addedWidget.widgetGuid,
-                    isNew: true,
-                    component: widgetViewConfiguration.component,
-                    gridInformation: {
-                        id: widgetId,
-                        cols: addedWidget.width,
-                        rows: addedWidget.height,
-                        x: addedWidget.positionX,
-                        y: addedWidget.positionY,
-                    },
-                };
+                    cols: widgetWidth,
+                    rows: widgetViewConfiguration.defaultHeight,
+                    x: 0,
+                    y: y,
+                },
+            };
 
-                this.userDashboard.pages.find((page) => page.id === this.selectedPage.id).widgets.push(newWidget);
+            this.userDashboard.pages.find((page) => page.id === this.selectedPage.id).widgets.push(newWidget);
 
-                this.createWidgetSubject(newWidget.guid);
+            this.createWidgetSubject(newWidget.guid);
 
-                this.initializeUserDashboardFilters();
+            this.initializeUserDashboardFilters();
 
-                this.busy = false;
-                this.notify.success(this.l('SavedSuccessfully'));
-            });
+            this.busy = false;
+            //this.notify.success(this.l('SavedSuccessfully'));
+            // });
     }
 
     changeEditMode(): void {
-        this.editModeEnabled = !this.editModeEnabled;
-        this.editModeService.setEditMode(this.editModeEnabled);
-
         //change all gridster options
         //setTimeout for letting the DOM first update so that the edit button appears
         setTimeout(() => {
+            this.editModeEnabled = !this.editModeEnabled;
+            this.editModeService.setEditMode(this.editModeEnabled);
+            abp.event.trigger('app.dashboardEdit.onEditStateChange', this.editModeEnabled);
             this.refreshAllGrids();
-        }, 0);
-        abp.event.trigger('app.dashboardEdit.onEditStateChange', this.editModeEnabled);
+        }, 150);
     }
 
     refreshAllGrids(): void {
@@ -312,7 +340,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             this.options.forEach((option) => {
                 option.draggable.enabled = this.editModeEnabled;
                 option.resizable.enabled = this.editModeEnabled;
-                option.api.optionsChanged();
+                option.api?.optionsChanged();
             });
         }
     }
@@ -379,11 +407,13 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
         if (!this.loadedTabs[pageId]) {
             this.loadedTabs[pageId] = true;
-            if (this.editModeEnabled) {
-                setTimeout(() => {
+            
+        }
+        
+        if (this.editModeEnabled) {
+            setTimeout(() => {
                 abp.event.trigger('app.dashboardEdit.onEditStateChange', this.editModeEnabled);
-                }, 0);
-            }
+            }, 0);
         }
 
         //when tab change gridster should redraw because if a tab is not active gridster think that its height is 0 and do not draw it.
@@ -474,6 +504,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     savePage(): void {
         this.busy = true;
 
+        abp.event.trigger('app.dashboardEdit.onSave');
+
         let savePageInput = new SavePageInput({
             dashboardName: this.dashboardName,
             pages: this.userDashboard.pages.map(
@@ -506,7 +538,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
             this.busy = false;
             this.notify.success(this.l('SavedSuccessfully'));
-            window.location.reload();
+            //window.location.reload();
         });
     }
 
@@ -605,6 +637,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             pushItems: true,
             draggable: {
                 enabled: this.editModeEnabled,
+                ignoreContentClass: 'notDraggable'
             },
             resizable: {
                 enabled: this.editModeEnabled,
@@ -612,6 +645,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             compactType: 'compactUp',
             fixedRowHeight: 30,
             fixedColWidth: 30,
+            minCols: 12,
             gridType: 'verticalFixed',
             dirType: isRtl ? 'rtl' : 'ltr',
         };

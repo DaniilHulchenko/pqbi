@@ -24,6 +24,9 @@ import { FeatureCheckerPipe } from '@shared/common/pipes/feature-checker.pipe';
 import { DatePickerLuxonModifierDirective } from './date-time/date-picker-luxon-modifier.directive';
 import { DateRangePickerLuxonModifierDirective } from './date-time/date-range-picker-luxon-modifier.directive';
 import { GuidGeneratorService } from './guid-generator.service';
+import { RefreshWidgetPipe } from '@shared/common/pipes/refresh-widget.pipe';
+import { RefreshWidgetUnitValuePipe } from '@shared/common/pipes/refresh-widget-unit-value.pipe';
+import { RefreshWidgetCustomUnitValuePipe } from '@shared/common/pipes/refresh-widget-custom-unit-value.pipe';
 
 @NgModule({
     imports: [CommonModule],
@@ -34,7 +37,11 @@ import { GuidGeneratorService } from './guid-generator.service';
         StyleLoaderService,
         ArrayToTreeConverterService,
         TreeDataHelperService,
-        GuidGeneratorService
+        GuidGeneratorService,
+        LocalizePipe,
+        RefreshWidgetPipe,
+        RefreshWidgetUnitValuePipe,
+        RefreshWidgetCustomUnitValuePipe
     ],
     declarations: [
         EqualValidator,
@@ -54,6 +61,9 @@ import { GuidGeneratorService } from './guid-generator.service';
         DatePickerLuxonModifierDirective,
         DateRangePickerLuxonModifierDirective,
         PermissionAllPipe,
+        RefreshWidgetPipe,
+        RefreshWidgetUnitValuePipe,
+        RefreshWidgetCustomUnitValuePipe
     ],
     exports: [
         EqualValidator,
@@ -73,6 +83,9 @@ import { GuidGeneratorService } from './guid-generator.service';
         DatePickerLuxonModifierDirective,
         DateRangePickerLuxonModifierDirective,
         PermissionAllPipe,
+        RefreshWidgetPipe,
+        RefreshWidgetUnitValuePipe,
+        RefreshWidgetCustomUnitValuePipe
     ],
 })
 export class UtilsModule { }

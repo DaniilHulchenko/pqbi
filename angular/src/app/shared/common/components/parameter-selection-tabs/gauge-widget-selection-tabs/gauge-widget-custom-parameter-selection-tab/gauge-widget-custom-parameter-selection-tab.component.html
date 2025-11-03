@@ -1,0 +1,52 @@
+<form class="h-100 d-flex" #pqsForm="ngForm" novalidate (ngSubmit)="add()" autocomplete="off">
+    <div class="row flex-grow-1" style="align-items: center;">
+        <form-container wrapperClass="col-4 pe-0 h-100">
+            <limitedComponentsSelector id="componentsState" name="componentsState" [height]="'382px'"
+                [(ngModel)]="componentsState" (ngModelChange)="onComponentsChange()" [isFeederSelectionEnabled]="true"
+                required />
+        </form-container>
+        <form-container wrapperClass="col-3 pe-0 h-100">
+            <div *ngIf="groupError" class="text-danger mt-1 px-2">
+                {{ groupError }}
+            </div>
+            <customParameterSelector id="customParameterId" name="customParameterId" [height]="'320px'"
+                [(ngModel)]="customParameterId" (customParameterChanged)="onCustomParameterChange($event)"
+                [customParameterTypes]="typesOptions" required />
+        </form-container>
+        <div class="col-1 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
+            <div class="container">
+                <div *ngIf="quantityError" class="text-danger mt-1 px-2">
+                    {{ quantityError }}
+                </div>
+                <quantitySelector id="quantity" name="quantity" [(ngModel)]="quantity" (ngModelChange)="onQuantityChange()"
+                    [allowedQuantities]="allowedQuantities" [showTooltip]="false" required />
+            </div>
+            <div>
+                <div class="col">
+                    <dx-button class="btn btn-primary" (click)="showAdvancedSettingsModal()">{{'AdvancedSettings' |
+                        localize}}</dx-button>
+                </div>
+                <dx-button *ngIf="!isEdit" [useSubmitBehavior]="true" stylingMode="contained" type="default" style="min-width: 120px;"
+                    [disabled]="!isFormValid()">
+                    <span class="d-flex align-items-center">
+                        <!-- <ng-container *ngIf="isEdit;else newParameter">
+                            <i class="fa fa-save me-2" style="color: #ffff;"></i> {{'Save' | localize }}
+                        </ng-container> -->
+                        <i class="fa fa-plus me-2" style="color: #ffff;"></i> {{'Add' | localize}}
+                    </span>
+                </dx-button>
+                <!-- <ng-container *ngIf="isEdit">
+                    <dx-button class="mt-1" (onClick)="finishEdit()" stylingMode="contained" type="danger"
+                        style="min-width: 120px;">
+                        <span class="d-flex align-items-center">
+
+                        </span>{{'Cancel' | localize }}
+                    </dx-button>
+                </ng-container> -->
+            </div>
+        </div>
+    </div>
+</form>
+
+<gaugeWidgetParameterAdvancedSettings #advancedSettingsModal (configChange)="onAdvancedSettingsChanged($event)"
+    [config]="advancedSettingsConfig"></gaugeWidgetParameterAdvancedSettings>

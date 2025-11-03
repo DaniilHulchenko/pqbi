@@ -27,8 +27,6 @@ export class SubgroupCreateOrEditBlockComponent {
     }
 
     save() {
-        console.log(this.subgroup)
-        console.log(this.subgroup?.fromVal, this.subgroup?.toVal)
         if (this.isEditMode){
             this.onEditSave.emit(this.subgroup);
             this.finishEdit();

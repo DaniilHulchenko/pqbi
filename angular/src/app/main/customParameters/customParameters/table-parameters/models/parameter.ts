@@ -1,3 +1,5 @@
+import { FeederComponentInfo } from "@shared/service-proxies/service-proxies";
+
 export interface Parameter {
     id?: number | string;
     name?: string;
@@ -13,9 +15,8 @@ export interface Parameter {
     resolution: number;
     operator?: string;
     aggregationFunction?: string;
-    fromComponents?: FromComponent;
+    fromComponents?: FeederComponentInfo;
     advancedSettings?: any;
-
 }
 
 export interface Harmonics {
@@ -26,5 +27,5 @@ export interface Harmonics {
 
 export interface FromComponent {
     componentId: string;
-    feederId: number | undefined;
+    id: number | undefined;
 }

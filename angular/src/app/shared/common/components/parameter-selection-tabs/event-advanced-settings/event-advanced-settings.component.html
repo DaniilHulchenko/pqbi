@@ -87,7 +87,7 @@
       </div>
 
       <!-- Color Scheme -->
-      <div *ngIf="setLimits !== limitTypes.None">
+      <div >
         <h5>Color Scheme:</h5>
         <div *ngFor="let opt of colorSchemaOptions" style="margin-bottom: 4px;">
           <p-checkbox
@@ -113,7 +113,7 @@
       </div>
 
       <!-- Tag Value Calculation -->
-      <div>
+      <div *ngIf="chartType!=='barchart'">
         <h5>Tag Value Calculation:</h5>
         <p-checkbox
           [binary]="true"

@@ -20,28 +20,30 @@ import { FormContainerComponent } from "../../form-container/form-container.comp
     selector: 'customParameterSelectionTab',
     standalone: true,
     imports: [
-    CommonModule,
-    ComponentsSelectorComponent,
-    CustomParameterSelectorComponent,
-    DxButtonModule,
-    FormsModule,
-    QuantitySelectorComponent,
-    DxScrollViewModule,
-    DxListModule,
-    UtilsModule,
-    AdvancedSettingsComponent,
-    FormContainerComponent
-],
+        CommonModule,
+        ComponentsSelectorComponent,
+        CustomParameterSelectorComponent,
+        DxButtonModule,
+        FormsModule,
+        QuantitySelectorComponent,
+        DxScrollViewModule,
+        DxListModule,
+        UtilsModule,
+        AdvancedSettingsComponent,
+        FormContainerComponent,
+    ],
     templateUrl: './custom-parameter-selection-tab.component.html',
     styleUrl: './custom-parameter-selection-tab.component.css',
 })
 export class CustomParameterSelectionTabComponent
     extends EditableTabComponentBaseComponent
-    implements PopulatableForm<WidgetParametersColumn>{
+    implements PopulatableForm<WidgetParametersColumn>
+{
     @Input() disableComponentSelection = false;
     @Input() disableQuantitySelection = false;
     @Input() isInsideTable = false;
     @Input() customParameterTypes: string[] | undefined;
+    @Input() chartType: string | null;
     @Output() onAdd: EventEmitter<AddCustomParameterEventCallBack> = new EventEmitter();
     @Output() onEditSave: EventEmitter<EditCustomParameterEventCallBack> = new EventEmitter();
     @Output() onEditDelete: EventEmitter<string> = new EventEmitter();
@@ -86,6 +88,9 @@ export class CustomParameterSelectionTabComponent
     }
 
     populateComponentsFromTab(tab: any) {
+        if (!tab || !tab.componentsState) {
+            return;
+        }
         const state = JSON.parse(safeStringify(tab.componentsState));
         // if(this.componentsState.components.length === 0){
         //     this.componentsState.feeders = null
@@ -97,7 +102,7 @@ export class CustomParameterSelectionTabComponent
         );
     }
 
-    showAdvancedSettingsModal(){
+    showAdvancedSettingsModal() {
         this.advancedSettingsModal.show();
     }
 
@@ -149,9 +154,9 @@ export class CustomParameterSelectionTabComponent
             componentsState: this.componentsState,
             customParameterId: this.customParameterId,
             quantity: this.quantity,
-            advancedSettings: this.advancedSettingsConfig 
-                                    ? JSON.parse(JSON.stringify(this.advancedSettingsConfig)) 
-                                    : undefined,
+            advancedSettings: this.advancedSettingsConfig
+                ? JSON.parse(JSON.stringify(this.advancedSettingsConfig))
+                : undefined,
         };
 
         this.onEditSave.emit(editSaveEvent);
@@ -171,23 +176,36 @@ export class CustomParameterSelectionTabComponent
                             pickListState: this.componentsState.pickListState,
                             feeders: [feeder],
                         });
-                        this.emitAddParameter(eventComponentsState, this.customParameterId, this.quantity, this.advancedSettingsConfig);
+                        this.emitAddParameter(
+                            eventComponentsState,
+                            this.customParameterId,
+                            this.quantity,
+                            this.advancedSettingsConfig,
+                        );
                     }
                 }
             } else if (this.customParameterType === 'SPMC') {
-                this.emitAddParameter(new ComponentsState(this.componentsState), this.customParameterId, this.quantity, this.advancedSettingsConfig);
+                this.emitAddParameter(
+                    new ComponentsState(this.componentsState),
+                    this.customParameterId,
+                    this.quantity,
+                    this.advancedSettingsConfig,
+                );
             }
         }
     }
 
-    private emitAddParameter(componentsState: ComponentsState, customParameterId: number, quantity: QuantityUnits, advancedSettings: AdvancedSettingsConfig) {
+    private emitAddParameter(
+        componentsState: ComponentsState,
+        customParameterId: number,
+        quantity: QuantityUnits,
+        advancedSettings: AdvancedSettingsConfig,
+    ) {
         this.onAdd.emit({
             componentsState: componentsState,
             customParameterId: customParameterId,
             quantity: quantity,
-            advancedSettings: advancedSettings
-                                    ? JSON.parse(JSON.stringify(advancedSettings)) 
-                                    : undefined,
+            advancedSettings: advancedSettings ? JSON.parse(JSON.stringify(advancedSettings)) : undefined,
         });
     }
 }

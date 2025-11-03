@@ -48,6 +48,7 @@ export class ChannelParameterSelectionTabComponent
     extends EditableTabComponentBaseComponent
     implements PopulatableForm<WidgetParametersColumn>{
     @Input() disableComponentSelection = false;
+    @Input() chartType: string | null;
     @Output() onAdd: EventEmitter<AddBaseParameterEventCallBack> = new EventEmitter();
     @Output() onEditSave: EventEmitter<EditBaseParameterEventCallBack> = new EventEmitter();
     @Output() onEditDelete: EventEmitter<string> = new EventEmitter();
@@ -163,6 +164,9 @@ export class ChannelParameterSelectionTabComponent
     }
 
     populateComponentsFromTab(tab: any) {
+        if (!tab || !tab.componentsState) {
+            return;
+        }
         this.componentsState = JSON.parse(safeStringify(tab.componentsState));
         this.onComponentsChange();
     }
@@ -272,7 +276,6 @@ export class ChannelParameterSelectionTabComponent
             this.editSave();
             return;
         }
-        console.log(this.disableComponentSelection);
         this.emitComponentParameters();
         this.reset();
     }

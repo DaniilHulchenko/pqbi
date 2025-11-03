@@ -1,4 +1,4 @@
-<dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="modalVisible" [dragAndResizeArea]="false"
+<dx-popup [hideOnOutsideClick]="false" (onHidden)="hide(false)" [showCloseButton]="true" [(visible)]="modalVisible" [dragAndResizeArea]="false"
     [dragEnabled]="false" title="Edit Table Widget Configuration" height="90vh" width="90vw">
     <dx-scroll-view #scrollView [showScrollbar]="true">
         <form class="d-flex flex-column h-100" #tableWidgetConfigurationForm="ngForm" novalidate (ngSubmit)="save()"
@@ -100,7 +100,7 @@
     </dx-scroll-view>
 
     <dxi-popup-toolbar-item widget="dxButton" toolbar="bottom" location="after">
-        <button type="button" class="btn btn-light-primary fw-bold me-2" (click)="hide()" [disabled]="saving">
+        <button type="button" class="btn btn-light-primary fw-bold me-2" (click)="hide(false)" [disabled]="saving">
             {{ 'Cancel' | localize }}
         </button>
         <button type="submit" class="btn btn-primary fw-bold" [disabled]="saving || !isFormValid()" (click)="save()">

@@ -1,12 +1,8 @@
 ﻿import { AppConsts } from '@shared/AppConsts';
 import { Component, Injector, ViewEncapsulation, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { CustomParametersServiceProxy, CustomParameterDto } from '@shared/service-proxies/service-proxies';
-import { NotifyService } from 'abp-ng2-module';
 import { AppComponentBase } from '@shared/common/app-component-base';
-import { TokenAuthServiceProxy } from '@shared/service-proxies/service-proxies';
 import { CreateOrEditCustomParameterModalComponent } from './create-or-edit-customParameter-modal.component';
-
 import { ViewCustomParameterModalComponent } from './view-customParameter-modal.component';
 import { appModuleAnimation } from '@shared/animations/routerTransition';
 import { Table } from 'primeng/table';
@@ -14,13 +10,10 @@ import { Paginator } from 'primeng/paginator';
 import { LazyLoadEvent } from 'primeng/api';
 import { FileDownloadService } from '@shared/utils/file-download.service';
 import { filter as _filter } from 'lodash-es';
-import { DateTime } from 'luxon';
-
-import { DateTimeService } from '@app/shared/common/timing/date-time.service';
-
 import { HttpClient } from '@angular/common/http';
 import { FileUpload } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
+import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
 
 @Component({
     templateUrl: './customParameters.component.html',
@@ -50,12 +43,9 @@ export class CustomParametersComponent extends AppComponentBase {
     constructor(
         injector: Injector,
         private _customParametersServiceProxy: CustomParametersServiceProxy,
-        private _notifyService: NotifyService,
-        private _tokenAuth: TokenAuthServiceProxy,
-        private _activatedRoute: ActivatedRoute,
         private _fileDownloadService: FileDownloadService,
-        private _dateTimeService: DateTimeService,
         private _httpClient: HttpClient,
+        private _configurationVersionService: ConfigurationVersionService,
     ) {
         super(injector);
 
@@ -78,8 +68,8 @@ export class CustomParametersComponent extends AppComponentBase {
                 this.nameFilter,
                 this.aggregationFunctionFilter,
                 this.typeFilter,
-                undefined, // maxResolutionInSecondsFilter
-                undefined, // minResolutionInSecondsFilter
+                undefined,
+                undefined,
                 undefined, 
                 this.primengTableHelper.getSorting(this.dataTable),
                 this.primengTableHelper.getSkipCount(this.paginator, event),
@@ -97,7 +87,7 @@ export class CustomParametersComponent extends AppComponentBase {
     }
 
     createCustomParameter(): void {
-        this.createOrEditCustomParameterModal.show();
+        this._configurationVersionService.refreshVersion().subscribe(() => this.createOrEditCustomParameterModal.show());
     }
 
     deleteCustomParameter(customParameter: CustomParameterDto): void {

@@ -53,6 +53,21 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
+
+.edit-mode-switch {
+  background-color: #003d80;
+  color: white;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+
+  .form-check-input {
+    border: 2px solid white;
+  }
+}
+
 /* Rounded sliders */
 .slider.round {
   border-radius: 34px;

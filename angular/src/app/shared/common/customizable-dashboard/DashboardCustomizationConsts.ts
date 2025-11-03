@@ -11,6 +11,8 @@ export class DashboardCustomizationConst {
             PQSTrend: 'Widgets_Tenant_PQSTrend',
             PQSTable: 'Widgets_Tenant_PQSTable',
             PQSBarChart: 'Widgets_Tenant_PQSBarChart',
+            PQSCard: 'Widgets_Tenant_PQSCard',
+            PQSGauge: 'Widgets_Tenant_PQSGauge',
         },
         host: {
             topStats: 'Widgets_Host_TopStats',

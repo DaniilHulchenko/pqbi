@@ -16,9 +16,6 @@ import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
 import { QuantityUnits } from '@app/shared/enums/quantity-units';
 import {
     FeederComponentInfo,
-    BaseDataInfo,
-    CalculationBase,
-    GroupDataInfo,
     QuantityDataInfo,
     QuantityEnum,
 } from '@shared/service-proxies/service-proxies';
@@ -56,6 +53,7 @@ export class AdditionalParameterSelectionTabComponent
     implements PopulatableForm<WidgetParametersColumn>
 {
     @Input() disableComponentSelection = false;
+    @Input() chartType: string | null;
     @Output() onAdd: EventEmitter<AddBaseParameterEventCallBack> = new EventEmitter();
     @Output() onEditSave: EventEmitter<EditBaseParameterEventCallBack> = new EventEmitter();
     @Output() onEditDelete: EventEmitter<string> = new EventEmitter();
@@ -165,6 +163,9 @@ export class AdditionalParameterSelectionTabComponent
     }
 
     populateComponentsFromTab(tab: any) {
+        if (!tab || !tab.componentsState) {
+            return;
+        }
         this.componentsState = JSON.parse(safeStringify(tab.componentsState));
         this.onComponentsChange();
     }

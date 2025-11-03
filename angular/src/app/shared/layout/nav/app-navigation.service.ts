@@ -122,12 +122,12 @@ export class AppNavigationService {
                     )
                 ]
             ),
-            new AppMenuItem(
-                'DemoUiComponents',
-                'Pages.DemoUiComponents',
-                'flaticon-shapes',
-                '/app/admin/demo-ui-components'
-            ),
+            // new AppMenuItem(
+            //     'DemoUiComponents',
+            //     'Pages.DemoUiComponents',
+            //     'flaticon-shapes',
+            //     '/app/admin/demo-ui-components'
+            // ),
         ]);
     }
 

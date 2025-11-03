@@ -3,6 +3,7 @@ import { AppComponentBase } from '@shared/common/app-component-base';
 import { DashboardCustomizationServiceProxy, WidgetOutput } from '@shared/service-proxies/service-proxies';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { DashboardCustomizationConst } from '../DashboardCustomizationConsts';
+import { orderBy } from 'lodash-es';
 
 @Component({
     selector: 'add-widget-modal',
@@ -18,7 +19,7 @@ export class AddWidgetModalComponent extends AppComponentBase {
     selectedWidgetId: string;
 
     constructor(injector: Injector,
-        private _dashboardCustomizationServiceProxy: DashboardCustomizationServiceProxy,
+        private _dashboardCustomizationServiceProxy: DashboardCustomizationServiceProxy
     ) {
         super(injector);
     }
@@ -41,6 +42,12 @@ export class AddWidgetModalComponent extends AppComponentBase {
         this._dashboardCustomizationServiceProxy.getAllAvailableWidgetDefinitionsForPage(dashboardName, DashboardCustomizationConst.Applications.Angular, pageId)
             .subscribe(availableWidgets => {
                 this.widgets = availableWidgets;
+
+                this.widgets.forEach(x => {
+                    x.name = this.l(x.name);
+                });
+                this.widgets = orderBy(this.widgets, x => x.name);
+
                 if (this.widgets && this.widgets.length) {
                     this.selectedWidgetId = this.widgets[0].id;
                 } else {

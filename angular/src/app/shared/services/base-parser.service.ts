@@ -2,6 +2,7 @@ import { Injectable, OnInit } from '@angular/core';
 import { BaseState } from '../models/base-state';
 import { BaseUnits } from '../enums/base-units';
 import { BaseDataInfo, PQSRestApiServiceProxy } from '@shared/service-proxies/service-proxies';
+import { MeasurementsService } from './measurements-service.service';
 
 @Injectable({
     providedIn: 'root',
@@ -9,8 +10,8 @@ import { BaseDataInfo, PQSRestApiServiceProxy } from '@shared/service-proxies/se
 export class BaseParserService {
     bases: BaseDataInfo[] = [];
 
-    constructor(private _pqsRestApiServiceroxy: PQSRestApiServiceProxy){
-        this._pqsRestApiServiceroxy.measurementsBases().subscribe(bases => {
+    constructor(private _measurementsService: MeasurementsService){
+        this._measurementsService.baseMeasurements.subscribe(bases => {
             this.bases = bases;
         })
     }

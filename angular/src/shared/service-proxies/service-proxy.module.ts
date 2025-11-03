@@ -12,6 +12,8 @@ import { PQBIInterceptor } from './pqbi-interceptor';
         ApiServiceProxies.TrendWidgetConfigurationsServiceProxy,
         ApiServiceProxies.BarChartWidgetConfigurationsServiceProxy,
         ApiServiceProxies.TableWidgetConfigurationsServiceProxy,
+        ApiServiceProxies.CardWidgetConfigurationsServiceProxy,
+        ApiServiceProxies.GaugeWidgetConfigurationsServiceProxy,
         ApiServiceProxies.WidgetConfigurationsServiceProxy,
         ApiServiceProxies.TreeBuilderServiceProxy,
         ApiServiceProxies.PQSRestApiServiceProxy,

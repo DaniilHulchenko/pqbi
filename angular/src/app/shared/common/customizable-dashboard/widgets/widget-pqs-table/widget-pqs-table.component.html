@@ -1,22 +1,17 @@
-<div class="kt-portlet kt-portlet--height-fluid">
+<div class="kt-portlet kt-portlet--height-fluid widget-full-height">
     <div class="kt-portlet__head">
         <div class="kt-portlet__head-label">
             <h3 class="kt-portlet__head-title">
-                {{ widgetName }}
+                {{ widgetConfigurationInDB?.name }}
                 <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
                     <i class="fa fa-edit"></i>
                 </button>
+                <button class="btn btn-primary btn-sm" *ngIf="editState" (click)="edit()">{{ 'Edit' | localize }}</button>
             </h3>
         </div>
     </div>
-    <div class="kt-portlet__body" id="outerScroll" style="width: 98%; height: 600px; overflow-y: auto">
+    <div class="kt-portlet__body table-body-flex" id="outerScroll">
         <div class="d-flex mb-2" style="gap: 12px">
-            <div *ngIf="editState" class="row">
-                <div class="col">
-                    <button class="btn btn-primary" (click)="edit()">{{ 'Edit' | localize }}</button>
-                </div>
-            </div>
-    
             <div *ngIf="hasEventParameter()" class="row mb-2">
                 <span style="margin: 0 12px;">{{'FilterEventBy' | localize}}</span>
                 <div class="col">
@@ -44,16 +39,12 @@
                 </div>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col">
-                <div id="innerScroll" class="table-container">
+                <div id="innerScroll" #treeContainer class="table-container flex-grow-1 notDraggable">
                     <div *ngIf="isLoading" class="loading-overlay">
                         <dx-load-indicator></dx-load-indicator>
                         <p>{{'LoadingData' | localize }}</p>
                     </div>
                     <dx-tree-list
-                        class="pqs-table"
                         *ngIf="dataSource && columns"
                         [dataSource]="dataSource"
                         [columns]="columns"
@@ -64,6 +55,9 @@
                         [showRowLines]="true"
                         [showColumnLines]="true"
                         [columnAutoWidth]="true"
+                        [allowColumnResizing]="editState"
+                        [columnResizingMode]="'nextColumn'"
+                        [columnMinWidth]="50"
                         [wordWrapEnabled]="true"
                         [showBorders]="true"
                         [rowAlternationEnabled]="tableWidgetConfiguration.designOptions?.bandedRows"
@@ -71,14 +65,16 @@
                   </dx-tree-list>
                 </div>
             </div>
-        </div>
-    </div>
 </div>
 
-<ng-container *ngIf="editState">
+<ng-container *ngIf="isEditModalInitialized">
     <createOrEditTableConfiguration
         #createOrEditModal
         (onSave)="onConfigurationChange($event)"
+        (onClose)="onEditModelClose($event)"
     ></createOrEditTableConfiguration>
+</ng-container>
+
+<ng-container *ngIf="editState">
     <rename-widget-modal #renameWidgetModal (onSave)="saveName($event)"></rename-widget-modal>
 </ng-container>

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, share } from 'rxjs';
+import { Observable, of, share, tap } from 'rxjs';
 import { TagTreeRootDto, TreeBuilderServiceProxy } from '@shared/service-proxies/service-proxies';
 import { TreeNode } from 'primeng/api';
 
@@ -8,12 +8,21 @@ import { TreeNode } from 'primeng/api';
 })
 export class TreeBuilderService {
     private _tagsTree$: Observable<TagTreeRootDto>;
+    private _tagsTree: TagTreeRootDto;
 
     constructor(private _treeBuilderServiceProxy: TreeBuilderServiceProxy) {}
 
     tagsTree(): Observable<TagTreeRootDto> {
+        if (this._tagsTree) {
+            return of(this._tagsTree);
+        }
         if (!this._tagsTree$) {
-            this._tagsTree$ = this._treeBuilderServiceProxy.tagsTree().pipe(share());
+            this._tagsTree$ = this._treeBuilderServiceProxy.tagsTree().pipe(
+                tap((tree) => {
+                    this._tagsTree = tree;
+                }),
+                share(),
+            );
         }
         return this._tagsTree$;
     }

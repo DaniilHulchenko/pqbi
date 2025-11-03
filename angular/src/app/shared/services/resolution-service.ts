@@ -12,6 +12,7 @@ import { Observable, of, switchMap } from 'rxjs';
 import { Parameter } from '@app/main/customParameters/customParameters/table-parameters/models/parameter';
 import { BaseState } from '../models/base-state';
 import { BaseUnits } from '../enums/base-units';
+import { CustomParameterService } from './custom-parameter-service.service';
 
 @Injectable({
     providedIn: 'root',
@@ -38,7 +39,7 @@ export class ResolutionService {
 
     constructor(
         private _customResolutionUnitsComparer: CustomResolutionUnitsComparer,
-        private _customParameterServiceProxy: CustomParametersServiceProxy,
+        private _customParameterService: CustomParameterService,
     ) {}
 
     getResolutionUnits(seconds: number): [ResolutionUnits, number] {
@@ -218,10 +219,9 @@ export class ResolutionService {
     }
 
     findMaxResolutionByCustomParameter(id: number): Observable<ResolutionState> {
-        return this._customParameterServiceProxy.getCustomParameterForView(id).pipe(
-            switchMap((response: GetCustomParameterForViewDto) => {
-                let customParameter: CustomParameterDto = response.customParameter;
-                let baseParameters: Parameter[] = JSON.parse(customParameter.customBaseDataList);
+        return this._customParameterService.getById(id).pipe(
+            switchMap((response: CustomParameterDto) => {
+                let baseParameters: Parameter[] = JSON.parse(response.customBaseDataList);
                 let resolutions: ResolutionState[] = baseParameters.map((parameter: Parameter) =>
                     this.parseStateFromInt(parameter.resolution, true),
                 );

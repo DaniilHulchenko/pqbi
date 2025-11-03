@@ -88,8 +88,8 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
 
                 if (this.pickListState.source?.length === 0 && this.pickListState.target?.length === 0) {
                     this.defaultValuesService.getValue(this._defaultStateSettingName).subscribe((result) => {
-                        if (result.defaultValue?.value) {
-                            this.defaultState = JSON.parse(result.defaultValue?.value);
+                        if (result) {
+                            this.defaultState = JSON.parse(result);
                             this.prefillPickList();
                             this.checkIfDefault(); // Check if the state is equal to the default state
                         }

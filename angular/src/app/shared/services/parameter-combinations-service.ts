@@ -79,7 +79,7 @@ export class ParameterCombinationsService {
                             phase: newParameter.phase,
                             base: newParameter.baseResolution,
                             componentId: newParameter.fromComponents?.componentId,
-                            feederId: newParameter.fromComponents?.feederId.toString(),
+                            feederId: newParameter.fromComponents?.id?.toString(),
                             isLogical: newParameter.type === BaseParameterType.Logical,
                         }),
                     )

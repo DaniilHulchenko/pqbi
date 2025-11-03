@@ -8,7 +8,7 @@
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
-import { mergeMap as _observableMergeMap, catchError as _observableCatch } from 'rxjs/operators';
+import { mergeMap as _observableMergeMap, catchError as _observableCatch, share } from 'rxjs/operators';
 import { Observable, throwError as _observableThrow, of as _observableOf } from 'rxjs';
 import { Injectable, Inject, Optional, InjectionToken } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angular/common/http';
@@ -1976,6 +1976,362 @@ export class CachingServiceProxy {
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
     
             return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+@Injectable()
+export class CardWidgetConfigurationsServiceProxy {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @param filter (optional) 
+     * @param sorting (optional) 
+     * @param skipCount (optional) 
+     * @param maxResultCount (optional) 
+     * @return Success
+     */
+    getAll(filter: string | undefined, sorting: string | undefined, skipCount: number | undefined, maxResultCount: number | undefined): Observable<PagedResultDtoOfGetCardWidgetConfigurationForViewDto> {
+        let url_ = this.baseUrl + "/api/services/app/CardWidgetConfigurations/GetAll?";
+        if (filter === null)
+            throw new Error("The parameter 'filter' cannot be null.");
+        else if (filter !== undefined)
+            url_ += "Filter=" + encodeURIComponent("" + filter) + "&";
+        if (sorting === null)
+            throw new Error("The parameter 'sorting' cannot be null.");
+        else if (sorting !== undefined)
+            url_ += "Sorting=" + encodeURIComponent("" + sorting) + "&";
+        if (skipCount === null)
+            throw new Error("The parameter 'skipCount' cannot be null.");
+        else if (skipCount !== undefined)
+            url_ += "SkipCount=" + encodeURIComponent("" + skipCount) + "&";
+        if (maxResultCount === null)
+            throw new Error("The parameter 'maxResultCount' cannot be null.");
+        else if (maxResultCount !== undefined)
+            url_ += "MaxResultCount=" + encodeURIComponent("" + maxResultCount) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetAll(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetAll(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<PagedResultDtoOfGetCardWidgetConfigurationForViewDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<PagedResultDtoOfGetCardWidgetConfigurationForViewDto>;
+        }));
+    }
+
+    protected processGetAll(response: HttpResponseBase): Observable<PagedResultDtoOfGetCardWidgetConfigurationForViewDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PagedResultDtoOfGetCardWidgetConfigurationForViewDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    getCardWidgetConfigurationForView(id: number | undefined): Observable<GetCardWidgetConfigurationForViewDto> {
+        let url_ = this.baseUrl + "/api/services/app/CardWidgetConfigurations/GetCardWidgetConfigurationForView?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetCardWidgetConfigurationForView(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetCardWidgetConfigurationForView(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetCardWidgetConfigurationForViewDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetCardWidgetConfigurationForViewDto>;
+        }));
+    }
+
+    protected processGetCardWidgetConfigurationForView(response: HttpResponseBase): Observable<GetCardWidgetConfigurationForViewDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetCardWidgetConfigurationForViewDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    getCardWidgetConfigurationForEdit(id: number | undefined): Observable<GetCardWidgetConfigurationForEditOutput> {
+        let url_ = this.baseUrl + "/api/services/app/CardWidgetConfigurations/GetCardWidgetConfigurationForEdit?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetCardWidgetConfigurationForEdit(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetCardWidgetConfigurationForEdit(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetCardWidgetConfigurationForEditOutput>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetCardWidgetConfigurationForEditOutput>;
+        }));
+    }
+
+    protected processGetCardWidgetConfigurationForEdit(response: HttpResponseBase): Observable<GetCardWidgetConfigurationForEditOutput> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetCardWidgetConfigurationForEditOutput.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    createOrEdit(body: CreateOrEditCardWidgetConfigurationDto | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/services/app/CardWidgetConfigurations/CreateOrEdit";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCreateOrEdit(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCreateOrEdit(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processCreateOrEdit(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    createAndGetId(body: CreateOrEditCardWidgetConfigurationDto | undefined): Observable<number> {
+        let url_ = this.baseUrl + "/api/services/app/CardWidgetConfigurations/CreateAndGetId";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCreateAndGetId(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCreateAndGetId(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<number>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<number>;
+        }));
+    }
+
+    protected processCreateAndGetId(response: HttpResponseBase): Observable<number> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    delete(id: number | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/services/app/CardWidgetConfigurations/Delete?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("delete", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processDelete(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processDelete(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processDelete(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -6705,6 +7061,362 @@ export class FriendshipServiceProxy {
 }
 
 @Injectable()
+export class GaugeWidgetConfigurationsServiceProxy {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @param filter (optional) 
+     * @param sorting (optional) 
+     * @param skipCount (optional) 
+     * @param maxResultCount (optional) 
+     * @return Success
+     */
+    getAll(filter: string | undefined, sorting: string | undefined, skipCount: number | undefined, maxResultCount: number | undefined): Observable<PagedResultDtoOfGetGaugeWidgetConfigurationForViewDto> {
+        let url_ = this.baseUrl + "/api/services/app/GaugeWidgetConfigurations/GetAll?";
+        if (filter === null)
+            throw new Error("The parameter 'filter' cannot be null.");
+        else if (filter !== undefined)
+            url_ += "Filter=" + encodeURIComponent("" + filter) + "&";
+        if (sorting === null)
+            throw new Error("The parameter 'sorting' cannot be null.");
+        else if (sorting !== undefined)
+            url_ += "Sorting=" + encodeURIComponent("" + sorting) + "&";
+        if (skipCount === null)
+            throw new Error("The parameter 'skipCount' cannot be null.");
+        else if (skipCount !== undefined)
+            url_ += "SkipCount=" + encodeURIComponent("" + skipCount) + "&";
+        if (maxResultCount === null)
+            throw new Error("The parameter 'maxResultCount' cannot be null.");
+        else if (maxResultCount !== undefined)
+            url_ += "MaxResultCount=" + encodeURIComponent("" + maxResultCount) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetAll(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetAll(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<PagedResultDtoOfGetGaugeWidgetConfigurationForViewDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<PagedResultDtoOfGetGaugeWidgetConfigurationForViewDto>;
+        }));
+    }
+
+    protected processGetAll(response: HttpResponseBase): Observable<PagedResultDtoOfGetGaugeWidgetConfigurationForViewDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PagedResultDtoOfGetGaugeWidgetConfigurationForViewDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    getGaugeWidgetConfigurationForView(id: number | undefined): Observable<GetGaugeWidgetConfigurationForViewDto> {
+        let url_ = this.baseUrl + "/api/services/app/GaugeWidgetConfigurations/GetGaugeWidgetConfigurationForView?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetGaugeWidgetConfigurationForView(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetGaugeWidgetConfigurationForView(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetGaugeWidgetConfigurationForViewDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetGaugeWidgetConfigurationForViewDto>;
+        }));
+    }
+
+    protected processGetGaugeWidgetConfigurationForView(response: HttpResponseBase): Observable<GetGaugeWidgetConfigurationForViewDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetGaugeWidgetConfigurationForViewDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    getGaugeWidgetConfigurationForEdit(id: number | undefined): Observable<GetGaugeWidgetConfigurationForEditOutput> {
+        let url_ = this.baseUrl + "/api/services/app/GaugeWidgetConfigurations/GetGaugeWidgetConfigurationForEdit?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetGaugeWidgetConfigurationForEdit(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetGaugeWidgetConfigurationForEdit(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetGaugeWidgetConfigurationForEditOutput>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetGaugeWidgetConfigurationForEditOutput>;
+        }));
+    }
+
+    protected processGetGaugeWidgetConfigurationForEdit(response: HttpResponseBase): Observable<GetGaugeWidgetConfigurationForEditOutput> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetGaugeWidgetConfigurationForEditOutput.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    createOrEdit(body: CreateOrEditGaugeWidgetConfigurationDto | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/services/app/GaugeWidgetConfigurations/CreateOrEdit";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCreateOrEdit(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCreateOrEdit(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processCreateOrEdit(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    createAndGetId(body: CreateOrEditGaugeWidgetConfigurationDto | undefined): Observable<number> {
+        let url_ = this.baseUrl + "/api/services/app/GaugeWidgetConfigurations/CreateAndGetId";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCreateAndGetId(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCreateAndGetId(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<number>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<number>;
+        }));
+    }
+
+    protected processCreateAndGetId(response: HttpResponseBase): Observable<number> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param id (optional) 
+     * @return Success
+     */
+    delete(id: number | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/services/app/GaugeWidgetConfigurations/Delete?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("delete", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processDelete(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processDelete(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processDelete(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+@Injectable()
 export class GroupsServiceProxy {
     private http: HttpClient;
     private baseUrl: string;
@@ -11226,6 +11938,53 @@ export class PQSRestApiServiceProxy {
     /**
      * @return Success
      */
+    confVersion(): Observable<number> {
+        let url_ = this.baseUrl + "/api/services/app/PQSRestApi/ConfVersion";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processConfVersion(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processConfVersion(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<number>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<number>;
+        }));
+    }
+
+    protected processConfVersion(response: HttpResponseBase): Observable<number> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(Number.parseInt(_responseText));
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return Success
+     */
     pQSEvents(): Observable<EventClassDescription[]> {
         let url_ = this.baseUrl + "/api/services/app/PQSRestApi/PQSEvents";
         url_ = url_.replace(/[?&]$/, "");
@@ -15257,6 +16016,118 @@ export class TenantDashboardServiceProxy {
     }
 
     protected processPQSTableWidgetData(response: HttpResponseBase): Observable<TableWidgetResponse> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = TableWidgetResponse.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    pQSCardWidgetData(body: TableWidgetRequest | undefined): Observable<TableWidgetResponse> {
+        let url_ = this.baseUrl + "/api/services/app/TenantDashboard/PQSCardWidgetData";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processPQSCardWidgetData(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processPQSCardWidgetData(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<TableWidgetResponse>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<TableWidgetResponse>;
+        }));
+    }
+
+    protected processPQSCardWidgetData(response: HttpResponseBase): Observable<TableWidgetResponse> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = TableWidgetResponse.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    pQSGaugeWidgetData(body: TableWidgetRequest | undefined): Observable<TableWidgetResponse> {
+        let url_ = this.baseUrl + "/api/services/app/TenantDashboard/PQSGaugeWidgetData";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processPQSGaugeWidgetData(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processPQSGaugeWidgetData(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<TableWidgetResponse>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<TableWidgetResponse>;
+        }));
+    }
+
+    protected processPQSGaugeWidgetData(response: HttpResponseBase): Observable<TableWidgetResponse> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -20338,6 +21209,69 @@ export class WidgetConfigurationsServiceProxy {
     }
 
     /**
+     * @param widgetIds (optional) 
+     * @return Success
+     */
+    getWidgetConfigurationBatchesByWidgetIds(widgetIds: string[] | undefined): Observable<GetWidgetConfigurationForEditOutput[]> {
+        let url_ = this.baseUrl + "/api/services/app/WidgetConfigurations/GetWidgetConfigurationBatchesByWidgetIds?";
+        if (widgetIds === null)
+            throw new Error("The parameter 'widgetIds' cannot be null.");
+        else if (widgetIds !== undefined)
+            widgetIds && widgetIds.forEach(item => { url_ += "widgetIds=" + encodeURIComponent("" + item) + "&"; });
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetWidgetConfigurationBatchesByWidgetIds(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetWidgetConfigurationBatchesByWidgetIds(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetWidgetConfigurationForEditOutput[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetWidgetConfigurationForEditOutput[]>;
+        }));
+    }
+
+    protected processGetWidgetConfigurationBatchesByWidgetIds(response: HttpResponseBase): Observable<GetWidgetConfigurationForEditOutput[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(GetWidgetConfigurationForEditOutput.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
      * @param body (optional) 
      * @return Success
      */
@@ -22255,6 +23189,65 @@ export interface ICancelPaymentDto {
     gateway: SubscriptionPaymentGatewayType;
 }
 
+export class CardWidgetConfigurationDto implements ICardWidgetConfigurationDto {
+    id!: number;
+    dateRange!: string | undefined;
+    parameters!: string | undefined;
+    styleType!: CardWidgetStyleType;
+    refreshRate!: number;
+
+    constructor(data?: ICardWidgetConfigurationDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.dateRange = _data["dateRange"];
+            this.parameters = _data["parameters"];
+            this.styleType = _data["styleType"];
+            this.refreshRate = _data["refreshRate"];
+        }
+    }
+
+    static fromJS(data: any): CardWidgetConfigurationDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CardWidgetConfigurationDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["dateRange"] = this.dateRange;
+        data["parameters"] = this.parameters;
+        data["styleType"] = this.styleType;
+        data["refreshRate"] = this.refreshRate;
+        return data;
+    }
+}
+
+export interface ICardWidgetConfigurationDto {
+    id: number;
+    dateRange: string | undefined;
+    parameters: string | undefined;
+    styleType: CardWidgetStyleType;
+    refreshRate: number;
+}
+
+export enum CardWidgetStyleType {
+    RoundDial = 1,
+    ClassicBox = 2,
+    CompactHorizontal = 3,
+    IconTopValueBelow = 4,
+}
+
 export class ChangeEmailInput implements IChangeEmailInput {
     c!: string | undefined;
 
@@ -22639,6 +23632,7 @@ export class ColumnWidgetTable implements IColumnWidgetTable {
     baseData!: string | undefined;
     tableEvent!: TableWidgetEvent;
     parameterName!: string | undefined;
+    markers!: GaugeMarkerDto[] | undefined;
 
     constructor(data?: IColumnWidgetTable) {
         if (data) {
@@ -22666,6 +23660,11 @@ export class ColumnWidgetTable implements IColumnWidgetTable {
             this.baseData = _data["baseData"];
             this.tableEvent = _data["tableEvent"] ? TableWidgetEvent.fromJS(_data["tableEvent"]) : <any>undefined;
             this.parameterName = _data["parameterName"];
+            if (Array.isArray(_data["markers"])) {
+                this.markers = [] as any;
+                for (let item of _data["markers"])
+                    this.markers!.push(GaugeMarkerDto.fromJS(item));
+            }
         }
     }
 
@@ -22693,6 +23692,11 @@ export class ColumnWidgetTable implements IColumnWidgetTable {
         data["baseData"] = this.baseData;
         data["tableEvent"] = this.tableEvent ? this.tableEvent.toJSON() : <any>undefined;
         data["parameterName"] = this.parameterName;
+        if (Array.isArray(this.markers)) {
+            data["markers"] = [];
+            for (let item of this.markers)
+                data["markers"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -22709,6 +23713,7 @@ export interface IColumnWidgetTable {
     baseData: string | undefined;
     tableEvent: TableWidgetEvent;
     parameterName: string | undefined;
+    markers: GaugeMarkerDto[] | undefined;
 }
 
 export class ComboboxItemDto implements IComboboxItemDto {
@@ -23527,6 +24532,58 @@ export interface ICreateOrEditBarChartWidgetConfigurationDto {
     dateRange: string | undefined;
 }
 
+export class CreateOrEditCardWidgetConfigurationDto implements ICreateOrEditCardWidgetConfigurationDto {
+    id!: number | undefined;
+    dateRange!: string;
+    parameters!: string;
+    styleType!: CardWidgetStyleType;
+    refreshRate!: number;
+
+    constructor(data?: ICreateOrEditCardWidgetConfigurationDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.dateRange = _data["dateRange"];
+            this.parameters = _data["parameters"];
+            this.styleType = _data["styleType"];
+            this.refreshRate = _data["refreshRate"];
+        }
+    }
+
+    static fromJS(data: any): CreateOrEditCardWidgetConfigurationDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateOrEditCardWidgetConfigurationDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["dateRange"] = this.dateRange;
+        data["parameters"] = this.parameters;
+        data["styleType"] = this.styleType;
+        data["refreshRate"] = this.refreshRate;
+        return data;
+    }
+}
+
+export interface ICreateOrEditCardWidgetConfigurationDto {
+    id: number | undefined;
+    dateRange: string;
+    parameters: string;
+    styleType: CardWidgetStyleType;
+    refreshRate: number;
+}
+
 export class CreateOrEditCustomParameterDto implements ICreateOrEditCustomParameterDto {
     id!: number | undefined;
     name!: string;
@@ -23629,6 +24686,58 @@ export interface ICreateOrEditDefaultValueDto {
     id: number | undefined;
     name: string;
     value: string;
+}
+
+export class CreateOrEditGaugeWidgetConfigurationDto implements ICreateOrEditGaugeWidgetConfigurationDto {
+    id!: number | undefined;
+    dateRange!: string;
+    parameter!: string;
+    style!: string;
+    refreshRate!: number;
+
+    constructor(data?: ICreateOrEditGaugeWidgetConfigurationDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.dateRange = _data["dateRange"];
+            this.parameter = _data["parameter"];
+            this.style = _data["style"];
+            this.refreshRate = _data["refreshRate"];
+        }
+    }
+
+    static fromJS(data: any): CreateOrEditGaugeWidgetConfigurationDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateOrEditGaugeWidgetConfigurationDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["dateRange"] = this.dateRange;
+        data["parameter"] = this.parameter;
+        data["style"] = this.style;
+        data["refreshRate"] = this.refreshRate;
+        return data;
+    }
+}
+
+export interface ICreateOrEditGaugeWidgetConfigurationDto {
+    id: number | undefined;
+    dateRange: string;
+    parameter: string;
+    style: string;
+    refreshRate: number;
 }
 
 export class CreateOrEditGroupDto implements ICreateOrEditGroupDto {
@@ -25010,7 +26119,7 @@ export interface IDelegatedImpersonateInput {
 
 export class DimensionSelector implements IDimensionSelector {
     type!: DimensionType;
-    id!: number | undefined;
+    id!: string | undefined;
     name!: string | undefined;
 
     constructor(data?: IDimensionSelector) {
@@ -25048,7 +26157,7 @@ export class DimensionSelector implements IDimensionSelector {
 
 export interface IDimensionSelector {
     type: DimensionType;
-    id: number | undefined;
+    id: string | undefined;
     name: string | undefined;
 }
 
@@ -28026,6 +29135,150 @@ export interface IFunction {
     arg: string | undefined;
 }
 
+export class GaugeMarkerDto implements IGaugeMarkerDto {
+    key!: string | undefined;
+    kind!: MarkerKind;
+    operation!: PQBIQuantityType;
+    percentOfNominal!: number | undefined;
+
+    constructor(data?: IGaugeMarkerDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.key = _data["key"];
+            this.kind = _data["kind"];
+            this.operation = _data["operation"];
+            this.percentOfNominal = _data["percentOfNominal"];
+        }
+    }
+
+    static fromJS(data: any): GaugeMarkerDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new GaugeMarkerDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["key"] = this.key;
+        data["kind"] = this.kind;
+        data["operation"] = this.operation;
+        data["percentOfNominal"] = this.percentOfNominal;
+        return data;
+    }
+}
+
+export interface IGaugeMarkerDto {
+    key: string | undefined;
+    kind: MarkerKind;
+    operation: PQBIQuantityType;
+    percentOfNominal: number | undefined;
+}
+
+export class GaugeMarkerResultDto implements IGaugeMarkerResultDto {
+    key!: string | undefined;
+    value!: number | undefined;
+    dataValueStatus!: PqbiDataValueStatus;
+
+    constructor(data?: IGaugeMarkerResultDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.key = _data["key"];
+            this.value = _data["value"];
+            this.dataValueStatus = _data["dataValueStatus"];
+        }
+    }
+
+    static fromJS(data: any): GaugeMarkerResultDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new GaugeMarkerResultDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["key"] = this.key;
+        data["value"] = this.value;
+        data["dataValueStatus"] = this.dataValueStatus;
+        return data;
+    }
+}
+
+export interface IGaugeMarkerResultDto {
+    key: string | undefined;
+    value: number | undefined;
+    dataValueStatus: PqbiDataValueStatus;
+}
+
+export class GaugeWidgetConfigurationDto implements IGaugeWidgetConfigurationDto {
+    id!: number;
+    dateRange!: string | undefined;
+    parameter!: string | undefined;
+    style!: string | undefined;
+    refreshRate!: number;
+
+    constructor(data?: IGaugeWidgetConfigurationDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.dateRange = _data["dateRange"];
+            this.parameter = _data["parameter"];
+            this.style = _data["style"];
+            this.refreshRate = _data["refreshRate"];
+        }
+    }
+
+    static fromJS(data: any): GaugeWidgetConfigurationDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new GaugeWidgetConfigurationDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["dateRange"] = this.dateRange;
+        data["parameter"] = this.parameter;
+        data["style"] = this.style;
+        data["refreshRate"] = this.refreshRate;
+        return data;
+    }
+}
+
+export interface IGaugeWidgetConfigurationDto {
+    id: number;
+    dateRange: string | undefined;
+    parameter: string | undefined;
+    style: string | undefined;
+    refreshRate: number;
+}
+
 export class GeneralSettingsEditDto implements IGeneralSettingsEditDto {
     timezone!: string | undefined;
     timezoneForComparison!: string | undefined;
@@ -28687,6 +29940,78 @@ export interface IGetBaseParameterNameIntegrationTest {
     userNameOrEmailAddress: string | undefined;
     password: string | undefined;
     request: BaseParameterNameSlim;
+}
+
+export class GetCardWidgetConfigurationForEditOutput implements IGetCardWidgetConfigurationForEditOutput {
+    cardWidgetConfiguration!: CreateOrEditCardWidgetConfigurationDto;
+
+    constructor(data?: IGetCardWidgetConfigurationForEditOutput) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.cardWidgetConfiguration = _data["cardWidgetConfiguration"] ? CreateOrEditCardWidgetConfigurationDto.fromJS(_data["cardWidgetConfiguration"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetCardWidgetConfigurationForEditOutput {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetCardWidgetConfigurationForEditOutput();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["cardWidgetConfiguration"] = this.cardWidgetConfiguration ? this.cardWidgetConfiguration.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetCardWidgetConfigurationForEditOutput {
+    cardWidgetConfiguration: CreateOrEditCardWidgetConfigurationDto;
+}
+
+export class GetCardWidgetConfigurationForViewDto implements IGetCardWidgetConfigurationForViewDto {
+    cardWidgetConfiguration!: CardWidgetConfigurationDto;
+
+    constructor(data?: IGetCardWidgetConfigurationForViewDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.cardWidgetConfiguration = _data["cardWidgetConfiguration"] ? CardWidgetConfigurationDto.fromJS(_data["cardWidgetConfiguration"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetCardWidgetConfigurationForViewDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetCardWidgetConfigurationForViewDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["cardWidgetConfiguration"] = this.cardWidgetConfiguration ? this.cardWidgetConfiguration.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetCardWidgetConfigurationForViewDto {
+    cardWidgetConfiguration: CardWidgetConfigurationDto;
 }
 
 export class GetComponentByTagsRequest implements IGetComponentByTagsRequest {
@@ -29471,6 +30796,78 @@ export interface IGetExpiringTenantsOutput {
     maxExpiringTenantsShownCount: number;
     subscriptionEndDateStart: DateTime;
     subscriptionEndDateEnd: DateTime;
+}
+
+export class GetGaugeWidgetConfigurationForEditOutput implements IGetGaugeWidgetConfigurationForEditOutput {
+    gaugeWidgetConfiguration!: CreateOrEditGaugeWidgetConfigurationDto;
+
+    constructor(data?: IGetGaugeWidgetConfigurationForEditOutput) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.gaugeWidgetConfiguration = _data["gaugeWidgetConfiguration"] ? CreateOrEditGaugeWidgetConfigurationDto.fromJS(_data["gaugeWidgetConfiguration"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetGaugeWidgetConfigurationForEditOutput {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetGaugeWidgetConfigurationForEditOutput();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["gaugeWidgetConfiguration"] = this.gaugeWidgetConfiguration ? this.gaugeWidgetConfiguration.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetGaugeWidgetConfigurationForEditOutput {
+    gaugeWidgetConfiguration: CreateOrEditGaugeWidgetConfigurationDto;
+}
+
+export class GetGaugeWidgetConfigurationForViewDto implements IGetGaugeWidgetConfigurationForViewDto {
+    gaugeWidgetConfiguration!: GaugeWidgetConfigurationDto;
+
+    constructor(data?: IGetGaugeWidgetConfigurationForViewDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.gaugeWidgetConfiguration = _data["gaugeWidgetConfiguration"] ? GaugeWidgetConfigurationDto.fromJS(_data["gaugeWidgetConfiguration"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): GetGaugeWidgetConfigurationForViewDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetGaugeWidgetConfigurationForViewDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["gaugeWidgetConfiguration"] = this.gaugeWidgetConfiguration ? this.gaugeWidgetConfiguration.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IGetGaugeWidgetConfigurationForViewDto {
+    gaugeWidgetConfiguration: GaugeWidgetConfigurationDto;
 }
 
 export class GetGeneralStatsOutput implements IGetGeneralStatsOutput {
@@ -33449,6 +34846,11 @@ export interface IMarkAllUnreadMessagesOfUserAsReadInput {
     userId: number;
 }
 
+export enum MarkerKind {
+    Quantity = 1,
+    Nominal = 2,
+}
+
 export class MassNotificationOrganizationUnitLookupTableDto implements IMassNotificationOrganizationUnitLookupTableDto {
     id!: number;
     displayName!: string | undefined;
@@ -35085,6 +36487,14 @@ export interface IPQBIParameterInfo {
     quantity: string | undefined;
 }
 
+export enum PQBIQuantityType {
+    Min = 0,
+    Max = 1,
+    Avg = 2,
+    Percentile = 3,
+    Count = 4,
+}
+
 export class PQSCalculationChartBarRequestTest implements IPQSCalculationChartBarRequestTest {
     userNameOrEmailAddress!: string | undefined;
     password!: string | undefined;
@@ -36059,6 +37469,54 @@ export interface IPagedResultDtoOfGetBarChartWidgetConfigurationForViewDto {
     totalCount: number;
 }
 
+export class PagedResultDtoOfGetCardWidgetConfigurationForViewDto implements IPagedResultDtoOfGetCardWidgetConfigurationForViewDto {
+    items!: GetCardWidgetConfigurationForViewDto[] | undefined;
+    totalCount!: number;
+
+    constructor(data?: IPagedResultDtoOfGetCardWidgetConfigurationForViewDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(GetCardWidgetConfigurationForViewDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+        }
+    }
+
+    static fromJS(data: any): PagedResultDtoOfGetCardWidgetConfigurationForViewDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PagedResultDtoOfGetCardWidgetConfigurationForViewDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item.toJSON());
+        }
+        data["totalCount"] = this.totalCount;
+        return data;
+    }
+}
+
+export interface IPagedResultDtoOfGetCardWidgetConfigurationForViewDto {
+    items: GetCardWidgetConfigurationForViewDto[] | undefined;
+    totalCount: number;
+}
+
 export class PagedResultDtoOfGetCustomParameterForViewDto implements IPagedResultDtoOfGetCustomParameterForViewDto {
     items!: GetCustomParameterForViewDto[] | undefined;
     totalCount!: number;
@@ -36152,6 +37610,54 @@ export class PagedResultDtoOfGetDefaultValueForViewDto implements IPagedResultDt
 
 export interface IPagedResultDtoOfGetDefaultValueForViewDto {
     items: GetDefaultValueForViewDto[] | undefined;
+    totalCount: number;
+}
+
+export class PagedResultDtoOfGetGaugeWidgetConfigurationForViewDto implements IPagedResultDtoOfGetGaugeWidgetConfigurationForViewDto {
+    items!: GetGaugeWidgetConfigurationForViewDto[] | undefined;
+    totalCount!: number;
+
+    constructor(data?: IPagedResultDtoOfGetGaugeWidgetConfigurationForViewDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(GetGaugeWidgetConfigurationForViewDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+        }
+    }
+
+    static fromJS(data: any): PagedResultDtoOfGetGaugeWidgetConfigurationForViewDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PagedResultDtoOfGetGaugeWidgetConfigurationForViewDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item.toJSON());
+        }
+        data["totalCount"] = this.totalCount;
+        return data;
+    }
+}
+
+export interface IPagedResultDtoOfGetGaugeWidgetConfigurationForViewDto {
+    items: GetGaugeWidgetConfigurationForViewDto[] | undefined;
     totalCount: number;
 }
 
@@ -40147,6 +41653,7 @@ export class TableWidgetResponseItem implements ITableWidgetResponseItem {
     quantity!: string | undefined;
     missingBaseParameterInfo!: MissingBaseParameterInfo;
     dataUnitType!: DataUnitType;
+    gaugeMarkerResultList!: GaugeMarkerResultDto[] | undefined;
 
     constructor(data?: ITableWidgetResponseItem) {
         if (data) {
@@ -40168,6 +41675,11 @@ export class TableWidgetResponseItem implements ITableWidgetResponseItem {
             this.quantity = _data["quantity"];
             this.missingBaseParameterInfo = _data["missingBaseParameterInfo"] ? MissingBaseParameterInfo.fromJS(_data["missingBaseParameterInfo"]) : <any>undefined;
             this.dataUnitType = _data["dataUnitType"] ? DataUnitType.fromJS(_data["dataUnitType"]) : <any>undefined;
+            if (Array.isArray(_data["gaugeMarkerResultList"])) {
+                this.gaugeMarkerResultList = [] as any;
+                for (let item of _data["gaugeMarkerResultList"])
+                    this.gaugeMarkerResultList!.push(GaugeMarkerResultDto.fromJS(item));
+            }
         }
     }
 
@@ -40189,6 +41701,11 @@ export class TableWidgetResponseItem implements ITableWidgetResponseItem {
         data["quantity"] = this.quantity;
         data["missingBaseParameterInfo"] = this.missingBaseParameterInfo ? this.missingBaseParameterInfo.toJSON() : <any>undefined;
         data["dataUnitType"] = this.dataUnitType ? this.dataUnitType.toJSON() : <any>undefined;
+        if (Array.isArray(this.gaugeMarkerResultList)) {
+            data["gaugeMarkerResultList"] = [];
+            for (let item of this.gaugeMarkerResultList)
+                data["gaugeMarkerResultList"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -40203,6 +41720,7 @@ export interface ITableWidgetResponseItem {
     quantity: string | undefined;
     missingBaseParameterInfo: MissingBaseParameterInfo;
     dataUnitType: DataUnitType;
+    gaugeMarkerResultList: GaugeMarkerResultDto[] | undefined;
 }
 
 export class Tag implements ITag {

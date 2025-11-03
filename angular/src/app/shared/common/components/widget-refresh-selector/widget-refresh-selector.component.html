@@ -1,0 +1,31 @@
+<div class="row">
+  <div class="col-4 w-auto">
+    <label class="form-label">{{'RefreshRate' | localize }} *</label>
+    <dx-select-box name="quickSelect" [ngModel]="selectedValue.unit" (ngModelChange)="onUnitChange($event)"
+      [dataSource]="unitOptions" displayExpr="label" valueExpr="value" [showClearButton]="true"
+      placeholder="Refresh rate quick select" [class.is-invalid]="!isRefreshRateValid" [disabled]="isDisabled" required>
+    </dx-select-box>
+    <small *ngIf="!isRefreshRateValid" class="text-danger">{{'RefreshRateRequired' | localize }}</small>
+  </div>
+
+  <ng-container *ngIf="selectedValue.unit === refreshSelectionUnits.INTERVAL">
+    <div class="col-4">
+      <label class="form-label">{{'Value' | localize }} *</label>
+      <dx-number-box name="valueSelect" [(ngModel)]="selectedValue.value" (ngModelChange)="onChange(selectedValue.ToValueInSeconds())" [showClearButton]="true"
+        [showSpinButtons]="true" placeholder="Refresh rate value select" [class.is-invalid]="!isValueValid"
+        [min]="minCustomValue" required>
+      </dx-number-box>
+      <small *ngIf="!isValueValid" class="text-danger">{{'ValueRequired' | localize }}</small>
+    </div>
+
+    <div class="col-4">
+      <label class="form-label">{{'CustomUnit' | localize }} *</label>
+      <dx-select-box name="customUnitSelect" [(ngModel)]="selectedValue.customUnit"
+        (ngModelChange)="onChange(selectedValue.ToValueInSeconds())" [dataSource]="customUnitOptions" displayExpr="label"
+        valueExpr="value" [showClearButton]="true" placeholder="Refresh rate select"
+        [class.is-invalid]="!isRefreshRateCustomUnitValid" required>
+      </dx-select-box>
+      <small *ngIf="!isRefreshRateCustomUnitValid" class="text-danger">{{'CustomUnitRequired' | localize }}.</small>
+    </div>
+  </ng-container>
+</div>
