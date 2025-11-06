@@ -1,0 +1,69 @@
+<h3>Segmentation:</h3>
+<div class="segmentation">
+  <div class="form">
+    <dx-text-box [(value)]="name" placeholder="Name"></dx-text-box>
+    <dx-number-box [(value)]="from" placeholder="Start Value"></dx-number-box>
+    <dx-number-box [(value)]="to" placeholder="End Value"></dx-number-box>
+    <dx-number-box [(value)]="weight" placeholder="Weight, %" [step]="0.1" [min]="0.1" [showSpinButtons]="true"
+      hint="How much of the gauge this segment occupies visually." [focusStateEnabled]="true"></dx-number-box>
+    <small class="form-hint">How much of the gauge this segment occupies visually.</small>
+
+    <div class="mt-2">
+      <dx-radio-group [(value)]="colorMode"
+        [items]="[
+        { text: 'use color scheme', value: 'scheme' },
+        { text: 'set color', value: 'custom' }
+      ]"
+        layout="vertical" valueExpr="value" displayExpr="text">
+      </dx-radio-group>
+    </div>
+
+    <div *ngIf="colorMode === 'custom'" class="mt-2">
+      <dx-color-box [(value)]="color"></dx-color-box>
+    </div>
+
+    <dx-button *ngIf="!isEditingSegment" text="+ Add" type="default" stylingMode="contained" (onClick)="addSegment()">
+    </dx-button>
+    <dx-button *ngIf="isEditingSegment" text="Save" type="default" stylingMode="contained" (onClick)="saveEditedSegment()">
+    </dx-button>
+    <dx-button *ngIf="isEditingSegment" text="Cancel" type="danger" stylingMode="contained"
+      (onClick)="cancelEditedSegment()">
+    </dx-button>
+
+    <div class="segment-error" *ngIf="segmentError">{{ segmentError }}</div>
+  </div>
+
+  <div class="table mt-4">
+    <div class="weight-indicator" [class.invalid]="!isTotalWeightValid">
+      Total: {{ totalWeight | number: '1.0-2' }}% (100% required / Сума: має бути 100%)
+    </div>
+    <div class="weight-error" *ngIf="!isTotalWeightValid">Weights must sum to 100%. / Сума ваг повинна дорівнювати 100%.
+    </div>
+    <dx-data-grid [dataSource]="segments" [showBorders]="true">
+
+      <dxi-column dataField="name" caption="Name"></dxi-column>
+      <dxi-column dataField="from" caption="From"></dxi-column>
+      <dxi-column dataField="to" caption="To"></dxi-column>
+      <dxi-column dataField="weight" caption="Weight, % / Вага, %"></dxi-column>
+
+      <dxi-column caption="Color" [cellTemplate]="'colorCell'"></dxi-column>
+      <dxi-column caption="Actions" [cellTemplate]="'actionsCell'"></dxi-column>
+
+      <div *dxTemplate="let data of 'colorCell'">
+        <div *ngIf="data.data.colorMode !== 'custom'; else customColor" style="font-style: italic;">
+          Scheme
+        </div>
+        <ng-template #customColor>
+          <div [style.background]="data.data.color" style="width:20px;height:20px;border:1px solid #000;">
+          </div>
+        </ng-template>
+      </div>
+
+      <div *dxTemplate="let data of 'actionsCell'">
+        <dx-button icon="edit" stylingMode="text" (onClick)="editSegment(data.data)"></dx-button>
+        <dx-button icon="trash" stylingMode="text" (onClick)="deleteSegment(data.rowIndex)">
+        </dx-button>
+      </div>
+    </dx-data-grid>
+  </div>
+</div>
