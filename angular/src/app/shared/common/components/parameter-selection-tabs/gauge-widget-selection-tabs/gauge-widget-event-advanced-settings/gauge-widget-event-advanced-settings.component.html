@@ -137,61 +137,13 @@
           <dx-number-box [(value)]="upperLimit" placeholder="Upper Limit" [min]="0"></dx-number-box>
         </div>
 
-        <h3>Segmentation:</h3>
-        <div class="segmentation">
-          <div class="form">
-            <dx-text-box [(value)]="name" placeholder="Name"></dx-text-box>
-            <dx-number-box [(value)]="from" placeholder="Start Value"></dx-number-box>
-            <dx-number-box [(value)]="to" placeholder="End Value"></dx-number-box>
-
-            <div class="mt-2">
-              <dx-radio-group [(value)]="colorMode" [items]="[
-                      { text: 'use color scheme', value: 'scheme' },
-                      { text: 'set color', value: 'custom' }
-                    ]" layout="vertical" valueExpr="value" displayExpr="text">
-              </dx-radio-group>
-            </div>
-
-            <div *ngIf="colorMode === 'custom'" class="mt-2">
-              <dx-color-box [(value)]="color"></dx-color-box>
-            </div>
-
-            <dx-button *ngIf="!isEditingSegment" text="+ Add" type="default" stylingMode="contained" (onClick)="addSegment()">
-            </dx-button>
-            <dx-button *ngIf="isEditingSegment" text="Save" type="default" stylingMode="contained" (onClick)="saveEditedSegment()">
-            </dx-button>
-            <dx-button *ngIf="isEditingSegment" text="Cancel" type="danger" stylingMode="contained" (onClick)="cancelEditedSegment()">
-            </dx-button>
-          </div>
-
-          <div class="table mt-4">
-            <dx-data-grid [dataSource]="segments" [showBorders]="true">
-
-              <dxi-column dataField="name" caption="Name"></dxi-column>
-              <dxi-column dataField="from" caption="From"></dxi-column>
-              <dxi-column dataField="to" caption="To"></dxi-column>
-
-              <dxi-column caption="Color" [cellTemplate]="'colorCell'"></dxi-column>
-              <dxi-column caption="Actions" [cellTemplate]="'actionsCell'"></dxi-column>
-
-              <div *dxTemplate="let data of 'colorCell'">
-                <div *ngIf="data.data.useScheme; else customColor" style="font-style: italic;">
-                  Scheme
-                </div>
-                <ng-template #customColor>
-                  <div [style.background]="data.data.color" style="width:20px;height:20px;border:1px solid #000;">
-                  </div>
-                </ng-template>
-              </div>
-
-              <div *dxTemplate="let data of 'actionsCell'">
-                <dx-button icon="edit" stylingMode="text" (onClick)="editSegment(data.data)"></dx-button>
-                <dx-button icon="trash" stylingMode="text" (onClick)="deleteSegment(data.rowIndex)">
-                </dx-button>
-              </div>
-            </dx-data-grid>
-          </div>
-        </div>
+        <gaugeWidgetSegmentationSettings
+          #segmentation
+          [segments]="segments"
+          (segmentsChange)="onSegmentsChange($event)"
+          (validityChange)="onSegmentsValidityChange($event)"
+          (totalWeightChange)="onSegmentsTotalWeightChange($event)">
+        </gaugeWidgetSegmentationSettings>
 
         <h6 class="mt-3">Decimal points:</h6>
         <dx-select-box class="w-25" [(value)]="decimalPoints" [items]="decimalPointOptions"
@@ -216,6 +168,7 @@
         stylingMode="contained"
         [width]="140"
         [height]="48"
+        [disabled]="!canSave"
       ></dx-button>
     </div>
   </dx-scroll-view>

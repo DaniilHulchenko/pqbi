@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,15 +12,13 @@ import {
     DxNumberBoxModule,
     DxSelectBoxModule,
     DxFileUploaderModule,
-    DxDataGridModule,
 } from 'devextreme-angular';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { NormalizeEnum, EventClass } from '@shared/service-proxies/service-proxies';
+import { NormalizeEnum } from '@shared/service-proxies/service-proxies';
 import { GaugeWidgetAdvancedSettingsConfig, Segment } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
-import { Guid } from 'guid-ts';
-
+import { GaugeWidgetSegmentationSettingsComponent } from '../shared/gauge-widget-segmentation-settings/gauge-widget-segmentation-settings.component';
 @Component({
     selector: 'gaugeWidgetEventAdvancedSettings',
     standalone: true,
@@ -39,7 +37,7 @@ import { Guid } from 'guid-ts';
         CheckboxModule,
         RadioButtonModule,
         DxFileUploaderModule,
-        DxDataGridModule,
+        GaugeWidgetSegmentationSettingsComponent
     ],
     templateUrl: './gauge-widget-event-advanced-settings.component.html',
     styleUrl: './gauge-widget-event-advanced-settings.component.css',
@@ -82,15 +80,11 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
     marker1: string = 'None';
     marker2: string = 'None';
 
-    segments: Segment[] = [];
-    isEditingSegment = false;
-    editingSegmentId: string | null = null;
+    @ViewChild('segmentation') segmentationComponent?: GaugeWidgetSegmentationSettingsComponent;
 
-    name: string = '';
-    from: number | null = null;
-    to: number | null = null;
-    colorMode: 'scheme' | 'custom';
-    color: string | null;
+    segments: Segment[] = [];
+    isSegmentsValid = false;
+    totalWeight = 0;
 
     decimalPointOptions = [0, 1, 2, 3];
 
@@ -151,7 +145,9 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
             this.link.page = c.linkPage;
             this.titleFont = c.titleFont;
             this.valueFont = c.valueFont;
-            this.segments = c.segments || [];
+            this.isSegmentsValid = false;
+            this.totalWeight = 0;
+            this.segments = c.segments ? c.segments.map((segment) => ({ ...segment })) : [];
             this.unitType = c.unit?.unitType || 'auto';
             this.selectedUnit = c.unit?.selectedUnit || '';
             this.marker1 = c.marker1 || null;
@@ -179,69 +175,28 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
     }
 
     hide() {
-        this.reset();
         this.modalVisible = false;
+        this.reset();
     }
 
-    addSegment() {
-        if (!this.name || this.from === null || this.to === null) return;
-
-        this.segments.push({
-            id: Guid.newGuid().toString(),
-            name: this.name,
-            from: this.from,
-            to: this.to,
-            color: this.color,
-            colorMode: this.colorMode,
-        });
-
-        this.name = '';
-        this.from = null;
-        this.to = null;
-        this.color = null;
-        this.colorMode = 'scheme';
+    onSegmentsChange(segments: Segment[]) {
+        this.segments = segments.map((segment) => ({ ...segment }));
     }
 
-    editSegment(data: Segment) {
-        this.isEditingSegment = true;
-        this.editingSegmentId = data.id;
-        this.name = data.name;
-        this.from = data.from;
-        this.to = data.to;
-        this.color = data.color;
-        this.colorMode = data.colorMode;
+    onSegmentsValidityChange(isValid: boolean) {
+        this.isSegmentsValid = isValid;
     }
 
-    saveEditedSegment() {
-        if (!this.name || this.from === null || this.to === null || !this.editingSegmentId) return;
-
-        const segment = this.segments.find((s) => s.id === this.editingSegmentId);
-        if (segment) {
-            segment.name = this.name;
-            segment.from = this.from;
-            segment.to = this.to;
-            segment.color = this.color;
-            segment.colorMode = this.colorMode;
-        }
-
-        this.cancelEditedSegment();
-    }
-
-    cancelEditedSegment() {
-        this.isEditingSegment = false;
-        this.editingSegmentId = null;
-        this.name = '';
-        this.from = null;
-        this.to = null;
-        this.color = null;
-        this.colorMode = 'scheme';
-    }
-
-    deleteSegment(index: number) {
-        this.segments.splice(index, 1);
+    onSegmentsTotalWeightChange(total: number) {
+        this.totalWeight = total;
     }
 
     save() {
+        if (!this.canSave) {
+            this.segmentationComponent?.validateBeforeSave();
+            return;
+        }
+
         const config: GaugeWidgetAdvancedSettingsConfig = {
             normalizeValue: this.normalizeValue,
             normalizeNominalValue: this.normalizeNominalValue,
@@ -252,8 +207,8 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
             linkPage: this.link.page,
             titleFont: this.titleFont,
             valueFont: this.valueFont,
-            segments: this.segments,
-            unit: {unitType: this.unitType, selectedUnit: this.selectedUnit},
+            segments: this.segments.map((segment) => ({ ...segment })),
+            unit: { unitType: this.unitType, selectedUnit: this.selectedUnit },
             marker1: this.marker1,
             marker2: this.marker2,
             colorScheme: this.colorScheme,
@@ -269,6 +224,10 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
         this.setLimits = this.setLimits === value ? null : value;
     }
 
+    get canSave(): boolean {
+        return this.isSegmentsValid;
+    }
+
     private reset() {
         this.normalizeValue = NormalizeEnum.NO;
         this.normalizeNominalValue = 0;
@@ -280,6 +239,8 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
         this.titleFont = { family: '', size: 20, colorMode: 'scheme', customColor: '#000000' };
         this.valueFont = { family: '', size: 20, colorMode: 'scheme', customColor: '#000000' };
         this.segments = [];
+        this.isSegmentsValid = false;
+        this.totalWeight = 0;
         this.unitType = 'auto';
         this.selectedUnit = '';
         this.marker1 = null;
