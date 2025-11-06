@@ -46,6 +46,7 @@ export interface Segment {
     to: number;
     colorMode: 'scheme' | 'custom';
     color: string | null;
+    weight?: number;
 }
 
 export interface Unit {

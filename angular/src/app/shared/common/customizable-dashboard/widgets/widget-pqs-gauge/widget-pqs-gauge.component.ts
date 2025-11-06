@@ -32,10 +32,16 @@ import { ColumnType } from '@app/shared/enums/column-type';
 import { ArrayUtils } from '@app/shared/services/array-utils.service';
 import safeStringify from 'fast-safe-stringify';
 import { GaugeStyle, GaugeStyleArcAngleEnum, GaugeStyleEnum } from '@app/shared/interfaces/gauge-style';
-import { GaugeWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
+import { GaugeWidgetAdvancedSettingsConfig, Segment } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
 import { ChartsColor } from 'devextreme/common/charts';
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
 import { GaugeWidgetConfigurationService } from '@app/shared/services/widget-configurations/gauge-widget-configuration.service';
+
+interface WeightedSegmentMeta extends Segment {
+    startPosition: number;
+    endPosition: number;
+    weight: number;
+}
 
 @Component({
     selector: 'app-widget-pqs-gauge',
@@ -62,9 +68,13 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     }[];
 
     subvalues?: number[];
+    actualSubvalues?: number[];
+    scaleCustomTicks?: number[];
+    scaleLabelCustomizeText = (info: { value: number; valueText: string }) => this.getScaleLabelText(info);
 
     formattedValue: number;
-    value: number;
+    actualValue: number;
+    displayValue: number;
     unit = '';
     title = '';
     valueFontSize = 20;
@@ -80,6 +90,10 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     private stopStream$ = new Subject();
 
     private subs: Subscription[] = [];
+    private weightedSegments: WeightedSegmentMeta[] = [];
+    private hasWeightedScale = false;
+    private actualLowerLimit: number;
+    private actualUpperLimit: number;
 
     constructor(
         injector: Injector,
@@ -101,9 +115,11 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         return this.style && this.style.orientation === 1 ? 'horizontal' : 'vertical';
     }
 
-    customizeTooltip = ({ valueText }) => {
-        let value = this.formatNumberWithReturn(Number.parseFloat(valueText), this.dataUnitType);
-        return { text: value[0] + ' ' + value[1] };
+    customizeTooltip = ({ value }) => {
+        const numericValue = Number(value);
+        const actualValue = this.hasWeightedScale ? this.mapAxisValueToActual(numericValue) : numericValue;
+        const formatted = this.formatNumberWithReturn(actualValue, this.dataUnitType);
+        return { text: `${formatted[0]} ${formatted[1]}`.trim() };
     };
 
     ngOnInit(): void {
@@ -367,7 +383,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         //         this.parameter.cardWidgetAdvancedSettings.normalizeNominalValue,
         //     );
         // }
-        this.value = responseItem.calculated;
+        this.actualValue = responseItem.calculated;
         this.dataUnitType = responseItem.dataUnitType;
         this.formatNumber(responseItem.calculated, responseItem.dataUnitType);
         this.setLimits(responseItem);
@@ -456,6 +472,9 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     }
 
     private setLimits(item: TableWidgetResponseItem) {
+        let lower: number;
+        let upper: number;
+
         if (
             this.parameter?.gaugeWidgetAdvancedSettings?.lowerLimit !== null &&
             this.parameter?.gaugeWidgetAdvancedSettings?.upperLimit !== null &&
@@ -464,8 +483,8 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
             this.parameter?.gaugeWidgetAdvancedSettings?.lowerLimit !==
                 this.parameter?.gaugeWidgetAdvancedSettings?.upperLimit
         ) {
-            this.lowerLimit = this.parameter.gaugeWidgetAdvancedSettings.lowerLimit;
-            this.upperLimit = this.parameter.gaugeWidgetAdvancedSettings.upperLimit;
+            lower = this.parameter.gaugeWidgetAdvancedSettings.lowerLimit;
+            upper = this.parameter.gaugeWidgetAdvancedSettings.upperLimit;
         } else {
             if (
                 this.parameter?.gaugeWidgetAdvancedSettings?.marker1 !== null &&
@@ -473,19 +492,24 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                 this.parameter?.gaugeWidgetAdvancedSettings?.marker1 !== undefined &&
                 this.parameter?.gaugeWidgetAdvancedSettings?.marker2 !== undefined
             ) {
-                var values = item.gaugeMarkerResultList?.map((m) => m.value).filter((v) => v != null);
-                var min = Math.min(...values);
-                var max = Math.max(...values);
-                this.lowerLimit = min - 10;
-                this.upperLimit = max + 10;
+                const values = item.gaugeMarkerResultList?.map((m) => m.value).filter((v) => v != null) ?? [];
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                lower = min - 10;
+                upper = max + 10;
             } else if (item.calculated !== 0) {
-                this.lowerLimit = item.calculated * 0.8;
-                this.upperLimit = item.calculated * 1.2;
+                lower = item.calculated * 0.8;
+                upper = item.calculated * 1.2;
             } else {
-                this.lowerLimit = -10;
-                this.upperLimit = 10;
+                lower = -10;
+                upper = 10;
             }
         }
+
+        this.actualLowerLimit = Math.min(lower, upper);
+        this.actualUpperLimit = Math.max(lower, upper);
+        this.lowerLimit = lower;
+        this.upperLimit = upper;
 
         if (this.style.style === GaugeStyleEnum.Linear && this.style.isInvertScale) {
             const temp = this.lowerLimit;
@@ -495,15 +519,224 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     }
 
     private setSubvalues(item: TableWidgetResponseItem) {
-        this.subvalues = item.gaugeMarkerResultList?.map((m) => m.value).filter((v) => v != null);
+        this.actualSubvalues = item.gaugeMarkerResultList?.map((m) => m.value).filter((v) => v != null);
+        this.subvalues = this.actualSubvalues ? [...this.actualSubvalues] : undefined;
     }
 
     private setSegments() {
-        this.ranges = this.parameter?.gaugeWidgetAdvancedSettings?.segments?.map((s) => ({
-            startValue: s.from,
-            endValue: s.to,
-            color: s.colorMode === 'custom' ? s.color : this.calculatedColorSchema,
+        const segments = this.parameter?.gaugeWidgetAdvancedSettings?.segments ?? [];
+
+        this.weightedSegments = this.buildWeightedSegments(segments);
+        this.hasWeightedScale = this.weightedSegments.length > 0;
+
+        if (!this.hasWeightedScale) {
+            this.ranges = segments.map((s) => ({
+                startValue: s.from,
+                endValue: s.to,
+                color: s.colorMode === 'custom' ? s.color : this.calculatedColorSchema,
+            }));
+            this.displayValue = this.actualValue;
+            this.subvalues = this.actualSubvalues ? [...this.actualSubvalues] : undefined;
+            this.scaleCustomTicks = undefined;
+            this.lowerLimit = this.actualLowerLimit;
+            this.upperLimit = this.actualUpperLimit;
+            return;
+        }
+
+        this.ranges = this.weightedSegments.map((segment) => ({
+            startValue: this.toAxisCoordinate(segment.startPosition),
+            endValue: this.toAxisCoordinate(segment.endPosition),
+            color: segment.colorMode === 'custom' ? segment.color : this.calculatedColorSchema,
         }));
+
+        const tickPositions = Array.from(
+            new Set(this.weightedSegments.flatMap((segment) => [segment.startPosition, segment.endPosition])),
+        ).sort((a, b) => a - b);
+
+        this.scaleCustomTicks = tickPositions.map((position) => this.toAxisCoordinate(position));
+
+        this.displayValue = this.mapActualToAxisValue(this.actualValue);
+        this.subvalues = this.actualSubvalues?.map((value) => this.mapActualToAxisValue(value));
+
+        this.lowerLimit = this.toAxisCoordinate(0);
+        this.upperLimit = this.toAxisCoordinate(100);
+    }
+
+    private buildWeightedSegments(segments: Segment[]): WeightedSegmentMeta[] {
+        if (!segments?.length) {
+            return [];
+        }
+
+        const prepared = segments
+            .map((segment) => ({
+                ...segment,
+                from: +segment.from,
+                to: +segment.to,
+                weight: segment.weight != null ? +segment.weight : undefined,
+            }))
+            .sort((a, b) => a.from - b.from);
+
+        let weights = prepared.map((segment) => segment.weight ?? 0);
+
+        if (prepared.some((segment) => segment.weight == null)) {
+            const totalSpan = prepared.reduce((sum, segment) => sum + Math.max(segment.to - segment.from, 0), 0);
+
+            if (totalSpan > 0) {
+                weights = prepared.map((segment) => {
+                    const span = Math.max(segment.to - segment.from, 0);
+                    return span === 0 ? 0 : (span / totalSpan) * 100;
+                });
+            } else {
+                const equalWeight = 100 / prepared.length;
+                weights = prepared.map(() => equalWeight);
+            }
+        }
+
+        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+        if (!totalWeight) {
+            return [];
+        }
+
+        const factor = 100 / totalWeight;
+        let cursor = 0;
+
+        return prepared.map((segment, index) => {
+            const normalizedWeight = weights[index] * factor;
+            const startPosition = cursor;
+            cursor += normalizedWeight;
+            const endPosition = index === prepared.length - 1 ? 100 : cursor;
+            return {
+                ...segment,
+                weight: normalizedWeight,
+                startPosition,
+                endPosition,
+            };
+        });
+    }
+
+    private mapActualToAxisValue(value: number | null | undefined): number {
+        if (value === null || value === undefined) {
+            return value as any;
+        }
+        if (!this.hasWeightedScale) {
+            return value;
+        }
+        const normalized = this.mapActualToNormalized(value);
+        return this.toAxisCoordinate(normalized);
+    }
+
+    private mapAxisValueToActual(axisValue: number | null | undefined): number {
+        if (axisValue === null || axisValue === undefined || !this.hasWeightedScale) {
+            return axisValue as any;
+        }
+        const normalized = this.fromAxisCoordinate(axisValue);
+        return this.mapNormalizedToActual(normalized);
+    }
+
+    private mapActualToNormalized(value: number): number {
+        if (!this.weightedSegments.length) {
+            return value;
+        }
+
+        const first = this.weightedSegments[0];
+        const last = this.weightedSegments[this.weightedSegments.length - 1];
+
+        if (value <= first.from) {
+            return this.interpolateSegmentValue(first, value);
+        }
+
+        if (value >= last.to) {
+            return this.interpolateSegmentValue(last, value);
+        }
+
+        for (const segment of this.weightedSegments) {
+            if (value >= segment.from && value <= segment.to) {
+                return this.interpolateSegmentValue(segment, value);
+            }
+        }
+
+        const previous = [...this.weightedSegments].reverse().find((segment) => value > segment.to);
+        if (previous) {
+            return previous.endPosition;
+        }
+
+        const next = this.weightedSegments.find((segment) => value < segment.from);
+        if (next) {
+            return next.startPosition;
+        }
+
+        return value;
+    }
+
+    private mapNormalizedToActual(position: number): number {
+        if (!this.weightedSegments.length) {
+            return position;
+        }
+
+        const first = this.weightedSegments[0];
+        const last = this.weightedSegments[this.weightedSegments.length - 1];
+
+        if (position <= first.startPosition) {
+            return first.from;
+        }
+
+        if (position >= last.endPosition) {
+            return last.to;
+        }
+
+        for (const segment of this.weightedSegments) {
+            if (position >= segment.startPosition && position <= segment.endPosition) {
+                return this.interpolatePosition(segment, position);
+            }
+        }
+
+        return position;
+    }
+
+    private interpolateSegmentValue(segment: WeightedSegmentMeta, value: number): number {
+        if (segment.to === segment.from) {
+            return segment.endPosition;
+        }
+        const ratio = (value - segment.from) / (segment.to - segment.from);
+        return segment.startPosition + this.clamp(ratio, 0, 1) * (segment.endPosition - segment.startPosition);
+    }
+
+    private interpolatePosition(segment: WeightedSegmentMeta, position: number): number {
+        if (segment.endPosition === segment.startPosition) {
+            return segment.to;
+        }
+        const ratio = (position - segment.startPosition) / (segment.endPosition - segment.startPosition);
+        return segment.from + this.clamp(ratio, 0, 1) * (segment.to - segment.from);
+    }
+
+    private toAxisCoordinate(position: number): number {
+        return this.isInvertedScale ? 100 - position : position;
+    }
+
+    private fromAxisCoordinate(position: number): number {
+        return this.isInvertedScale ? 100 - position : position;
+    }
+
+    private get isInvertedScale(): boolean {
+        return this.style?.style === GaugeStyleEnum.Linear && this.style.isInvertScale;
+    }
+
+    private clamp(value: number, min: number, max: number): number {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    private getScaleLabelText(info: { value: number; valueText: string }): string {
+        if (!this.hasWeightedScale) {
+            return info.valueText;
+        }
+
+        const actualValue = this.mapAxisValueToActual(info.value);
+        if (actualValue === null || actualValue === undefined || Number.isNaN(actualValue)) {
+            return '';
+        }
+
+        const decimalPoints = this.parameter?.gaugeWidgetAdvancedSettings?.decimalPoints ?? 2;
+        return actualValue.toFixed(decimalPoints);
     }
 
     private roundValue(value: number): number {
