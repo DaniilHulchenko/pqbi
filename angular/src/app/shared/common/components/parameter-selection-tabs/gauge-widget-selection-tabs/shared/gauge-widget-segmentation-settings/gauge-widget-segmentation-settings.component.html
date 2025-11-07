@@ -41,7 +41,9 @@
     </div>
     <div class="segment-hint" *ngIf="segmentHint">{{ segmentHint }}</div>
     <div class="boundary-error" *ngIf="boundaryErrorMessage">{{ boundaryErrorMessage }}</div>
-    <dx-data-grid [dataSource]="segments" [showBorders]="true" (onRowPrepared)="onRowPrepared($event)">
+    <dx-data-grid [dataSource]="segments" [showBorders]="true" keyExpr="id" [focusedRowEnabled]="true"
+      [focusedRowKey]="selectedSegmentId" (onFocusedRowChanged)="onFocusedRowChanged($event)"
+      (onRowPrepared)="onRowPrepared($event)">
 
       <dxi-column dataField="name" caption="Name"></dxi-column>
       <dxi-column dataField="from" caption="From"></dxi-column>

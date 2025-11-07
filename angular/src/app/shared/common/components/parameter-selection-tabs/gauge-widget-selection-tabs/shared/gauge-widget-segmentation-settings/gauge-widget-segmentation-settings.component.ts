@@ -53,6 +53,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
 
     isEditingSegment = false;
     editingSegmentId: string | null = null;
+    selectedSegmentId: string | null = null;
 
     name: string = '';
     from: number | null = null;
@@ -79,12 +80,16 @@ export class GaugeWidgetSegmentationSettingsComponent {
             to: this.to!,
             colorMode: this.colorMode,
             color: this.colorMode === 'custom' ? this.color : null,
-            weight: this.weight!,
+            weight: this._segments.length ? this.weight! : this.TOTAL_WEIGHT,
         };
 
-        this.updateSegments([...this._segments, newSegment], {
+        const plannedSegments = [...this._segments, newSegment];
+        const neighborId = this.resolveNeighborId(plannedSegments, newSegment.id);
+
+        this.updateSegments(plannedSegments, {
             targetId: newSegment.id,
             desiredWeight: newSegment.weight!,
+            neighborId,
         });
         this.resetSegmentForm();
     }
@@ -92,6 +97,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
     editSegment(data: Segment): void {
         this.isEditingSegment = true;
         this.editingSegmentId = data.id;
+        this.selectedSegmentId = data.id;
         this.name = data.name;
         this.from = data.from;
         this.to = data.to;
@@ -125,9 +131,12 @@ export class GaugeWidgetSegmentationSettingsComponent {
                 : segment,
         );
 
+        const neighborId = this.resolveNeighborId(updated, this.editingSegmentId);
+
         this.updateSegments(updated, {
             targetId: this.editingSegmentId,
             desiredWeight: this.weight!,
+            neighborId,
         });
         this.cancelEditedSegment(false);
     }
@@ -143,8 +152,30 @@ export class GaugeWidgetSegmentationSettingsComponent {
     }
 
     deleteSegment(index: number): void {
-        const updated = this._segments.filter((_, idx) => idx !== index);
-        this.updateSegments(updated, { suppressHint: true });
+        const sorted = this.sortSegments(this._segments);
+
+        if (index < 0 || index >= sorted.length) {
+            return;
+        }
+
+        const removed = sorted[index];
+        const remaining = sorted.filter((_, idx) => idx !== index);
+
+        if (!remaining.length) {
+            this.updateSegments([], { suppressHint: true });
+            return;
+        }
+
+        const neighborIndex = index > 0 ? index - 1 : 0;
+        const neighbor = remaining[neighborIndex];
+        const neighborWeight = (neighbor.weight ?? 0) + (removed.weight ?? 0);
+
+        remaining[neighborIndex] = {
+            ...neighbor,
+            weight: this.roundWeight(neighborWeight),
+        };
+
+        this.updateSegments(remaining, { suppressHint: true });
     }
 
     validateBeforeSave(): boolean {
@@ -171,7 +202,12 @@ export class GaugeWidgetSegmentationSettingsComponent {
 
     private updateSegments(
         segments: Segment[],
-        options?: { targetId?: string; desiredWeight?: number; suppressHint?: boolean },
+        options?: {
+            targetId?: string;
+            desiredWeight?: number;
+            neighborId?: string | null;
+            suppressHint?: boolean;
+        },
     ): void {
         const normalized = segments.map((segment) => ({
             ...segment,
@@ -187,6 +223,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
         this.recalculateSegmentsState();
         this.segmentError = null;
         this.emitState({ emitSegments: true });
+        this.ensureSelectedSegment(options?.targetId);
     }
 
     private emitState({ emitSegments }: { emitSegments: boolean }): void {
@@ -259,6 +296,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
         const total = this._segments.reduce((sum, segment) => sum + (segment.weight ?? 0), 0);
         this.totalWeight = this.roundWeight(total);
         this.updateAdjacencyState();
+        this.ensureSelectedSegment(this.selectedSegmentId);
     }
 
     private validateSegmentForm(ignoreId?: string): boolean {
@@ -326,81 +364,109 @@ export class GaugeWidgetSegmentationSettingsComponent {
 
     private balanceWeights(
         segments: Segment[],
-        options?: { targetId?: string; desiredWeight?: number; suppressHint?: boolean },
+        options?: {
+            targetId?: string;
+            desiredWeight?: number;
+            neighborId?: string | null;
+            suppressHint?: boolean;
+        },
     ): { segments: Segment[]; message: string | null } {
         if (!segments.length) {
             return { segments: [], message: null };
         }
 
         const sorted = this.sortSegments(segments);
-        const balancingIndex = sorted.length - 1;
-        const targetId = options?.targetId;
-        const desiredWeight = options?.desiredWeight;
-        let hintMessage: string | null = null;
-
-        if (!targetId || desiredWeight === undefined) {
-            const fixedSum = this.sumWeights(sorted.slice(0, balancingIndex));
-            sorted[balancingIndex] = {
-                ...sorted[balancingIndex],
-                weight: this.roundWeight(Math.max(0, this.TOTAL_WEIGHT - fixedSum)),
-            };
-
-            return { segments: sorted, message: null };
-        }
-
-        const targetIndex = sorted.findIndex((segment) => segment.id === targetId);
-
-        if (targetIndex === -1) {
-            return this.balanceWeights(sorted, { suppressHint: options?.suppressHint });
-        }
 
         if (sorted.length === 1) {
             sorted[0] = { ...sorted[0], weight: this.roundWeight(this.TOTAL_WEIGHT) };
             return { segments: sorted, message: null };
         }
 
-        if (targetIndex === balancingIndex) {
-            const fixedSum = this.sumWeights(sorted.slice(0, balancingIndex));
-            sorted[targetIndex] = {
-                ...sorted[targetIndex],
-                weight: this.roundWeight(Math.max(0, this.TOTAL_WEIGHT - fixedSum)),
-            };
+        const targetId = options?.targetId;
+        const desiredWeight = options?.desiredWeight;
 
-            return { segments: sorted, message: null };
+        if (targetId && desiredWeight !== undefined) {
+            const targetIndex = sorted.findIndex((segment) => segment.id === targetId);
+
+            if (targetIndex !== -1) {
+                const neighborIndex = this.findNeighborIndex(sorted, targetIndex, options?.neighborId ?? null);
+
+                if (neighborIndex !== -1) {
+                    return this.balanceWithNeighbor(sorted, targetIndex, neighborIndex, desiredWeight, options?.suppressHint);
+                }
+            }
         }
 
-        const fixedSum = sorted.reduce((sum, segment, index) => {
-            if (index === targetIndex || index === balancingIndex) {
-                return sum;
-            }
+        return this.normalizeByTrailingSegment(sorted);
+    }
 
-            return sum + (segment.weight ?? 0);
-        }, 0);
+    private balanceWithNeighbor(
+        segments: Segment[],
+        targetIndex: number,
+        neighborIndex: number,
+        desiredWeight: number,
+        suppressHint?: boolean,
+    ): { segments: Segment[]; message: string | null } {
+        const otherSum = this.sumWeights(
+            segments.filter((_, index) => index !== targetIndex && index !== neighborIndex),
+        );
+        const pairTotal = this.roundWeight(Math.max(0, this.TOTAL_WEIGHT - otherSum));
 
-        const maxWeight = Math.max(0, this.TOTAL_WEIGHT - fixedSum);
-        let actualWeight = Math.max(0, Math.min(desiredWeight, maxWeight));
+        let actualWeight = Math.max(0, Math.min(desiredWeight, pairTotal));
         actualWeight = this.roundWeight(actualWeight);
 
-        if (!options?.suppressHint && desiredWeight - actualWeight > this.EPSILON) {
+        let hintMessage: string | null = null;
+
+        if (!suppressHint && desiredWeight - actualWeight > this.EPSILON) {
             const formatted = this.formatWeight(actualWeight);
-            hintMessage = `Доступно лише ${formatted}% для дотримання суми 100%. / Доступно только ${formatted}% для соблюдения суммы 100%.`;
+            hintMessage = `Недостатньо відсотків у попереднього сегмента. Доступно лише ${formatted}%. / Недостаточно процентов у предыдущего сегмента. Доступно только ${formatted}%.`;
         }
 
-        const balancingWeight = this.roundWeight(Math.max(0, this.TOTAL_WEIGHT - (fixedSum + actualWeight)));
+        const neighborWeight = this.roundWeight(Math.max(0, pairTotal - actualWeight));
 
-        sorted[targetIndex] = {
-            ...sorted[targetIndex],
+        segments[targetIndex] = {
+            ...segments[targetIndex],
             weight: actualWeight,
         };
 
-        sorted[balancingIndex] = {
-            ...sorted[balancingIndex],
-            weight: balancingWeight,
+        segments[neighborIndex] = {
+            ...segments[neighborIndex],
+            weight: neighborWeight,
         };
 
-        return { segments: sorted, message: hintMessage };
+        return { segments, message: hintMessage };
     }
 
+    private normalizeByTrailingSegment(segments: Segment[]): { segments: Segment[]; message: string | null } {
+        const sorted = this.sortSegments(segments);
+        const balancingIndex = sorted.length - 1;
+        const fixedSum = this.sumWeights(sorted.slice(0, balancingIndex));
+        sorted[balancingIndex] = {
+            ...sorted[balancingIndex],
+            weight: this.roundWeight(Math.max(0, this.TOTAL_WEIGHT - fixedSum)),
+        };
+
+        return { segments: sorted, message: null };
+    }
+
+    private findNeighborIndex(segments: Segment[], targetIndex: number, neighborId: string | null): number {
+        if (neighborId) {
+            const explicitIndex = segments.findIndex((segment) => segment.id === neighborId);
+            if (explicitIndex !== -1 && explicitIndex !== targetIndex) {
+                return explicitIndex;
+            }
+        }
+
+        if (targetIndex > 0) {
+            return targetIndex - 1;
+        }
+
+        if (targetIndex + 1 < segments.length) {
+            return targetIndex + 1;
+        }
+
+        return -1;
+    }
     private sortSegments(segments: Segment[]): Segment[] {
         return [...segments].sort((a, b) => {
             if (a.from !== b.from) {
@@ -474,12 +540,56 @@ export class GaugeWidgetSegmentationSettingsComponent {
         }
 
         const sorted = this.sortSegments(this._segments);
-        if (sorted.length === 1) {
-            return sorted[0].weight ?? this.TOTAL_WEIGHT;
+        const targetId = this.selectedSegmentId;
+
+        if (targetId) {
+            const candidate = sorted.find((segment) => segment.id === targetId);
+            if (candidate?.weight != null) {
+                return this.roundWeight(candidate.weight);
+            }
         }
 
-        const balancingIndex = sorted.length - 1;
-        const fixedSum = this.sumWeights(sorted.slice(0, balancingIndex));
-        return this.roundWeight(Math.max(0, this.TOTAL_WEIGHT - fixedSum));
+        const last = sorted[sorted.length - 1];
+        return this.roundWeight(last.weight ?? this.TOTAL_WEIGHT);
+    }
+
+    private resolveNeighborId(segments: Segment[], targetId: string): string | null {
+        const sorted = this.sortSegments(segments);
+        const targetIndex = sorted.findIndex((segment) => segment.id === targetId);
+
+        if (targetIndex === -1) {
+            return null;
+        }
+
+        if (targetIndex > 0) {
+            return sorted[targetIndex - 1].id;
+        }
+
+        if (targetIndex + 1 < sorted.length) {
+            return sorted[targetIndex + 1].id;
+        }
+
+        return null;
+    }
+
+    private ensureSelectedSegment(preferredId: string | null | undefined): void {
+        const candidate = preferredId ?? this.selectedSegmentId;
+
+        if (candidate && this._segments.some((segment) => segment.id === candidate)) {
+            this.selectedSegmentId = candidate;
+            return;
+        }
+
+        this.selectedSegmentId = this._segments.length
+            ? this._segments[this._segments.length - 1].id
+            : null;
+    }
+
+    onFocusedRowChanged(event: any): void {
+        const data = event?.row?.data;
+
+        if (data?.id) {
+            this.selectedSegmentId = data.id;
+        }
     }
 }
