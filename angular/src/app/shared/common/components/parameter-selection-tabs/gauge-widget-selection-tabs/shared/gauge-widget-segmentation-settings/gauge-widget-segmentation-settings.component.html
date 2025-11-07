@@ -39,7 +39,9 @@
     </div>
     <div class="weight-error" *ngIf="!isTotalWeightValid">Weights must sum to 100%. / Сума ваг повинна дорівнювати 100%.
     </div>
-    <dx-data-grid [dataSource]="segments" [showBorders]="true">
+    <div class="segment-hint" *ngIf="segmentHint">{{ segmentHint }}</div>
+    <div class="boundary-error" *ngIf="boundaryErrorMessage">{{ boundaryErrorMessage }}</div>
+    <dx-data-grid [dataSource]="segments" [showBorders]="true" (onRowPrepared)="onRowPrepared($event)">
 
       <dxi-column dataField="name" caption="Name"></dxi-column>
       <dxi-column dataField="from" caption="From"></dxi-column>

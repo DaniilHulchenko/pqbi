@@ -38,3 +38,19 @@
   font-size: 0.85rem;
   margin-bottom: 0.5rem;
 }
+
+.segment-hint {
+  color: #0c5460;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.boundary-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+:host ::ng-deep .dx-datagrid .dx-row.invalid-boundary > td {
+  background-color: #fff3cd;
+}
