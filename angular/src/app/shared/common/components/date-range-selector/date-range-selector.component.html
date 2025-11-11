@@ -1,0 +1,53 @@
+<div class="time-settings-container">
+  <div class="header">{{'TimeIntervalAndRefreshRate' | localize}}:</div>
+
+  <dx-radio-group [(ngModel)]="selectedMode" (ngModelChange)="invokeOnChange()" [items]="dateRangeOptions" layout="vertical" class="radio-group">
+    <div *dxTemplate="let item of 'item'">
+      <div *ngIf="item === DateRangeType.Relative" class="radio-row">
+        <div class="controls-cell">
+          <div class="left-controls">
+            <span>{{'Last' | localize}}</span>
+
+            <dx-number-box class="small-number" [(ngModel)]="relativeValue" (ngModelChange)="invokeOnChange()" [min]="1" [disabled]="selectedMode !== DateRangeType.Relative"
+              [showSpinButtons]="true"></dx-number-box>
+
+            <dx-select-box class="small-select" [(ngModel)]="relativeUnit" (ngModelChange)="invokeOnChange()" [items]="customUnitOptions"
+              displayExpr="label" valueExpr="value" placeholder=""
+              [disabled]="selectedMode !== DateRangeType.Relative"></dx-select-box>
+          </div>
+
+          <div class="right-controls ms-2">
+            <span>{{'RefreshRate' | localize}}*</span>
+            <dx-number-box name="valueSelect" class="small-number" [(value)]="refreshValue"
+              (valueChange)="invokeRefreshChange()"
+              [showSpinButtons]="true" [class.is-invalid]="!isValueValid"
+              [min]="minCustomValue" required [disabled]="selectedMode !== DateRangeType.Relative">
+            </dx-number-box>
+
+            <dx-select-box name="customUnitSelect" class="small-select" [(value)]="refreshUnit"
+              (valueChange)="invokeRefreshChange()" [dataSource]="customUnitOptions"
+              displayExpr="label" valueExpr="value" placeholder=""
+              [class.is-invalid]="!isRefreshRateCustomUnitValid" required [disabled]="selectedMode !== DateRangeType.Relative">
+            </dx-select-box>
+          </div>
+        </div>
+      </div>
+
+
+
+      <div *ngIf="item === DateRangeType.Range" class="radio-row">
+        <div class="controls-cell range-controls">
+          <span>{{'From' | localize}}:</span>
+          <dx-date-box [(ngModel)]="fromDate" (ngModelChange)="invokeOnChange()" type="datetime" width="140"
+            [disabled]="selectedMode !== DateRangeType.Range"></dx-date-box>
+
+          <span>{{'To' | localize}}:</span>
+          <dx-date-box [(ngModel)]="toDate" (ngModelChange)="invokeOnChange()" type="datetime" width="140"
+            [disabled]="selectedMode !== DateRangeType.Range"></dx-date-box>
+
+          <span class="no-refresh">{{'NoRefresh' | localize}}</span>
+        </div>
+      </div>
+    </div>
+  </dx-radio-group>
+</div>

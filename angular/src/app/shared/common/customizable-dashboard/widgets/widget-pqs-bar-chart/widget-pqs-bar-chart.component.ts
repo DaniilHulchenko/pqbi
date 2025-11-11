@@ -5,7 +5,6 @@ import {
     BarChartResponse,
     BarChartType,
     BarChartWidgetConfigurationDto,
-    BarChartWidgetConfigurationsServiceProxy,
     BarParameter,
     CreateOrEditBarChartWidgetConfigurationDto,
     CustomWidgetTableData,
@@ -20,20 +19,19 @@ import {
 } from '@shared/service-proxies/service-proxies';
 import { CreateOrEditBarChartConfigurationComponent } from './create-or-edit-bar-chart-configuration/create-or-edit-bar-chart-configuration.component';
 import { DateRangeService } from '@app/shared/services/date-range-service';
-import { DateRangeState } from '@app/shared/models/date-range-state';
 import { RenameWidgetModalComponent } from '../../rename-widget-modal/rename-widget-modal.component';
 import { ComponentsState } from '@app/shared/models/components-state';
 import { ColumnType } from '@app/shared/enums/column-type';
 import safeStringify from 'fast-safe-stringify';
 import { ExcludeFlagged } from '@app/shared/enums/advanced-settings-options';
 import { ArrayUtils } from '@app/shared/services/array-utils.service';
-import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
-import { Guid } from '@node_modules/guid-ts/lib';
-import { Observable, of, forkJoin, Subscription } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Guid } from 'guid-ts';
+import { Observable, of, forkJoin, Subscription, Subject, timer } from 'rxjs';
+import { catchError, map, takeUntil } from 'rxjs/operators';
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
 import { BarchartWidgetConfigurationService } from '@app/shared/services/widget-configurations/barchart-widget-configuration.service';
-
+import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
+import { DateTime } from 'luxon';
 
 @Component({
     selector: 'widgetPqsBarChart',
@@ -49,8 +47,10 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     barChartType = BarChartType;
     dataSource: any;
     dataUnitType: DataUnitType;
+    refreshRate: number | null = null;
 
     private subs: Subscription[] = [];
+    private stopStream$ = new Subject();
 
     constructor(
         injector: Injector,
@@ -88,24 +88,13 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
         return e.valueText;
     };
 
-    getToken(dataUnitType: DataUnitType): string{
-        return dataUnitType?.id !== 41 && dataUnitType?.id !== 255 && dataUnitType?.tokenCode ? this.l(dataUnitType.tokenCode) : '';
+    getToken(dataUnitType: DataUnitType): string {
+        return dataUnitType?.id !== 41 && dataUnitType?.id !== 255 && dataUnitType?.tokenCode
+            ? this.l(dataUnitType.tokenCode)
+            : '';
     }
 
     fetch(): void {
-        const state: DateRangeState = this.barChartConfiguration?.dateRange
-            ? DateRangeState.fromJSON(this.barChartConfiguration.dateRange)
-            : new DateRangeState({ rangeOption: DateRangeUnits.LAST_7_DAYS, startDate: null, endDate: null });
-
-        let [startDate, endDate] = this._dateRangeService.getDateRangeFromState(state);
-
-        if (!startDate || !endDate || startDate >= endDate) {
-            [startDate, endDate] = this._dateRangeService.getDateRangeFromUnit(DateRangeUnits.LAST_7_DAYS);
-        }
-
-        startDate = startDate.toUTC();
-        endDate = endDate.toUTC();
-
         const config = JSON.parse(this.barChartConfiguration.configuration);
 
         var sub = forkJoin({
@@ -175,10 +164,57 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
                 }),
                 feeders: [...formattedFeeders, ...formattedComponents],
                 widgetName: this.widgetConfigurationInDB?.name,
-                startDate: startDate,
-                endDate: endDate,
+                startDate: null,
+                endDate: null,
                 userTimeZone: 1,
             });
+
+            this.refreshRate = DateRangeAndRefreshModelNew.getRefreshIntervalInSecondsFromJson(this.barChartConfiguration?.dateRange);
+
+            if (this.refreshRate && this.refreshRate !== -1) {
+                var subTimer = timer(0, this.refreshRate * 1000)
+                    .pipe(takeUntil(this.stopStream$))
+                    .subscribe(() => {
+                        const range = this.prepareDataRange();
+                        this.barChartRequest.startDate = range[0];
+                        this.barChartRequest.endDate = range[1];
+                        var sub = this._tenantDashboardService.pQSBarChartWidgetData(this.barChartRequest).subscribe({
+                            next: (response: BarChartResponse) => {
+                                const groups = response?.groups || [];
+                                this.dataUnitType = response?.dataUnitType;
+                                if (this.barChartConfiguration?.type === BarChartType.Plain) {
+                                    this.dataSource = this.getPlainData(groups);
+                                } else {
+                                    this.dataSource = this.transformData(groups);
+                                }
+                            },
+                            error: (err) => {
+                                console.error('Bar chart data load failed', err);
+                            },
+                        });
+                        this.subs.push(sub);
+                    });
+                this.subs.push(subTimer);
+            } else {
+                const range = this.prepareDataRange();
+                this.barChartRequest.startDate = range[0];
+                this.barChartRequest.endDate = range[1];
+                var sub = this._tenantDashboardService.pQSBarChartWidgetData(this.barChartRequest).subscribe({
+                    next: (response: BarChartResponse) => {
+                        const groups = response?.groups || [];
+                        this.dataUnitType = response?.dataUnitType;
+                        if (this.barChartConfiguration?.type === BarChartType.Plain) {
+                            this.dataSource = this.getPlainData(groups);
+                        } else {
+                            this.dataSource = this.transformData(groups);
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Bar chart data load failed', err);
+                    },
+                });
+                this.subs.push(sub);
+            }
 
             var subGetData = this._tenantDashboardService.pQSBarChartWidgetData(this.barChartRequest).subscribe({
                 next: (response: BarChartResponse) => {
@@ -209,20 +245,26 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     }
 
     onEditModelClose(isSaved) {
-        if (!isSaved && !this.widgetConfigurationInDB?.configuration)
-        {
-            abp.event.trigger('app.dashboard.removeWidget', this.widgetConfigurationInDB.widgetGuid, 'Widgets_Tenant_PQSBarChart');
+        if (!isSaved && !this.widgetConfigurationInDB?.configuration) {
+            abp.event.trigger(
+                'app.dashboard.removeWidget',
+                this.widgetConfigurationInDB.widgetGuid,
+                'Widgets_Tenant_PQSBarChart',
+            );
         }
     }
 
     onConfigurationChange(newConfig: CreateOrEditBarChartWidgetConfigurationDto): void {
         this.saveConfiguration(newConfig.id.toString());
+        this.stopStream$.next(null);
+        this.stopStream$.complete();
         this.refreshWidget();
     }
 
     refreshWidget(): void {
         if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
-            var sub = this._barChartWidgetConfigurationService.getForEdit(+this.widgetConfigurationInDB.configuration)
+            var sub = this._barChartWidgetConfigurationService
+                .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.barChartConfiguration = result.barChartWidgetConfiguration;
                     if (this.barChartConfiguration) {
@@ -231,6 +273,15 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
                 });
             this.subs.push(sub);
         }
+    }
+
+    private prepareDataRange(): [DateTime, DateTime] {
+        const state: DateRangeAndRefreshModelNew = this.barChartConfiguration?.dateRange
+            ? DateRangeAndRefreshModelNew.createItem(this.barChartConfiguration.dateRange)
+            : DateRangeAndRefreshModelNew.createItem('');
+        var [startDate, endDate] = this._dateRangeService.getDateRangeFromNewState(state);
+
+        return [DateTime.fromJSDate(startDate), DateTime.fromJSDate(endDate)];
     }
 
     private getPlainData(groups: any[]): any[] {
@@ -272,7 +323,7 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
         if (Guid.isValid(seriesBy)) {
             result.type = DimensionType.CustomGroup;
             result.id = seriesBy;
-            return  this._groupService.getGroupForView(seriesBy).pipe(
+            return this._groupService.getGroupForView(seriesBy).pipe(
                 map((response) => {
                     if (response.group) {
                         result.name = response.group.name;
@@ -350,6 +401,8 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     }
 
     ngOnDestroy(): void {
-        this.subs.forEach(sub => sub.unsubscribe());
+        this.stopStream$.next(null);
+        this.stopStream$.complete();
+        this.subs.forEach((sub) => sub.unsubscribe());
     }
 }

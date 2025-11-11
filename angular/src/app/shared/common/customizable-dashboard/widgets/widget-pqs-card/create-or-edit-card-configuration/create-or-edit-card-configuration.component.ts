@@ -24,17 +24,26 @@ import { finalize, Subscription } from 'rxjs';
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { CardWidgetConfigurationService } from '@app/shared/services/widget-configurations/card-widget-configuration.service';
 import { EditableTabComponentBaseComponent } from '@app/shared/common/components/parameter-selection-tabs/editable-tab-component-base';
+import { DateRangeType } from '@app/shared/enums/date-range-type';
+import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
+import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 
 @Component({
     selector: 'createOrEditCardConfiguration',
     templateUrl: './create-or-edit-card-configuration.component.html',
     styleUrl: './create-or-edit-card-configuration.component.css',
 })
-export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationModalBaseComponent implements OnInit, OnDestroy {
+export class CreateOrEditCardConfigurationComponent
+    extends WidgetConfigurationModalBaseComponent
+    implements OnInit, OnDestroy
+{
     @ViewChild('cardWidgetConfigurationForm') pqsForm: NgForm;
-    @ViewChild('customParameterSelectionTab') customParameterSelectionTab: CardWidgetCustomParameterSelectionTabComponent;
-    @ViewChild('logicalParameterSelectionTab') logicalParameterSelectionTab: CardWidgetLogicalParameterSelectionTabComponent;
-    @ViewChild('channelParameterSelectionTab') channelParameterSelectionTab: CardWidgetChannelParameterSelectionTabComponent;
+    @ViewChild('customParameterSelectionTab')
+    customParameterSelectionTab: CardWidgetCustomParameterSelectionTabComponent;
+    @ViewChild('logicalParameterSelectionTab')
+    logicalParameterSelectionTab: CardWidgetLogicalParameterSelectionTabComponent;
+    @ViewChild('channelParameterSelectionTab')
+    channelParameterSelectionTab: CardWidgetChannelParameterSelectionTabComponent;
     @ViewChild('additionalParameterSelectionTab')
     additionalParameterSelectionTab: CardWidgetAdditionalParameterSelectionTabComponent;
     @ViewChild('exceptionParameterSelectionTab')
@@ -49,11 +58,9 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
     isEditMode = false;
 
     selectedCardStyle: CardWidgetStyleType;
-    dateRangeSelectionState: DateRangeState = new DateRangeState({
-        rangeOption: DateRangeUnits.LAST_30_DAYS,
-        startDate: null,
-        endDate: null,
-    });
+
+    dateRangeSelectionState: DateRangeAndRefreshModelNew;
+
     refreshRateSelectionState: number = 0;
     parameters: WidgetParametersColumn[] = [];
 
@@ -92,7 +99,8 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
             template: 'eventTemplate',
         },
     ];
-    private cardWidgetConfiguration: CreateOrEditCardWidgetConfigurationDto = new CreateOrEditCardWidgetConfigurationDto();
+    private cardWidgetConfiguration: CreateOrEditCardWidgetConfigurationDto =
+        new CreateOrEditCardWidgetConfigurationDto();
 
     private subs: Subscription[] = [];
 
@@ -134,50 +142,60 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
         }
     }
 
+    onDateRangeChangedNew() {
+        this.refreshRateSelectionState = this.dateRangeSelectionState.refreshIntervalInSeconds;
+    }
+
     onAddBaseParameter(event: AddBaseParameterEventCallBack) {
-        this.parameters = [{
-            id: Guid.newGuid().toString(),
-            componentsState: event.componentsState,
-            name: event.parameter.name,
-            quantity: event.quantity,
-            type: ColumnType.BaseParameter,
-            data: safeStringify(event.parameter),
-            cardWidgetAdvancedSettings: event.cardWidgetAdvancedSettings,
-            resolution: 0,
-                style: null
-        }];
+        this.parameters = [
+            {
+                id: Guid.newGuid().toString(),
+                componentsState: event.componentsState,
+                name: event.parameter.name,
+                quantity: event.quantity,
+                type: ColumnType.BaseParameter,
+                data: safeStringify(event.parameter),
+                cardWidgetAdvancedSettings: event.cardWidgetAdvancedSettings,
+                resolution: 0,
+                style: null,
+            },
+        ];
     }
 
     onAddCustomParameter(event: AddCustomParameterEventCallBack) {
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
-            this.parameters = [{
-                id: Guid.newGuid().toString(),
-                componentsState: event.componentsState,
-                name: parameter.name,
-                quantity: event.quantity,
-                type: ColumnType.CustomParameter,
-                data: event.customParameterId,
-                cardWidgetAdvancedSettings: event.advancedSettings,
-                resolution: 0,
-                style: null
-            }];
+            this.parameters = [
+                {
+                    id: Guid.newGuid().toString(),
+                    componentsState: event.componentsState,
+                    name: parameter.name,
+                    quantity: event.quantity,
+                    type: ColumnType.CustomParameter,
+                    data: event.customParameterId,
+                    cardWidgetAdvancedSettings: event.advancedSettings,
+                    resolution: 0,
+                    style: null,
+                },
+            ];
         });
         this.subs.push(sub);
     }
 
     onAddException(event: AddCardWidgetExceptionEventCallBack) {
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
-            this.parameters = [{
-                id: Guid.newGuid().toString(),
-                componentsState: null,
-                name: parameter.name,
-                quantity: event.quantity,
-                type: ColumnType.Exception,
-                data: event.customParameterId,
-                resolution: 0,
-                cardWidgetAdvancedSettings: event.cardWidgetAdvancedSettings,
-                style: null
-            }];
+            this.parameters = [
+                {
+                    id: Guid.newGuid().toString(),
+                    componentsState: null,
+                    name: parameter.name,
+                    quantity: event.quantity,
+                    type: ColumnType.Exception,
+                    data: event.customParameterId,
+                    resolution: 0,
+                    cardWidgetAdvancedSettings: event.cardWidgetAdvancedSettings,
+                    style: null,
+                },
+            ];
         });
         this.subs.push(sub);
     }
@@ -201,7 +219,7 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
                 aggregationInSeconds: event.aggregation.aggregationValue,
             }),
             cardWidgetAdvancedSettings: event.advancedSettings,
-            style: null
+            style: null,
         };
 
         this.parameters = [newItem];
@@ -333,10 +351,11 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
     show(configuration: CreateOrEditWidgetConfigurationDto) {
         this.open();
         if (configuration && configuration.configuration) {
-            var sub = this.cardWidgetConfigurationService.getForEdit(+configuration.configuration)
+            var sub = this.cardWidgetConfigurationService
+                .getForEdit(+configuration.configuration)
                 .subscribe((result) => {
                     this.cardWidgetConfiguration = result.cardWidgetConfiguration;
-                    this.dateRangeSelectionState = DateRangeState.fromJSON(result.cardWidgetConfiguration.dateRange);
+                    this.dateRangeSelectionState = DateRangeAndRefreshModelNew.createItem(result.cardWidgetConfiguration.dateRange);
                     this.refreshRateSelectionState = result.cardWidgetConfiguration.refreshRate;
                     this.selectedCardStyle = result.cardWidgetConfiguration.styleType;
                     this.parameters = JSON.parse(result.cardWidgetConfiguration.parameters);
@@ -344,16 +363,11 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
                         this.handleParameter(this.parameters[0], 'edit');
                         this.isEditMode = true;
                     }, 1000);
-                    
                 });
             this.subs.push(sub);
         } else {
             this.cardWidgetConfiguration = new CreateOrEditCardWidgetConfigurationDto();
-            this.dateRangeSelectionState = new DateRangeState({
-                rangeOption: DateRangeUnits.LAST_30_DAYS,
-                startDate: null,
-                endDate: null,
-            });
+            this.dateRangeSelectionState = null;
             this.parameters = [];
             this.refreshRateSelectionState = 0;
             this.selectedCardStyle = null;
@@ -361,16 +375,19 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
     }
 
     isFormValid(): boolean {
-        return this.refreshRateSelectionState
-            && this.refreshRateSelectionState !== 0
-            && this.parameters?.length > 0
-            && this.dateRangeSelectionState && this.selectedCardStyle != null
-            && (this.selectedTab ? this.selectedTab.isFormValid() : true);
+        return (
+            this.refreshRateSelectionState &&
+            this.refreshRateSelectionState !== 0 &&
+            this.parameters?.length > 0 &&
+            this.dateRangeSelectionState &&
+            this.selectedCardStyle != null &&
+            (this.selectedTab ? this.selectedTab.isFormValid() : true)
+        );
     }
 
     save() {
         this.saving = true;
-        this.cardWidgetConfiguration.dateRange = this.dateRangeSelectionState.toJSON();
+        this.cardWidgetConfiguration.dateRange = this.dateRangeSelectionState.toJson();
         this.cardWidgetConfiguration.parameters = safeStringify(this.parameters);
         this.cardWidgetConfiguration.refreshRate = this.refreshRateSelectionState;
         this.cardWidgetConfiguration.styleType = this.selectedCardStyle;
@@ -410,9 +427,7 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
     onTabSelectionChanging(e: any) {
         if (this.isEditMode) {
             e.cancel = true;
-            this.notify.info(
-                this.l('CannotChangeTabTitle'),
-            );
+            this.notify.info(this.l('CannotChangeTabTitle'));
             return;
         }
         this.previousTabIndex = e.component.option('selectedIndex');
@@ -472,6 +487,6 @@ export class CreateOrEditCardConfigurationComponent extends WidgetConfigurationM
     }
 
     ngOnDestroy(): void {
-        this.subs.forEach(sub => sub.unsubscribe());
+        this.subs.forEach((sub) => sub.unsubscribe());
     }
 }

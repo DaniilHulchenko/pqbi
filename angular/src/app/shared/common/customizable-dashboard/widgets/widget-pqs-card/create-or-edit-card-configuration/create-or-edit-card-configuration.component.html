@@ -6,14 +6,8 @@
                 <cardWidgetStyleSelector [(ngModel)]="selectedCardStyle" name="style" required>
                 </cardWidgetStyleSelector>
             </div>
-            <div class="row my-3">
-                <div class="col-auto">
-                    <datetimeRangeSelector name="dateRange" [(ngModel)]="dateRangeSelectionState" (ngModelChange)="onDateRangeChanged($event)" required
-                        style="flex: 1; max-width: 50%;" />
-                </div>
-                <div class="col-6">
-                    <widgetRefreshSelector name="refreshRate" [(ngModel)]="refreshRateSelectionState" required />
-                </div>
+            <div class="my-3 w-50">
+                <dateRangeSelector name="dateRange" [(ngModel)]="dateRangeSelectionState" (ngModelChange)="onDateRangeChangedNew()" required></dateRangeSelector>
             </div>
 
             <div class="d-flex flex-column mb-3" style="width: 100%;">

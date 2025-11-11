@@ -1,0 +1,70 @@
+.time-settings-container {
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+.header {
+  background-color: #e86f27;
+  color: #fff;
+  font-weight: bold;
+  padding: 6px;
+  border-radius: 6px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.radio-group {
+  width: 100%;
+}
+
+.radio-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.radio-label {
+  width: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.controls-cell {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.left-controls,
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.range-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.small-number {
+  max-width: 90px;
+}
+
+.small-select {
+  max-width: 100px;
+}
+
+.no-refresh {
+  color: gray;
+  font-style: italic;
+  margin-left: 12px;
+}
+
+.tiny-radio {
+  width: 20px;
+}

@@ -5,7 +5,6 @@ import { CreateOrEditCardConfigurationComponent } from './create-or-edit-card-co
 import { RenameWidgetModalComponent } from '../../rename-widget-modal/rename-widget-modal.component';
 import {
     CardWidgetConfigurationDto,
-    CardWidgetConfigurationsServiceProxy,
     ColumnWidgetTable,
     CreateOrEditWidgetConfigurationDto,
     CustomWidgetTableData,
@@ -18,8 +17,6 @@ import {
     TableWidgetResponse,
     TenantDashboardServiceProxy,
 } from '@shared/service-proxies/service-proxies';
-import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
-import { DateRangeState } from '@app/shared/models/date-range-state';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
 import { ColorSchema, ExcludeFlagged } from '@app/shared/enums/advanced-settings-options';
 import { ColumnType } from '@app/shared/enums/column-type';
@@ -30,6 +27,8 @@ import { DateTime } from 'luxon';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
 import { CardWidgetConfigurationService } from '@app/shared/services/widget-configurations/card-widget-configuration.service';
+import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
+import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 
 @Component({
     selector: 'app-widget-pqs-card',
@@ -103,7 +102,8 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
     refreshWidget(): void {
         if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
-            var sub = this.cardWidgetConfigurationService.getForEdit(+this.widgetConfigurationInDB.configuration)
+            var sub = this.cardWidgetConfigurationService
+                .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.cardWidgetConfiguration = result.cardWidgetConfiguration;
                     if (this.cardWidgetConfiguration) {
@@ -171,8 +171,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                     customData,
                     tableEvent,
                     parameterName: column.name,
-                    isExcludeFlaggedData: column.cardWidgetAdvancedSettings?.excludeFlagged === ExcludeFlagged.DefaultEvents,
-                    markers: null
+                    isExcludeFlaggedData:
+                        column.cardWidgetAdvancedSettings?.excludeFlagged === ExcludeFlagged.DefaultEvents,
+                    markers: null,
                 });
             });
         }
@@ -184,8 +185,8 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                 .pipe(takeUntil(this.stopStream$))
                 .subscribe(() => {
                     const range = this.prepareDataRange();
-                    request.startDate = range[0].toUTC();
-                    request.endDate = range[1].toUTC();
+                    request.startDate = range[0];
+                    request.endDate = range[1];
                     var sub = this._tenantDashboardService
                         .pQSCardWidgetData(request)
                         .subscribe((result) => this.processResponse(result));
@@ -194,9 +195,11 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             this.subs.push(subTimer);
         } else {
             const range = this.prepareDataRange();
-            request.startDate = range[0].toUTC();
-            request.endDate = range[1].toUTC();
-            var sub = this._tenantDashboardService.pQSCardWidgetData(request).subscribe((result) => this.processResponse(result));
+            request.startDate = range[0];
+            request.endDate = range[1];
+            var sub = this._tenantDashboardService
+                .pQSCardWidgetData(request)
+                .subscribe((result) => this.processResponse(result));
             this.subs.push(sub);
         }
     }
@@ -209,10 +212,16 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
             if (components) {
                 let tableWidgetConfigurationComponents = components.components ?? [];
-                let formattedFeeders = components.feeders?.map((f) => new FeederComponentInfo({
-                    ...f,
-                    compName: tableWidgetConfigurationComponents?.find(c => c.key === f.componentId)?.label ?? ''
-                })) ?? [];
+                let formattedFeeders =
+                    components.feeders?.map(
+                        (f) =>
+                            new FeederComponentInfo({
+                                ...f,
+                                compName:
+                                    tableWidgetConfigurationComponents?.find((c) => c.key === f.componentId)?.label ??
+                                    '',
+                            }),
+                    ) ?? [];
                 let formattedComponents = tableWidgetConfigurationComponents
                     .filter((c) => !formattedFeeders.some((f) => f.componentId === c.key))
                     .map(
@@ -274,16 +283,19 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     }
 
     onEditModelClose(isSaved) {
-        if (!isSaved && !this.widgetConfigurationInDB?.configuration)
-        {
-            abp.event.trigger('app.dashboard.removeWidget', this.widgetConfigurationInDB.widgetGuid, 'Widgets_Tenant_PQSCard');
+        if (!isSaved && !this.widgetConfigurationInDB?.configuration) {
+            abp.event.trigger(
+                'app.dashboard.removeWidget',
+                this.widgetConfigurationInDB.widgetGuid,
+                'Widgets_Tenant_PQSCard',
+            );
         }
     }
 
     private processResponse(response: TableWidgetResponse) {
         const responseItem = response.items[0];
         this.title = responseItem.parameterName;
-        // if(this.parameter?.cardWidgetAdvancedSettings?.normalizeValue === NormalizeEnum.VALUE && this.parameter?.cardWidgetAdvancedSettings?.normalizeNominalValue){ 
+        // if(this.parameter?.cardWidgetAdvancedSettings?.normalizeValue === NormalizeEnum.VALUE && this.parameter?.cardWidgetAdvancedSettings?.normalizeNominalValue){
         //     responseItem.calculated = normalize(responseItem.calculated, this.parameter.cardWidgetAdvancedSettings.normalizeNominalValue);
         // }
         this.formatNumber(responseItem.calculated, responseItem.dataUnitType);
@@ -297,9 +309,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         }
 
         if (
-            this.parameter.cardWidgetAdvancedSettings?.lowerLimit < responseItem.calculated 
-            && this.parameter.cardWidgetAdvancedSettings?.upperLimit > responseItem.calculated
-            && this.parameter.cardWidgetAdvancedSettings?.icon.appearance === 'limits'
+            this.parameter.cardWidgetAdvancedSettings?.lowerLimit < responseItem.calculated &&
+            this.parameter.cardWidgetAdvancedSettings?.upperLimit > responseItem.calculated &&
+            this.parameter.cardWidgetAdvancedSettings?.icon.appearance === 'limits'
         ) {
             this.isIconVisible = false;
         }
@@ -328,23 +340,23 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     }
 
     private prepareDataRange(): [DateTime, DateTime] {
-        const state: DateRangeState = this.cardWidgetConfiguration?.dateRange
-            ? DateRangeState.fromJSON(this.cardWidgetConfiguration.dateRange)
-            : new DateRangeState({ rangeOption: DateRangeUnits.LAST_7_DAYS, startDate: null, endDate: null });
-
-        let [startDate, endDate] = this.dateRangeService.getDateRangeFromState(state);
+        const state: DateRangeAndRefreshModelNew = this.cardWidgetConfiguration?.dateRange
+            ? DateRangeAndRefreshModelNew.createItem(this.cardWidgetConfiguration.dateRange)
+            : DateRangeAndRefreshModelNew.createItem('');
+        var [startDate, endDate] = this._dateRangeService.getDateRangeFromNewState(state);
 
         if (!startDate || !endDate || startDate >= endDate) {
-            [startDate, endDate] = this.dateRangeService.getDateRangeFromUnit(DateRangeUnits.LAST_7_DAYS);
+            [startDate, endDate] = this.dateRangeService.getDateRangeFromNewUnit(RefreshSelectionCustomUnits.Day, 30);
         }
 
-        return [startDate, endDate];
+        return [DateTime.fromJSDate(startDate), DateTime.fromJSDate(endDate)];
     }
 
     private roundValue(value: number): number {
         let roundTo = 2;
-        if (this.parameter?.cardWidgetAdvancedSettings?.decimalPoints !== null
-            && this.parameter?.cardWidgetAdvancedSettings?.decimalPoints !== undefined
+        if (
+            this.parameter?.cardWidgetAdvancedSettings?.decimalPoints !== null &&
+            this.parameter?.cardWidgetAdvancedSettings?.decimalPoints !== undefined
         ) {
             roundTo = this.parameter.cardWidgetAdvancedSettings.decimalPoints;
         }
@@ -354,7 +366,8 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     private formatNumber(value: number, dataUnitType: DataUnitType) {
         const token = dataUnitType?.id !== 41 && dataUnitType?.id !== 255 ? this.l(dataUnitType.tokenCode) : '';
 
-        if (value === 0 || dataUnitType.id === 18 || dataUnitType.id === 19) { // 18 19 is Percentage
+        if (value === 0 || dataUnitType.id === 18 || dataUnitType.id === 19) {
+            // 18 19 is Percentage
             this.value = this.roundValue(value);
             this.unit = `${token}`;
             return;
@@ -397,7 +410,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        this.subs.forEach(sub => sub.unsubscribe());
+        this.subs.forEach((sub) => sub.unsubscribe());
     }
 }
 

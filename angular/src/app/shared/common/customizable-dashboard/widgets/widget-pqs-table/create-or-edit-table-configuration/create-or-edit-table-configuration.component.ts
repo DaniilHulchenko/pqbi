@@ -28,7 +28,6 @@ import {
     EditEventParameterEventCallBack,
     EventParameterSelectionTabComponent,
 } from '@app/shared/common/components/parameter-selection-tabs/event-parameter-selection-tab/event-parameter-selection-tab.component';
-import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
 import { DxDataGridComponent, DxDataGridTypes } from '@node_modules/devextreme-angular/ui/data-grid';
 import { Parameter } from '@app/main/customParameters/customParameters/table-parameters/models/parameter';
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
@@ -41,6 +40,7 @@ import { TableDesignOptions } from './table-design-options/table-design-options.
 import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/additional-parameter-selection-tab/additional-parameter-selection-tab.component';
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { TableWidgetConfigurationService } from '@app/shared/services/widget-configurations/table-widget-configuration.service';
+import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 
 @Component({
     selector: 'createOrEditTableConfiguration',
@@ -66,7 +66,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase im
     saving = false;
     expandTags = true;
 
-    dateRangeSelectionState: DateRangeState = new DateRangeState({ rangeOption: null, startDate: null, endDate: null });
+    dateRangeSelectionState: DateRangeAndRefreshModelNew;;
     componentsState: ComponentsState;
     parameters: WidgetParametersColumn[] = [];
 
@@ -133,16 +133,16 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase im
     }
 
     isFormValid(): boolean {
-        const isDateRangeValid =
-            this.dateRangeSelectionState?.rangeOption &&
-            (this.dateRangeSelectionState.rangeOption !== DateRangeUnits.CUSTOM ||
-                (this.dateRangeSelectionState.startDate &&
-                    this.dateRangeSelectionState.endDate &&
-                    this.dateRangeSelectionState.startDate < this.dateRangeSelectionState.endDate));
+        // const isDateRangeValid =
+        //     this.dateRangeSelectionState?.rangeOption &&
+        //     (this.dateRangeSelectionState.rangeOption !== DateRangeUnits.CUSTOM ||
+        //         (this.dateRangeSelectionState.startDate &&
+        //             this.dateRangeSelectionState.endDate &&
+        //             this.dateRangeSelectionState.startDate < this.dateRangeSelectionState.endDate));
 
         const isTableNotEmpty = this.parameters && this.parameters.length > 0;
 
-        return isDateRangeValid && isTableNotEmpty;
+        return /*isDateRangeValid && */ isTableNotEmpty;
     }
 
     getIconClass(tabID: number): string {
@@ -326,7 +326,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase im
 
     save() {
         this.saving = true;
-        this.tableWidgetConfiguration.dateRange = this.dateRangeSelectionState.toJSON();
+        this.tableWidgetConfiguration.dateRange = this.dateRangeSelectionState.toJson();
         this.tableWidgetConfiguration.configuration = safeStringify(this.parameters);
         this.tableWidgetConfiguration.components = safeStringify(this.componentsState);
         this.tableWidgetConfiguration.designOptions = JSON.stringify(this.designOptionsObj);
@@ -370,7 +370,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase im
                 .getForEdit(+configuration.configuration)
                 .subscribe((result) => {
                     this.tableWidgetConfiguration = result.tableWidgetConfiguration;
-                    this.dateRangeSelectionState = DateRangeState.fromJSON(result.tableWidgetConfiguration.dateRange);
+                    this.dateRangeSelectionState = DateRangeAndRefreshModelNew.createItem(result.tableWidgetConfiguration.dateRange);
                     this.componentsState = JSON.parse(result.tableWidgetConfiguration.components);
                     this.parameters = JSON.parse(result.tableWidgetConfiguration.configuration);
                     this.updatePossibleTabs();
@@ -395,11 +395,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase im
             this.subs.push(sub);
         } else {
             this.tableWidgetConfiguration = new CreateOrEditTableWidgetConfigurationDto();
-            this.dateRangeSelectionState = new DateRangeState({
-                rangeOption: DateRangeUnits.LAST_30_DAYS,
-                startDate: null,
-                endDate: null,
-            });
+            this.dateRangeSelectionState = null;
             this.parameters = [];
             this.componentsState = null;
             this.designOptionsObj = {
