@@ -14,7 +14,7 @@
        <div [ngSwitch]="style?.style" class="w-100 h-75">
             <!--Circle widget-->
             <div *ngSwitchCase="1" class="gauge-chart-container flex-grow-1">
-                <dx-circular-gauge class="w-100 h-100" [value]="value" [rangeContainer]="{ranges: ranges}"
+                <dx-circular-gauge class="w-100 h-100" [value]="displayValue" [rangeContainer]="{ranges: ranges}"
                     [subvalues]="subvalues">
                     <dxo-title [text]="title"
                         [font]="{ size: titleFontSize, color: titleFontColor, family: titleFontFamily }">
@@ -24,8 +24,8 @@
                     </dxo-title>
                     <dxo-geometry [startAngle]="style.startAngle" [endAngle]="style.endAngle"></dxo-geometry>
                     <dxo-range-container [width]="style.arcWidth"></dxo-range-container>
-                    <dxo-scale [startValue]="lowerLimit" [endValue]="upperLimit">
-                        <dxo-label [indentFromTick]="style.arcWidth"></dxo-label>
+                    <dxo-scale [startValue]="lowerLimit" [endValue]="upperLimit" [customTicks]="scaleCustomTicks">
+                        <dxo-label [indentFromTick]="style.arcWidth" [customizeText]="scaleLabelCustomizeText"></dxo-label>
                     </dxo-scale>
                     <dxo-tooltip [enabled]="true" [customizeTooltip]="customizeTooltip"></dxo-tooltip>
                     <dxo-animation [enabled]="false"></dxo-animation>
@@ -34,7 +34,7 @@
 
             <!--Line widget-->
             <div *ngSwitchCase="2" class="gauge-chart-container flex-grow-1">
-                <dx-linear-gauge class="w-100 h-100" [value]="value" [rangeContainer]="{ranges: ranges}"
+                <dx-linear-gauge class="w-100 h-100" [value]="displayValue" [rangeContainer]="{ranges: ranges}"
                     [subvalues]="subvalues">
                     <dxo-title [text]="title"
                         [font]="{ size: titleFontSize, color: titleFontColor, family: titleFontFamily }">
@@ -44,7 +44,8 @@
                     </dxo-title>
                     <dxo-geometry [orientation]="orientation"></dxo-geometry>
                     <dxo-range-container [width]="style.trackWidth"></dxo-range-container>
-                    <dxo-scale [startValue]="lowerLimit" [endValue]="upperLimit">
+                    <dxo-scale [startValue]="lowerLimit" [endValue]="upperLimit" [customTicks]="scaleCustomTicks">
+                        <dxo-label [customizeText]="scaleLabelCustomizeText"></dxo-label>
                     </dxo-scale>
                     <dxo-tooltip [enabled]="true" [customizeTooltip]="customizeTooltip"></dxo-tooltip>
                     <dxo-animation [enabled]="false"></dxo-animation>

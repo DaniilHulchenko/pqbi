@@ -121,23 +121,24 @@
 
       <!-- right block -->
       <div style="flex: 1; min-width: 300px;">
-        <h5>Set Lower and Upper Limits for Scale Values:</h5>
-        <div *ngFor="let opt of limitOptions" class="mb-2">
-          <p-checkbox [binary]="true" [label]="opt.text" [ngModel]="setLimits === opt.value"
-            (onChange)="onSelectLimitType(opt.value)"></p-checkbox>
+        <h5>Scale Limits</h5>
+        <p class="cancel-note">CANCEL — limits taken from segments</p>
+        <div class="scale-range">
+          <dx-number-box [value]="minScale" placeholder="Min" [readOnly]="true" [showSpinButtons]="false"
+            [focusStateEnabled]="false"></dx-number-box>
+          <dx-number-box [value]="maxScale" placeholder="Max" [readOnly]="true" [showSpinButtons]="false"
+            [focusStateEnabled]="false"></dx-number-box>
         </div>
 
-        <div *ngIf="setLimits" class="mt-3 d-flex flex-column gap-2">
-          <dx-number-box [(value)]="lowerLimit" placeholder="Lower Limit" [min]="0"></dx-number-box>
-          <dx-number-box [(value)]="upperLimit" placeholder="Upper Limit" [min]="0"></dx-number-box>
-        </div>
-        
         <h3>Segmentation:</h3>
         <div class="segmentation">
           <div class="form">
             <dx-text-box [(value)]="name" placeholder="Name"></dx-text-box>
             <dx-number-box [(value)]="from" placeholder="Start Value"></dx-number-box>
             <dx-number-box [(value)]="to" placeholder="End Value"></dx-number-box>
+            <dx-number-box [(value)]="weight" placeholder="Weight, %" [step]="0.1" [min]="0.1" [showSpinButtons]="true"
+              hint="How much of the gauge this segment occupies visually." [focusStateEnabled]="true"></dx-number-box>
+            <small class="form-hint">How much of the gauge this segment occupies visually.</small>
 
             <div class="mt-2">
               <dx-radio-group [(value)]="colorMode" [items]="[
@@ -157,20 +158,27 @@
             </dx-button>
             <dx-button *ngIf="isEditingSegment" text="Cancel" type="danger" stylingMode="contained" (onClick)="cancelEditedSegment()">
             </dx-button>
+
+            <div class="segment-error" *ngIf="segmentError">{{ segmentError }}</div>
           </div>
 
           <div class="table mt-4">
+            <div class="weight-indicator" [class.invalid]="!isTotalWeightValid">
+              Total: {{ totalWeight | number: '1.0-2' }}% (100% required / Сума: має бути 100%)
+            </div>
+            <div class="weight-error" *ngIf="!isTotalWeightValid">Weights must sum to 100%. / Сума ваг повинна дорівнювати 100%.</div>
             <dx-data-grid [dataSource]="segments" [showBorders]="true">
 
               <dxi-column dataField="name" caption="Name"></dxi-column>
               <dxi-column dataField="from" caption="From"></dxi-column>
               <dxi-column dataField="to" caption="To"></dxi-column>
+              <dxi-column dataField="weight" caption="Weight, % / Вага, %"></dxi-column>
 
               <dxi-column caption="Color" [cellTemplate]="'colorCell'"></dxi-column>
               <dxi-column caption="Actions" [cellTemplate]="'actionsCell'"></dxi-column>
 
               <div *dxTemplate="let data of 'colorCell'">
-                <div *ngIf="data.data.useScheme; else customColor" style="font-style: italic;">
+                <div *ngIf="data.data.colorMode !== 'custom'; else customColor" style="font-style: italic;">
                   Scheme
                 </div>
                 <ng-template #customColor>
@@ -198,7 +206,7 @@
     <div class="d-flex justify-content-center mt-4 mb-3 gap-4">
       <dx-button text="Cancel" (onClick)="hide()" stylingMode="contained" [width]="140" [height]="48"></dx-button>
       <dx-button text="OK" type="success" (onClick)="save()" stylingMode="contained" [width]="140"
-        [height]="48"></dx-button>
+        [height]="48" [disabled]="!canSave"></dx-button>
     </div>
   </dx-scroll-view>
 </dx-popup>
