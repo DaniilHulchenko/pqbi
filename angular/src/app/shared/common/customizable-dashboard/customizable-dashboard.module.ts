@@ -106,8 +106,6 @@ import { GaugeWidgetEventParameterSelectionTabComponent } from '../components/pa
 import { GaugeWidgetExceptionParameterSelectionTabComponent } from '../components/parameter-selection-tabs/gauge-widget-selection-tabs/gauge-widget-exception-parameter-selection-tab/gauge-widget-exception-parameter-selection-tab.component';
 import { GaugeWidgetLogicalParameterSelectionTabComponent } from '../components/parameter-selection-tabs/gauge-widget-selection-tabs/gauge-widget-logical-parameter-selection-tab/gauge-widget-logical-parameter-selection-tab.component';
 import { GaugeWidgetStyleSelectorComponent } from "@app/shared/common/components/gauge-widget-style-selector/gauge-widget-style-selector.component";
-import { DateRangeSelectorComponent } from '../components/date-range-selector/date-range-selector.component';
-import { DateRangeAndResolutionSelectorComponent } from '../components/date-range-and-resolution-selector/date-range-and-resolution-selector.component';
 
 @NgModule({
     imports: [
@@ -177,7 +175,6 @@ import { DateRangeAndResolutionSelectorComponent } from '../components/date-rang
     CardWidgetStyleSelectorComponent,
     CardWidgetStyleSelectorComponent,
     WidgetRefreshSelectorComponent,
-    DateRangeSelectorComponent,
     CardWidgetAdditionalParameterSelectionTabComponent,
     CardWidgetChannelParameterSelectionTabComponent,
     CardWidgetCustomParameterSelectionTabComponent,
@@ -192,7 +189,6 @@ import { DateRangeAndResolutionSelectorComponent } from '../components/date-rang
     GaugeWidgetExceptionParameterSelectionTabComponent,
     GaugeWidgetLogicalParameterSelectionTabComponent,
     GaugeWidgetStyleSelectorComponent,
-    DateRangeAndResolutionSelectorComponent
 ],
 
     declarations: [

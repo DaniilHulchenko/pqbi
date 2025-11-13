@@ -15,12 +15,6 @@ export class RefreshWidgetCustomUnitValuePipe implements PipeTransform {
                 return 3600;
             case RefreshSelectionCustomUnits.Day:
                 return 86400;
-            case RefreshSelectionCustomUnits.Week:
-                return 86400 * 7;
-            case RefreshSelectionCustomUnits.Month:
-                return 86400 * 30;
-            case RefreshSelectionCustomUnits.Year:
-                return 86400 * 365;
         }
     }
 }

@@ -29,7 +29,6 @@ import {
     TableWidgetEvent,
     EventClass,
     TableWidgetConfigurationDto,
-    TimeSpan
 } from '@shared/service-proxies/service-proxies';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
 import { CreateOrEditTableConfigurationComponent } from './create-or-edit-table-configuration/create-or-edit-table-configuration.component';
@@ -57,7 +56,6 @@ import { ConfigurationVersionService } from '@app/shared/services/configuration-
 import { ComponentsService } from '@app/shared/services/components-service.service';
 import { TableWidgetConfigurationService } from '@app/shared/services/widget-configurations/table-widget-configuration.service';
 import { dxTreeListColumn } from '@node_modules/devextreme/ui/tree_list';
-import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 
 
 interface TreeWidgetParametersColumn extends WidgetParametersColumn {
@@ -101,6 +99,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     columns: dxTreeListColumn[];
 
     stopStream$ = new Subject();
+
 
     private widthChanges$ = new Subject<number[]>();
     private widthChangeStream$ = new Subject();
@@ -161,15 +160,20 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscribeToEvent('app.dashboardEdit.onSave', () => this.checkAndSaveColumns());
+        this.subscribeToEvent('app.dashboardEdit.onSave',() => this.checkAndSaveColumns());
 
-        this.widthChanges$.pipe(debounceTime(500), takeUntil(this.widthChangeStream$)).subscribe((widths) => {
-            if (this.isResizeIgnored) {
-                return;
-            }
-            this.calculateWidthes(widths);
-            this.onColumnWidthsStabilized();
-        });
+        this.widthChanges$
+            .pipe(
+                debounceTime(500),
+                takeUntil(this.widthChangeStream$)
+            )
+            .subscribe((widths) => {
+                if (this.isResizeIgnored) {
+                    return;
+                }
+                this.calculateWidthes(widths);
+                this.onColumnWidthsStabilized();
+            });
 
         if (this.isNew) {
             this.runDelayed(() => this.edit());
@@ -204,7 +208,10 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     }
 
     fetch() {
-        let range: [DateTime, DateTime] = this.prepareDataRange();
+        let rangeOption = this.tableWidgetConfiguration.dateRange.rangeOption;
+        let range: [DateTime, DateTime] = this._dateRangeService.getDateRangeFromState(
+            this.tableWidgetConfiguration.dateRange,
+        );
 
         let formattedFeeders =
             this.tableWidgetConfiguration?.components?.feeders?.map((f) => new FeederComponentInfo(f)) ?? [];
@@ -278,25 +285,6 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
             startDate: range[0],
             endDate: range[1],
             userTimeZone: 1,
-            refreshRate: new TimeSpan({
-    ticks: 0,
-    days: 0,
-    hours: 0,
-    milliseconds: 0,
-    microseconds: 0,
-    nanoseconds: 0,
-    minutes: 0,
-    seconds: 0,
-    totalDays: 0,
-    totalHours: 0,
-    totalMilliseconds: 0,
-    totalMicroseconds: 0,
-    totalNanoseconds: 0,
-    totalMinutes: 0,
-    totalSeconds: 0,
-  } as any),
-  isRealTime: false, 
-                   
         });
 
         // find minimum resolution from all columns
@@ -324,11 +312,25 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         columnResolutions.push(...baseParameterResolutions);
         columnResolutions.push(...Array.from(customParameterChildrenResolutions));
 
-        if (this.tableWidgetConfiguration.dateRange?.refreshIntervalInSeconds) {
-            timer(0, this.tableWidgetConfiguration.dateRange.refreshIntervalInSeconds * 1000) // use minimum resulotion value(ms) to refresh table widget
+        let minResolutions = this._resolutionService.findMinResolution(columnResolutions);
+        if (
+            (minResolutions && rangeOption.startsWith('Last')) ||
+            rangeOption.startsWith('This') ||
+            rangeOption === 'Today'
+        ) {
+            if (
+                minResolutions.customResolutionUnit === CustomResolutionUnits.MS ||
+                minResolutions.customResolutionUnit === CustomResolutionUnits.SEC
+            ) {
+                minResolutions.customResolutionUnit = CustomResolutionUnits.MIN;
+                minResolutions.customResolutionValue = 1;
+            }
+            timer(0, this._resolutionService.resolutionValueInMs(minResolutions)) // use minimum resulotion value(ms) to refresh table widget
                 .pipe(takeUntil(this.stopStream$))
                 .subscribe((result) => {
-                    let range: [DateTime, DateTime] = this.prepareDataRange();
+                    let range: [DateTime, DateTime] = this._dateRangeService.getDateRangeFromState(
+                        this.tableWidgetConfiguration.dateRange,
+                    );
                     this.pqsTableConfigRequest.startDate = range[0];
                     this.pqsTableConfigRequest.endDate = range[1];
                     this.getPQSTableData(this.pqsTableConfigRequest);
@@ -360,13 +362,12 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         this.widgetRefresh.emit();
         this.isLoading = true;
         if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
-            var sub = this._tableWidgetConfigurationService
-                .getForEdit(+this.widgetConfigurationInDB.configuration)
+            var sub = this._tableWidgetConfigurationService.getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     if (result.tableWidgetConfiguration) {
                         this.tableWidgetConfDb = result.tableWidgetConfiguration;
                         this.tableWidgetConfiguration = {
-                            dateRange: DateRangeAndRefreshModelNew.createItem(result.tableWidgetConfiguration.dateRange),
+                            dateRange: DateRangeState.fromJSON(result.tableWidgetConfiguration.dateRange),
                             parameters: JSON.parse(result.tableWidgetConfiguration.configuration),
                             components: JSON.parse(result.tableWidgetConfiguration.components),
                             designOptions: result.tableWidgetConfiguration.designOptions
@@ -379,9 +380,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                                       bandedRows: false,
                                   },
                         };
-                        this.configColumnWidthes = this.tableWidgetConfiguration.parameters
-                            .map((x) => x.style)
-                            .filter((x) => !!x);
+                        this.configColumnWidthes = this.tableWidgetConfiguration.parameters.map(x => x.style).filter(x => !!x);
                         this.columnWidthes = JSON.parse(JSON.stringify(this.configColumnWidthes));
                         this.headerBgColor = this.tableWidgetConfiguration.designOptions.headerBackgroundColor;
                         this.headerTextColor = this.tableWidgetConfiguration.designOptions.headerTextColor;
@@ -549,11 +548,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     onEditModelClose(isSaved) {
         if (!isSaved && !this.widgetConfigurationInDB?.configuration) {
-            abp.event.trigger(
-                'app.dashboard.removeWidget',
-                this.widgetConfigurationInDB.widgetGuid,
-                'Widgets_Tenant_PQSTable',
-            );
+            abp.event.trigger('app.dashboard.removeWidget', this.widgetConfigurationInDB.widgetGuid, 'Widgets_Tenant_PQSTable');
         }
     }
 
@@ -566,20 +561,11 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     }
 
     ngOnDestroy() {
-        this.subs.forEach((sub) => sub.unsubscribe());
+        this.subs.forEach(sub => sub.unsubscribe());
         this.stopStream$.next(null);
         this.stopStream$.complete();
         this.widthChangeStream$.next(null);
         this.widthChangeStream$.complete();
-    }
-
-    private prepareDataRange(): [DateTime, DateTime] {
-        const state: DateRangeAndRefreshModelNew = this.tableWidgetConfiguration?.dateRange
-            ? this.tableWidgetConfiguration?.dateRange
-            : DateRangeAndRefreshModelNew.createItem('');
-        var [startDate, endDate] = this._dateRangeService.getDateRangeFromNewState(state);
-
-        return [DateTime.fromJSDate(startDate), DateTime.fromJSDate(endDate)];
     }
 
     private formatNumber(value: number, dataUnitType: DataUnitType): string {
@@ -622,18 +608,18 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         return `${value.toFixed(2)}${suffix}`;
     }
 
-    private calculateColumnFirstColumnAndDefaultWidth(widths: string[]): [number, number] {
+    private calculateColumnFirstColumnAndDefaultWidth(widths: string[]): [number, number]
+    {
         const defaultWidth = 100 / (this.columns.length + 1);
-        const firstColumnWidth =
-            100 -
-            widths.reduce((accumulator, width) => {
-                return accumulator + Number.parseFloat(width.replace('%', ''));
-            }, 0);
+        const firstColumnWidth = 100 - widths.reduce((accumulator, width) => {
+            return accumulator + Number.parseFloat(width.replace('%', ''));
+        }, 0);
 
         return [firstColumnWidth, defaultWidth];
     }
 
-    private calculateWidthes(newWidths: number[]) {
+    private calculateWidthes(newWidths: number[])
+    {
         const totalWidth = newWidths.reduce((accumulator, currentValue) => {
             return accumulator + currentValue;
         }, 0);
@@ -642,8 +628,8 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
         this.columnWidthes = [];
 
-        newWidths.forEach((w) => {
-            this.columnWidthes.push(`${(w * 100) / totalWidth}%`);
+        newWidths.forEach(w => {
+            this.columnWidthes.push(`${w * 100 / totalWidth}%`);
         });
     }
 
@@ -651,11 +637,11 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         var i = 0;
         const [firstColumnWidth, defaultWidth] = this.calculateColumnFirstColumnAndDefaultWidth(this.columnWidthes);
 
-        this.columns?.forEach((element) => {
+        this.columns?.forEach(element => {
             if (i == 0) {
                 element.width = `${firstColumnWidth}%`;
             } else {
-                element.width = this.columnWidthes[i - 1];
+                element.width = this.columnWidthes[i-1];
             }
             i++;
         });
@@ -669,12 +655,14 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         }, 500);
     }
 
-    private checkAndSaveColumns() {
-        if (this.configColumnWidthes !== this.columnWidthes) {
+    private checkAndSaveColumns()
+    {
+        if (this.configColumnWidthes !== this.columnWidthes)
+        {
             let i = 0;
 
             let parameters = JSON.parse(this.tableWidgetConfDb.configuration) as WidgetParametersColumn[];
-            parameters.forEach((p) => {
+            parameters.forEach(p => {
                 p.style = this.columnWidthes[i];
                 i++;
             });
@@ -683,7 +671,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                 dateRange: this.tableWidgetConfDb.dateRange,
                 components: this.tableWidgetConfDb.components,
                 configuration: safeStringify(parameters),
-                designOptions: this.tableWidgetConfDb.designOptions,
+                designOptions: this.tableWidgetConfDb.designOptions
             });
             var sub = this._tableWidgetConfigurationsServiceProxy.createOrEdit(request).subscribe();
             this.subs.push(sub);
@@ -885,9 +873,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     private buildColumns(parameters: TreeWidgetParametersColumn[]): any[] {
         const defaultWidth = 100 / (parameters.length + 1);
-        const firstColumnWidth =
-            100 -
-            parameters.reduce((accumulator, parameter) => {
+        const firstColumnWidth = 100 - parameters.reduce((accumulator, parameter) => {
                 var width = parameter.style ? Number.parseFloat(parameter.style.replace('%', '')) : defaultWidth;
                 return accumulator + width;
             }, 0);
@@ -1037,7 +1023,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                     : parseFloat(s);
         }
 
-        if (typeof rawValue === 'number') {
+        if (typeof(rawValue) === 'number') {
             rawValue = rawValue.toFixed(2);
         }
 
@@ -1208,7 +1194,7 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 
 interface TableWidgetConfigurationModel {
     components: ComponentsState;
-    dateRange: DateRangeAndRefreshModelNew;
+    dateRange: DateRangeState;
     parameters: WidgetParametersColumn[];
     designOptions: TableDesignOptions;
 }

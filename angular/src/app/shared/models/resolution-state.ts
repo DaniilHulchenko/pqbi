@@ -68,7 +68,7 @@ export class ResolutionState implements IResolutionState {
 
     static getSecondCustomParameterUnits(unit: CustomResolutionUnits): number {
         switch (unit) {
-            // case CustomResolutionUnits.MS:
+            case CustomResolutionUnits.MS:
             case CustomResolutionUnits.SEC:
                 return 1;
             case CustomResolutionUnits.MIN:
@@ -79,10 +79,6 @@ export class ResolutionState implements IResolutionState {
                 return 60 * 60 * 24;
             case CustomResolutionUnits.WEEK:
                 return 60 * 60 * 24 * 7;
-            case CustomResolutionUnits.MONTH:
-                return 60 * 60 * 24 * 30;
-            case CustomResolutionUnits.YEAR:
-                return 60 * 60 * 24 * 365;
             default:
                 return 0;
         }

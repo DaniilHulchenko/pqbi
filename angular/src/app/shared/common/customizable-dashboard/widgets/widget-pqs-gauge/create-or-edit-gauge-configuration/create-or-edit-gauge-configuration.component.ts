@@ -27,26 +27,17 @@ import { WidgetRefreshSelectorComponent } from '@app/shared/common/components/wi
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { GaugeWidgetConfigurationService } from '@app/shared/services/widget-configurations/gauge-widget-configuration.service';
 import { EditableTabComponentBaseComponent } from '@app/shared/common/components/parameter-selection-tabs/editable-tab-component-base';
-import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
-import { DateRangeType } from '@app/shared/enums/date-range-type';
-import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 
 @Component({
-    selector: 'createOrEditGaugeConfiguration',
-    templateUrl: './create-or-edit-gauge-configuration.component.html',
-    styleUrl: './create-or-edit-gauge-configuration.component.css',
+  selector: 'createOrEditGaugeConfiguration',
+  templateUrl: './create-or-edit-gauge-configuration.component.html',
+  styleUrl: './create-or-edit-gauge-configuration.component.css'
 })
-export class CreateOrEditGaugeConfigurationComponent
-    extends WidgetConfigurationModalBaseComponent
-    implements OnInit, OnDestroy
-{
+export class CreateOrEditGaugeConfigurationComponent extends WidgetConfigurationModalBaseComponent implements OnInit, OnDestroy {
     @ViewChild('gaugeWidgetConfigurationForm') pqsForm: NgForm;
-    @ViewChild('customParameterSelectionTab')
-    customParameterSelectionTab: GaugeWidgetCustomParameterSelectionTabComponent;
-    @ViewChild('logicalParameterSelectionTab')
-    logicalParameterSelectionTab: GaugeWidgetLogicalParameterSelectionTabComponent;
-    @ViewChild('channelParameterSelectionTab')
-    channelParameterSelectionTab: GaugeWidgetChannelParameterSelectionTabComponent;
+    @ViewChild('customParameterSelectionTab') customParameterSelectionTab: GaugeWidgetCustomParameterSelectionTabComponent;
+    @ViewChild('logicalParameterSelectionTab') logicalParameterSelectionTab: GaugeWidgetLogicalParameterSelectionTabComponent;
+    @ViewChild('channelParameterSelectionTab') channelParameterSelectionTab: GaugeWidgetChannelParameterSelectionTabComponent;
     @ViewChild('additionalParameterSelectionTab')
     additionalParameterSelectionTab: GaugeWidgetAdditionalParameterSelectionTabComponent;
     @ViewChild('exceptionParameterSelectionTab')
@@ -63,9 +54,11 @@ export class CreateOrEditGaugeConfigurationComponent
     isEditMode = false;
 
     selectedStyle: GaugeStyle | null = null;
-
-    dateRangeSelectionState: DateRangeAndRefreshModelNew;
-
+    dateRangeSelectionState: DateRangeState = new DateRangeState({
+        rangeOption: DateRangeUnits.LAST_30_DAYS,
+        startDate: null,
+        endDate: null,
+    });
     refreshRateSelectionState: number = 0;
     parameter: WidgetParametersColumn;
 
@@ -104,8 +97,7 @@ export class CreateOrEditGaugeConfigurationComponent
             template: 'eventTemplate',
         },
     ];
-    private gaugeWidgetConfiguration: CreateOrEditGaugeWidgetConfigurationDto =
-        new CreateOrEditGaugeWidgetConfigurationDto();
+    private gaugeWidgetConfiguration: CreateOrEditGaugeWidgetConfigurationDto = new CreateOrEditGaugeWidgetConfigurationDto();
 
     private subs: Subscription[] = [];
 
@@ -151,10 +143,6 @@ export class CreateOrEditGaugeConfigurationComponent
         }
     }
 
-    onDateRangeChangedNew() {
-        this.refreshRateSelectionState = this.dateRangeSelectionState.refreshIntervalInSeconds;
-    }
-
     onAddBaseParameter(event: AddBaseParameterEventCallBack) {
         this.parameter = {
             id: Guid.newGuid().toString(),
@@ -165,7 +153,7 @@ export class CreateOrEditGaugeConfigurationComponent
             data: safeStringify(event.parameter),
             gaugeWidgetAdvancedSettings: event.gaugeWidgetAdvancedSettings,
             resolution: 0,
-            style: null,
+            style: null
         };
     }
 
@@ -180,7 +168,7 @@ export class CreateOrEditGaugeConfigurationComponent
                 data: event.customParameterId,
                 gaugeWidgetAdvancedSettings: event.advancedSettings,
                 resolution: 0,
-                style: null,
+                style: null
             };
         });
         this.subs.push(sub);
@@ -197,7 +185,7 @@ export class CreateOrEditGaugeConfigurationComponent
                 data: event.customParameterId,
                 resolution: 0,
                 gaugeWidgetAdvancedSettings: event.gaugeWidgetAdvancedSettings,
-                style: null,
+                style: null
             };
         });
         this.subs.push(sub);
@@ -222,7 +210,7 @@ export class CreateOrEditGaugeConfigurationComponent
                 aggregationInSeconds: event.aggregation.aggregationValue,
             }),
             gaugeWidgetAdvancedSettings: event.advancedSettings,
-            style: null,
+            style: null
         };
 
         this.parameter = newItem;
@@ -363,13 +351,15 @@ export class CreateOrEditGaugeConfigurationComponent
     show(configuration: CreateOrEditWidgetConfigurationDto) {
         this.open();
         if (configuration && configuration.configuration) {
-            var sub = this.gaugeWidgetConfigurationService
-                .getForEdit(+configuration.configuration)
+            var sub = this.gaugeWidgetConfigurationService.getForEdit(+configuration.configuration)
                 .subscribe((result) => {
                     this.gaugeWidgetConfiguration = result.gaugeWidgetConfiguration;
-                    this.dateRangeSelectionState = DateRangeAndRefreshModelNew.createItem(result.gaugeWidgetConfiguration.dateRange);
+                    this.dateRangeSelectionState = DateRangeState.fromJSON(result.gaugeWidgetConfiguration.dateRange);
                     this.parameter = JSON.parse(result.gaugeWidgetConfiguration.parameter);
                     this.refreshRateSelectionState = result.gaugeWidgetConfiguration.refreshRate;
+                    if (this.dateRangeSelectionState.rangeOption === DateRangeUnits.CUSTOM) {
+                        this.refreshSelector.isDisabled = true;
+                    }
                     this.selectedStyle = JSON.parse(result.gaugeWidgetConfiguration.style) as GaugeStyle;
                     setTimeout(() => {
                         this.handleParameter(this.parameter, 'edit');
@@ -379,7 +369,11 @@ export class CreateOrEditGaugeConfigurationComponent
             this.subs.push(sub);
         } else {
             this.gaugeWidgetConfiguration = new CreateOrEditGaugeWidgetConfigurationDto();
-            this.dateRangeSelectionState = null;
+            this.dateRangeSelectionState = new DateRangeState({
+                rangeOption: DateRangeUnits.LAST_30_DAYS,
+                startDate: null,
+                endDate: null,
+            });
             this.parameter = null;
             this.refreshRateSelectionState = 0;
             this.selectedStyle = null;
@@ -387,19 +381,17 @@ export class CreateOrEditGaugeConfigurationComponent
     }
 
     isFormValid(): boolean {
-        return (
-            this.refreshRateSelectionState &&
-            this.refreshRateSelectionState !== 0 &&
-            this.parameter &&
-            this.dateRangeSelectionState &&
-            this.styleSelector.isValidState() &&
-            (this.selectedTab ? this.selectedTab.isFormValid() : true)
-        );
+        return this.refreshRateSelectionState
+            && this.refreshRateSelectionState !== 0
+            && this.parameter
+            && this.dateRangeSelectionState
+            && this.styleSelector.isValidState()
+            && (this.selectedTab ? this.selectedTab.isFormValid() : true);;
     }
 
     save() {
         this.saving = true;
-        this.gaugeWidgetConfiguration.dateRange = this.dateRangeSelectionState.toJson();
+        this.gaugeWidgetConfiguration.dateRange = this.dateRangeSelectionState.toJSON();
         this.gaugeWidgetConfiguration.parameter = safeStringify(this.parameter);
         this.gaugeWidgetConfiguration.refreshRate = this.refreshRateSelectionState;
         this.gaugeWidgetConfiguration.style = safeStringify(this.selectedStyle);
@@ -437,7 +429,9 @@ export class CreateOrEditGaugeConfigurationComponent
     onTabSelectionChanging(e: any) {
         if (this.isEditMode) {
             e.cancel = true;
-            this.notify.info(this.l('CannotChangeTabTitle'));
+            this.notify.info(
+                this.l('CannotChangeTabTitle'),
+            );
             return;
         }
         this.previousTabIndex = e.component.option('selectedIndex');
@@ -497,6 +491,6 @@ export class CreateOrEditGaugeConfigurationComponent
     }
 
     ngOnDestroy(): void {
-        this.subs.forEach((sub) => sub.unsubscribe());
+        this.subs.forEach(sub => sub.unsubscribe());
     }
 }

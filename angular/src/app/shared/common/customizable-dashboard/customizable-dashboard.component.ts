@@ -7,6 +7,8 @@ import {
     OnDestroy,
     Injectable,
     InjectionToken,
+    HostListener,
+
 } from '@angular/core';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import { DashboardViewConfigurationService } from './dashboard-view-configuration.service';
@@ -337,10 +339,15 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     refreshAllGrids(): void {
         if (this.options) {
+            const rowHeight = this.getResponsiveRowHeight();
+
             this.options.forEach((option) => {
                 option.draggable.enabled = this.editModeEnabled;
                 option.resizable.enabled = this.editModeEnabled;
                 option.api?.optionsChanged();
+                if (option.fixedRowHeight !== rowHeight) {
+                    option.fixedRowHeight = rowHeight;
+                }
             });
         }
     }
@@ -602,6 +609,39 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         return this._dashboardViewConfiguration.widgetFilterDefinitions.find((filter) => filter.id === id);
     }
 
+    @HostListener('window:resize')
+    onWindowResize(): void {
+        this.updateGridsterRowHeights();
+    }
+
+    private updateGridsterRowHeights(): void {
+        const rowHeight = this.getResponsiveRowHeight();
+        this.options?.forEach((option) => {
+            if (option.fixedRowHeight !== rowHeight) {
+                option.fixedRowHeight = rowHeight;
+                option.api?.optionsChanged();
+            }
+        });
+    }
+
+    private getResponsiveRowHeight(): number {
+        const baseRowHeight = 30;
+        const minRowHeight = 18;
+        const maxRowHeight = 36;
+        const viewportHeight = typeof window !== 'undefined'
+            ? window.innerHeight || document.documentElement?.clientHeight || 0
+            : 0;
+
+        if (!viewportHeight) {
+            return baseRowHeight;
+        }
+
+        const referenceHeight = 1080;
+        const scaledRowHeight = Math.round((viewportHeight / referenceHeight) * baseRowHeight);
+        return Math.max(minRowHeight, Math.min(maxRowHeight, scaledRowHeight));
+    }
+
+
     //after we load page or add widget initialize needed filter too.
     private initializeUserDashboardFilters(): void {
         let allFilters: WidgetFilterOutput[] = [];
@@ -643,7 +683,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                 enabled: this.editModeEnabled,
             },
             compactType: 'compactUp',
-            fixedRowHeight: 30,
+            fixedRowHeight: this.getResponsiveRowHeight(),
             fixedColWidth: 30,
             minCols: 12,
             gridType: 'verticalFixed',

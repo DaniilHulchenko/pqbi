@@ -8,7 +8,7 @@
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
-import { mergeMap as _observableMergeMap, catchError as _observableCatch } from 'rxjs/operators';
+import { mergeMap as _observableMergeMap, catchError as _observableCatch, share } from 'rxjs/operators';
 import { Observable, throwError as _observableThrow, of as _observableOf } from 'rxjs';
 import { Injectable, Inject, Optional, InjectionToken } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angular/common/http';
@@ -11938,7 +11938,7 @@ export class PQSRestApiServiceProxy {
     /**
      * @return Success
      */
-    confVersion(): Observable<void> {
+    confVersion(): Observable<number> {
         let url_ = this.baseUrl + "/api/services/app/PQSRestApi/ConfVersion";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -11956,14 +11956,14 @@ export class PQSRestApiServiceProxy {
                 try {
                     return this.processConfVersion(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<number>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<number>;
         }));
     }
 
-    protected processConfVersion(response: HttpResponseBase): Observable<void> {
+    protected processConfVersion(response: HttpResponseBase): Observable<number> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -11972,7 +11972,7 @@ export class PQSRestApiServiceProxy {
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            return _observableOf(Number.parseInt(_responseText));
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -22358,8 +22358,6 @@ export interface IAuthenticateResultModel {
 export class BarChartRequest implements IBarChartRequest {
     startDate!: DateTime;
     endDate!: DateTime;
-    refreshRate?: TimeSpan;
-    isRealTime?: boolean;
     widgetName!: string | undefined;
     userTimeZone!: number;
     category!: DimensionSelector;
@@ -22380,8 +22378,6 @@ export class BarChartRequest implements IBarChartRequest {
         if (_data) {
             this.startDate = _data["startDate"] ? DateTime.fromISO(_data["startDate"].toString()) : <any>undefined;
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
-            this.refreshRate = _data["refreshRate"] ? TimeSpan.fromJS(_data["refreshRate"]) : <any>undefined;
-            this.isRealTime = _data["isRealTime"];
             this.widgetName = _data["widgetName"];
             this.userTimeZone = _data["userTimeZone"];
             this.category = _data["category"] ? DimensionSelector.fromJS(_data["category"]) : <any>undefined;
@@ -22410,8 +22406,6 @@ export class BarChartRequest implements IBarChartRequest {
         data = typeof data === 'object' ? data : {};
         data["startDate"] = this.startDate ? this.startDate.toString() : <any>undefined;
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
-        data["refreshRate"] = this.refreshRate ? this.refreshRate.toJSON() : <any>undefined;
-        data["isRealTime"] = this.isRealTime;
         data["widgetName"] = this.widgetName;
         data["userTimeZone"] = this.userTimeZone;
         data["category"] = this.category ? this.category.toJSON() : <any>undefined;
@@ -22433,8 +22427,6 @@ export class BarChartRequest implements IBarChartRequest {
 export interface IBarChartRequest {
     startDate: DateTime;
     endDate: DateTime;
-    refreshRate?: TimeSpan;
-    isRealTime?: boolean;
     widgetName: string | undefined;
     userTimeZone: number;
     category: DimensionSelector;
@@ -23770,11 +23762,10 @@ export interface IComboboxItemDto {
 
 export class ComponentDto implements IComponentDto {
     componentId!: string | undefined;
-    readonly componentName!: string | undefined;
-    readonly feeders!: FeederDescriptionDto[] | undefined;
-    readonly channels!: ChannelDescriptionDto[] | undefined;
+    componentName!: string | undefined;
+    feeders!: FeederDescriptionDto[] | undefined;
+    channels!: ChannelDescriptionDto[] | undefined;
     additionalDatas!: AdditionalData[] | undefined;
-    customBaseList!: CustomCalculationBaseInfo[] | undefined;
     tags!: TagDto[] | undefined;
     parameterInfos!: string[] | undefined;
 
@@ -23790,26 +23781,21 @@ export class ComponentDto implements IComponentDto {
     init(_data?: any) {
         if (_data) {
             this.componentId = _data["componentId"];
-            (<any>this).componentName = _data["componentName"];
+            this.componentName = _data["componentName"];
             if (Array.isArray(_data["feeders"])) {
-                (<any>this).feeders = [] as any;
+                this.feeders = [] as any;
                 for (let item of _data["feeders"])
-                    (<any>this).feeders!.push(FeederDescriptionDto.fromJS(item));
+                    this.feeders!.push(FeederDescriptionDto.fromJS(item));
             }
             if (Array.isArray(_data["channels"])) {
-                (<any>this).channels = [] as any;
+                this.channels = [] as any;
                 for (let item of _data["channels"])
-                    (<any>this).channels!.push(ChannelDescriptionDto.fromJS(item));
+                    this.channels!.push(ChannelDescriptionDto.fromJS(item));
             }
             if (Array.isArray(_data["additionalDatas"])) {
                 this.additionalDatas = [] as any;
                 for (let item of _data["additionalDatas"])
                     this.additionalDatas!.push(AdditionalData.fromJS(item));
-            }
-            if (Array.isArray(_data["customBaseList"])) {
-                this.customBaseList = [] as any;
-                for (let item of _data["customBaseList"])
-                    this.customBaseList!.push(CustomCalculationBaseInfo.fromJS(item));
             }
             if (Array.isArray(_data["tags"])) {
                 this.tags = [] as any;
@@ -23850,11 +23836,6 @@ export class ComponentDto implements IComponentDto {
             for (let item of this.additionalDatas)
                 data["additionalDatas"].push(item.toJSON());
         }
-        if (Array.isArray(this.customBaseList)) {
-            data["customBaseList"] = [];
-            for (let item of this.customBaseList)
-                data["customBaseList"].push(item.toJSON());
-        }
         if (Array.isArray(this.tags)) {
             data["tags"] = [];
             for (let item of this.tags)
@@ -23875,18 +23856,16 @@ export interface IComponentDto {
     feeders: FeederDescriptionDto[] | undefined;
     channels: ChannelDescriptionDto[] | undefined;
     additionalDatas: AdditionalData[] | undefined;
-    customBaseList: CustomCalculationBaseInfo[] | undefined;
     tags: TagDto[] | undefined;
     parameterInfos: string[] | undefined;
 }
 
 export class ComponentSlimDto implements IComponentSlimDto {
     componentId!: string | undefined;
-    readonly componentName!: string | undefined;
-    readonly feeders!: FeederDescriptionDto[] | undefined;
-    readonly channels!: ChannelDescriptionDto[] | undefined;
+    componentName!: string | undefined;
+    feeders!: FeederDescriptionDto[] | undefined;
+    channels!: ChannelDescriptionDto[] | undefined;
     additionalDatas!: AdditionalData[] | undefined;
-    customBaseList!: CustomCalculationBaseInfo[] | undefined;
 
     constructor(data?: IComponentSlimDto) {
         if (data) {
@@ -23900,26 +23879,21 @@ export class ComponentSlimDto implements IComponentSlimDto {
     init(_data?: any) {
         if (_data) {
             this.componentId = _data["componentId"];
-            (<any>this).componentName = _data["componentName"];
+            this.componentName = _data["componentName"];
             if (Array.isArray(_data["feeders"])) {
-                (<any>this).feeders = [] as any;
+                this.feeders = [] as any;
                 for (let item of _data["feeders"])
-                    (<any>this).feeders!.push(FeederDescriptionDto.fromJS(item));
+                    this.feeders!.push(FeederDescriptionDto.fromJS(item));
             }
             if (Array.isArray(_data["channels"])) {
-                (<any>this).channels = [] as any;
+                this.channels = [] as any;
                 for (let item of _data["channels"])
-                    (<any>this).channels!.push(ChannelDescriptionDto.fromJS(item));
+                    this.channels!.push(ChannelDescriptionDto.fromJS(item));
             }
             if (Array.isArray(_data["additionalDatas"])) {
                 this.additionalDatas = [] as any;
                 for (let item of _data["additionalDatas"])
                     this.additionalDatas!.push(AdditionalData.fromJS(item));
-            }
-            if (Array.isArray(_data["customBaseList"])) {
-                this.customBaseList = [] as any;
-                for (let item of _data["customBaseList"])
-                    this.customBaseList!.push(CustomCalculationBaseInfo.fromJS(item));
             }
         }
     }
@@ -23950,11 +23924,6 @@ export class ComponentSlimDto implements IComponentSlimDto {
             for (let item of this.additionalDatas)
                 data["additionalDatas"].push(item.toJSON());
         }
-        if (Array.isArray(this.customBaseList)) {
-            data["customBaseList"] = [];
-            for (let item of this.customBaseList)
-                data["customBaseList"].push(item.toJSON());
-        }
         return data;
     }
 }
@@ -23965,7 +23934,6 @@ export interface IComponentSlimDto {
     feeders: FeederDescriptionDto[] | undefined;
     channels: ChannelDescriptionDto[] | undefined;
     additionalDatas: AdditionalData[] | undefined;
-    customBaseList: CustomCalculationBaseInfo[] | undefined;
 }
 
 export class ComponentWithTagDtos implements IComponentWithTagDtos {
@@ -24874,8 +24842,6 @@ export class CreateOrEditTrendWidgetConfigurationDto implements ICreateOrEditTre
     resolution!: string;
     parameters!: string | undefined;
 
-      refreshRate?: number;
-  isRealTime?: boolean;
     constructor(data?: ICreateOrEditTrendWidgetConfigurationDto) {
         if (data) {
             for (var property in data) {
@@ -25667,36 +25633,6 @@ export class CustomAttributeTypedArgument implements ICustomAttributeTypedArgume
 export interface ICustomAttributeTypedArgument {
     argumentType: Type;
     value: any | undefined;
-}
-
-export class CustomCalculationBaseInfo implements ICustomCalculationBaseInfo {
-
-    constructor(data?: ICustomCalculationBaseInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): CustomCalculationBaseInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new CustomCalculationBaseInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        return data;
-    }
-}
-
-export interface ICustomCalculationBaseInfo {
 }
 
 export class CustomParameter implements ICustomParameter {
@@ -41602,8 +41538,6 @@ export interface ITableWidgetEvent {
 export class TableWidgetRequest implements ITableWidgetRequest {
     startDate!: DateTime;
     endDate!: DateTime;
-    refreshRate?: TimeSpan;
-    isRealTime?: boolean;
     widgetName!: string | undefined;
     userTimeZone!: number;
     rows!: RowWidgetTable;
@@ -41622,8 +41556,6 @@ export class TableWidgetRequest implements ITableWidgetRequest {
         if (_data) {
             this.startDate = _data["startDate"] ? DateTime.fromISO(_data["startDate"].toString()) : <any>undefined;
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
-            this.refreshRate = _data["refreshRate"] ? TimeSpan.fromJS(_data["refreshRate"]) : <any>undefined;
-            this.isRealTime = _data["isRealTime"];
             this.widgetName = _data["widgetName"];
             this.userTimeZone = _data["userTimeZone"];
             this.rows = _data["rows"] ? RowWidgetTable.fromJS(_data["rows"]) : <any>undefined;
@@ -41646,8 +41578,6 @@ export class TableWidgetRequest implements ITableWidgetRequest {
         data = typeof data === 'object' ? data : {};
         data["startDate"] = this.startDate ? this.startDate.toString() : <any>undefined;
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
-        data["refreshRate"] = this.refreshRate ? this.refreshRate.toJSON() : <any>undefined;
-        data["isRealTime"] = this.isRealTime;
         data["widgetName"] = this.widgetName;
         data["userTimeZone"] = this.userTimeZone;
         data["rows"] = this.rows ? this.rows.toJSON() : <any>undefined;
@@ -41663,8 +41593,6 @@ export class TableWidgetRequest implements ITableWidgetRequest {
 export interface ITableWidgetRequest {
     startDate: DateTime;
     endDate: DateTime;
-    refreshRate?: TimeSpan;
-    isRealTime?: boolean;
     widgetName: string | undefined;
     userTimeZone: number;
     rows: RowWidgetTable;
@@ -43129,98 +43057,6 @@ export interface IThemeToolbarSettingsDto {
     mobileFixedToolbar: boolean;
 }
 
-export class TimeSpan implements ITimeSpan {
-    ticks!: number;
-    readonly days!: number;
-    readonly hours!: number;
-    readonly milliseconds!: number;
-    readonly microseconds!: number;
-    readonly nanoseconds!: number;
-    readonly minutes!: number;
-    readonly seconds!: number;
-    readonly totalDays!: number;
-    readonly totalHours!: number;
-    readonly totalMilliseconds!: number;
-    readonly totalMicroseconds!: number;
-    readonly totalNanoseconds!: number;
-    readonly totalMinutes!: number;
-    readonly totalSeconds!: number;
-
-    constructor(data?: ITimeSpan) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.ticks = _data["ticks"];
-            (<any>this).days = _data["days"];
-            (<any>this).hours = _data["hours"];
-            (<any>this).milliseconds = _data["milliseconds"];
-            (<any>this).microseconds = _data["microseconds"];
-            (<any>this).nanoseconds = _data["nanoseconds"];
-            (<any>this).minutes = _data["minutes"];
-            (<any>this).seconds = _data["seconds"];
-            (<any>this).totalDays = _data["totalDays"];
-            (<any>this).totalHours = _data["totalHours"];
-            (<any>this).totalMilliseconds = _data["totalMilliseconds"];
-            (<any>this).totalMicroseconds = _data["totalMicroseconds"];
-            (<any>this).totalNanoseconds = _data["totalNanoseconds"];
-            (<any>this).totalMinutes = _data["totalMinutes"];
-            (<any>this).totalSeconds = _data["totalSeconds"];
-        }
-    }
-
-    static fromJS(data: any): TimeSpan {
-        data = typeof data === 'object' ? data : {};
-        let result = new TimeSpan();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["ticks"] = this.ticks;
-        data["days"] = this.days;
-        data["hours"] = this.hours;
-        data["milliseconds"] = this.milliseconds;
-        data["microseconds"] = this.microseconds;
-        data["nanoseconds"] = this.nanoseconds;
-        data["minutes"] = this.minutes;
-        data["seconds"] = this.seconds;
-        data["totalDays"] = this.totalDays;
-        data["totalHours"] = this.totalHours;
-        data["totalMilliseconds"] = this.totalMilliseconds;
-        data["totalMicroseconds"] = this.totalMicroseconds;
-        data["totalNanoseconds"] = this.totalNanoseconds;
-        data["totalMinutes"] = this.totalMinutes;
-        data["totalSeconds"] = this.totalSeconds;
-        return data;
-    }
-}
-
-export interface ITimeSpan {
-    ticks: number;
-    days: number;
-    hours: number;
-    milliseconds: number;
-    microseconds: number;
-    nanoseconds: number;
-    minutes: number;
-    seconds: number;
-    totalDays: number;
-    totalHours: number;
-    totalMilliseconds: number;
-    totalMicroseconds: number;
-    totalNanoseconds: number;
-    totalMinutes: number;
-    totalSeconds: number;
-}
-
 export class TopStatsData implements ITopStatsData {
     newTenantsCount!: number;
     newSubscriptionAmount!: number;
@@ -43272,8 +43108,6 @@ export interface ITopStatsData {
 export class TrendCalcRequest implements ITrendCalcRequest {
     startDate!: DateTime;
     endDate!: DateTime;
-    refreshRate?: TimeSpan;
-    isRealTime?: boolean;
     isAutoResolution!: boolean;
     resolutionInSeconds!: number;
     widgetName!: string | undefined;
@@ -43293,8 +43127,6 @@ export class TrendCalcRequest implements ITrendCalcRequest {
         if (_data) {
             this.startDate = _data["startDate"] ? DateTime.fromISO(_data["startDate"].toString()) : <any>undefined;
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
-            this.refreshRate = _data["refreshRate"] ? TimeSpan.fromJS(_data["refreshRate"]) : <any>undefined;
-            this.isRealTime = _data["isRealTime"];
             this.isAutoResolution = _data["isAutoResolution"];
             this.resolutionInSeconds = _data["resolutionInSeconds"];
             this.widgetName = _data["widgetName"];
@@ -43318,8 +43150,6 @@ export class TrendCalcRequest implements ITrendCalcRequest {
         data = typeof data === 'object' ? data : {};
         data["startDate"] = this.startDate ? this.startDate.toString() : <any>undefined;
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
-        data["refreshRate"] = this.refreshRate ? this.refreshRate.toJSON() : <any>undefined;
-        data["isRealTime"] = this.isRealTime;
         data["isAutoResolution"] = this.isAutoResolution;
         data["resolutionInSeconds"] = this.resolutionInSeconds;
         data["widgetName"] = this.widgetName;
@@ -43336,8 +43166,6 @@ export class TrendCalcRequest implements ITrendCalcRequest {
 export interface ITrendCalcRequest {
     startDate: DateTime;
     endDate: DateTime;
-    refreshRate?: TimeSpan;
-    isRealTime?: boolean;
     isAutoResolution: boolean;
     resolutionInSeconds: number;
     widgetName: string | undefined;

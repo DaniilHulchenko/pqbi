@@ -1,0 +1,58 @@
+.segmentation {
+  display: flex;
+  gap: 2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.table {
+  flex: 1;
+}
+
+.form-hint {
+  color: #6c757d;
+  font-size: 0.75rem;
+}
+
+.segment-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+}
+
+.weight-indicator {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.weight-indicator.invalid {
+  color: #dc3545;
+}
+
+.weight-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+.segment-hint {
+  color: #0c5460;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.boundary-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+:host ::ng-deep .dx-datagrid .dx-row.invalid-boundary > td {
+  background-color: #fff3cd;
+}
+.segment-error--hidden {
+  visibility: hidden;
+}

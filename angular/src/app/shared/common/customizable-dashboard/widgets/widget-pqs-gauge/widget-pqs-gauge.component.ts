@@ -9,6 +9,7 @@ import {
     FeederComponentInfo,
     GaugeMarkerDto,
     GaugeWidgetConfigurationDto,
+    GaugeWidgetConfigurationsServiceProxy,
     MarkerKind,
     PQBIQuantityType,
     RowWidgetTable,
@@ -23,6 +24,8 @@ import { CreateOrEditGaugeConfigurationComponent } from './create-or-edit-gauge-
 import { DateRangeService } from '@app/shared/services/date-range-service';
 import { Subject, Subscription, takeUntil, timer } from 'rxjs';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
+import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
+import { DateRangeState } from '@app/shared/models/date-range-state';
 import { DateTime } from 'luxon';
 import { ColorSchema, ExcludeFlagged } from '@app/shared/enums/advanced-settings-options';
 import { ColumnType } from '@app/shared/enums/column-type';
@@ -33,14 +36,13 @@ import { GaugeWidgetAdvancedSettingsConfig, Segment } from '@app/shared/interfac
 import { ChartsColor } from 'devextreme/common/charts';
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
 import { GaugeWidgetConfigurationService } from '@app/shared/services/widget-configurations/gauge-widget-configuration.service';
-import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
-import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 
 interface WeightedSegmentMeta extends Segment {
     startPosition: number;
     endPosition: number;
     weight: number;
 }
+
 
 @Component({
     selector: 'app-widget-pqs-gauge',
@@ -73,8 +75,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
 
     formattedValue: number;
     actualValue: number;
-    displayValue: number;
-    unit = '';
+    displayValue: number;    unit = '';
     title = '';
     valueFontSize = 20;
     valueFontFamily = '';
@@ -150,8 +151,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
 
     refreshWidget(): void {
         if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
-            var sub = this.gaugeWidgetConfigurationService
-                .getForEdit(+this.widgetConfigurationInDB.configuration)
+            var sub = this.gaugeWidgetConfigurationService.getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.gaugeWidgetConfiguration = result.gaugeWidgetConfiguration;
                     if (this.gaugeWidgetConfiguration) {
@@ -220,8 +220,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                     customData,
                     tableEvent,
                     parameterName: column.name,
-                    isExcludeFlaggedData:
-                        column.gaugeWidgetAdvancedSettings?.excludeFlagged === ExcludeFlagged.DefaultEvents,
+                    isExcludeFlaggedData: column.gaugeWidgetAdvancedSettings?.excludeFlagged === ExcludeFlagged.DefaultEvents,
                     markers: this.prepareMarkers(column),
                 });
             });
@@ -234,8 +233,8 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                 .pipe(takeUntil(this.stopStream$))
                 .subscribe(() => {
                     const range = this.prepareDataRange();
-                    request.startDate = range[0];
-                    request.endDate = range[1];
+                    request.startDate = range[0].toUTC();
+                    request.endDate = range[1].toUTC();
                     var subGetData = this._tenantDashboardService
                         .pQSGaugeWidgetData(request)
                         .subscribe((result) => this.processResponse(result));
@@ -244,8 +243,8 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
             this.subs.push(sub);
         } else {
             const range = this.prepareDataRange();
-            request.startDate = range[0];
-            request.endDate = range[1];
+            request.startDate = range[0].toUTC();
+            request.endDate = range[1].toUTC();
             var sub = this._tenantDashboardService
                 .pQSGaugeWidgetData(request)
                 .subscribe((result) => this.processResponse(result));
@@ -254,12 +253,9 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     }
 
     onEditModelClose(isSaved) {
-        if (!isSaved && !this.widgetConfigurationInDB?.configuration) {
-            abp.event.trigger(
-                'app.dashboard.removeWidget',
-                this.widgetConfigurationInDB.widgetGuid,
-                'Widgets_Tenant_PQSGauge',
-            );
+        if (!isSaved && !this.widgetConfigurationInDB?.configuration)
+        {
+            abp.event.trigger('app.dashboard.removeWidget', this.widgetConfigurationInDB.widgetGuid, 'Widgets_Tenant_PQSGauge');
         }
     }
 
@@ -271,16 +267,10 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
 
             if (components) {
                 let tableWidgetConfigurationComponents = components.components ?? [];
-                let formattedFeeders =
-                    components.feeders?.map(
-                        (f) =>
-                            new FeederComponentInfo({
-                                ...f,
-                                compName:
-                                    tableWidgetConfigurationComponents?.find((c) => c.key === f.componentId)?.label ??
-                                    '',
-                            }),
-                    ) ?? [];
+                let formattedFeeders = components.feeders?.map((f) => new FeederComponentInfo({
+                    ...f,
+                    compName: tableWidgetConfigurationComponents?.find(c => c.key === f.componentId)?.label ?? ''
+                })) ?? [];
                 let formattedComponents = tableWidgetConfigurationComponents
                     .filter((c) => !formattedFeeders.some((f) => f.componentId === c.key))
                     .map(
@@ -468,22 +458,22 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     }
 
     private prepareDataRange(): [DateTime, DateTime] {
-        const state: DateRangeAndRefreshModelNew = this.gaugeWidgetConfiguration?.dateRange
-            ? DateRangeAndRefreshModelNew.createItem(this.gaugeWidgetConfiguration.dateRange)
-            : DateRangeAndRefreshModelNew.createItem('');
-        var [startDate, endDate] = this._dateRangeService.getDateRangeFromNewState(state);
+        const state: DateRangeState = this.gaugeWidgetConfiguration?.dateRange
+            ? DateRangeState.fromJSON(this.gaugeWidgetConfiguration.dateRange)
+            : new DateRangeState({ rangeOption: DateRangeUnits.LAST_7_DAYS, startDate: null, endDate: null });
+
+        let [startDate, endDate] = this.dateRangeService.getDateRangeFromState(state);
 
         if (!startDate || !endDate || startDate >= endDate) {
-            [startDate, endDate] = this.dateRangeService.getDateRangeFromNewUnit(RefreshSelectionCustomUnits.Day, 30);
+            [startDate, endDate] = this.dateRangeService.getDateRangeFromUnit(DateRangeUnits.LAST_7_DAYS);
         }
 
-        return [DateTime.fromJSDate(startDate), DateTime.fromJSDate(endDate)];
+        return [startDate, endDate];
     }
 
     private setLimits(item: TableWidgetResponseItem) {
         let lower: number;
         let upper: number;
-
         if (
             this.parameter?.gaugeWidgetAdvancedSettings?.lowerLimit !== null &&
             this.parameter?.gaugeWidgetAdvancedSettings?.upperLimit !== null &&
@@ -529,11 +519,10 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
 
     private setSubvalues(item: TableWidgetResponseItem) {
         this.actualSubvalues = item.gaugeMarkerResultList?.map((m) => m.value).filter((v) => v != null);
-        this.subvalues = this.actualSubvalues ? [...this.actualSubvalues] : undefined;
-    }
+        this.subvalues = this.actualSubvalues ? [...this.actualSubvalues] : undefined;    }
 
     private setSegments() {
-        const segments = this.parameter?.gaugeWidgetAdvancedSettings?.segments ?? [];
+         const segments = this.parameter?.gaugeWidgetAdvancedSettings?.segments ?? [];
 
         this.weightedSegments = this.buildWeightedSegments(segments);
         this.hasWeightedScale = this.weightedSegments.length > 0;
@@ -557,7 +546,6 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
             endValue: this.toAxisCoordinate(segment.endPosition),
             color: segment.colorMode === 'custom' ? segment.color : this.calculatedColorSchema,
         }));
-
         const tickPositions = Array.from(
             new Set(this.weightedSegments.flatMap((segment) => [segment.startPosition, segment.endPosition])),
         ).sort((a, b) => a - b);
@@ -813,7 +801,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        this.subs.forEach((sub) => sub.unsubscribe());
+        this.subs.forEach(sub => sub.unsubscribe());
     }
 }
 

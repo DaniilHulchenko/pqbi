@@ -21,7 +21,6 @@ import {
     BaseData,
     CalculatedDataItem,
     TrendResponse,
-    TimeSpan,
 } from '@shared/service-proxies/service-proxies';
 import { DashboardChartBase } from '../dashboard-chart-base';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
@@ -41,7 +40,6 @@ import { RenameWidgetModalComponent } from '../../rename-widget-modal/rename-wid
 import { ColumnType } from '@app/shared/enums/column-type';
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
 import { TrendWidgetConfigurationService } from '@app/shared/services/widget-configurations/trend-widget-configuration.service';
-import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 
 type LineLegendType = {
     name: string,
@@ -304,7 +302,12 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                         let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
                         let resulutionValueInMs = 0;
 
-                        if (isAutoResolution) {
+                        if (
+                            isAutoResolution &&
+                            (rangeOption.startsWith('Last') ||
+                                rangeOption.startsWith('This') ||
+                                rangeOption === 'Today')
+                        ) {
                             resulutionValueInMs = this.calculateAutoResolution().toRefresh;
                         } else {
                             resulutionValueInMs = this._resolutionService.resolutionValueInMs(
@@ -318,6 +321,13 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                             timer(0, resulutionValueInMs)
                                 .pipe(takeUntil(this.stopStream$))
                                 .subscribe((result) => {
+                                    /*let range: [DateTime, DateTime] = this._dateRangeService.getDateRangeFromState(
+                                    this.trendWidgetConfiguration.dateRange,
+                                );
+                                this.trendWidgetConfiguration.dateR
+
+                                this.pqsTrendConfigRequest.startDate = range[0];
+                                this.pqsTableConfigRequest.endDate = range[1];*/
                                     let input = this.formatRequest();
                                     if (input) {
                                         this.lineChart.reload(input);
@@ -340,11 +350,15 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         if (!this.trendWidgetConfiguration.dateRange) {
             throw new Error('No dateRange for calculating AUTO resolution');
         }
-        let calculatedDateRange = this._dateRangeService.getDateRangeFromNewState(
-                DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange),
-            );
+        let { startDate, endDate, rangeOption } = JSON.parse(this.trendWidgetConfiguration.dateRange);
+        let dateRange: [DateTime, DateTime];
         let dateRangeInMs: number;
-        dateRangeInMs = DateTime.fromJSDate(calculatedDateRange[1]).toMillis() - DateTime.fromJSDate(calculatedDateRange[0]).toMillis();
+        if (rangeOption !== DateRangeUnits.CUSTOM) {
+            dateRange = this._dateRangeService.getDateRangeFromUnit(rangeOption);
+        } else if (startDate && endDate) {
+            dateRange = [DateTime.fromISO(startDate), DateTime.fromISO(endDate)];
+        }
+        dateRangeInMs = dateRange[1].toMillis() - dateRange[0].toMillis();
 
         this.chartWidth = this.chartComponent?.instance.element().clientWidth ?? this.chartWidth;
         return {
@@ -358,11 +372,11 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
             abp.event.trigger('app.dashboard.removeWidget', this.widgetConfigurationInDB.widgetGuid, 'Widgets_Tenant_PQSTrend');
         }
     }
-    
+
     formatRequest(): TrendCalcRequest | null {
         try {
-            let dateRange = this._dateRangeService.getDateRangeFromNewState(
-                DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange),
+            let dateRange = this._dateRangeService.getDateRangeFromState(
+                DateRangeState.fromJSON(this.trendWidgetConfiguration.dateRange),
             );
 
             const state = this._resolutionService.parseStateFromString(this.trendWidgetConfiguration.resolution, true);
@@ -382,27 +396,8 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 resolutionInSeconds,
                 userTimeZone: 1,
                 widgetName: this.widgetConfigurationInDB?.name,
-                startDate: DateTime.fromJSDate(dateRange[0]),
-                endDate: DateTime.fromJSDate(dateRange[1]),
-                refreshRate: new TimeSpan({
-    ticks: 0,
-    days: 0,
-    hours: 0,
-    milliseconds: 0,
-    microseconds: 0,
-    nanoseconds: 0,
-    minutes: 0,
-    seconds: 0,
-    totalDays: 0,
-    totalHours: 0,
-    totalMilliseconds: 0,
-    totalMicroseconds: 0,
-    totalNanoseconds: 0,
-    totalMinutes: 0,
-    totalSeconds: 0,
-  } as any),
-  isRealTime: false, 
-
+                startDate: dateRange[0],
+                endDate: dateRange[1],
                 // resolution:
                 //     this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO
                 //         ? `AUTO(${this.calculateAutoResolution().toServer})`
@@ -483,8 +478,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     save(configuration: CreateOrEditTrendWidgetConfigurationDto) {
-        this.stopStream$.next(null);
-        this.stopStream$.complete();
         this.saveConfiguration(configuration.id.toString());
     }
 

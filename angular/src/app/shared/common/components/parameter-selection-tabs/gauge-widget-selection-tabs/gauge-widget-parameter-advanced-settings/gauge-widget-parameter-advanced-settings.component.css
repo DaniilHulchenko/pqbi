@@ -6,22 +6,6 @@
   margin-bottom: 16px;
 }
 
-.segmentation {
-  display: flex;
-  gap: 2rem;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-width: 200px;
-}
-
-.table {
-  flex: 1;
-}
-
 .cancel-note {
   margin-bottom: 0.5rem;
   color: #6c757d;
@@ -36,29 +20,4 @@
 
 .scale-range ::ng-deep .dx-texteditor-input {
   cursor: default;
-}
-
-.form-hint {
-  color: #6c757d;
-  font-size: 0.75rem;
-}
-
-.segment-error {
-  color: #dc3545;
-  font-size: 0.85rem;
-}
-
-.weight-indicator {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.weight-indicator.invalid {
-  color: #dc3545;
-}
-
-.weight-error {
-  color: #dc3545;
-  font-size: 0.85rem;
-  margin-bottom: 0.5rem;
 }
