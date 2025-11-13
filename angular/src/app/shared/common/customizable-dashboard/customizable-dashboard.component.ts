@@ -138,6 +138,13 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             if (widgetIds.length === 0) {
                 this.loading = false;
                 this.busy = false;
+
+                this.selectedPage = {
+                    id: this.userDashboard.pages[0].id,
+                    name: this.userDashboard.pages[0].name,
+                };
+                this.selectPageTab(this.userDashboard.pages[0].id);
+
                 return;
             }
 
@@ -545,7 +552,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
             this.busy = false;
             this.notify.success(this.l('SavedSuccessfully'));
-            //window.location.reload();
+            window.location.reload();
         });
     }
 

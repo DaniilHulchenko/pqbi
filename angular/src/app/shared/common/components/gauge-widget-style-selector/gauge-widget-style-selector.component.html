@@ -52,16 +52,16 @@
   </div>
   <div *ngIf="isCustomArc" class="col-2">
     <label class="form-label">{{'StartAngle' | localize }} *</label>
-    <dx-number-box [(value)]="styleModel.startAngle" [min]="0" [max]="360" format="# °" (onValueChanged)="invokeOnChange()"
+    <dx-number-box [(value)]="styleModel.startAngle" [min]="0" [max]="360" format="#0°" (onValueChanged)="invokeOnChange()"
       [placeholder]="l('StartAngle')" [showSpinButtons]="true" [showClearButton]="true">
     </dx-number-box>
-    <small *ngIf="!isStartAngleValid" class="text-danger">{{'StartAngleRequired' | localize }}</small>
+    <small *ngIf="isStartAngleValid == null || isValidState == undefined" class="text-danger">{{'StartAngleRequired' | localize }}</small>
   </div>
   <div *ngIf="isCustomArc" class="col-2">
     <label class="form-label">{{'EndAngle' | localize }} *</label>
-    <dx-number-box [(value)]="styleModel.endAngle" [min]="0" [max]="360" format="# °" (onValueChanged)="invokeOnChange()"
+    <dx-number-box [(value)]="styleModel.endAngle" [min]="0" [max]="360" format="#0°" (onValueChanged)="invokeOnChange()"
       [placeholder]="l('EndAngle')" [showSpinButtons]="true" [showClearButton]="true">
     </dx-number-box>
-    <small *ngIf="!isEndAngleValid" class="text-danger">{{'EndAngleRequired' | localize }}</small>
+    <small *ngIf="isEndAngleValid == null || isEndAngleValid == undefined" class="text-danger">{{'EndAngleRequired' | localize }}</small>
   </div>
 </div>

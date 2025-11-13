@@ -23,7 +23,7 @@ import { NgForm } from '@angular/forms';
 import { DateRangeState } from '@app/shared/models/date-range-state';
 import { ComponentsState } from '@app/shared/models/components-state';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
-import { DxDataGridComponent, DxScrollViewComponent, DxTabPanelComponent } from '@node_modules/devextreme-angular';
+import { DxDataGridComponent, DxScrollViewComponent, DxTabPanelComponent } from 'devextreme-angular';
 import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/additional-parameter-selection-tab/additional-parameter-selection-tab.component';
 import { LogicalParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/logical-parameter-selection-tab/logical-parameter-selection-tab.component';
 import {
@@ -47,12 +47,15 @@ import { EditExceptionEventCallBack } from '@app/shared/common/components/parame
 import { DxDataGridTypes } from '@node_modules/devextreme-angular/ui/data-grid';
 import { BaseParameterType } from '@app/shared/enums/base-parameter-type';
 import { Parameter } from '@app/main/customParameters/customParameters/table-parameters/models/parameter';
-import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
 import { DateRangeService } from '@app/shared/services/date-range-service';
 import { ArrayUtils } from '@app/shared/services/array-utils.service';
 import { ExcludeFlagged } from '@app/shared/enums/advanced-settings-options';
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { BarchartWidgetConfigurationService } from '@app/shared/services/widget-configurations/barchart-widget-configuration.service';
+import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
+import { DateRangeType } from '@app/shared/enums/date-range-type';
+import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
+import { DateTime } from 'luxon';
 
 
 @Component({
@@ -116,11 +119,8 @@ export class CreateOrEditBarChartConfigurationComponent
 
     private subs: Subscription[] = [];
 
-    dateRangeSelectionState: DateRangeState = new DateRangeState({
-        rangeOption: DateRangeUnits.LAST_7_DAYS,
-        startDate: null,
-        endDate: null,
-    });
+    dateRangeSelectionState: DateRangeAndRefreshModelNew;
+
     constructor(
         injector: Injector,
         private _barChartConfigurationService: BarchartWidgetConfigurationService,
@@ -337,7 +337,7 @@ export class CreateOrEditBarChartConfigurationComponent
 
     save() {
         this.saving = true;
-        this.barChartWidgetConfiguration.dateRange = this.dateRangeSelectionState.toJSON();
+        this.barChartWidgetConfiguration.dateRange = safeStringify(this.dateRangeSelectionState);
         this.barChartWidgetConfiguration.components = safeStringify(this.componentsState);
 
         const params = this.parameters.map((p) => ({
@@ -393,7 +393,7 @@ export class CreateOrEditBarChartConfigurationComponent
                     this.barChartWidgetConfiguration = result.barChartWidgetConfiguration;
                     let loadedSeries: string = '';
 
-                    try {
+                    // try {
                         const cfg = JSON.parse(this.barChartWidgetConfiguration.configuration);
 
                         this.selectedXUnit = cfg.xUnit;
@@ -407,30 +407,33 @@ export class CreateOrEditBarChartConfigurationComponent
                             resolution: p.resolution ?? 0,
                         }));
                         this.componentsState = cfg.componentsState;
-                        this.dateRangeSelectionState = DateRangeState.fromJSON(cfg.dateRangeSelectionState);
-                    } catch {
-                        this.dateRangeSelectionState = DateRangeState.fromJSON(
+                        this.dateRangeSelectionState = DateRangeAndRefreshModelNew.createItem(
                             this.barChartWidgetConfiguration.dateRange,
                         );
-                        this.componentsState = JSON.parse(this.barChartWidgetConfiguration.components);
-                        this.parameters = JSON.parse(this.barChartWidgetConfiguration.configuration).map((p: any) => ({
-                            ...p,
-                            resolution: p.resolution ?? 0,
-                        }));
-                        const comps = JSON.parse(this.barChartWidgetConfiguration.components) as any[];
-                        const params = this.parameters;
+                        
+                    // } catch {
+                    //     this.dateRangeSelectionState = DateRangeAndRefreshModelNew.createItem(
+                    //         this.barChartWidgetConfiguration.dateRange,
+                    //     );
+                    //     this.componentsState = JSON.parse(this.barChartWidgetConfiguration.components);
+                    //     this.parameters = JSON.parse(this.barChartWidgetConfiguration.configuration).map((p: any) => ({
+                    //         ...p,
+                    //         resolution: p.resolution ?? 0,
+                    //     }));
+                    //     const comps = JSON.parse(this.barChartWidgetConfiguration.components) as any[];
+                    //     const params = this.parameters;
 
-                        if (this.barChartWidgetConfiguration.dateRange && params.length === 0) {
-                            this.selectedXUnit = 'time';
-                            loadedSeries = comps.length > 1 ? 'components' : 'parameters';
-                        } else if (comps.length > 1 && params.length === 1) {
-                            this.selectedXUnit = 'components';
-                            loadedSeries = 'parameters';
-                        } else if (params.length > 1 && comps.length === 1) {
-                            this.selectedXUnit = 'parameters';
-                            loadedSeries = 'components';
-                        }
-                    }
+                    //     if (this.barChartWidgetConfiguration.dateRange && params.length === 0) {
+                    //         this.selectedXUnit = 'time';
+                    //         loadedSeries = comps.length > 1 ? 'components' : 'parameters';
+                    //     } else if (comps.length > 1 && params.length === 1) {
+                    //         this.selectedXUnit = 'components';
+                    //         loadedSeries = 'parameters';
+                    //     } else if (params.length > 1 && comps.length === 1) {
+                    //         this.selectedXUnit = 'parameters';
+                    //         loadedSeries = 'components';
+                    //     }
+                    // }
 
                     this.onXUnitChange(this.selectedXUnit);
                     this.selectedSeries = loadedSeries;
@@ -440,7 +443,7 @@ export class CreateOrEditBarChartConfigurationComponent
             this.subs.push(sub);
         } else {
             this.barChartWidgetConfiguration = new CreateOrEditBarChartWidgetConfigurationDto();
-            this.dateRangeSelectionState = new DateRangeState({ rangeOption: null, startDate: null, endDate: null });
+            this.dateRangeSelectionState = null;
             this.componentsState = null;
             this.parameters = [];
             this.selectedXUnit = null;
@@ -581,14 +584,11 @@ export class CreateOrEditBarChartConfigurationComponent
             return;
         }
 
-        let [startDate, endDate] = this._dateRangeService.getDateRangeFromState(this.dateRangeSelectionState);
+        let [startDate, endDate] = this._dateRangeService.getDateRangeFromNewState(this.dateRangeSelectionState);
 
         if (!startDate || !endDate || startDate >= endDate) {
-            [startDate, endDate] = this._dateRangeService.getDateRangeFromUnit(DateRangeUnits.LAST_7_DAYS);
+            [startDate, endDate] = this._dateRangeService.getDateRangeFromNewUnit(RefreshSelectionCustomUnits.Day, 7);
         }
-
-        startDate = startDate.toUTC();
-        endDate = endDate.toUTC();
 
         const config = JSON.parse(this.barChartWidgetConfiguration.configuration);
 
@@ -648,9 +648,11 @@ export class CreateOrEditBarChartConfigurationComponent
             }),
             feeders: [...formattedFeeders, ...formattedComponents],
             widgetName: '',
-            startDate: startDate,
-            endDate: endDate,
+            startDate: DateTime.fromJSDate(startDate),
+            endDate: DateTime.fromJSDate(endDate),
             userTimeZone: 1,
+            refreshRateInSeconds: 0,
+            isRealTime: false,
         });
 
         var sub = this._tenantDashboardService.pQSBarChartWidgetData(request).subscribe({

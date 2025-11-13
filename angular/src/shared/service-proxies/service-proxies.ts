@@ -22358,6 +22358,8 @@ export interface IAuthenticateResultModel {
 export class BarChartRequest implements IBarChartRequest {
     startDate!: DateTime;
     endDate!: DateTime;
+    refreshRateInSeconds!: number;
+    isRealTime!: boolean;
     widgetName!: string | undefined;
     userTimeZone!: number;
     category!: DimensionSelector;
@@ -22378,6 +22380,8 @@ export class BarChartRequest implements IBarChartRequest {
         if (_data) {
             this.startDate = _data["startDate"] ? DateTime.fromISO(_data["startDate"].toString()) : <any>undefined;
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
+            this.refreshRateInSeconds = _data["refreshRateInSeconds"];
+            this.isRealTime = _data["isRealTime"];
             this.widgetName = _data["widgetName"];
             this.userTimeZone = _data["userTimeZone"];
             this.category = _data["category"] ? DimensionSelector.fromJS(_data["category"]) : <any>undefined;
@@ -22406,6 +22410,8 @@ export class BarChartRequest implements IBarChartRequest {
         data = typeof data === 'object' ? data : {};
         data["startDate"] = this.startDate ? this.startDate.toString() : <any>undefined;
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
+        data["refreshRateInSeconds"] = this.refreshRateInSeconds;
+        data["isRealTime"] = this.isRealTime;
         data["widgetName"] = this.widgetName;
         data["userTimeZone"] = this.userTimeZone;
         data["category"] = this.category ? this.category.toJSON() : <any>undefined;
@@ -22427,6 +22433,8 @@ export class BarChartRequest implements IBarChartRequest {
 export interface IBarChartRequest {
     startDate: DateTime;
     endDate: DateTime;
+    refreshRateInSeconds: number;
+    isRealTime: boolean;
     widgetName: string | undefined;
     userTimeZone: number;
     category: DimensionSelector;
@@ -23762,10 +23770,11 @@ export interface IComboboxItemDto {
 
 export class ComponentDto implements IComponentDto {
     componentId!: string | undefined;
-    componentName!: string | undefined;
-    feeders!: FeederDescriptionDto[] | undefined;
-    channels!: ChannelDescriptionDto[] | undefined;
+    readonly componentName!: string | undefined;
+    readonly feeders!: FeederDescriptionDto[] | undefined;
+    readonly channels!: ChannelDescriptionDto[] | undefined;
     additionalDatas!: AdditionalData[] | undefined;
+    customBaseList!: CustomCalculationBaseInfo[] | undefined;
     tags!: TagDto[] | undefined;
     parameterInfos!: string[] | undefined;
 
@@ -23781,21 +23790,26 @@ export class ComponentDto implements IComponentDto {
     init(_data?: any) {
         if (_data) {
             this.componentId = _data["componentId"];
-            this.componentName = _data["componentName"];
+            (<any>this).componentName = _data["componentName"];
             if (Array.isArray(_data["feeders"])) {
-                this.feeders = [] as any;
+                (<any>this).feeders = [] as any;
                 for (let item of _data["feeders"])
-                    this.feeders!.push(FeederDescriptionDto.fromJS(item));
+                    (<any>this).feeders!.push(FeederDescriptionDto.fromJS(item));
             }
             if (Array.isArray(_data["channels"])) {
-                this.channels = [] as any;
+                (<any>this).channels = [] as any;
                 for (let item of _data["channels"])
-                    this.channels!.push(ChannelDescriptionDto.fromJS(item));
+                    (<any>this).channels!.push(ChannelDescriptionDto.fromJS(item));
             }
             if (Array.isArray(_data["additionalDatas"])) {
                 this.additionalDatas = [] as any;
                 for (let item of _data["additionalDatas"])
                     this.additionalDatas!.push(AdditionalData.fromJS(item));
+            }
+            if (Array.isArray(_data["customBaseList"])) {
+                this.customBaseList = [] as any;
+                for (let item of _data["customBaseList"])
+                    this.customBaseList!.push(CustomCalculationBaseInfo.fromJS(item));
             }
             if (Array.isArray(_data["tags"])) {
                 this.tags = [] as any;
@@ -23836,6 +23850,11 @@ export class ComponentDto implements IComponentDto {
             for (let item of this.additionalDatas)
                 data["additionalDatas"].push(item.toJSON());
         }
+        if (Array.isArray(this.customBaseList)) {
+            data["customBaseList"] = [];
+            for (let item of this.customBaseList)
+                data["customBaseList"].push(item.toJSON());
+        }
         if (Array.isArray(this.tags)) {
             data["tags"] = [];
             for (let item of this.tags)
@@ -23856,16 +23875,18 @@ export interface IComponentDto {
     feeders: FeederDescriptionDto[] | undefined;
     channels: ChannelDescriptionDto[] | undefined;
     additionalDatas: AdditionalData[] | undefined;
+    customBaseList: CustomCalculationBaseInfo[] | undefined;
     tags: TagDto[] | undefined;
     parameterInfos: string[] | undefined;
 }
 
 export class ComponentSlimDto implements IComponentSlimDto {
     componentId!: string | undefined;
-    componentName!: string | undefined;
-    feeders!: FeederDescriptionDto[] | undefined;
-    channels!: ChannelDescriptionDto[] | undefined;
+    readonly componentName!: string | undefined;
+    readonly feeders!: FeederDescriptionDto[] | undefined;
+    readonly channels!: ChannelDescriptionDto[] | undefined;
     additionalDatas!: AdditionalData[] | undefined;
+    customBaseList!: CustomCalculationBaseInfo[] | undefined;
 
     constructor(data?: IComponentSlimDto) {
         if (data) {
@@ -23879,21 +23900,26 @@ export class ComponentSlimDto implements IComponentSlimDto {
     init(_data?: any) {
         if (_data) {
             this.componentId = _data["componentId"];
-            this.componentName = _data["componentName"];
+            (<any>this).componentName = _data["componentName"];
             if (Array.isArray(_data["feeders"])) {
-                this.feeders = [] as any;
+                (<any>this).feeders = [] as any;
                 for (let item of _data["feeders"])
-                    this.feeders!.push(FeederDescriptionDto.fromJS(item));
+                    (<any>this).feeders!.push(FeederDescriptionDto.fromJS(item));
             }
             if (Array.isArray(_data["channels"])) {
-                this.channels = [] as any;
+                (<any>this).channels = [] as any;
                 for (let item of _data["channels"])
-                    this.channels!.push(ChannelDescriptionDto.fromJS(item));
+                    (<any>this).channels!.push(ChannelDescriptionDto.fromJS(item));
             }
             if (Array.isArray(_data["additionalDatas"])) {
                 this.additionalDatas = [] as any;
                 for (let item of _data["additionalDatas"])
                     this.additionalDatas!.push(AdditionalData.fromJS(item));
+            }
+            if (Array.isArray(_data["customBaseList"])) {
+                this.customBaseList = [] as any;
+                for (let item of _data["customBaseList"])
+                    this.customBaseList!.push(CustomCalculationBaseInfo.fromJS(item));
             }
         }
     }
@@ -23924,6 +23950,11 @@ export class ComponentSlimDto implements IComponentSlimDto {
             for (let item of this.additionalDatas)
                 data["additionalDatas"].push(item.toJSON());
         }
+        if (Array.isArray(this.customBaseList)) {
+            data["customBaseList"] = [];
+            for (let item of this.customBaseList)
+                data["customBaseList"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -23934,6 +23965,7 @@ export interface IComponentSlimDto {
     feeders: FeederDescriptionDto[] | undefined;
     channels: ChannelDescriptionDto[] | undefined;
     additionalDatas: AdditionalData[] | undefined;
+    customBaseList: CustomCalculationBaseInfo[] | undefined;
 }
 
 export class ComponentWithTagDtos implements IComponentWithTagDtos {
@@ -25633,6 +25665,36 @@ export class CustomAttributeTypedArgument implements ICustomAttributeTypedArgume
 export interface ICustomAttributeTypedArgument {
     argumentType: Type;
     value: any | undefined;
+}
+
+export class CustomCalculationBaseInfo implements ICustomCalculationBaseInfo {
+
+    constructor(data?: ICustomCalculationBaseInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): CustomCalculationBaseInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CustomCalculationBaseInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        return data;
+    }
+}
+
+export interface ICustomCalculationBaseInfo {
 }
 
 export class CustomParameter implements ICustomParameter {
@@ -41538,6 +41600,8 @@ export interface ITableWidgetEvent {
 export class TableWidgetRequest implements ITableWidgetRequest {
     startDate!: DateTime;
     endDate!: DateTime;
+    refreshRateInSeconds!: number;
+    isRealTime!: boolean;
     widgetName!: string | undefined;
     userTimeZone!: number;
     rows!: RowWidgetTable;
@@ -41556,6 +41620,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
         if (_data) {
             this.startDate = _data["startDate"] ? DateTime.fromISO(_data["startDate"].toString()) : <any>undefined;
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
+            this.refreshRateInSeconds = _data["refreshRateInSeconds"];
+            this.isRealTime = _data["isRealTime"];
             this.widgetName = _data["widgetName"];
             this.userTimeZone = _data["userTimeZone"];
             this.rows = _data["rows"] ? RowWidgetTable.fromJS(_data["rows"]) : <any>undefined;
@@ -41578,6 +41644,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
         data = typeof data === 'object' ? data : {};
         data["startDate"] = this.startDate ? this.startDate.toString() : <any>undefined;
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
+        data["refreshRateInSeconds"] = this.refreshRateInSeconds;
+        data["isRealTime"] = this.isRealTime;
         data["widgetName"] = this.widgetName;
         data["userTimeZone"] = this.userTimeZone;
         data["rows"] = this.rows ? this.rows.toJSON() : <any>undefined;
@@ -41593,6 +41661,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
 export interface ITableWidgetRequest {
     startDate: DateTime;
     endDate: DateTime;
+    refreshRateInSeconds: number;
+    isRealTime: boolean;
     widgetName: string | undefined;
     userTimeZone: number;
     rows: RowWidgetTable;
@@ -43108,6 +43178,8 @@ export interface ITopStatsData {
 export class TrendCalcRequest implements ITrendCalcRequest {
     startDate!: DateTime;
     endDate!: DateTime;
+    refreshRateInSeconds!: number;
+    isRealTime!: boolean;
     isAutoResolution!: boolean;
     resolutionInSeconds!: number;
     widgetName!: string | undefined;
@@ -43127,6 +43199,8 @@ export class TrendCalcRequest implements ITrendCalcRequest {
         if (_data) {
             this.startDate = _data["startDate"] ? DateTime.fromISO(_data["startDate"].toString()) : <any>undefined;
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
+            this.refreshRateInSeconds = _data["refreshRateInSeconds"];
+            this.isRealTime = _data["isRealTime"];
             this.isAutoResolution = _data["isAutoResolution"];
             this.resolutionInSeconds = _data["resolutionInSeconds"];
             this.widgetName = _data["widgetName"];
@@ -43150,6 +43224,8 @@ export class TrendCalcRequest implements ITrendCalcRequest {
         data = typeof data === 'object' ? data : {};
         data["startDate"] = this.startDate ? this.startDate.toString() : <any>undefined;
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
+        data["refreshRateInSeconds"] = this.refreshRateInSeconds;
+        data["isRealTime"] = this.isRealTime;
         data["isAutoResolution"] = this.isAutoResolution;
         data["resolutionInSeconds"] = this.resolutionInSeconds;
         data["widgetName"] = this.widgetName;
@@ -43166,6 +43242,8 @@ export class TrendCalcRequest implements ITrendCalcRequest {
 export interface ITrendCalcRequest {
     startDate: DateTime;
     endDate: DateTime;
+    refreshRateInSeconds: number;
+    isRealTime: boolean;
     isAutoResolution: boolean;
     resolutionInSeconds: number;
     widgetName: string | undefined;

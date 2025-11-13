@@ -87,8 +87,10 @@ export class DateRangeSelectorComponent implements ControlValueAccessor, OnInit 
     }
 
     writeValue(value: DateRangeAndRefreshModelNew): void {
+        let isInvoke = false;
         if (!value) {
             value = this._defaultDateRangeSelectionState;
+            isInvoke = true;
         }
 
         this.selectedRefreshValue = new RefreshWidgetSelectionModel(
@@ -105,6 +107,10 @@ export class DateRangeSelectorComponent implements ControlValueAccessor, OnInit 
         this.relativeUnit = value.relativeUnit;
         this.fromDate = value.fromDate;
         this.toDate = value.toDate;
+
+        if (isInvoke) {
+            setTimeout(() => this.invokeOnChange(), 1000);
+        }
     }
 
     registerOnChange(fn: any): void {

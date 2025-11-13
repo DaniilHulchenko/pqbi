@@ -35,17 +35,6 @@ export class DateRangeAndRefreshModelNew {
         });
     }
 
-    toJson(): string {
-        return JSON.stringify({
-            rangeUnit: this.rangeUnit,
-            relativeValue: this.relativeValue,
-            relativeUnit: this.relativeUnit,
-            fromDate: this.fromDate ? this.fromDate.toISOString() : null,
-            toDate: this.toDate ? this.toDate.toISOString() : null,
-            refreshIntervalInSeconds: this.refreshIntervalInSeconds,
-        });
-    }
-
     static createItem(
         dateRangeJson: string,
         refreshIntervalInSeconds: number | null = null,

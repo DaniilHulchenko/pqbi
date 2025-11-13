@@ -36,17 +36,6 @@ export class DateRangeAndResolutionModel {
         });
     }
 
-    toJson(): string {
-        return JSON.stringify({
-            rangeUnit: this.rangeUnit,
-            relativeValue: this.relativeValue,
-            relativeUnit: this.relativeUnit,
-            fromDate: this.fromDate ? this.fromDate.toISOString() : null,
-            toDate: this.toDate ? this.toDate.toISOString() : null,
-            resolution: this.resolution?.toJSON(),
-        });
-    }
-
     static createItem(
         dateRangeJson: string,
         resolution: ResolutionState | null = null,

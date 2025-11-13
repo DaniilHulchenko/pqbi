@@ -25,6 +25,8 @@ export class ResolutionService {
         [CustomResolutionUnits.HOUR]: 'Hour',
         [CustomResolutionUnits.DAY]: 'Day',
         [CustomResolutionUnits.WEEK]: 'Week',
+        [CustomResolutionUnits.MONTH]: 'Month',
+        [CustomResolutionUnits.YEAR]: 'Year',
     };
 
     readonly _resolutionDisplayNames: Record<ResolutionUnits, string> = {
@@ -61,6 +63,8 @@ export class ResolutionService {
 
     parseStateFromInt(seconds: number, parseToCustomState: boolean = false): ResolutionState {
         const unitMappings: { unit: CustomResolutionUnits; inSeconds: number }[] = [
+            { unit: CustomResolutionUnits.YEAR, inSeconds: 365 * 24 * 60 * 60 },
+            { unit: CustomResolutionUnits.MONTH, inSeconds: 30 * 24 * 60 * 60 },
             { unit: CustomResolutionUnits.WEEK, inSeconds: 7 * 24 * 60 * 60 },
             { unit: CustomResolutionUnits.DAY, inSeconds: 24 * 60 * 60 },
             { unit: CustomResolutionUnits.HOUR, inSeconds: 60 * 60 },

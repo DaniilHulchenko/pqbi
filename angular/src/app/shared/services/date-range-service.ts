@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { DateRangeUnits } from '../enums/date-range-selection-units';
 import { DateTime, Duration } from 'luxon';
 import { IDateRangeState } from '../interfaces/date-range-state';
+import { DateRangeAndRefreshModelNew } from '../models/date-range-and-refresh-model-new';
+import { DateRangeType } from '../enums/date-range-type';
+import { RefreshSelectionCustomUnits } from '../enums/refresh-selection-custom-units';
 
 @Injectable({
     providedIn: 'root',
@@ -63,6 +66,37 @@ export class DateRangeService {
         }
 
         return range;
+    }
+
+    getDateRangeFromNewState(state: DateRangeAndRefreshModelNew): [Date, Date] {
+        let range: [Date, Date];
+
+        if (state.rangeUnit === DateRangeType.Range) {
+            range = [state.fromDate, state.toDate];
+        } else {
+            range = this.getDateRangeFromNewUnit(state.relativeUnit, state.relativeValue);
+        }
+
+        return range;
+    }
+
+    getDateRangeFromNewUnit(unit: RefreshSelectionCustomUnits, value: number): [Date, Date] {
+        switch (unit) {
+            case RefreshSelectionCustomUnits.Sec:
+                return [new Date(Date.now() - value * 1000), new Date()];   
+            case RefreshSelectionCustomUnits.Min:
+                return [new Date(Date.now() - value * 60 * 1000), new Date()];
+            case RefreshSelectionCustomUnits.Hour:
+                return [new Date(Date.now() - value * 60 * 60 * 1000), new Date()];
+            case RefreshSelectionCustomUnits.Day:
+                return [new Date(Date.now() - value * 24 * 60 * 60 * 1000), new Date()];
+            case RefreshSelectionCustomUnits.Week:
+                return [new Date(Date.now() - value * 7 * 24 * 60 * 60 * 1000), new Date()];
+            case RefreshSelectionCustomUnits.Month:
+                return [new Date(Date.now() - value * 30 * 24 * 60 * 60 * 1000), new Date()];
+            case RefreshSelectionCustomUnits.Year:
+                return [new Date(Date.now() - value * 365 * 24 * 60 * 60 * 1000), new Date()];
+        }
     }
 
     private roundDateTimeToResolution(dateTime: DateTime, resolutionMinutes: number, roundUp: boolean = false): DateTime {

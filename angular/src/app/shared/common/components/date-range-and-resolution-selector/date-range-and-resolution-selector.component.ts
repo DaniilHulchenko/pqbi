@@ -86,8 +86,10 @@ export class DateRangeAndResolutionSelectorComponent implements ControlValueAcce
     }
 
     writeValue(value: DateRangeAndResolutionModel): void {
+        let isInvoke = false;
         if (!value) {
             value = this._defaultDateRangeSelectionState;
+            isInvoke = true;
         }
 
         if (value.resolution?.resolutionUnit === ResolutionUnits.AUTO) {
@@ -103,6 +105,10 @@ export class DateRangeAndResolutionSelectorComponent implements ControlValueAcce
         this.relativeUnit = value.relativeUnit;
         this.fromDate = value.fromDate;
         this.toDate = value.toDate;
+
+        if (isInvoke) {
+            setTimeout(() => this.invokeOnChange(), 1000);
+        }
     }
 
     registerOnChange(fn: any): void {

@@ -51,6 +51,7 @@ import { DxScrollViewComponent, DxTabPanelComponent } from '@node_modules/devext
 import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/additional-parameter-selection-tab/additional-parameter-selection-tab.component';
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { TrendWidgetConfigurationService } from '@app/shared/services/widget-configurations/trend-widget-configuration.service';
+import { DateRangeAndResolutionModel } from '@app/shared/models/date-range-and-resolution-model';
 
 @Component({
     selector: 'createOrEditTrendConfiguration',
@@ -77,8 +78,9 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     popupVisible = false;
     configuration: CreateOrEditTrendWidgetConfigurationDto = new CreateOrEditTrendWidgetConfigurationDto();
 
-    dateRangeSelectionState: DateRangeState = new DateRangeState({ rangeOption: null, startDate: null, endDate: null });
-    resolutionState: ResolutionState;
+    // dateRangeSelectionState: DateRangeState = new DateRangeState({ rangeOption: null, startDate: null, endDate: null });
+    // resolutionState: ResolutionState;
+    dateRangeAndResolutionSelectionState: DateRangeAndResolutionModel;
     parameters: WidgetParametersColumn[] = [];
 
     parameterResolutions: ResolutionState[] = [];
@@ -135,24 +137,24 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     }
 
     isFormValid(): boolean {
-        const isDateRangeValid =
-            this.dateRangeSelectionState?.rangeOption &&
-            (this.dateRangeSelectionState.rangeOption !== DateRangeUnits.CUSTOM ||
-                (this.dateRangeSelectionState.startDate &&
-                    this.dateRangeSelectionState.endDate &&
-                    this.dateRangeSelectionState.startDate < this.dateRangeSelectionState.endDate));
+        // const isDateRangeValid =
+        //     this.dateRangeSelectionState?.rangeOption &&
+        //     (this.dateRangeSelectionState.rangeOption !== DateRangeUnits.CUSTOM ||
+        //         (this.dateRangeSelectionState.startDate &&
+        //             this.dateRangeSelectionState.endDate &&
+        //             this.dateRangeSelectionState.startDate < this.dateRangeSelectionState.endDate));
 
-        const isResolutionValid =
-            this.resolutionState?.resolutionUnit &&
-            (this.resolutionState.resolutionUnit !== ResolutionUnits.CUSTOM ||
-                (this.resolutionState.customResolutionValue &&
-                    this.resolutionState.customResolutionValue >= this.minCustomArgument &&
-                    this.resolutionState.customResolutionValue <= this.maxCustomArgument &&
-                    this.resolutionState.customResolutionUnit));
+        // const isResolutionValid =
+        //     this.resolutionState?.resolutionUnit &&
+        //     (this.resolutionState.resolutionUnit !== ResolutionUnits.CUSTOM ||
+        //         (this.resolutionState.customResolutionValue &&
+        //             this.resolutionState.customResolutionValue >= this.minCustomArgument &&
+        //             this.resolutionState.customResolutionValue <= this.maxCustomArgument &&
+        //             this.resolutionState.customResolutionUnit));
 
         const isTableNotEmpty = this.parameters && this.parameters.length > 0;
 
-        return isDateRangeValid && isResolutionValid && isTableNotEmpty;
+        return /*isDateRangeValid && isResolutionValid &&*/ isTableNotEmpty;
     }
 
     getIconClass(tabID: number): string {
@@ -282,8 +284,8 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     save(): void {
         this.saving = true;
 
-        this.configuration.dateRange = this.dateRangeSelectionState.toJSON();
-        this.configuration.resolution = this.resolutionState.toString();
+        this.configuration.dateRange = safeStringify(this.dateRangeAndResolutionSelectionState);
+        this.configuration.resolution = this.dateRangeAndResolutionSelectionState.resolution.toString();
         this.configuration.parameters = safeStringify(this.parameters);
 
         if (this.configuration.id) {
@@ -328,8 +330,13 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                 .subscribe((configuration: GetTrendWidgetConfigurationForEditOutput) => {
                     this.configuration = configuration.trendWidgetConfiguration;
 
-                    this.resolutionState = this._resolutionService.parseStateFromString(this.configuration.resolution);
-                    this.dateRangeSelectionState = DateRangeState.fromJSON(this.configuration.dateRange);
+                    this.dateRangeAndResolutionSelectionState = DateRangeAndResolutionModel.createItem(
+                        this.configuration.dateRange,
+                        this._resolutionService.parseStateFromString(this.configuration.resolution, true)
+                    );
+
+                    console.log()
+
                     this.parameters = JSON.parse(this.configuration.parameters);
 
                     for (let parameter of this.parameters.filter(
@@ -351,13 +358,8 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             this.subs.push(sub);
         } else {
             this.parameters = [];
-            this.resolutionState = new ResolutionState({ resolutionUnit: ResolutionUnits.AUTO });
+            this.dateRangeAndResolutionSelectionState = null;
             this.minAllowedResolution = this._resolutionService.parseStateFromString(ResolutionUnits.IS1MIN, true);
-            this.dateRangeSelectionState = new DateRangeState({
-                rangeOption: DateRangeUnits.LAST_30_DAYS,
-                startDate: null,
-                endDate: null,
-            });
             this.parameterResolutions = [];
         }
     }
