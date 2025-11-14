@@ -3,6 +3,7 @@ import {
     AdditionalData,
     BaseDataInfo,
     CalculationBase,
+    CustomCalculationBaseInfo,
     Group,
     GroupDataInfo,
     PhaseDataInfo,
@@ -73,7 +74,7 @@ export class BaseParameterCreationTreeBuilder {
             let base = parameterInfo.propertyName.substring(parameterInfo.propertyName.lastIndexOf('_') + 1);
             let baseInGroup = groupInTree.bases.find((baseInfo) => baseInfo.base === CalculationBase[base]);
             if (!baseInGroup) {
-                baseInGroup = { ...this.getParameterBase(base) };
+                baseInGroup = { ...this.getParameterBase(base, new Map()) };
                 groupInTree.bases.push(baseInGroup);
             }
         });
@@ -81,7 +82,12 @@ export class BaseParameterCreationTreeBuilder {
         return tree;
     }
 
-    buildTree(baseParametrerType: BaseParameterType, componentId: string, componentParameterInfos: string[]): object {
+    buildTree(
+        baseParametrerType: BaseParameterType,
+        componentId: string,
+        componentParameterInfos: string[],
+        customBaseList?: CustomCalculationBaseInfo[],
+    ): object {
         let tree = {};
 
         tree[componentId] = {
@@ -90,6 +96,7 @@ export class BaseParameterCreationTreeBuilder {
         };
 
         const parameterInfos = this.filterParameterInfosByType(baseParametrerType, componentParameterInfos);
+        const customBaseDescriptions = this.createCustomBaseDescriptionMap(customBaseList ?? []);
 
         parameterInfos.forEach((parameterInfo) => {
             const isHarmonic = parameterInfo.startsWith(this._harmonicParameterStartsWith);
@@ -141,6 +148,9 @@ export class BaseParameterCreationTreeBuilder {
 
             let base = parameterInfoArr[counter];
             counter++;
+            const normalizedBaseKey = base?.toUpperCase();
+            const enumKey = normalizedBaseKey?.includes('_') ? normalizedBaseKey.split('_')[0] : normalizedBaseKey;
+            const enumValue = enumKey ? CalculationBase[enumKey as keyof typeof CalculationBase] : undefined;
 
             let phase: string;
             switch (baseParametrerType) {
@@ -167,12 +177,28 @@ export class BaseParameterCreationTreeBuilder {
                 groupInTree.phases.push(phaseInGroup);
             }
 
-            let baseInPhase = phaseInGroup.bases.find((baseInfo) => baseInfo.base === CalculationBase[base]);
+            let baseInPhase =
+                phaseInGroup.bases.find((baseInfo) => baseInfo.phaseName === base) ??
+                phaseInGroup.bases.find((baseInfo) => enumValue !== undefined && baseInfo.base === enumValue);
             if (!baseInPhase) {
-                baseInPhase = { ...this.getParameterBase(base) };
+                const parameterBase = this.getParameterBase(base, customBaseDescriptions);
+                if (!parameterBase) {
+                    return;
+                }
+                baseInPhase = { ...parameterBase };
+                baseInPhase.base = enumValue ?? parameterBase.base;
+                baseInPhase.phaseName = parameterBase.phaseName ?? base;
                 baseInPhase.quantities = [];
                 phaseInGroup.bases.push(baseInPhase);
             }
+
+            const customDescription =
+                customBaseDescriptions.get(normalizedBaseKey) ??
+                customBaseDescriptions.get(enumKey ?? '');
+            if (customDescription) {
+                baseInPhase.description = customDescription;
+            }
+            baseInPhase.phaseName = base;
 
             quantities = quantities.slice(1);
             quantities.forEach((quantity) => {
@@ -196,8 +222,36 @@ export class BaseParameterCreationTreeBuilder {
         return this._phaseMeasurements?.find((phase) => phase.phase === PhaseMeasurementEnum[phaseInfo]);
     }
 
-    private getParameterBase(baseInfo: string): BaseDataInfo {
-        return this._baseMeasurements?.find((base) => base.base === CalculationBase[baseInfo]);
+    private getParameterBase(
+        baseInfo: string,
+        customBaseDescriptions: Map<string, string>,
+    ): BaseDataInfo {
+        const normalizedBaseInfo = baseInfo?.toUpperCase();
+        const enumKey = normalizedBaseInfo?.includes('_') ? normalizedBaseInfo.split('_')[0] : normalizedBaseInfo;
+        const enumValue = enumKey ? CalculationBase[enumKey as keyof typeof CalculationBase] : undefined;
+
+        const measurement = this._baseMeasurements?.find((base) => base.base === enumValue);
+        if (measurement) {
+            const descriptionOverride =
+                customBaseDescriptions.get(normalizedBaseInfo) ?? customBaseDescriptions.get(enumKey ?? '');
+            return new BaseDataInfo({
+                base: measurement.base,
+                phaseName: baseInfo,
+                description: descriptionOverride ?? measurement.description,
+            });
+        }
+
+        const description =
+            customBaseDescriptions.get(normalizedBaseInfo) ?? customBaseDescriptions.get(enumKey ?? '');
+        if (description && enumValue !== undefined) {
+            return new BaseDataInfo({
+                base: enumValue,
+                phaseName: baseInfo,
+                description,
+            });
+        }
+
+        return null;
     }
 
     private getParameterQuantity(quantityInfo: string): QuantityDataInfo {
@@ -205,6 +259,112 @@ export class BaseParameterCreationTreeBuilder {
         if (quantity !== undefined && quantity !== null) {
             return this._quantityMeasurements?.find((quantity) => quantity.quantity === QuantityEnum[quantityInfo]);
         }
+        return null;
+    }
+
+    private createCustomBaseDescriptionMap(
+        customBaseList: CustomCalculationBaseInfo[],
+    ): Map<string, string> {
+        const map = new Map<string, string>();
+
+        customBaseList?.forEach((customBase) => {
+            const presentedName = (customBase as any)?.presentedName ?? (customBase as any)?.PresentedName;
+            if (!presentedName) {
+                return;
+            }
+
+            const key = this.extractCustomBaseKey(customBase);
+            if (!key) {
+                return;
+            }
+
+            const normalizedKey = key.toUpperCase();
+            if (!map.has(normalizedKey)) {
+                map.set(normalizedKey, presentedName);
+            }
+
+            const baseOnly = normalizedKey.split('_')[0];
+            if (baseOnly && !map.has(baseOnly)) {
+                map.set(baseOnly, presentedName);
+            }
+        });
+
+        return map;
+    }
+
+    private extractCustomBaseKey(customBase: CustomCalculationBaseInfo): string | null {
+        if (!customBase) {
+            return null;
+        }
+
+        const customBaseAny = customBase as any;
+        const rawCalcBase =
+            customBaseAny?.calcBase ??
+            customBaseAny?.CalcBase ??
+            customBaseAny?.base ??
+            customBaseAny?.Base;
+
+        let basePart: string | null = null;
+
+        if (typeof rawCalcBase === 'string') {
+            basePart = rawCalcBase;
+        } else if (typeof rawCalcBase === 'number') {
+            basePart = CalculationBase[rawCalcBase] ?? rawCalcBase.toString();
+        } else if (rawCalcBase) {
+            const enumValue =
+                rawCalcBase?.calculationBaseEnum ??
+                rawCalcBase?.CalculationBaseEnum ??
+                rawCalcBase?.enum ??
+                rawCalcBase?.Enum;
+
+            if (typeof enumValue === 'number') {
+                basePart = CalculationBase[enumValue] ?? enumValue.toString();
+            } else if (typeof enumValue === 'string') {
+                basePart = enumValue;
+            } else if (typeof rawCalcBase?.toString === 'function') {
+                const parsed = rawCalcBase.toString();
+                if (parsed && parsed !== '[object Object]') {
+                    basePart = parsed;
+                }
+            }
+        }
+
+        const rawWindowInterval =
+            customBaseAny?.windowInterval ??
+            customBaseAny?.WindowInterval;
+
+        let windowPart: string | null = null;
+        if (rawWindowInterval !== undefined && rawWindowInterval !== null) {
+            if (typeof rawWindowInterval === 'string' || typeof rawWindowInterval === 'number') {
+                windowPart = rawWindowInterval.toString();
+            } else {
+                const candidate =
+                    rawWindowInterval?.value ??
+                    rawWindowInterval?.Value ??
+                    rawWindowInterval?.windowInterval ??
+                    rawWindowInterval?.WindowInterval;
+                if (candidate !== undefined && candidate !== null) {
+                    windowPart = candidate.toString();
+                } else if (typeof rawWindowInterval?.toString === 'function') {
+                    const parsed = rawWindowInterval.toString();
+                    if (parsed && parsed !== '[object Object]') {
+                        windowPart = parsed;
+                    }
+                }
+            }
+        }
+
+        if (basePart) {
+            if (windowPart) {
+                return `${basePart}_${windowPart}`;
+            }
+            return basePart;
+        }
+
+        if (windowPart) {
+            return windowPart;
+        }
+
         return null;
     }
 

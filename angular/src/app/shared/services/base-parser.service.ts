@@ -23,34 +23,39 @@ export class BaseParserService {
         const halfPattern = /half|1\/2/i;
         const unitPattern = new RegExp(Object.values(BaseUnits).join('|'), 'i');
 
-        const base = this.bases.find(base => base.phaseName === baseValue).description;
+        const baseMeasurement = this.bases.find((base) => base.phaseName === baseValue);
+        const baseDescription = baseMeasurement?.description ?? baseValue;
 
         baseModel.value = 1;
 
-        const fractionMatch = base.match(fractionPattern);
+        const fractionMatch = baseDescription.match(fractionPattern);
         if (fractionMatch) {
             const [numerator, denominator] = fractionMatch[1].split('/').map(Number);
             baseModel.value = numerator / denominator;
             baseModel.unit = fractionMatch[2] ? (fractionMatch[2].toLowerCase() as BaseUnits) : BaseUnits.Cycle;
         } else {
-            const singleFractionMatch = base.match(singleFractionPattern);
+            const singleFractionMatch = baseDescription.match(singleFractionPattern);
             if (singleFractionMatch) {
                 const denominator = parseFloat(singleFractionMatch[2]);
                 baseModel.value = 1 / denominator;
                 baseModel.unit = singleFractionMatch[1].toLowerCase() as BaseUnits;
-            } else if (halfPattern.test(base)) {
+            } else if (halfPattern.test(baseDescription)) {
                 baseModel.value = 0.5;
             } else {
-                const numberMatch = base.match(numberPattern);
+                const numberMatch = baseDescription.match(numberPattern);
                 if (numberMatch) {
                     baseModel.value = parseFloat(numberMatch[0]);
                 }
             }
         }
 
-        const unitMatch = base.match(unitPattern);
+        const unitMatch = baseDescription.match(unitPattern);
         if (unitMatch) {
             baseModel.unit = unitMatch[0].toLowerCase() as BaseUnits;
+            return true;
+        }
+
+        if (!baseMeasurement) {
             return true;
         }
 

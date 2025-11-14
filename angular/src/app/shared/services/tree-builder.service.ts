@@ -74,11 +74,13 @@ export class TreeBuilderService {
                                     leaf: true,
                                     parameterInfos: component.parameterInfos,
                                     additionalDatas: component.additionalDatas,
+                                    customBaseList: component.customBaseList,
                                     selectable: true,
                                     data: {
                                         tags: component.tags.map((tag) => tag.tagDescription),
                                         // parameterNames: component.parameterNames.map(parameter => parameter.split('#')[0]),
                                         feeders: component.feeders,
+                                        customBaseList: component.customBaseList,
                                     },
                                 })),
                             ],
