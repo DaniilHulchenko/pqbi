@@ -30,7 +30,7 @@ public interface IPQSTreeBuilderService
 
     Task<TagTreeRootDto> GetTagOmnibusTreeAsync(string url, string session);
     Task<DynamicTreeNode> GetLogicalOrChannelTreeAsync(string url, string session, string componentId);
-    Task<TagTreeRootDto> GetTreeTableAsync(string url, string session, GetEventstRequest input);
+    //Task<TagTreeRootDto> GetTreeTableAsync(string url, string session, GetEventstRequest input);
     Task<StaticTreeNode> CheckGetBaseDataTree(string url, string session, string componentId);
     IEnumerable<TagWithComponents> GetComponentByTags(GetComponentByTagsRequest request);
 }
@@ -116,111 +116,180 @@ public class PQSTreeBuilderService : PQSRestApiServiceBase, IPQSTreeBuilderServi
 
     public async Task<TagTreeRootDto> GetTagOmnibusTreeAsync(string url, string session)
     {
-        IEnumerable<PQS.ComponentDto> components = null;
-        GetTagsConfigurationResponse tags = null;
-        var no_name = string.Empty;
+        var componentWithTags = await _pQSComponentOperationService.GetObjectAsync(url, session);     
+        var components = componentWithTags.Components ?? Enumerable.Empty<ComponentDto>();
+        IEnumerable<TagWithComponents> tagWithComponents = componentWithTags.TagComponents;
 
-        var mainLogger = PqbiStopwatch.AnchorAsync(nameof(GetTagOmnibusTreeAsync), Logger);
+        //componentWithTags.GetTagsConfigurationResponse.TryGetMap(out _, out IEnumerable<TagWithComponents> tagWithComponents);
+        var tagWithComponentsList = tagWithComponents?.ToList() ?? new List<TagWithComponents>();
+
+        // Cache for later use
+        await _cacheManager.GetTagWithComponentCache().SetAsync(
+            TagWithComponentCacheItem.CacheName,
+            new TagWithComponentCacheItem { Components = tagWithComponentsList }
+        );
+
+        // Build a lookup for fast component-to-tag association
+        var componentIdToTags = new Dictionary<string, List<TagWithComponents>>();
+        foreach (var tag in tagWithComponentsList)
         {
-            var componentWithTags = await _pQSComponentOperationService.GetObjectAsync(url, session);
-            components = componentWithTags.Components;
-            tags = componentWithTags.GetTagsConfigurationResponse;
-
-            mainLogger.LogInformation("Additional Information");
-            var compStr = string.Join(',', components.Select(x => x.ComponentId));
-            mainLogger.LogInformation(compStr);
-
-            compStr = string.Join(',', components.Select(x => x.ComponentName));
-            mainLogger.LogInformation(compStr);
+            foreach (var compId in tag.ComponentIds)
+            {
+                if (!componentIdToTags.TryGetValue(compId, out var tagList))
+                    componentIdToTags[compId] = tagList = new List<TagWithComponents>();
+                tagList.Add(tag);
+            }
         }
 
-
-        tags.TryGetMap(out IDictionary<string, ComponentWithTagsDto> map, out IEnumerable<TagWithComponents> tagWithComponents);
-        var cacheItem = new TagWithComponentCacheItem
-        {
-            Components = tagWithComponents,
-        };
-
-        await _cacheManager.GetTagWithComponentCache().SetAsync(TagWithComponentCacheItem.CacheName, cacheItem);
-
-        //var ptr = _cacheManager.GetOrDefault();
-
+        // Build the tag tree structure
         var tagMap = new Dictionary<string, Dictionary<string, List<ComponentDto>>>();
-
         foreach (var component in components)
         {
-            var found = tagWithComponents.FirstOrDefault(tag => tag.ComponentIds.Contains(component.ComponentId) == true);
-            if (found is null)
+            if (componentIdToTags.TryGetValue(component.ComponentId, out var tagsForComponent))
             {
-                if (tagMap.TryGetValue(no_name, out var dickCom))
+                foreach (var tag in tagsForComponent)
                 {
-                    if (dickCom.TryGetValue(component.ComponentId, out var comp) == true)
-                    {
-                        comp.Add(component);
-                    }
-                    else
-                    {
-                        dickCom[component.ComponentId] = [component];
-                    }
-                }
-                else
-                {
-                    var dickComp = new Dictionary<string, List<ComponentDto>>();
-                    tagMap[no_name] = dickComp;
-                    dickComp[component.ComponentId] = [component];
+                    if (!tagMap.TryGetValue(tag.TagName, out var labelMap))
+                        tagMap[tag.TagName] = labelMap = new Dictionary<string, List<ComponentDto>>();
+
+                    if (!labelMap.TryGetValue(tag.TagValue, out var compList))
+                        labelMap[tag.TagValue] = compList = new List<ComponentDto>();
+
+                    compList.Add(component);
                 }
             }
             else
             {
-                foreach (var tag in tagWithComponents)
-                {
-                    var key = tag.TagName;
-                    if (tag.ComponentIds.Contains(component.ComponentId))
-                    {
-                        var labelsMap = default(Dictionary<string, List<ComponentDto>>);
-                        if (tagMap.TryGetValue(key, out labelsMap) == false)
-                        {
-                            tagMap[key] = labelsMap = new Dictionary<string, List<ComponentDto>>();
-                        }
+                // Components without tags go under an empty tag name
+                if (!tagMap.TryGetValue(string.Empty, out var labelMap))
+                    tagMap[string.Empty] = labelMap = new Dictionary<string, List<ComponentDto>>();
 
-                        var comps = default(List<ComponentDto>);
-                        if (labelsMap.TryGetValue(tag.TagValue, out comps) == false)
-                        {
-                            labelsMap[tag.TagValue] = comps = new List<ComponentDto>();
-                        }
-                        comps.Add(component);
-                    }
-                }
+                if (!labelMap.TryGetValue(component.ComponentId, out var compList))
+                    labelMap[component.ComponentId] = compList = new List<ComponentDto>();
+
+                compList.Add(component);
             }
-
         }
 
-
+        // Build DTOs for return
         var tagSlims = new List<TagDtoV2>();
-        var omnibus = new TagTreeRootDto(tagSlims);
-
-        foreach (var tag in tagMap)
+        foreach (var (tagName, labelMap) in tagMap)
         {
-            var labels = new List<LabelDtoV2>();
-            var tagRoot = new TagDtoV2(tag.Key, labels);
-
-            foreach (var keyAndValue in tag.Value)
-            {
-                var comps = new List<ComponentDto>();
-                var labelDto = new LabelDtoV2(keyAndValue.Key, comps);
-
-                foreach (var componentDto in keyAndValue.Value)
-                {
-                    comps.Add(componentDto);
-                }
-                tagRoot.Labels.Add(labelDto);
-            }
-
-            tagSlims.Add(tagRoot);
+            var labels = labelMap.Select(kv => new LabelDtoV2(kv.Key, kv.Value)).ToList();
+            tagSlims.Add(new TagDtoV2(tagName, labels));
         }
 
-        return omnibus;
+        return new TagTreeRootDto(tagSlims);
     }
+
+
+    //public async Task<TagTreeRootDto> GetTagOmnibusTreeAsync(string url, string session)
+    //{
+    //    IEnumerable<PQS.ComponentDto> components = null;
+    //    GetTagsConfigurationResponse tags = null;
+    //    var no_name = string.Empty;
+
+    //    var mainLogger = PqbiStopwatch.AnchorAsync(nameof(GetTagOmnibusTreeAsync), Logger);
+    //    {
+    //        var componentWithTags = await _pQSComponentOperationService.GetObjectAsync(url, session);
+    //        components = componentWithTags.Components;
+    //        tags = componentWithTags.GetTagsConfigurationResponse;
+
+    //        mainLogger.LogInformation("Additional Information");
+    //        var compStr = string.Join(',', components.Select(x => x.ComponentId));
+    //        mainLogger.LogInformation(compStr);
+
+    //        compStr = string.Join(',', components.Select(x => x.ComponentName));
+    //        mainLogger.LogInformation(compStr);
+    //    }
+
+
+    //    tags.TryGetMap(out IDictionary<string, ComponentWithTagsDto> map, out IEnumerable<TagWithComponents> tagWithComponents);
+    //    var cacheItem = new TagWithComponentCacheItem
+    //    {
+    //        Components = tagWithComponents,
+    //    };
+
+    //    await _cacheManager.GetTagWithComponentCache().SetAsync(TagWithComponentCacheItem.CacheName, cacheItem);
+
+    //    //var ptr = _cacheManager.GetOrDefault();
+
+    //    var tagMap = new Dictionary<string, Dictionary<string, List<ComponentDto>>>();
+
+    //    foreach (var component in components)
+    //    {
+    //        var found = tagWithComponents.FirstOrDefault(tag => tag.ComponentIds.Contains(component.ComponentId) == true);
+    //        if (found is null)
+    //        {
+    //            if (tagMap.TryGetValue(no_name, out var dickCom))
+    //            {
+    //                if (dickCom.TryGetValue(component.ComponentId, out var comp) == true)
+    //                {
+    //                    comp.Add(component);
+    //                }
+    //                else
+    //                {
+    //                    dickCom[component.ComponentId] = [component];
+    //                }
+    //            }
+    //            else
+    //            {
+    //                var dickComp = new Dictionary<string, List<ComponentDto>>();
+    //                tagMap[no_name] = dickComp;
+    //                dickComp[component.ComponentId] = [component];
+    //            }
+    //        }
+    //        else
+    //        {
+    //            foreach (var tag in tagWithComponents)
+    //            {
+    //                var key = tag.TagName;
+    //                if (tag.ComponentIds.Contains(component.ComponentId))
+    //                {
+    //                    var labelsMap = default(Dictionary<string, List<ComponentDto>>);
+    //                    if (tagMap.TryGetValue(key, out labelsMap) == false)
+    //                    {
+    //                        tagMap[key] = labelsMap = new Dictionary<string, List<ComponentDto>>();
+    //                    }
+
+    //                    var comps = default(List<ComponentDto>);
+    //                    if (labelsMap.TryGetValue(tag.TagValue, out comps) == false)
+    //                    {
+    //                        labelsMap[tag.TagValue] = comps = new List<ComponentDto>();
+    //                    }
+    //                    comps.Add(component);
+    //                }
+    //            }
+    //        }
+
+    //    }
+
+
+    //    var tagSlims = new List<TagDtoV2>();
+    //    var omnibus = new TagTreeRootDto(tagSlims);
+
+    //    foreach (var tag in tagMap)
+    //    {
+    //        var labels = new List<LabelDtoV2>();
+    //        var tagRoot = new TagDtoV2(tag.Key, labels);
+
+    //        foreach (var keyAndValue in tag.Value)
+    //        {
+    //            var comps = new List<ComponentDto>();
+    //            var labelDto = new LabelDtoV2(keyAndValue.Key, comps);
+
+    //            foreach (var componentDto in keyAndValue.Value)
+    //            {
+    //                comps.Add(componentDto);
+    //            }
+    //            tagRoot.Labels.Add(labelDto);
+    //        }
+
+    //        tagSlims.Add(tagRoot);
+    //    }
+
+    //    return omnibus;
+    //}
 
     public async Task<DynamicTreeNode> GetLogicalOrChannelTreeAsync(string url, string session, string componentId)
     {
@@ -229,7 +298,7 @@ public class PQSTreeBuilderService : PQSRestApiServiceBase, IPQSTreeBuilderServi
         var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
 
         var response = new PQSGetAllObjectsResponse(request, pqsResponse);
-        response.ExtractGetParametersOrError(out var @params, out var error);
+        response.ExtractGetParametersOrError(out var @params, out var customParams, out var customBaseMap, out var error);
 
         DynamicTreeNode tree = null;
         var paramDictionary = @params;
@@ -253,7 +322,7 @@ public class PQSTreeBuilderService : PQSRestApiServiceBase, IPQSTreeBuilderServi
         var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
 
         var response = new PQSGetAllObjectsResponse(request, pqsResponse);
-        response.ExtractGetParametersOrError(out var @params, out var error);
+        response.ExtractGetParametersOrError(out var @params, out var customParams, out var customBaseMap, out var error);
 
         var start = new PQZDateTime(DateTime.Now.AddDays(-100));
         var end = new PQZDateTime(DateTime.Now.AddDays(-1));
@@ -313,22 +382,22 @@ public class PQSTreeBuilderService : PQSRestApiServiceBase, IPQSTreeBuilderServi
     }
 
 
-    public async Task<TagTreeRootDto> GetTreeTableAsync(string url, string session, GetEventstRequest input)
-    {
+    //public async Task<TagTreeRootDto> GetTreeTableAsync(string url, string session, GetEventstRequest input)
+    //{
 
-        var start = new PQZDateTime(input.Start);
-        var end = new PQZDateTime(input.End);
+    //    var start = new PQZDateTime(input.Start);
+    //    var end = new PQZDateTime(input.End);
 
-        var evennts = EventFactory.GetAllEvents();
+    //    var evennts = EventFactory.GetAllEvents();
 
-        var request = new PQSGetEventRequest(session, start, end, evennts, input.ComponentIds);
-        var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
+    //    var request = new PQSGetEventRequest(session, start, end, evennts, input.ComponentIds);
+    //    var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
 
-        var respose = new PQSAddEventResponse(request, pqsResponse);
-        var events = respose.Events;
+    //    var respose = new PQSAddEventResponse(request, pqsResponse);
+    //    var events = respose.Events;
 
 
-        return null;
-    }
+    //    return null;
+    //}
 
 }

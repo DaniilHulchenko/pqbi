@@ -5,6 +5,7 @@ using Abp.Timing;
 using PQBI.Authorization.Users;
 using PQBI.Configuration;
 using PQBI.Editions;
+using PQBI.Infrastructure;
 using PQBI.MultiTenancy.Payments;
 
 namespace PQBI.MultiTenancy

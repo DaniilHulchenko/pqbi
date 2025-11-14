@@ -59,9 +59,9 @@ public class PQSenderHelper : IPQSenderHelper
 
         if (bytes != null)
         {
-            using (MemoryStream memoryStream = new MemoryStream(bytes))
+            //using (MemoryStream memoryStream = new MemoryStream(bytes))
             {
-                result = PQZBinaryReader.ReadMessage(memoryStream);
+                result = PQZBinaryReader.ReadMessage(bytes);
             }
         }
 

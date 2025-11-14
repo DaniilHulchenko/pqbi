@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PQBI.Configuration;
+using PQBI.Infrastructure;
 using PQBI.MultiTenancy;
 using System;
 using System.Threading.Tasks;

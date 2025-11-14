@@ -4,6 +4,7 @@ using Abp.Runtime.Session;
 using PQBI.Network.RestApi;
 using PQBI.PQS;
 using GraphQL;
+using System.Diagnostics;
 
 namespace PQBI.Web.Controllers;
 
@@ -80,9 +81,13 @@ public class TreeBuilderController : PQBIControllerBase
 
             var session = await _userSessionCacheRepository.GetCacheSessionAsync(AbpSession.UserId.Value);
 
-            using (var mainLogger = PqbiStopwatch.AnchorAsync($"{nameof(GetAllComponentsAsync)} - Beggin", _logger))
+            using (var mainLogger = PqbiStopwatch.AnchorAsync($"{nameof(GetAllComponentsAsync)} - Begin", _logger))
             {
+                //Stopwatch watch = Stopwatch.StartNew();
+
                 response = await _pQSTreeBuilderService.GetTagOmnibusTreeAsync(tenant.PQSServiceUrl, session);
+                //watch.Stop();
+                //Console.WriteLine($"Total Time for {nameof(GetAllComponentsAsync)}: {watch.ElapsedMilliseconds} ms");
             }
         }
 
@@ -202,22 +207,6 @@ public class TreeBuilderController : PQBIControllerBase
             var components = await _pQSComponentOperationService.GetAllComponentSlimsAsync(tenant.PQSServiceUrl, session);
             response = new GetComponentSlimInfosResponse { Components = components };
         }
-
-        return response;
-    }
-
-    [HttpPost]
-    [Route(PostTreeTabletIntegrationTestUrl)]
-
-    public async Task<TagTreeRootDto> GetTreeTableIntegrationTests([FromBody] PostEventstRequestTest request)
-    {
-        var tenantId = AbpSession.GetTenantId();
-        var userId = AbpSession.UserId;
-
-        var tenant = await _tenantCacheRepository.GetTenantByIdAsync(tenantId);
-
-        var session = await _PQSRestApiService.OpenSessionForUserAsync(tenant.PQSServiceUrl, request.UserNameOrEmailAddress, request.Password);
-        var response = await _pQSTreeBuilderService.GetTreeTableAsync(tenant.PQSServiceUrl, session.SessionId, request.Request);
 
         return response;
     }

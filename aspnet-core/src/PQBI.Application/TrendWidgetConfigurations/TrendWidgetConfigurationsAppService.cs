@@ -18,7 +18,7 @@ using PQBI.Exporting;
 
 namespace PQBI.TrendWidgetConfigurations
 {
-    [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations)]
+//    [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations)]  
     public class TrendWidgetConfigurationsAppService : PQBIAppServiceBase, ITrendWidgetConfigurationsAppService
     {
         private readonly IRepository<TrendWidgetConfiguration> _trendWidgetConfigurationRepository;

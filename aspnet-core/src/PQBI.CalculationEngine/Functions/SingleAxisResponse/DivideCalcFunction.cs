@@ -16,11 +16,11 @@ public class DivideCalcFunction : ArrayCalculationFunction
 
             if (item.Value is not null)
             {
-                result.Add(new BasicValue((double)(item.Value / parameter), item.DataValueStatus));
+                result.Add(new BasicValue((double)(item.Value / parameter), item.StartTime, item.DataValueStatus));
             }
             else
             {
-                result.Add(new BasicValue(item.Value, item.DataValueStatus));
+                result.Add(new BasicValue(item.Value, item.StartTime, item.DataValueStatus));
             }
         }
 

@@ -1,8 +1,8 @@
-﻿using NUglify.JavaScript.Syntax;
-using PQBI.CalculationEngine.Functions;
-using PQBI.CalculationEngine.Functions.CalcSingleAxis;
+﻿using PQS.Data.Events.Enums;
 using PQS.Data.Measurements;
+using PQS.Data.Measurements.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace PQBI.PQS.CalcEngine;
 
@@ -15,14 +15,16 @@ public class BaseParameter
     public string Operator { get; set; }
 
     public string Quantity { get; set; }
-    public int Resolution { get; set; }
+    public int? Resolution { get; set; }
     public string Group { get; set; }
     public HarmonicsDto Harmonics { get; set; }
     public FeederComponentInfo FromComponents { get; set; }
     public string Phase { get; set; }
-    public string Base { get; set; }
+    public string BaseResolution { get; set; }
     public string Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; }    
+
+    public IntervalSynchronized IntervalSync { get; set; } = IntervalSynchronized.ISX;
 
     //public int ResolutionInSeconds
     //{
@@ -43,7 +45,19 @@ public class BaseParameter
             //    return syncInterval;
             //}
 
-            return SyncInterval.GetSyncEnum(Resolution);
+            if (IntervalSync == IntervalSynchronized.ISX)
+            {
+                if (Resolution == null)
+                {
+                    return SyncInterval.GetSyncEnum(0);
+                }
+
+                return SyncInterval.GetSyncEnum(Resolution.Value);
+            }
+            else
+            {
+                return new SyncInterval(IntervalSync);
+            }
         }
     }
 
@@ -58,7 +72,7 @@ public class BaseParameter
 
             if (Quantity[0] != 'Q')
             {
-                return $"Q{Quantity}";
+                return $"Q{Quantity.ToUpper()}";
             }
 
             return Quantity;
@@ -67,6 +81,18 @@ public class BaseParameter
 
     public bool IsExceptionParameter => FromComponents is not null;
 }
+
+public interface IWidgetParameter
+{
+    string ParameterType { get; }
+    List<EventClass> ExcludeFlagged { get; }
+    bool IsExcludeFlaggedData { get; }
+    string BaseData { get; }
+    string ParameterName { get; }
+    CustomWidgetTableData CustomData { get; }
+}
+
+public sealed record TimeRange(DateTime Start, DateTime End);
 
 public static class BaseParameterExtensions
 {

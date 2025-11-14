@@ -2,8 +2,11 @@
 using PQBI.Sapphire.Options;
 using PQS.Data.Common;
 using PQS.Data.Events.Enums;
+using PQS.Data.Measurements;
+using PQS.Data.Measurements.CustomParameter;
 using PQS.Data.Measurements.Enums;
 using PQS.Translator;
+using System.Reflection;
 using MeasurementGroup = PQS.Data.Measurements.Enums.Group;
 
 namespace PQBI.IntegrationTests.Scenarios.PopulatingParameters;
@@ -33,17 +36,17 @@ public class CreationLogicalOptions : PopulateBasicParameters
 
         CreateBasedOnGroups();
     }
-    
 
-    public StaticTreeNode CreateDataAsync()
+    public StaticTreeNode CreateDataAsync(List<CustomCalculationBaseInfo> customCalcBaseInfoList)
     {
-        var parameters = UnderLogical();
-        var tree = new StaticTreeNode { Value = StaticTreeNode.LogicalLabel , Description =  StaticTreeNode.LogicalLabel  };
+        //var tree = new StaticTreeNode { Value = StaticTreeNode.LogicalLabel, Description = StaticTreeNode.LogicalLabel }
+        var tree = NewNode(StaticTreeNode.LogicalLabel, StaticTreeNode.LogicalLabel);
 
+        var parameters = UnderLogical();
         foreach (var parameter in parameters)
         {
-            var node = new StaticTreeNode { Value = parameter.Group.ToString(), Description = parameter.Description };//  , IsHarmonic = parameter.IsHarmonic};
-                                                                                                                      //var (minHarmonic, maxHarmonic) = GetHarmonicMinMaxForCurrentSelection(parameter.Group);
+            var node = NewNode(parameter.Group.ToString(), parameter.Description ?? parameter.Group.ToString());
+
             if (parameter.IsHarmonic)
             {
                 var harmonic = GetHarmonicMinMaxForCurrentSelection(parameter.Group);
@@ -53,31 +56,172 @@ public class CreationLogicalOptions : PopulateBasicParameters
             var phases = FillPhasesColumnSortedByFeederNetwork(parameter.Group);
             var baseOns = FillBasedOnColumnSortedByFeederNetwork(parameter.Group);
 
-            foreach (var phase in phases)
-            {
-                if(phase.Description.Contains("All"))
-                {
-                    continue;
-                }
-                var phaseRoot = new StaticTreeNode { Value = phase.Value.ToString(), Description = phase.Description };
-                node.Children.Add(phaseRoot);
+            // Precompute which OldCalculationBaseEnum are actually present in baseOns
+            var allowedOldBases = new HashSet<OldCalculationBaseEnum>(
+                baseOns.Select(b => MapToOldEnum(b.Value?.CalculationBase?.CalculationBaseEnum))
+                       .Where(e => e.HasValue)
+                       .Select(e => e!.Value));
 
-                foreach (var baseOn in baseOns)
-                {
-                    if (baseOn.Description.Contains("All"))
-                    {
-                        continue;
-                    }
-                    var baseOnRoot = new StaticTreeNode { Value = baseOn.Value.ToString(), Description = baseOn.Description };
-                    phaseRoot.Children.Add(baseOnRoot);
-                }
+            // Build base-on nodes once
+            var baseOnChildren = baseOns
+                .Select(b => NewNode(b.Value?.ToString() ?? string.Empty, b.Description ?? string.Empty))
+                .ToList();
+
+            // Build custom base nodes (dedup by Value string)
+            var customBaseNodes = new List<StaticTreeNode>();
+            //var seenCustomValues = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var ci in customCalcBaseInfoList)
+            {
+                var oldEnum = ci.CalcBase?.OldCalculationBaseEnum;
+                if (oldEnum == null || !allowedOldBases.Contains(oldEnum.Value))
+                    continue;
+
+                var valString = ci.WindowInterval == null
+                    ? ci.CalcBase.ToString()
+                    : $"{ci.CalcBase}_{ci.WindowInterval}";
+
+                if (string.IsNullOrEmpty(valString))
+                    //if (string.IsNullOrEmpty(valString) || !seenCustomValues.Add(valString))
+                    continue;
+
+                customBaseNodes.Add(NewNode(valString, ci.PresentedName));
             }
 
-            tree.Children.Add(node);
+            // Assemble per-phase
+            foreach (var phase in phases)
+            {
+                var phaseDesc = phase.Description ?? string.Empty;
+                if (phaseDesc.IndexOf("All", StringComparison.OrdinalIgnoreCase) >= 0)
+                    continue;
+
+                var phaseRoot = NewNode(phase.Value.ToString(), phaseDesc);
+                AddChild(node, phaseRoot);
+
+                // Add built-in base options
+                foreach (var baseOnChild in baseOnChildren)
+                    AddChild(phaseRoot, baseOnChild);
+
+                // Add custom base options
+                foreach (var custom in customBaseNodes)
+                    AddChild(phaseRoot, custom);
+            }
+
+            AddChild(tree, node);
         }
 
         return tree;
+
+        // --- local helpers ---
+        static StaticTreeNode NewNode(string value, string description) =>
+            new StaticTreeNode { Value = value, Description = description, Children = new List<StaticTreeNode>() };
+
+        static void AddChild(StaticTreeNode parent, StaticTreeNode child)
+        {
+            if (parent.Children == null) parent.Children = new List<StaticTreeNode>();
+            parent.Children.Add(child);
+        }
+
+        static OldCalculationBaseEnum? MapToOldEnum(CalculationBase? calcBase) =>
+            calcBase switch
+            {
+                CalculationBase.BHCYC => OldCalculationBaseEnum.BHCYC,
+                CalculationBase.BCYC => OldCalculationBaseEnum.BCYC,
+                CalculationBase.B200MS => OldCalculationBaseEnum.B200MS,
+                _ => (OldCalculationBaseEnum?)null
+            };
     }
+
+
+    //public StaticTreeNode CreateDataAsync(List<CustomCalculationBaseInfo> customCalcBaseInfoList)
+    //{
+    //    var parameters = UnderLogical();
+    //    var tree = new StaticTreeNode { Value = StaticTreeNode.LogicalLabel, Description = StaticTreeNode.LogicalLabel };
+
+    //    foreach (var parameter in parameters)
+    //    {
+    //        var node = new StaticTreeNode { Value = parameter.Group.ToString(), Description = parameter.Description };//  , IsHarmonic = parameter.IsHarmonic};
+    //                                                                                                                  //var (minHarmonic, maxHarmonic) = GetHarmonicMinMaxForCurrentSelection(parameter.Group);
+    //        if (parameter.IsHarmonic)
+    //        {
+    //            var harmonic = GetHarmonicMinMaxForCurrentSelection(parameter.Group);
+    //            node.Range = $"{harmonic.MinHarmonic}:{harmonic.MaxHarmonic}";
+    //        }
+
+    //        var phases = FillPhasesColumnSortedByFeederNetwork(parameter.Group);
+    //        var baseOns = FillBasedOnColumnSortedByFeederNetwork(parameter.Group);
+
+    //        List<StaticTreeNode> customBaseTreeNodeList = new List<StaticTreeNode>();
+    //        foreach (var calcInfo in customCalcBaseInfoList)
+    //        {
+    //            bool isFoundMatchingBase = false;
+    //            foreach (var baseOnNode in baseOns)
+    //            {
+    //                switch (baseOnNode.Value.CalculationBase.CalculationBaseEnum)
+    //                {
+    //                    case CalculationBase.BHCYC:
+    //                        if (calcInfo.CalcBase.OldCalculationBaseEnum == OldCalculationBaseEnum.BHCYC)
+    //                        {
+    //                            string valString = calcInfo.WindowInterval == null ? calcInfo.CalcBase.ToString() : $"{calcInfo.CalcBase}_{calcInfo.WindowInterval}";
+    //                            var baseOnRoot = new StaticTreeNode { Value = valString, Description = calcInfo.PresentedName };
+    //                            isFoundMatchingBase = true;
+    //                            customBaseTreeNodeList.Add(baseOnRoot);
+    //                        }
+    //                        break;
+    //                    case CalculationBase.BCYC:
+    //                        if (calcInfo.CalcBase.OldCalculationBaseEnum == OldCalculationBaseEnum.BCYC)
+    //                        {
+    //                            string valString = calcInfo.WindowInterval == null ? calcInfo.CalcBase.ToString() : $"{calcInfo.CalcBase}_{calcInfo.WindowInterval}";
+    //                            var baseOnRoot = new StaticTreeNode { Value = valString, Description = calcInfo.PresentedName };
+    //                            isFoundMatchingBase = true;
+
+    //                            customBaseTreeNodeList.Add(baseOnRoot);
+    //                        }
+    //                        break;
+    //                    case CalculationBase.B200MS:
+    //                        if (calcInfo.CalcBase.OldCalculationBaseEnum == OldCalculationBaseEnum.B200MS)
+    //                        {
+    //                            string valString = calcInfo.WindowInterval == null ? calcInfo.CalcBase.ToString() : $"{calcInfo.CalcBase}_{calcInfo.WindowInterval}";
+    //                            var baseOnRoot = new StaticTreeNode { Value = valString, Description = calcInfo.PresentedName };
+    //                            isFoundMatchingBase = true;
+
+    //                            customBaseTreeNodeList.Add(baseOnRoot);
+    //                        }
+    //                        break;
+    //                    default:
+    //                        break;
+    //                }
+
+    //                if (isFoundMatchingBase)
+    //                    break;
+
+    //            }
+    //        }
+
+    //        foreach (var phase in phases)
+    //        {
+    //            if (phase.Description.Contains("All"))
+    //            {
+    //                continue;
+    //            }
+    //            var phaseRoot = new StaticTreeNode { Value = phase.Value.ToString(), Description = phase.Description };
+    //            node.Children.Add(phaseRoot);
+
+    //            foreach (var baseOn in baseOns)
+    //            {
+    //                var baseOnRoot = new StaticTreeNode { Value = baseOn.Value.ToString(), Description = baseOn.Description };
+    //                phaseRoot.Children.Add(baseOnRoot);
+    //            }
+
+    //            phaseRoot.Children.AddRange(customBaseTreeNodeList);
+
+    //        }
+
+    //        tree.Children.Add(node);
+    //    }
+
+    //    return tree;
+    //}
 
     #region Phase
 
@@ -85,143 +229,143 @@ public class CreationLogicalOptions : PopulateBasicParameters
     {
         var AvailablePhases = new List<ValueAndDescription<PhaseMeasurementWithDuplicationsEnum>>();
 
-        #region Add Phases with duplications (all voltages and all currents)
-        ValueAndDescription<PhaseMeasurementWithDuplicationsEnum> phaseAndDescriptionAll = new ValueAndDescription<PhaseMeasurementWithDuplicationsEnum>();
-        phaseAndDescriptionAll.Value = PhaseMeasurementWithDuplicationsEnum.AllDuplications;
-        phaseAndDescriptionAll.Description = PhaseMeasurementWithDuplicationsEnum.AllDuplications.Description();
-        phaseAndDescriptionAll.IsEnabled = true;
-        ValueAndDescription<PhaseMeasurementWithDuplicationsEnum> phaseAndDescriptionVolt = new ValueAndDescription<PhaseMeasurementWithDuplicationsEnum>();
-        phaseAndDescriptionVolt.Value = PhaseMeasurementWithDuplicationsEnum.VoltagesDuplications;
-        phaseAndDescriptionVolt.Description = PhaseMeasurementWithDuplicationsEnum.VoltagesDuplications.Description();
-        phaseAndDescriptionVolt.IsEnabled = true;
-        ValueAndDescription<PhaseMeasurementWithDuplicationsEnum> phaseAndDescriptionCurr = new ValueAndDescription<PhaseMeasurementWithDuplicationsEnum>();
-        phaseAndDescriptionCurr.Value = PhaseMeasurementWithDuplicationsEnum.CurrentsDuplications;
-        phaseAndDescriptionCurr.Description = PhaseMeasurementWithDuplicationsEnum.CurrentsDuplications.Description();
-        phaseAndDescriptionCurr.IsEnabled = true;
+        //#region Add Phases with duplications (all voltages and all currents)
+        //ValueAndDescription<PhaseMeasurementWithDuplicationsEnum> phaseAndDescriptionAll = new ValueAndDescription<PhaseMeasurementWithDuplicationsEnum>();
+        //phaseAndDescriptionAll.Value = PhaseMeasurementWithDuplicationsEnum.AllDuplications;
+        //phaseAndDescriptionAll.Description = PhaseMeasurementWithDuplicationsEnum.AllDuplications.Description();
+        //phaseAndDescriptionAll.IsEnabled = true;
+        //ValueAndDescription<PhaseMeasurementWithDuplicationsEnum> phaseAndDescriptionVolt = new ValueAndDescription<PhaseMeasurementWithDuplicationsEnum>();
+        //phaseAndDescriptionVolt.Value = PhaseMeasurementWithDuplicationsEnum.VoltagesDuplications;
+        //phaseAndDescriptionVolt.Description = PhaseMeasurementWithDuplicationsEnum.VoltagesDuplications.Description();
+        //phaseAndDescriptionVolt.IsEnabled = true;
+        //ValueAndDescription<PhaseMeasurementWithDuplicationsEnum> phaseAndDescriptionCurr = new ValueAndDescription<PhaseMeasurementWithDuplicationsEnum>();
+        //phaseAndDescriptionCurr.Value = PhaseMeasurementWithDuplicationsEnum.CurrentsDuplications;
+        //phaseAndDescriptionCurr.Description = PhaseMeasurementWithDuplicationsEnum.CurrentsDuplications.Description();
+        //phaseAndDescriptionCurr.IsEnabled = true;
 
-        switch (_selectedParameter)
-        {
-            case MeasurementGroup.RMS:
-            case MeasurementGroup.RMSFUND:
-            case MeasurementGroup.RMSNONFUND:
-            case MeasurementGroup.RMSRW:
-            case MeasurementGroup.THD:
-            case MeasurementGroup.THDODD:
-            case MeasurementGroup.THDEVEN:
-            case MeasurementGroup.THDI:
-            case MeasurementGroup.CRESTF:
-            case MeasurementGroup.HRMS:
-            case MeasurementGroup.HRMSINCYC:
-            case MeasurementGroup.IHRMS:
-            case MeasurementGroup.IHRMSB:
-            case MeasurementGroup.HRMSPER:
-            case MeasurementGroup.IHRMSPER:
-            case MeasurementGroup.HRMSPERINCYC:
-            case MeasurementGroup.WAVE:
-            case MeasurementGroup.WAVEF:
-            case MeasurementGroup.WAVEH:
-            case MeasurementGroup.PHASORANG:
-            case MeasurementGroup.TIF:
-                AvailablePhases.Add(phaseAndDescriptionAll);
-                AvailablePhases.Add(phaseAndDescriptionVolt);
-                AvailablePhases.Add(phaseAndDescriptionCurr);
-                break;
-            case MeasurementGroup.KF:
-            case MeasurementGroup.TEMPC:
-            case MeasurementGroup.IL:
-            case MeasurementGroup.TDD:
-            case MeasurementGroup.HDD:
-                AvailablePhases.Add(phaseAndDescriptionCurr);
-                break;
-            case MeasurementGroup.PST:
-            case MeasurementGroup.PLT:
-                AvailablePhases.Add(phaseAndDescriptionVolt);
-                break;
-            #region Empty cases
-            case MeasurementGroup.HRMSG:
-            case MeasurementGroup.IHRMSG:
-            case MeasurementGroup.IHRMSA:
-            case MeasurementGroup.IHRMSASIN:
-            case MeasurementGroup.IHRMSACOS:
-            case MeasurementGroup.IHRMSPA:
-            case MeasurementGroup.IHRMSPASIN:
-            case MeasurementGroup.IHRMSPACOS:
-            case MeasurementGroup.HRMSANGREV1:
-            case MeasurementGroup.HRMSANGREV1SIN:
-            case MeasurementGroup.HRMSANGREV1COS:
-            case MeasurementGroup.HRMSANG:
-            case MeasurementGroup.HRMSANGSIN:
-            case MeasurementGroup.HRMSANGCOS:
-            case MeasurementGroup.HRMSPERG:
-            case MeasurementGroup.FREQ:
-            case MeasurementGroup.FREQBYPHASE:
-            case MeasurementGroup.PEAK:
-            case MeasurementGroup.PEAKF:
-            case MeasurementGroup.PEAKH:
-            case MeasurementGroup.UNDERDEV:
-            case MeasurementGroup.OVERDEV:
-            case MeasurementGroup.PINSTMAX:
-            case MeasurementGroup.PHASORANGSIN:
-            case MeasurementGroup.PHASORANGCOS:
-            case MeasurementGroup.PHASORAMPANG:
-            case MeasurementGroup.AI:
-            case MeasurementGroup.AO:
-            case MeasurementGroup.DI:
-            case MeasurementGroup.DO:
-            case MeasurementGroup.RELAY:
-            case MeasurementGroup.DIPULSECOUNT:
-            case MeasurementGroup.CUSTOM:
-            case MeasurementGroup.TOLERANCE:
-            case MeasurementGroup.ACTPWR:
-            case MeasurementGroup.REAPWR:
-            case MeasurementGroup.APPPWR:
-            case MeasurementGroup.PF:
-            case MeasurementGroup.PFSOURCE:
-            case MeasurementGroup.PFTRUE:
-            case MeasurementGroup.PFTRUESOURCE:
-            case MeasurementGroup.ACTPWRF:
-            case MeasurementGroup.REAPWRF:
-            case MeasurementGroup.APPPWRF:
-            case MeasurementGroup.PFF:
-            case MeasurementGroup.PFFSOURCE:
-            case MeasurementGroup.ACTPWRH:
-            case MeasurementGroup.REAPWRH:
-            case MeasurementGroup.APPPWRH:
-            case MeasurementGroup.PFH:
-            case MeasurementGroup.PFHSOURCE:
-            case MeasurementGroup.R:
-            case MeasurementGroup.RH:
-            case MeasurementGroup.RF:
-            case MeasurementGroup.ENERGYINACT:
-            case MeasurementGroup.ENERGYINREA:
-            case MeasurementGroup.ENERGYAPP:
-            case MeasurementGroup.ENERGYOUTACT:
-            case MeasurementGroup.ENERGYOUTREA:
-            case MeasurementGroup.UNBAL:
-            case MeasurementGroup.ZUNBAL:
-            case MeasurementGroup.ZSEQ:
-            case MeasurementGroup.NSEQ:
-            case MeasurementGroup.PSEQ:
-            case MeasurementGroup.TOTALRMS:
-            case MeasurementGroup.PWRHRMSANG:
-            case MeasurementGroup.PWRHRMSPF:
-            case MeasurementGroup.PWRHRMSPFSOURCE:
-            case MeasurementGroup.PWRHRMSACT:
-            case MeasurementGroup.PWRHRMSREACT:
-            case MeasurementGroup.PWRHRMSAPP:
-            case MeasurementGroup.WAVECYCSTAT:
-            case MeasurementGroup.GETTIMES:
-            case MeasurementGroup.IMPAMP:
-            case MeasurementGroup.IMPANG:
-            case MeasurementGroup.IMPAMPANG:
-            case MeasurementGroup.IMPANGSIN:
-            case MeasurementGroup.IMPANGCOS:
-            case MeasurementGroup.ADMAMPANG:
-            #endregion
-            default:
-                break;
-        }
-        #endregion Add Phases with duplications (all voltages and all currents)
+        //switch (_selectedParameter)
+        //{
+        //    case MeasurementGroup.RMS:
+        //    case MeasurementGroup.RMSFUND:
+        //    case MeasurementGroup.RMSNONFUND:
+        //    case MeasurementGroup.RMSRW:
+        //    case MeasurementGroup.THD:
+        //    case MeasurementGroup.THDODD:
+        //    case MeasurementGroup.THDEVEN:
+        //    case MeasurementGroup.THDI:
+        //    case MeasurementGroup.CRESTF:
+        //    case MeasurementGroup.HRMS:
+        //    case MeasurementGroup.HRMSINCYC:
+        //    case MeasurementGroup.IHRMS:
+        //    case MeasurementGroup.IHRMSB:
+        //    case MeasurementGroup.HRMSPER:
+        //    case MeasurementGroup.IHRMSPER:
+        //    case MeasurementGroup.HRMSPERINCYC:
+        //    case MeasurementGroup.WAVE:
+        //    case MeasurementGroup.WAVEF:
+        //    case MeasurementGroup.WAVEH:
+        //    case MeasurementGroup.PHASORANG:
+        //    case MeasurementGroup.TIF:
+        //        AvailablePhases.Add(phaseAndDescriptionAll);
+        //        AvailablePhases.Add(phaseAndDescriptionVolt);
+        //        AvailablePhases.Add(phaseAndDescriptionCurr);
+        //        break;
+        //    case MeasurementGroup.KF:
+        //    case MeasurementGroup.TEMPC:
+        //    case MeasurementGroup.IL:
+        //    case MeasurementGroup.TDD:
+        //    case MeasurementGroup.HDD:
+        //        AvailablePhases.Add(phaseAndDescriptionCurr);
+        //        break;
+        //    case MeasurementGroup.PST:
+        //    case MeasurementGroup.PLT:
+        //        AvailablePhases.Add(phaseAndDescriptionVolt);
+        //        break;
+        //    #region Empty cases
+        //    case MeasurementGroup.HRMSG:
+        //    case MeasurementGroup.IHRMSG:
+        //    case MeasurementGroup.IHRMSA:
+        //    case MeasurementGroup.IHRMSASIN:
+        //    case MeasurementGroup.IHRMSACOS:
+        //    case MeasurementGroup.IHRMSPA:
+        //    case MeasurementGroup.IHRMSPASIN:
+        //    case MeasurementGroup.IHRMSPACOS:
+        //    case MeasurementGroup.HRMSANGREV1:
+        //    case MeasurementGroup.HRMSANGREV1SIN:
+        //    case MeasurementGroup.HRMSANGREV1COS:
+        //    case MeasurementGroup.HRMSANG:
+        //    case MeasurementGroup.HRMSANGSIN:
+        //    case MeasurementGroup.HRMSANGCOS:
+        //    case MeasurementGroup.HRMSPERG:
+        //    case MeasurementGroup.FREQ:
+        //    case MeasurementGroup.FREQBYPHASE:
+        //    case MeasurementGroup.PEAK:
+        //    case MeasurementGroup.PEAKF:
+        //    case MeasurementGroup.PEAKH:
+        //    case MeasurementGroup.UNDERDEV:
+        //    case MeasurementGroup.OVERDEV:
+        //    case MeasurementGroup.PINSTMAX:
+        //    case MeasurementGroup.PHASORANGSIN:
+        //    case MeasurementGroup.PHASORANGCOS:
+        //    case MeasurementGroup.PHASORAMPANG:
+        //    case MeasurementGroup.AI:
+        //    case MeasurementGroup.AO:
+        //    case MeasurementGroup.DI:
+        //    case MeasurementGroup.DO:
+        //    case MeasurementGroup.RELAY:
+        //    case MeasurementGroup.DIPULSECOUNT:
+        //    case MeasurementGroup.CUSTOM:
+        //    case MeasurementGroup.TOLERANCE:
+        //    case MeasurementGroup.ACTPWR:
+        //    case MeasurementGroup.REAPWR:
+        //    case MeasurementGroup.APPPWR:
+        //    case MeasurementGroup.PF:
+        //    case MeasurementGroup.PFSOURCE:
+        //    case MeasurementGroup.PFTRUE:
+        //    case MeasurementGroup.PFTRUESOURCE:
+        //    case MeasurementGroup.ACTPWRF:
+        //    case MeasurementGroup.REAPWRF:
+        //    case MeasurementGroup.APPPWRF:
+        //    case MeasurementGroup.PFF:
+        //    case MeasurementGroup.PFFSOURCE:
+        //    case MeasurementGroup.ACTPWRH:
+        //    case MeasurementGroup.REAPWRH:
+        //    case MeasurementGroup.APPPWRH:
+        //    case MeasurementGroup.PFH:
+        //    case MeasurementGroup.PFHSOURCE:
+        //    case MeasurementGroup.R:
+        //    case MeasurementGroup.RH:
+        //    case MeasurementGroup.RF:
+        //    case MeasurementGroup.ENERGYINACT:
+        //    case MeasurementGroup.ENERGYINREA:
+        //    case MeasurementGroup.ENERGYAPP:
+        //    case MeasurementGroup.ENERGYOUTACT:
+        //    case MeasurementGroup.ENERGYOUTREA:
+        //    case MeasurementGroup.UNBAL:
+        //    case MeasurementGroup.ZUNBAL:
+        //    case MeasurementGroup.ZSEQ:
+        //    case MeasurementGroup.NSEQ:
+        //    case MeasurementGroup.PSEQ:
+        //    case MeasurementGroup.TOTALRMS:
+        //    case MeasurementGroup.PWRHRMSANG:
+        //    case MeasurementGroup.PWRHRMSPF:
+        //    case MeasurementGroup.PWRHRMSPFSOURCE:
+        //    case MeasurementGroup.PWRHRMSACT:
+        //    case MeasurementGroup.PWRHRMSREACT:
+        //    case MeasurementGroup.PWRHRMSAPP:
+        //    case MeasurementGroup.WAVECYCSTAT:
+        //    case MeasurementGroup.GETTIMES:
+        //    case MeasurementGroup.IMPAMP:
+        //    case MeasurementGroup.IMPANG:
+        //    case MeasurementGroup.IMPAMPANG:
+        //    case MeasurementGroup.IMPANGSIN:
+        //    case MeasurementGroup.IMPANGCOS:
+        //    case MeasurementGroup.ADMAMPANG:
+        //    #endregion
+        //    default:
+        //        break;
+        //}
+        //#endregion Add Phases with duplications (all voltages and all currents)
 
         foreach (PhaseMeasurementWithDuplicationsEnum item in GetSupportedNetworkFeederParametersPhases(_selectedParameter))
         {

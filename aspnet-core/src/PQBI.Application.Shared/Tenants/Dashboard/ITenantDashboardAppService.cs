@@ -24,11 +24,11 @@ namespace PQBI.Tenants.Dashboard
 
         GetGeneralStatsOutput GetGeneralStats();
 
-        Task<TableWidgetResponse> PQSTableWidgetData2222Async(TableWidgetRequest222 request);
+        Task<TableWidgetResponse> PQSTableWidgetDataAsync(TableWidgetRequest request);
         Task<BarChartResponse> PQSBarChartWidgetData( BarChartRequest request);
 
 
-        Task<TrendResponse> PQSTrendData222(TrendCalcRequest222 request);
+        Task<TrendResponse> PQSTrendData(TrendCalcRequest request);
 
     }
 }

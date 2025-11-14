@@ -10,7 +10,7 @@ namespace PQBI.Web.Controllers;
 
 
 //public record PQSCalculationRequestTest(string UserNameOrEmailAddress, string Password, CalcRequestDto Request);
-public record PQSCalculationRequestTest(string UserNameOrEmailAddress, string Password, TrendCalcRequest222 Request);
+public record PQSCalculationRequestTest(string UserNameOrEmailAddress, string Password, TrendCalcRequest Request);
 
 
 

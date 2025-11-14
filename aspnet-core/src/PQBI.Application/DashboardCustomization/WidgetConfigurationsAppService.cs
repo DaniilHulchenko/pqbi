@@ -1,20 +1,21 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Dynamic.Core;
-using Abp.Linq.Extensions;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using Abp.Application.Services.Dto;
+using Abp.Authorization;
 using Abp.Domain.Repositories;
+using Abp.Extensions;
+using Abp.Linq.Extensions;
+using Abp.UI;
+using Microsoft.EntityFrameworkCore;
+using PQBI.Authorization;
 using PQBI.DashboardCustomization.Dtos;
 using PQBI.Dto;
-using Abp.Application.Services.Dto;
-using PQBI.Authorization;
-using Abp.Extensions;
-using Abp.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Abp.UI;
-using PQBI.Storage;
 using PQBI.Exporting;
+using PQBI.Storage;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Threading.Tasks;
+using static PQBI.PQBIDashboardCustomizationConsts;
 
 namespace PQBI.DashboardCustomization
 {
@@ -105,7 +106,26 @@ namespace PQBI.DashboardCustomization
 
             return output;
         }
-        
+
+        [AbpAuthorize(AppPermissions.WidgetConfigurations_Edit)]
+        public async Task<List<GetWidgetConfigurationForEditOutput>> GetWidgetConfigurationBatchesByWidgetIds(List<string> widgetIds)
+        {
+            var widgetConfigurations = await _widgetConfigurationRepository
+                .GetAll()
+                .Where(w => widgetIds.Contains(w.WidgetGuid))
+                .ToListAsync();
+
+            var result = new List<GetWidgetConfigurationForEditOutput>();
+
+            foreach (var widgetConfiguration in widgetConfigurations)
+            {
+                var output = new GetWidgetConfigurationForEditOutput { WidgetConfiguration = ObjectMapper.Map<CreateOrEditWidgetConfigurationDto>(widgetConfiguration) };
+                result.Add(output);
+            }
+
+            return result;
+        }
+
         public virtual async Task<GetWidgetConfigurationForEditOutput> CreateOrEdit(CreateOrEditWidgetConfigurationDto input)
         {
             WidgetConfiguration configuration = null!;

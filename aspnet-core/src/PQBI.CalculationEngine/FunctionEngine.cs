@@ -19,7 +19,7 @@ public interface IFunctionEngine
     static IEnumerable<SingleCalculationFunction> GetAllAggregationFunctions() => [new AvgCalcFunction(), new MinCalcFunction(), new MaxCalcFunction(), new CountCalcFunction(), new SumCalcFunction(), new PercentileCalcFunction(), new RmsCalcFunction()];
     static IEnumerable<ArrayCalculationFunction> GetAllMathematicalFunction() => [new MultiplyCalcFunction(), new DivideCalcFunction(), new AbsoluteCalcFunction()];
 
-    BasicValue AggregationCalculationAsync(string type, IEnumerable<BasicValue> input);
+    BasicValue AggregationCalculationAsync(string type, IEnumerable<BasicValue> input, bool isIgnoreHoleForWidgetSync = false);
     //IEnumerable<double?> AggregationCalculation(MatrixCalculation_Original matrix, string type);
     IEnumerable<BasicValue> AggregationCalculation(IEnumerable<IEnumerable<BasicValue>> matrix, string type);
 
@@ -113,7 +113,7 @@ public class FunctionEngine : IFunctionEngine
     }
 
 
-    public BasicValue AggregationCalculationAsync(string type, IEnumerable<BasicValue> input)
+    public BasicValue AggregationCalculationAsync(string type, IEnumerable<BasicValue> input, bool isIgnoreHoleForWidgetSync = false)
     {
         type = type.ToLower();
 

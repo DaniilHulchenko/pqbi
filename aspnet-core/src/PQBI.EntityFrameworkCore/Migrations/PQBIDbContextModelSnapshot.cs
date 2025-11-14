@@ -1657,6 +1657,36 @@ namespace PQBI.Migrations
                     b.ToTable("BarChartWidgetConfigurations");
                 });
 
+            modelBuilder.Entity("PQBI.CardWidgetConfigurations.CardWidgetConfiguration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DateRange")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Parameters")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RefreshRate")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StyleType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TenantId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("CardWidgetConfigurations");
+                });
+
             modelBuilder.Entity("PQBI.Chat.ChatMessage", b =>
                 {
                     b.Property<long>("Id")
@@ -1718,6 +1748,9 @@ namespace PQBI.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CustomBaseDataList")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("InnerCustomParameters")
                         .HasColumnType("TEXT");
 
@@ -1727,9 +1760,6 @@ namespace PQBI.Migrations
 
                     b.Property<int>("ResolutionInSeconds")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("STDPQSParametersList")
-                        .HasColumnType("TEXT");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("INTEGER");
@@ -1849,6 +1879,57 @@ namespace PQBI.Migrations
                     b.HasIndex("TenantId", "UserId");
 
                     b.ToTable("AppFriendships");
+                });
+
+            modelBuilder.Entity("PQBI.GaugeWidgetConfigurations.GaugeWidgetConfiguration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DateRange")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Parameter")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RefreshRate")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Style")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TenantId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("GaugeWidgetConfigurations");
+                });
+
+            modelBuilder.Entity("PQBI.Groups.Group", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subgroups")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Groups");
                 });
 
             modelBuilder.Entity("PQBI.MultiTenancy.Accounting.Invoice", b =>

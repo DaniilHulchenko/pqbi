@@ -1,42 +1,32 @@
-﻿using Abp.Events.Bus.Handlers;
-using Abp.UI;
-using Castle.Core.Logging;
+﻿using Abp.UI;
 using Microsoft.Extensions.Logging;
 using PQBI.CalculationEngine;
-using PQBI.Friendships.Dto;
 using PQBI.Infrastructure.Extensions;
+using PQBI.Infrastructure.Sapphire;
 using PQBI.IntegrationTests.Scenarios.PopulatingParameters;
 using PQBI.Network.Base;
 using PQBI.Network.RestApi.EngineCalculation;
-using PQBI.Network.RestApi.Validations;
 using PQBI.PQS;
+using PQBI.PQS.Cache.Tags;
 using PQBI.PQS.CalcEngine;
 using PQBI.Requests;
 using PQBI.Sapphire;
+using PQBI.Sapphire.Options;
 using PQBI.Tenants.Dashboard.Dto;
-using PQS.CommonUI.Data;
 using PQS.CommonUI.Enums;
-using PQS.Data.Common.Extensions;
+using PQS.Data.Common.Values;
+using PQS.Data.Configurations;
 using PQS.Data.Configurations.Enums;
 using PQS.Data.Events.Enums;
 using PQS.Data.Measurements;
 using PQS.Data.Measurements.CustomParameter;
-using PQS.Data.Measurements.Enums;
-using PQS.Data.Measurements.StandardParameter;
-using PQS.Data.Networks;
 using PQS.Data.RecordsContainer;
 using PQS.Data.RecordsContainer.Records;
 using PQS.PQZxml;
 using PQS.Translator;
 using PQZTimeFormat;
-using System.Collections;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Channels;
-using Twilio.TwiML.Voice;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace PQBI.Network.RestApi;
@@ -55,6 +45,7 @@ public interface IPQSComponentOperationService
     Task<PQSOutput> GetBaseDataConcurrentAsync(string url, string session, PQSInput request);
     Task<PQSOutput> GetBaseDataAsync_Original(string url, string session, PQSInput request);
     Task<ComponentWithTagsResponse> GetAllTags(string url, string session);
+    Task<IEnumerable<EventClassDescription>> GetEventsTypeAsync(string url, string session);
     Task<IEnumerable<PQSEventDto[]>> GetEventss(string url, string session, GetEventstRequest request);
     Task<IEnumerable<ComponentSlimDto>> GetAllComponentSlimsAsync(string url, string session);
     Task<StaticDataInfo> GetStaticTree(string url, string session);
@@ -65,6 +56,7 @@ public class ComponentsWithTagsDto
     public IEnumerable<PQS.ComponentDto> Components { get; init; }
 
     public GetTagsConfigurationResponse GetTagsConfigurationResponse { get; init; }
+    public IEnumerable<TagWithComponents> TagComponents { get; init; }
 }
 
 public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponentOperationService
@@ -153,7 +145,78 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
         return name;
     }
 
+    public async Task<IEnumerable<EventClassDescription>> GetEventsTypeAsync(string url, string session)    
+    {       
+        ConfigurationParameterBase eventsIdAndNameConf = StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_SUPPORTED_EVENTS_ID_AND_NAME);
+        GetInstantConfigurationRecord getInstantConfigurationRecord = new GetInstantConfigurationRecord(Guid.Empty, [eventsIdAndNameConf]);
 
+        var request = new PQSRequest(Guid.NewGuid(), new Guid(session));
+        request.AddRecord(getInstantConfigurationRecord);       
+        var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
+
+        PQSRecordBase rec = pqsResponse.GetRecord(0);
+
+        if (rec is InstantConfigurationRecord instRec)
+        {
+            instRec.Configuration.TryGetConfigurationValue<ListValuesContainer<string>>(eventsIdAndNameConf, out ListValuesContainer<string> eventTypeList);
+            IEnumerable<EventClassDescription> eventClassDescriptionList = ParseEventsCodeAndNames(eventTypeList);          
+
+            return eventClassDescriptionList;
+        }
+
+        return null;
+    }
+
+    public static IEnumerable<EventClassDescription> ParseEventsCodeAndNames(ListValuesContainer<string> codesAndValues)
+    {
+        List<EventClassDescription> eventClassDescriptionList = new List<EventClassDescription>();
+        //List<Tuple<int, string, EventClass, AggregationEnum, bool>> values = new List<Tuple<int, string, EventClass, AggregationEnum, bool>>();
+        foreach (string cAndV in codesAndValues)
+        {
+            if (!string.IsNullOrEmpty(cAndV))
+            {
+                string[] splittedArray = cAndV.Split('&');
+                if (splittedArray.Length > 1)
+                {
+                    int eventID;
+                    if (int.TryParse(splittedArray[0], out eventID))
+                    {
+                        EventClassDescription eventClassDescription = new EventClassDescription() { ConfID = (uint)eventID };
+                        EventClass ec = EventClass.None;
+                        AggregationEnum aggregationEnum = AggregationEnum.NotAggregated;
+                        bool isSharedEvent = false;
+                        if (splittedArray.Length == 4)
+                        {
+                            Enum.TryParse<EventClass>(splittedArray[2], out ec);
+                            aggregationEnum = (AggregationEnum)byte.Parse(splittedArray[3]);                           
+                        }
+                        else if (splittedArray.Length == 5)
+                        {
+                            Enum.TryParse<EventClass>(splittedArray[2], out ec);
+                            aggregationEnum = (AggregationEnum)byte.Parse(splittedArray[3]);
+                            if (!bool.TryParse(splittedArray[4], out isSharedEvent))
+                            {
+                                isSharedEvent = false;
+                            }                         
+                        }
+                        else if (splittedArray.Length == 3)
+                        {
+                            Enum.TryParse<EventClass>(splittedArray[2], out ec);                           
+                        }
+
+                        eventClassDescription.EventClass = ec;
+                        eventClassDescription.IsShared = isSharedEvent;
+                        eventClassDescription.AggregationEnum = aggregationEnum;
+                        eventClassDescription.Name = splittedArray[1];
+                        eventClassDescription.Description = ec.Description();
+
+                        eventClassDescriptionList.Add(eventClassDescription);                       
+                    }
+                }
+            }
+        }
+        return eventClassDescriptionList;
+    }
 
     public async Task<IEnumerable<PQSEventDto[]>> GetEventss(string url, string session, GetEventstRequest input)
     {
@@ -184,40 +247,110 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
     public async Task<ComponentsWithTagsDto> GetAllComponentsWithTagsAsync(string url, string session)
     {
-        GetTagsConfigurationResponse getInstanceResponse = null;
-        using (var mainLogger = PqbiStopwatch.AnchorAsync(nameof(GetAllComponentsWithTagsAsync), Logger))
+        // Get tags and components in parallel
+        var tagsTask = GetAllTagsAsync(url, session);
+        var componentsTask = GetComponentsAsync(url, session);
+
+        await System.Threading.Tasks.Task.WhenAll(tagsTask, componentsTask);
+
+        var tagsConfig = tagsTask.Result;
+        var components = componentsTask.Result;
+
+        tagsConfig.TryGetMap(out var map, out var tagsWithComp);
+
+        foreach (var item in components.SafeArray())
         {
-            getInstanceResponse = await GetAllTagsAsync(url, session);
-            getInstanceResponse.TryGetMap(out var map, out _);
-
-            PQSGetComponentsRequest request = null;
-            PQSResponse pqsResponse = null;
-            using (var subLogger = mainLogger.CreateSubLogger(nameof(GetAllTagsAsync)))
+            if (map != null && map.TryGetValue(item.ComponentId, out var componentDto))
             {
-                request = new PQSGetComponentsRequest(session);
-                pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
+                item.Tags = componentDto.Tags.ToList();
             }
-
-            List<PQS.ComponentDto> result = null;
-            if (pqsResponse != null)
-            {
-                var response = new PQSGetComponentsResponse(request, pqsResponse);
-                var tmppp = response.Status;
-                result = response.Components?.Select(x => new ComponentDto(x.ComponentId, x.ComponentName, x.Feeders, x.Channels, x.AdditionalDatas)).ToSafeList<ComponentDto>();
-            }
-
-            foreach (var item in result.SafeArray())
-            {
-                if (map.TryGetValue(item.ComponentId, out var componentDto))
-                {
-                    item.Tags = componentDto.Tags.ToList();
-                }
-            }
-
-            return new ComponentsWithTagsDto { Components = result, GetTagsConfigurationResponse = getInstanceResponse };
         }
 
+        return new ComponentsWithTagsDto { Components = components, GetTagsConfigurationResponse = tagsConfig, TagComponents = tagsWithComp };
     }
+
+    // Helper for getting components only
+    private async Task<List<ComponentDto>> GetComponentsAsync(string url, string session)
+    {
+        var request = new PQSGetComponentsRequest(true, false, session);       
+
+        var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
+
+        if (pqsResponse != null)
+        {
+            var response = new PQSGetComponentsResponse(request, pqsResponse);
+            return response.Components?.Select(x => new ComponentDto(x.ComponentId, x.ComponentName, x.Feeders, x.Channels, x.AdditionalDatas)).ToList()
+                ?? new List<ComponentDto>();
+        }
+        return new List<ComponentDto>();
+    }
+
+
+    //public async Task<ComponentsWithTagsDto> GetAllComponentsWithTagsAsync(string url, string session)
+    //{
+    //    GetTagsConfigurationResponse getInstanceResponse = null;
+    //    using (var mainLogger = PqbiStopwatch.AnchorAsync(nameof(GetAllComponentsWithTagsAsync), Logger))
+    //    {
+    //        getInstanceResponse = await GetAllTagsAsync(url, session);
+    //        getInstanceResponse.TryGetMap(out var map, out _);
+
+    //        PQSGetComponentsRequest request = null;
+    //        PQSResponse pqsResponse = null;
+    //        using (var subLogger = mainLogger.CreateSubLogger(nameof(GetAllTagsAsync)))
+    //        {
+    //            request = new PQSGetComponentsRequest(session);
+    //            pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
+    //        }
+
+    //        List<PQS.ComponentDto> result = null;
+    //        if (pqsResponse != null)
+    //        {
+    //            var response = new PQSGetComponentsResponse(request, pqsResponse);
+    //            var tmppp = response.Status;
+    //            result = response.Components?.Select(x => new ComponentDto(x.ComponentId, x.ComponentName, x.Feeders, x.Channels, x.AdditionalDatas)).ToSafeList<ComponentDto>();
+    //        }
+
+    //        foreach (var item in result.SafeArray())
+    //        {
+    //            if (map.TryGetValue(item.ComponentId, out var componentDto))
+    //            {
+    //                item.Tags = componentDto.Tags.ToList();
+    //            }
+    //        }
+
+    //        return new ComponentsWithTagsDto { Components = result, GetTagsConfigurationResponse = getInstanceResponse };
+    //    }
+
+    //}
+
+    protected PQSRequest GetCompFromScada(string session)
+    {
+        PQSRequest req = new PQSRequest(Guid.NewGuid(), Guid.Parse(session));
+
+        var configurations = new List<ConfigurationParameterBase>();
+
+        //configurations.Add(new StandardConfiguration(StandardConfigurationEnum.STD_VIRTUAL_NAME, PQSType.STRING));
+        configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_VIRTUAL_NAME));
+        //configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_GEOGRAPHIC_COORDINATE));
+        configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_COMPONENT_UNIT_TYPE));
+        //configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_DEVICE_IP));
+        configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_COMPONENT_FEEDERS_NAMES_AND_NETWORKS));
+        configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_COMPONENT_SYSTEM_ELECTRICAL_MAP));
+        configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_TAGS_MAP));        
+
+        //configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_COMPONENT_RUNNING_EVENTS));
+        //configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_TOPOLOGY_TYPE));
+        configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_GUID));
+        configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_COMPONENT_ALL_PARAMETERS));
+        //configurations.Add(StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_COMPONENT_ALL_PARAMETERS));
+
+        var compRecord = new ObjectsRequestRecord(null, ObjectType.PhysicalAndVirtualComponents, ObjectFilterType.NoFilter, null, configurations);
+
+        req.AddRecord(compRecord);
+
+        return req;
+    }
+
 
     public async Task<StaticDataInfo> GetStaticTree(string url, string session)
     {
@@ -226,16 +359,41 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
         var logicalDataGenerator = new CreationLogicalOptions();
         var channelDataGenerator = new CreationChannelOptions();
 
-        var logicalData = logicalDataGenerator.CreateDataAsync();
+        HashSet<CustomCalculationBaseInfo> serverCustomCalculationBases = new HashSet<CustomCalculationBaseInfo>(new CalcBaseEqualityComparer());
+        PQSRequest request = new PQSRequest(Guid.Empty, Guid.Parse(session));
+        OperationRequestRecord operationRequestRecord = new OperationRequestRecord(null, OperationType.GET_ALL_CUSTOM_RESOLUTIONS, new ConfigurationParameterAndValueContainer());
+
+        request.AddRecord(operationRequestRecord);
+        PQSResponse pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
+        var response = new PQSCommonResponse<PQSRequest>(request, pqsResponse);
+        if (response.TryExtractOperationResponseRecord(out var operationResponseRecord))
+        {
+            operationResponseRecord.OperationConfigurationResult.TryGetConfigurationValue<string>(StandardConfigurationEnum.STD_CUSTOM_RESOLUTION_ARRAY, out string baseRes);
+            var calcBases = CustomPrmSerializationUtill.DeserializeXmlToObject<List<CustomCalcBaseXml>>(baseRes);
+            foreach (var item in calcBases)
+            {
+                var calcBaseAndWindowInterval = item.GenerateCalcBaseAndWindowInterval();
+                CustomCalculationBaseInfo customCalculationBaseInfo = new CustomCalculationBaseInfo
+                {
+                    PresentedName = item.PresentedName,
+                    CalcBase = calcBaseAndWindowInterval.CalculationBase,
+                    WindowInterval = calcBaseAndWindowInterval.WindowInterval
+                };
+                serverCustomCalculationBases.Add(customCalculationBaseInfo);
+            }            
+        }
+
+        var hashSet = new HashSet<AdditionalData>();
+
+        
+       (IEnumerable<ComponentSlimDto> components, List<CustomCalculationBaseInfo> customCalcBaseInfoList) = await GetAllComponentWithAdditionalPrmsAsync(url, session, serverCustomCalculationBases);
+
+        var logicalData = logicalDataGenerator.CreateDataAsync(customCalcBaseInfoList);
         tree.Children.Add(logicalData);
 
 
-        var channelData = channelDataGenerator.CreateDataAsync();
-        tree.Children.Add(channelData);
-
-
-        var hashSet = new HashSet<AdditionalData>();
-        var components = await GetAllComponentSlimsAsync(url, session);
+        var channelData = channelDataGenerator.CreateDataAsync(customCalcBaseInfoList);
+        tree.Children.Add(channelData);      
 
         foreach (var component in components)
         {
@@ -247,13 +405,14 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
 
         return new StaticDataInfo { StaticTreeNode = tree, AdditionalDatas = hashSet };
+
     }
 
     public async Task<IEnumerable<ComponentSlimDto>> GetAllComponentSlimsAsync(string url, string session)
     {
         using (var mainLogger = PqbiStopwatch.AnchorAsync(nameof(GetAllComponentSlimsAsync), Logger))
         {
-            var request = new PQSGetComponentsRequest(session); ;
+            var request = new PQSGetComponentsRequest(session);
             PQSResponse pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
 
             IEnumerable<PQS.ComponentSlimDto> result = null;
@@ -264,6 +423,43 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
             }
 
             return result;
+        }
+    }
+
+    public async Task<(IEnumerable<ComponentSlimDto>, List<CustomCalculationBaseInfo>)> GetAllComponentWithAdditionalPrmsAsync(string url, string session, HashSet<CustomCalculationBaseInfo> serverCustomCalculationBases)
+    {
+        using (var mainLogger = PqbiStopwatch.AnchorAsync(nameof(GetAllComponentWithAdditionalPrmsAsync), Logger))
+        {
+            var request = new PQSGetComponentsRequest(false, true, session);
+            PQSResponse pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
+
+            IEnumerable<PQS.ComponentSlimDto> result = null;
+            List<CustomCalculationBaseInfo> customCalcBaseInfoList = new List<CustomCalculationBaseInfo>();
+            if (pqsResponse != null)
+            {
+                var response = new PQSGetComponentsResponse(request, pqsResponse);
+                (result, var customCalcBaseInfoSet) = response.PopulateWithAdditionalData(serverCustomCalculationBases);
+                customCalcBaseInfoList = customCalcBaseInfoSet.ToList();               
+            }
+
+            //List<PQBI.Sapphire.Options.CalcBaseWindowInterval> customCalcBaseInfoList = new List<PQBI.Sapphire.Options.CalcBaseWindowInterval>();
+            //if (pqsResponse != null)
+            //{
+            //    var response = new PQSGetComponentsResponse(request, pqsResponse);
+            //    (result, var customCalcBaseInfoSet) = response.PopulateWithAdditionalData(serverCustomCalculationBases);
+            //    //customCalcBaseInfoList = customCalcBaseInfoSet.ToList();
+
+            //    foreach (var item in customCalcBaseInfoSet)
+            //    {
+            //        CalcBase calculationBase = new CalcBase(item.CalcBase.CalculationBaseEnum, item.CalcBase.CalculationBaseInNumOfSamples, item.CalcBase.OldCalculationBaseEnum);
+            //        calculationBase = item.CalcBase.
+            //        PQBI.Sapphire.Options.CalcBaseWindowInterval calcBaseWindowInterval = new PQBI.Sapphire.Options.CalcBaseWindowInterval(item.CalcBase, item.WindowInterval);
+            //        calcBaseWindowInterval.PresentedName = item.PresentedName;
+            //        customCalcBaseInfoList.Add(calcBaseWindowInterval);
+            //    }
+            //}
+
+            return (result, customCalcBaseInfoList);
         }
     }
 
@@ -292,12 +488,11 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
             ids = componentsWithTags.Components.Select(x => x.ComponentId).ToArray();
         }
 
-
         var request = new PQSGetAllObjectsRequest(session, ids);
         var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
         var response = new PQSGetAllObjectsResponse(request, pqsResponse);
 
-        response.ExtractGetParametersOrError(out var parameters, out var errors);
+        response.ExtractGetParametersOrError(out var parameters, out var customPrmsMap, out var customBaseMap, out var errors);
 
         if (errors != null)
         {
@@ -310,11 +505,32 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
             {
                 component.ParameterInfos = paramList.ToList();
             }
+
+            if (customPrmsMap.TryGetValue(component.ComponentId, out var customParams))
+            {
+                List<AdditionalData> additionalParameters = new List<AdditionalData>();
+                //var customPrms = PQZxmlReader.ReadCustomMeasurmentsParameters(customParamsString);
+
+                foreach (var customPrm in customParams)
+                {
+                    additionalParameters.Add(new AdditionalData
+                    {
+                        MeasurmentsParameterDetails = customPrm.Details,
+                        PropertyName = customPrm.GetGroupName(),
+                        Base = customPrm.CalculationBaseClass.CalculationBaseEnum.ToString()
+                    });
+                }               
+                component.AdditionalDatas = additionalParameters;
+            }
+
+            if (customBaseMap.TryGetValue(component.ComponentId, out var customBaseList))
+            {              
+                component.CustomBaseList = customBaseList;
+            }
         }
 
         return componentsWithTags;
     }
-
 
     void SwitchPlaces(List<string> list, int start, int end)
     {
@@ -531,6 +747,4 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
         return result;
     }
-
-
 }

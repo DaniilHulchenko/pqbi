@@ -53,7 +53,7 @@ public abstract class PQSRestApiServiceBase : PQSServiceBase
     //    return await SendRecordsContainerPostRequest(url, stream);
     //}
 
-    protected async Task<PQSResponse> SendRecordsContainerPostBinaryRequestAndException<TRequest>(string url, TRequest request) where TRequest : PQSRequestBase
+    protected async Task<PQSResponse> SendRecordsContainerPostBinaryRequestAndException<TRequest>(string url, TRequest request) where TRequest : PQSRequest
     {
         byte[] stream = _pQZBinaryWriterCore.WriteMessage(request);
         url = UrlBinaryUrl(url);
@@ -66,17 +66,23 @@ public abstract class PQSRestApiServiceBase : PQSServiceBase
             {
                 if (error.Status == PQZStatus.SESSION_EXPIRED)
                 {
+                    if (request.GetRecord(0) is OperationRequestRecord opRecord)
+                    {
+                        if (opRecord.OperationType == OperationType.CLOSE_SESSION)
+                            return result;
+                    }
+
                     Logger.LogError($"in Url ={url} PQZStatus = {error.Status.ToString()}");
                     throw new SessionExpiredException(result);
                 }
-                else
-                {
-                    if (error.Status != PQZStatus.OK)
-                    {
-                        Logger.LogError($"in Url ={url} PQZStatus ={error.Status.ToString()}");
-                        throw new PQBIExceptionBase($"Response from scada is incorrect {error.ToString()}", result);
-                    }
-                }
+                //else
+                //{
+                //    if (error.Status != PQZStatus.OK)
+                //    {
+                //        Logger.LogError($"in Url ={url} PQZStatus ={error.Status.ToString()}");
+                //        throw new PQBIExceptionBase($"Response from scada is incorrect {error.ToString()}", result);
+                //    }
+                //}
             }
         }
 

@@ -4,7 +4,9 @@ using Abp.Dependency;
 using Abp.Domain.Uow;
 using Abp.EntityFrameworkCore.Uow;
 using Abp.MultiTenancy;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PQBI.Configuration;
 using PQBI.EntityFrameworkCore;
@@ -42,7 +44,7 @@ namespace PQBI.Migrations.Seed
             {
 
                 //Default tenant seed (in host database).
-                new DefaultTenantBuilder(context, pqbiConfig.TenantSeedConfig,logger).Create();
+                new DefaultTenantBuilder(context, pqbiConfig.TenantSeedConfig, logger).Create();
                 new TenantRoleAndUserBuilder(context, 1, pqbiConfig.TenantSeedConfig).Create();
             }
         }
@@ -59,6 +61,24 @@ namespace PQBI.Migrations.Seed
                 {
                     var context = uowManager.Object.Current.GetDbContext<TDbContext>(MultiTenancySides.Host);
                     var logger = iocResolver.Resolve<ILogger<PQBIEntityFrameworkCoreModule>>();
+
+                    var env = iocResolver.Resolve<IWebHostEnvironment>();
+
+                    try
+                    {
+                        if (!env.IsDevelopment())
+                        {
+                            logger.LogError("Migration activated");
+                            context.Database.Migrate();
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        logger.LogError(ex, "An error occurred while applying database migrations.");
+                        throw;
+                    }
 
                     contextAction(context, pqbiConfig, logger);
 

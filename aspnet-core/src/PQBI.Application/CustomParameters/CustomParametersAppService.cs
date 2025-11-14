@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using PQBI.Storage;
 using PQBI.Exporting;
+using PQBI.Network.RestApi;
 
 namespace PQBI.CustomParameters;
 
@@ -34,61 +35,114 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
 
     public virtual async Task<PagedResultDto<GetCustomParameterForViewDto>> GetAll(GetAllCustomParametersInput input)
     {
+        var query = _customParameterRepository.GetAll();
 
-        var filteredCustomParameters = _customParameterRepository.GetAll()
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Name.Contains(input.Filter) || e.AggregationFunction.Contains(input.Filter) || e.STDPQSParametersList.Contains(input.Filter) || e.Type.Contains(input.Filter) || e.InnerCustomParameters.Contains(input.Filter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), e => e.Name.Contains(input.NameFilter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.AggregationFunctionFilter), e => e.AggregationFunction.Contains(input.AggregationFunctionFilter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.STDPQSParametersListFilter), e => e.STDPQSParametersList.Contains(input.STDPQSParametersListFilter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.TypeFilter), e => e.Type.Contains(input.TypeFilter))
-                        .WhereIf(input.MinResolutionInSecondsFilter != null, e => e.ResolutionInSeconds >= input.MinResolutionInSecondsFilter)
-                        .WhereIf(input.MaxResolutionInSecondsFilter != null, e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter);
-
-        var pagedAndFilteredCustomParameters = filteredCustomParameters
-            .OrderBy(input.Sorting ?? "id asc")
-            .PageBy(input);
-
-        var customParameters = from o in pagedAndFilteredCustomParameters
-                               select new
-                               {
-
-                                   o.Name,
-                                   o.AggregationFunction,
-                                   o.STDPQSParametersList,
-                                   o.Type,
-                                   Id = o.Id,
-                                   ResolutionInSeconds = o.ResolutionInSeconds,
-                               };
-
-        var totalCount = await filteredCustomParameters.CountAsync();
-
-        var dbList = await customParameters.ToListAsync();
-        var results = new List<GetCustomParameterForViewDto>();
-
-        foreach (var o in dbList)
+        if (!string.IsNullOrWhiteSpace(input.Filter))
         {
-            var res = new GetCustomParameterForViewDto()
+            query = query.Where(e =>
+                e.Name.Contains(input.Filter) ||
+                e.AggregationFunction.Contains(input.Filter) ||
+                e.Type.Contains(input.Filter) ||
+                e.InnerCustomParameters.Contains(input.Filter) ||
+                e.CustomBaseDataList.Contains(input.Filter));
+        }
+
+        if (!string.IsNullOrWhiteSpace(input.NameFilter))
+            query = query.Where(e => e.Name.Contains(input.NameFilter));
+
+        if (!string.IsNullOrWhiteSpace(input.AggregationFunctionFilter))
+            query = query.Where(e => e.AggregationFunction.Contains(input.AggregationFunctionFilter));
+
+        // Only apply TypeFilter if IgnoreTypeFilter is not true
+        if (!string.IsNullOrWhiteSpace(input.TypeFilter))
+            query = query.Where(e => e.Type.Contains(input.TypeFilter));
+
+        if (input.MinResolutionInSecondsFilter.HasValue)
+            query = query.Where(e => e.ResolutionInSeconds >= input.MinResolutionInSecondsFilter.Value);
+
+        if (input.MaxResolutionInSecondsFilter.HasValue)
+            query = query.Where(e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter.Value);
+
+        if (!string.IsNullOrWhiteSpace(input.CustomBaseDataListFilter))
+            query = query.Where(e => e.CustomBaseDataList.Contains(input.CustomBaseDataListFilter));
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(input.Sorting ?? "id asc")
+            .PageBy(input)
+            .Select(o => new GetCustomParameterForViewDto
             {
                 CustomParameter = new CustomParameterDto
                 {
-                    ResolutionInSeconds = o.ResolutionInSeconds,
+                    Id = o.Id,
                     Name = o.Name,
                     AggregationFunction = o.AggregationFunction,
-                    STDPQSParametersList = o.STDPQSParametersList,
                     Type = o.Type,
-                    Id = o.Id,
+                    ResolutionInSeconds = o.ResolutionInSeconds,
+                    CustomBaseDataList = o.CustomBaseDataList
                 }
-            };
+            })
+            .ToListAsync();
 
-            results.Add(res);
-        }
-
-        return new PagedResultDto<GetCustomParameterForViewDto>(
-            totalCount,
-            results
-        );
-
+        return new PagedResultDto<GetCustomParameterForViewDto>(totalCount, items);
     }
+
+    //public virtual async Task<PagedResultDto<GetCustomParameterForViewDto>> GetAll(GetAllCustomParametersInput input)
+    //{
+
+    //    var filteredCustomParameters = _customParameterRepository.GetAll()
+    //                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Name.Contains(input.Filter) || e.AggregationFunction.Contains(input.Filter) || e.Type.Contains(input.Filter) || e.InnerCustomParameters.Contains(input.Filter) || e.CustomBaseDataList.Contains(input.Filter))
+    //                    .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), e => e.Name.Contains(input.NameFilter))
+    //                    .WhereIf(!string.IsNullOrWhiteSpace(input.AggregationFunctionFilter), e => e.AggregationFunction.Contains(input.AggregationFunctionFilter))
+    //                    .WhereIf(!string.IsNullOrWhiteSpace(input.TypeFilter), e => e.Type.Contains(input.TypeFilter))
+    //                    .WhereIf(input.MinResolutionInSecondsFilter != null, e => e.ResolutionInSeconds >= input.MinResolutionInSecondsFilter)
+    //                    .WhereIf(input.MaxResolutionInSecondsFilter != null, e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter)
+    //                    .WhereIf(!string.IsNullOrWhiteSpace(input.CustomBaseDataListFilter), e => e.CustomBaseDataList.Contains(input.CustomBaseDataListFilter));
+
+    //    var pagedAndFilteredCustomParameters = filteredCustomParameters
+    //        .OrderBy(input.Sorting ?? "id asc")
+    //        .PageBy(input);
+
+    //    var customParameters = from o in pagedAndFilteredCustomParameters
+    //                           select new
+    //                           {
+
+    //                               o.Name,
+    //                               o.AggregationFunction,
+    //                               o.Type,
+    //                               Id = o.Id,
+    //                               ResolutionInSeconds = o.ResolutionInSeconds,
+    //                           };
+
+    //    var totalCount = await filteredCustomParameters.CountAsync();
+
+    //    var dbList = await customParameters.ToListAsync();
+    //    var results = new List<GetCustomParameterForViewDto>();
+
+    //    foreach (var o in dbList)
+    //    {
+    //        var res = new GetCustomParameterForViewDto()
+    //        {
+    //            CustomParameter = new CustomParameterDto
+    //            {
+    //                ResolutionInSeconds = o.ResolutionInSeconds,
+    //                Name = o.Name,
+    //                AggregationFunction = o.AggregationFunction,
+    //                Type = o.Type,
+    //                Id = o.Id,
+    //            }
+    //        };
+
+    //        results.Add(res);
+    //    }
+
+    //    return new PagedResultDto<GetCustomParameterForViewDto>(
+    //        totalCount,
+    //        results
+    //    );
+
+    //}
 
     public virtual async Task<GetCustomParameterForViewDto> GetCustomParameterForView(int id)
     {
@@ -102,6 +156,8 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
     [AbpAuthorize(AppPermissions.Pages_CustomParameters_Edit)]
     public virtual async Task<GetCustomParameterForEditOutput> GetCustomParameterForEdit(EntityDto input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
+
         var customParameter = await _customParameterRepository.FirstOrDefaultAsync(input.Id);
 
         var output = new GetCustomParameterForEditOutput { CustomParameter = ObjectMapper.Map<CreateOrEditCustomParameterDto>(customParameter) };
@@ -111,6 +167,7 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
 
     public virtual async Task<CreateOrEditCustomParameterDto> CreateOrEdit(CreateOrEditCustomParameterDto input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
         var response = default(CreateOrEditCustomParameterDto);
         if (input.Id == null)
         {
@@ -127,6 +184,8 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
 
     protected virtual async Task<CreateOrEditCustomParameterDto> Create(CreateOrEditCustomParameterDto input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
+
         var customParameter = ObjectMapper.Map<CustomParameter>(input);
 
         if (AbpSession.TenantId != null)
@@ -145,6 +204,8 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
     [AbpAuthorize(AppPermissions.Pages_CustomParameters_Edit)]
     protected virtual async Task<CreateOrEditCustomParameterDto> Update(CreateOrEditCustomParameterDto input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
+
         var customParameter = await _customParameterRepository.FirstOrDefaultAsync((int)input.Id);
         ObjectMapper.Map(input, customParameter);
 
@@ -155,6 +216,8 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
     [AbpAuthorize(AppPermissions.Pages_CustomParameters_Delete)]
     public virtual async Task Delete(EntityDto input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
+
         await _customParameterRepository.DeleteAsync(input.Id);
     }
 
@@ -162,13 +225,13 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
     {
 
         var filteredCustomParameters = _customParameterRepository.GetAll()
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Name.Contains(input.Filter) || e.AggregationFunction.Contains(input.Filter) || e.STDPQSParametersList.Contains(input.Filter) || e.Type.Contains(input.Filter) || e.InnerCustomParameters.Contains(input.Filter))
+                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Name.Contains(input.Filter) || e.AggregationFunction.Contains(input.Filter) || e.Type.Contains(input.Filter) || e.InnerCustomParameters.Contains(input.Filter) || e.CustomBaseDataList.Contains(input.Filter))
                     .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), e => e.Name.Contains(input.NameFilter))
                     .WhereIf(!string.IsNullOrWhiteSpace(input.AggregationFunctionFilter), e => e.AggregationFunction.Contains(input.AggregationFunctionFilter))
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.STDPQSParametersListFilter), e => e.STDPQSParametersList.Contains(input.STDPQSParametersListFilter))
                     .WhereIf(!string.IsNullOrWhiteSpace(input.TypeFilter), e => e.Type.Contains(input.TypeFilter))
                     .WhereIf(input.MinResolutionInSecondsFilter != null, e => e.ResolutionInSeconds >= input.MinResolutionInSecondsFilter)
-                    .WhereIf(input.MaxResolutionInSecondsFilter != null, e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter);
+                    .WhereIf(input.MaxResolutionInSecondsFilter != null, e => e.ResolutionInSeconds <= input.MaxResolutionInSecondsFilter)
+                    .WhereIf(!string.IsNullOrWhiteSpace(input.CustomBaseDataListFilter), e => e.CustomBaseDataList.Contains(input.CustomBaseDataListFilter));
 
         var query = from o in filteredCustomParameters
                     select new GetCustomParameterForViewDto()
@@ -177,7 +240,6 @@ public class CustomParametersAppService : PQBIAppServiceBase, ICustomParametersA
                         {
                             Name = o.Name,
                             AggregationFunction = o.AggregationFunction,
-                            STDPQSParametersList = o.STDPQSParametersList,
                             Type = o.Type,
                             Id = o.Id,
                             ResolutionInSeconds = o.ResolutionInSeconds,

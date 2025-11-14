@@ -38,7 +38,7 @@ namespace PQBI.CustomParameters.Dtos
             {
                 var innerCustomParameters = JsonConvert.DeserializeObject<InnerCustomParameter[]>(InnerCustomParameters);
 
-                if (string.IsNullOrEmpty(STDPQSParametersList) == true && innerCustomParameters.Length == 0)
+                if (string.IsNullOrEmpty(CustomBaseDataList) == true && innerCustomParameters.Length == 0)
                 {
                     context.Results.Add(new ValidationResult($"Either InnerCustomParameters or STDPQSParametersList must be provided and cannot both be empty."));
                     return;
@@ -77,7 +77,7 @@ namespace PQBI.CustomParameters.Dtos
 
             var functions = IFunctionEngine.GetAllMathematicalFunction().Select(x=>x.Alias).ToHashSet();
             //var aggregationFunctions = IFunctionEngine.GetAllAggregationFunctions().Select(x=>x.Alias).ToHashSet();
-            var parameterList = JsonConvert.DeserializeObject<BaseParameter[]>(STDPQSParametersList);
+            var parameterList = JsonConvert.DeserializeObject<BaseParameter[]>(CustomBaseDataList);
 
             //var (mainResolutionNum, mainResolutionUnit) = GroupByCalcFunction.ParsePeriod(Resolution);
             var mainRarameterResolution = ResolutionInSeconds;// GroupByCalcFunction.ConvertToSecond(mainResolutionNum, mainResolutionUnit);
@@ -104,22 +104,22 @@ namespace PQBI.CustomParameters.Dtos
                 //    context.Results.Add(new ValidationResult($"Duplication in Base Parameter {parameter.Name}"));
                 //}
 
-                if (parameter.Resolution< 0 )
-                //if (parameter.Resolution< 0 || string.IsNullOrEmpty(parameter.Id))
-                {
-                    var serialized = JsonConvert.SerializeObject(parameter);
-                    context.Results.Add(new ValidationResult($"The parameter {serialized} is not valid"));
-                    return;
-                }
+                //if (parameter.Resolution< 0 )
+                ////if (parameter.Resolution< 0 || string.IsNullOrEmpty(parameter.Id))
+                //{
+                //    var serialized = JsonConvert.SerializeObject(parameter);
+                //    context.Results.Add(new ValidationResult($"The parameter {serialized} is not valid"));
+                //    return;
+                //}
 
-                //var (resolutionNum, resolutionUnit) = GroupByCalcFunction.ParsePeriod(parameter.Resolution);
-                //var parameterResolution = GroupByCalcFunction.ConvertToSecond(resolutionNum, resolutionUnit);
+                ////var (resolutionNum, resolutionUnit) = GroupByCalcFunction.ParsePeriod(parameter.Resolution);
+                ////var parameterResolution = GroupByCalcFunction.ConvertToSecond(resolutionNum, resolutionUnit);
 
-                if (parameter.Resolution > mainRarameterResolution)
-                {
-                    context.Results.Add(new ValidationResult($"{nameof(ResolutionInSeconds)} - Cannot be less the parameter resolution [{parameter.Resolution}]"));
-                    return;
-                }
+                //if (parameter.Resolution > mainRarameterResolution)
+                //{
+                //    context.Results.Add(new ValidationResult($"{nameof(ResolutionInSeconds)} - Cannot be less the parameter resolution [{parameter.Resolution}]"));
+                //    return;
+                //}
 
 
                 Enum.TryParse(parameter.Type, true, out ParameterListItemType baseParameterType);

@@ -4,6 +4,8 @@ using PQBI.PQS.CalcEngine;
 using PQBI.Tenants.Dashboard.Dto;
 using PQS.Data.Common;
 using PQS.Data.Measurements;
+using PQS.Data.Networks;
+using System.Collections.Generic;
 
 namespace PQBI.Network.RestApi.EngineCalculation;
 
@@ -56,8 +58,8 @@ public static class BaseParameterComponentExtensions
                 result.AddRange(channels);
                 break;
 
-            case ParameterListItemType.Custom:
-                var custom = parameter.GetCustomParameter(feeders);
+            case ParameterListItemType.Additional:
+                var custom = parameter.GetAdditionalarameter(feeders);
                 result.AddRange(custom);
                 break;
 
@@ -96,14 +98,43 @@ public static class BaseParameterComponentExtensions
         return result;
     }
 
-    public static IEnumerable<BaseParameterComponent> GetCustomParameter(this BaseParameter baseParameter, IEnumerable<FeederComponentInfo> feeders)
+    public static IEnumerable<BaseParameterComponent> GetAdditionalarameter(this BaseParameter baseParameter, IEnumerable<FeederComponentInfo> feeders)
     {
+        List<BaseParameterComponent> result = new List<BaseParameterComponent>();
         foreach (var feeder in feeders)
         {
-            var item = BaseParameterComponentHelper.GetCustomParameter(baseParameter, feeder);
-            yield return null;
+            var item = GetAdditionalParameter(baseParameter, feeder);
+            result.Add(item);
         }
+
+        return result;
     }
+
+    public static BaseParameterComponent GetAdditionalParameter(BaseParameter baseParameter, FeederComponentInfo feeder)
+    {
+        var msrParam = BaseParameterComponentHelper.GetCustomParameter(baseParameter, feeder);
+
+        return new BaseParameterComponent(baseParameter, feeder, msrParam, ParameterListItemType.Additional);
+
+    }
+
+    //public static MeasurementParameterBase GetAdditionParameter(BaseParameter parameter)
+    //{
+    //    List<string> prmSectionList = null;
+    //    if (parameter.Harmonics is not null && parameter.Harmonics.Value is not null && parameter.Harmonics.Value > 0)
+    //    {
+    //        var harmonicNum = parameter.Harmonics.Value.ToString();
+
+    //        prmSectionList = ["STD", parameter.Group, harmonicNum, parameter.SyncInterval.ToString(), parameter.BaseResolution, parameter.ScadaQuantityName];
+    //    }
+    //    else
+    //    {
+    //        prmSectionList = ["STD", parameter.Group, parameter.SyncInterval.ToString(), parameter.BaseResolution, parameter.ScadaQuantityName];
+    //    }
+
+    //    prmSectionList.AddRange(parameter.Phase.Split("_"));
+    //    return MeasurementParameterFactory.GenerateNewMesurmentParameterWithoutSplit(prmSectionList.ToArray());
+    //}
 
     public static BaseParameterComponent CreateBaseParameterComponentForException(this BaseParameter parameter)
     {
@@ -162,7 +193,7 @@ public static class BaseParameterComponentExtensions
 
 
 
-public class BaseParameterComponent : IMatrixParameterKey
+public class BaseParameterComponent : IMatrixBaseParameterKey
 {
     public BaseParameterComponent(BaseParameter parameter, FeederComponentInfo feeder,
         MeasurementParameterBase measurementParameter, ParameterListItemType parameterListItemType)
@@ -182,13 +213,13 @@ public class BaseParameterComponent : IMatrixParameterKey
     public MeasurementParameterBase MeasurementParameter { get; }
     public string AggregationFunction => Parameter.AggregationFunction;
     public string Operator => Parameter.Operator;
-    public int BaseParameterResolutionInSeconds => Parameter.Resolution;
+    public int BaseParameterResolutionInSeconds => Parameter.Resolution ?? 0;
 
     public ParameterListItemType ParameterListItemType { get; }
     public string BaseParameterName => Parameter.Name;
     public Guid ComponentID => Feeder.ComponentId;
     public int? FeederId => Feeder?.Id;
-    public DataUnitType DataUnitType => Axis?.DataUnitType;
+    public DataUnitType DataUnitType => Axis?.DataUnitType;  
 
     public string ParameterId
     {
@@ -217,20 +248,20 @@ public class BaseParameterComponent : IMatrixParameterKey
         }
     }
 
-    public PQBIAxisData Axis { get; private set; }
+    public PQBIAxisData Axis { get; set; }
 
-    public void SetRawData(PQBIAxisData axisses, bool isToCalculate, double? nominalValue)
+    public void SetRawData(PQBIAxisData axisses)
     {
         Axis = axisses;
 
-        if (isToCalculate)
-        {
-            var nominal = nominalValue ?? Axis.Nominal ?? 1;
+        //if (isToCalculate)
+        //{
+        //    var nominal = nominalValue ?? Axis.Nominal ?? 1;
 
-            foreach (var item in Axis.DataTimeStamps)
-            {
-                item.Point /= nominal;
-            }
-        }
+        //    foreach (var item in Axis.DataTimeStamps)
+        //    {
+        //        item.Point /= nominal;
+        //    }
+        //}
     }
 }

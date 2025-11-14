@@ -146,6 +146,22 @@ namespace PQBI.DashboardCustomization.Definitions
                 permissionDependency: simplePermissionDependencyForTenantDashboard
             );
 
+            var pqsCard = new WidgetDefinition(
+                id: PQBIDashboardCustomizationConsts.Widgets.Tenant.PQSCard,
+                name: "WidgetPQSCard",//localized string key
+                side: MultiTenancySides.Tenant,
+                usedWidgetFilters: new List<string>() { dateRangeFilter.Id },
+                permissionDependency: simplePermissionDependencyForTenantDashboard
+            );
+
+            var pqsGauge = new WidgetDefinition(
+                id: PQBIDashboardCustomizationConsts.Widgets.Tenant.PQSGauge,
+                name: "WidgetPQSGauge",//localized string key
+                side: MultiTenancySides.Tenant,
+                usedWidgetFilters: new List<string>() { dateRangeFilter.Id },
+                permissionDependency: simplePermissionDependencyForTenantDashboard
+            );
+
 
             WidgetDefinitions.AddRange(
                 new List<WidgetDefinition>
@@ -159,7 +175,9 @@ namespace PQBI.DashboardCustomization.Definitions
                     //salesSummary,
                     pqs,
                     pqsTable,
-                    pqsBarChart
+                    pqsBarChart,
+                    pqsCard,
+                    pqsGauge
                     // Add your tenant side widgets here
                 });
 
@@ -229,7 +247,7 @@ namespace PQBI.DashboardCustomization.Definitions
                 {
                     //generalStats.Id, dailySales.Id, profitShare.Id, memberActivity.Id, regionalStats.Id, topStats.Id,
                     //salesSummary.Id,
-                    pqs.Id, pqsTable.Id, pqsBarChart.Id,
+                    pqs.Id, pqsTable.Id, pqsBarChart.Id, pqsCard.Id, pqsGauge.Id
                 });
 
             DashboardDefinitions.Add(defaultTenantDashboard);

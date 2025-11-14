@@ -271,6 +271,13 @@ namespace PQBI.Authorization.Users
                     {
                         await AddToRoleAsync(user, role.Name);
                     }
+                    //string viewer = PQBIRoleEnum.Viewer.ToString();
+                    //var role = await RoleManager.FindByNameAsync(viewer);
+                    //if (role != null)
+                    //{
+                    //    await AddToRoleAsync(user, viewer);                        
+                    //    //await AddToRoleAsync(user, role.Name);
+                    //}
 
                     await uow.CompleteAsync();
 

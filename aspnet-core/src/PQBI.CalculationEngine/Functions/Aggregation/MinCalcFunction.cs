@@ -11,6 +11,7 @@ public class MinCalcFunction : SingleCalculationFunction
         var flag = false;
         double min = double.MaxValue;
         var dataValueStatus = PqbiDataValueStatus.Ok;
+        DateTime? firstStartTime = null;
 
         foreach (var item in input.Data)
         {
@@ -19,11 +20,11 @@ public class MinCalcFunction : SingleCalculationFunction
                 flag = true;
                 min = Math.Min(min, item.Value.Value);
             }
-
+            if (firstStartTime is null)                 // this runs only once
+                firstStartTime = item.StartTime;
             dataValueStatus = dataValueStatus.Intersect(item.DataValueStatus);
-
         }
-
-        return new BasicValue(flag ? min : null, dataValueStatus);
+        DateTime startTime = firstStartTime ?? DateTime.MinValue;
+        return new BasicValue(flag ? min : null, startTime, dataValueStatus);
     }
 }

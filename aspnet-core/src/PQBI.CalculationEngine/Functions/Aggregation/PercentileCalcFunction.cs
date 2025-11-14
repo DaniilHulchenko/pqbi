@@ -20,18 +20,20 @@ public class PercentileCalcFunction : SingleCalculationFunction, ICalcEnginePara
         double rank = parameter / 100.0 * (sortedSequence.Length - 1) + 1;
         int integerRank = (int)rank;
         double fractionalRank = rank - integerRank;
-
+        DateTime firstStartTime = DateTime.MinValue;
+        if (input.Data.Count() > 0)                 // this runs only once
+            firstStartTime = input.Data.First().StartTime;
         if (integerRank >= sortedSequence.Length)
         {
             //Todo refactored
-            return new BasicValue(sortedSequence.Last().Value,PqbiDataValueStatus.Ok);
+            return new BasicValue(sortedSequence.Last().Value, firstStartTime, PqbiDataValueStatus.Ok);
             //return sortedSequence.Last();
         }
 
         if (integerRank == 0)
         {
             //Todo refactored
-            return new BasicValue(sortedSequence.First().Value, PqbiDataValueStatus.Ok);
+            return new BasicValue(sortedSequence.First().Value, firstStartTime, PqbiDataValueStatus.Ok);
             //return sortedSequence.First();
         }
 
@@ -39,7 +41,7 @@ public class PercentileCalcFunction : SingleCalculationFunction, ICalcEnginePara
         BasicValue upperValue = sortedSequence[integerRank];
 
         var result =  lowerValue.Value + (upperValue.Value - lowerValue.Value) * fractionalRank;
-        return new BasicValue(result, PqbiDataValueStatus.Ok);
+        return new BasicValue(result, firstStartTime, PqbiDataValueStatus.Ok);
         //return result;
     }
 

@@ -8,7 +8,7 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="PQZProtocolSapphire" Version="1.9.5" />
+		<PackageReference Include="PQZProtocolSapphire" Version="1.9.6" />
 
 	</ItemGroup>	
 

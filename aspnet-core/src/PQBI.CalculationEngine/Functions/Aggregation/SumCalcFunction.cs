@@ -13,6 +13,7 @@ public class SumCalcFunction : SingleCalculationFunction
         double? sum = 0;
         var data = input.Data;
         var dataValueStatus = PqbiDataValueStatus.Ok;
+        DateTime? firstStartTime = null;
 
         foreach (var item in data)
         {
@@ -20,10 +21,11 @@ public class SumCalcFunction : SingleCalculationFunction
             {
                 sum += item.Value.Value;
             }
-
+            if (firstStartTime is null)                 // this runs only once
+                firstStartTime = item.StartTime;
             dataValueStatus = dataValueStatus.Intersect(item.DataValueStatus);
         }
-
-        return new BasicValue(data.Count() > 0 ? sum : null, dataValueStatus);
+        DateTime startTime = firstStartTime ?? DateTime.MinValue;
+        return new BasicValue(data.Count() > 0 ? sum : null, startTime, dataValueStatus);
     }
 }

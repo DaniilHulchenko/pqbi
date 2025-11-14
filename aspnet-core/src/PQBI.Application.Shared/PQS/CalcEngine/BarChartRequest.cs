@@ -1,76 +1,74 @@
 ﻿using Abp.Runtime.Validation;
-using PQBI.Infrastructure.Sapphire;
+using Newtonsoft.Json;
 using PQS.Data.Events.Enums;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using PQBI.CalculationEngine.Matrix;
+using PQBI.CalculationEngine.Functions;
+using System;
 
 namespace PQBI.PQS.CalcEngine
 {
 
-    public class BarChartRequest : ICustomValidate
+    public class BarChartRequest : WidgetValidationBase, ICustomValidate
     {
-        //public BarChartConfig Config { get; set; }
-        public List<RequestBarChartComponent> Components { get; set; }
-        public List<BarChartEventRequest> Events { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public string WidgetName { get; set; }
+        public int UserTimeZone { get; set; }
+        public required DimensionSelector Category { get; set; }
+        public required DimensionSelector SeriesBy { get; set; }
+        public List<FeederComponentInfo> Feeders { get; set; } = [];
+        public List<BarParameter> BarPrmList { get; set; }       
 
-        public void AddValidationErrors(CustomValidationContext context)
+        public void AddValidationErrors(CustomValidationContext ctx)
         {
-            if (StartDate >= EndDate)
+            if (ValidationErrors(ctx) == false)
             {
-                context.Results.Add(new ValidationResult($"{nameof(TableWidgetParameter.Data)} - {nameof(BarChartRequest.StartDate)} <  {nameof(BarChartRequest.EndDate)}"));
-
-            }
-
-            if (Events is null || Events.Count == 0)
-            {
-                context.Results.Add(new ValidationResult($"{nameof(RequestBarChartComponent)}.{nameof(BarChartRequest.Events)} - Cannot be empty"));
                 return;
             }
 
-            if (Components is null || Components.Count == 0)
-            {
-                context.Results.Add(new ValidationResult($"{nameof(RequestBarChartComponent)}.{nameof(BarChartRequest.Components)} - Cannot be empty"));
-                return;
-            }
+            if (Feeders.Count == 0)
+                ctx.Results.Add(new("Feeders cannot be empty."));
 
-            foreach (var component in Components)
-            {
-                if (string.IsNullOrEmpty(component.Name))
-                {
-                    context.Results.Add(new ValidationResult($"{nameof(RequestBarChartComponent)}.{nameof(RequestBarChartComponent.Name)} - Cannot be empty"));
-                }
+            if (new HashSet<FeederComponentInfo>(Feeders).Count != Feeders.Count)
+                ctx.Results.Add(new("Feeders list contains duplicates."));
 
-                if (string.IsNullOrEmpty(component.Guid))
-                {
-                    context.Results.Add(new ValidationResult($"{nameof(RequestBarChartComponent)}.{nameof(RequestBarChartComponent.Guid)} - Cannot be empty"));
-                }
-            }
+            if (BarPrmList.Count == 0)
+                ctx.Results.Add(new("At least one BarParameter is required."));
 
-            var sapphireEvents = EventFactory.GetAllEventInfos().Select(x => (ushort)x.EventClass).ToHashSet();
-
-            foreach (var @event in Events)
-            {
-
-                var eventClassId = (ushort)@event.EventClass;
-                if (sapphireEvents.Contains(eventClassId) == false)
-                {
-                    context.Results.Add(new ValidationResult($"{nameof(RequestBarChartComponent)}.{nameof(BarChartEventRequest)}.{nameof(BarChartEventRequest.EventClass)} - Should be part of the {nameof(EventClass)} "));
-                    return;
-                }
-            }
         }
     }
-    public class RequestBarChartComponent
-    {
-        public string Guid { get; set; }
-        public string Name { get; set; }
+
+    public enum DimensionType 
+    { 
+        Dates, 
+        Parameters, 
+        Feeders,
+        CustomGroup 
     }
+
+    public sealed record DimensionSelector(
+        DimensionType Type,
+        Guid? Id,      
+        string? Name);
+
+    public sealed record BarParameter(
+        [property: JsonProperty("parameter_type")]
+        string ParameterType,
+
+        [property: JsonProperty("exclude_flagged")]
+        List<EventClass> ExcludeFlagged,
+
+        bool IsExcludeFlaggedData,
+
+        [property: JsonProperty("custom_data")]
+        CustomWidgetTableData CustomData,
+
+        [property: JsonProperty("base_data")]
+        string BaseData,
+
+        [property: JsonProperty("event_data")]
+        TableWidgetEvent TableEvent,
+
+        string ParameterName) : IWidgetParameter;
 
 
     public class BarChartEventBase
@@ -83,17 +81,68 @@ namespace PQBI.PQS.CalcEngine
 
     }
 
-    public class BarChartEventRequest : BarChartEventBase
+    /// A single bar (one rectangle on the chart)  
+    public record BarItem
     {
-        //public int EventClass { get; set; }
+        public string SeriesName { get; set; } = default!;
+        public double? Value { get; init; }
+        public DataUnitType DataUnitType { get; init; }
+        public PqbiDataValueStatus Status { get; init; }
 
+        public BarItem(string seriesName, double? value, DataUnitType dataUnitType, PqbiDataValueStatus status)
+        {
+            SeriesName = seriesName;
+            Value = value;
+            DataUnitType = dataUnitType;
+            Status = status;
+        }
     }
 
-    public class BarChartEventResponse : BarChartEventBase
-    {
-        public double Data { get; set; }
+    /// All bars that share the same X-axis tick
+    public record BarGroup(
+        string Category,   // The label shown on the X axis
+        List<BarItem> Bars);      // One or more bars that sit side-by-side
 
-    }
+    /// Full DTO returned to the web client
+    public record BarChartResponse(
+    DataUnitType DataUnitType,
+    List<BarGroup> Groups);      // Extend with extra fields when needed
+
+
+
+    //public class BarParameter //: ITableParameterDisplay
+    //{
+    //    [JsonProperty("parameter_type")]
+    //    public string ParameterType { get; set; }      
+
+    //    [JsonProperty("exclude_flagged")]
+    //    public List<EventClass> ExcludeFlagged { get; set; } = new List<EventClass>();
+
+    //    public bool IsExcludeFlaggedData { get; set; }      
+
+    //    [JsonProperty("custom_data")]
+    //    public CustomWidgetTableData CustomData { get; set; }
+
+    //    [JsonProperty("base_data")]
+    //    public string BaseData { get; set; } // Can replace with a typed model if needed
+
+    //    [JsonProperty("event_data")]
+    //    public TableWidgetEvent TableEvent { get; set; } // Can replace with a typed model if needed
+
+    //    public string ParameterName { get; set; }
+    //}
+
+    //public class BarChartEventRequest : BarChartEventBase
+    //{
+    //    //public int EventClass { get; set; }
+
+    //}
+
+    //public class BarChartEventResponse : BarChartEventBase
+    //{
+    //    public double Data { get; set; }
+
+    //}
 
     //    public record BarChartEvent(
     //        string Type,
@@ -103,22 +152,4 @@ namespace PQBI.PQS.CalcEngine
 
     //        double EventClass
     //);
-
-    public class BarCharComponentResponse
-    {
-        public Guid Guid { get; set; }
-        public string Name { get; set; }
-        public List<int> Feeders { get; set; }
-        public List<BarChartEventResponse> Events { get; set; } = new List<BarChartEventResponse>();
-    }
-
-    public class BarChartResponse
-    {
-        //public BarChartConfig Config { get; set; }
-        public List<BarCharComponentResponse> Components { get; set; }
-        //public List<BarCharEvent> Events { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-    }
-
 }

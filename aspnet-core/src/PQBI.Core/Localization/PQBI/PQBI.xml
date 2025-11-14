@@ -1,6 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
 	<texts>
+		<text name="GaugeWidgetConfigurations">Gauge widget configurations</text>
+		<text name="GaugeWidgetConfiguration">Gauge widget configuration</text>
+		<text name="CreateNewGaugeWidgetConfiguration">Create new gauge widget configuration</text>
+		<text name="EditGaugeWidgetConfiguration">Edit gauge widget configuration</text>
+		<text name="DeleteGaugeWidgetConfiguration">Delete gauge widget configuration</text>
+
+		<text name="CardWidgetConfigurations">Card widget configurations</text>
+		<text name="CardWidgetConfiguration">Card widget configuration</text>
+		<text name="CreateNewCardWidgetConfiguration">Create new card widget configuration</text>
+		<text name="EditCardWidgetConfiguration">Edit card widget configuration</text>
+		<text name="DeleteCardWidgetConfiguration">Delete card widget configuration</text>
+
+		<text name="Groups">Groups</text>
+		<text name="PQBI.Groups.Group">Group</text>
+		<text name="Subgroups">Subgroups</text>
+		<text name="GroupsHeaderInfo">Groups header info</text>
+		<text name="CreateNewGroup">Create new group</text>
+		<text name="EditGroup">Edit group</text>
+		<text name="DeleteGroup">Delete group</text>
+
 
 
 		<text name="Common_UnitsEnum_STD_TIMESTAMP">Time stamp</text>
@@ -45,7 +65,7 @@
 		<text name="Common_UnitsEnum_KILOMETER">Km</text>
 		<text name="Common_UnitsEnum_None"></text>
 		<text name="Common_UnitsEnum_Unknown"></text>
-		
+
 		<text name="TrendWidgetConfigurations">Trend widget configurations</text>
 		<text name="TrendWidgetConfiguration">Trend widget configuration</text>
 		<text name="CreateNewTrendWidgetConfiguration">Create new trend widget configuration</text>
@@ -67,7 +87,7 @@
 		<text name="BarChartWidgetConfigurations">Bar chart widget configurations</text>
 		<text name="BarChartWidgetConfiguration">Bar chart widget configuration</text>
 		<text name="PQBI.BarChartWidgetConfigurations.BarChartWidgetConfiguration">BarChartWidgetConfiguration</text>
-		<text name="WidgetPQSBarChart">PQS Bar Chart</text>
+		<text name="WidgetPQSBarChart">Bar Chart</text>
 		<text name="Type">Type</text>
 		<text name="DateStart">Date start</text>
 		<text name="DateEnd">Date end</text>
@@ -529,7 +549,7 @@
 		<text name="Timezone">Timezone</text>
 		<text name="HasOwnDatabase">Has own database</text>
 		<text name="TimeZoneSettingChangedRefreshPageNotification">Timezone setting changed. Click OK button to refresh page and changes to take effect.</text>
-		<text name="Ok">Ok</text>
+		<text name="Ok">OK</text>
 		<text name="Permission">Permission</text>
 		<text name="Role">Role</text>
 		<text name="Security">Security</text>
@@ -1111,8 +1131,10 @@
 		<text name="WidgetMemberActivity">Member Activity</text>
 		<text name="WidgetRegionalStats">Regional Stats</text>
 		<text name="WidgetSalesSummary">Sales Summary</text>
-		<text name="WidgetPQSTrend">PQS Trend</text>
-		<text name="WidgetPQSTable">PQS Table</text>
+		<text name="WidgetPQSTrend">Trend</text>
+		<text name="WidgetPQSTable">Table</text>
+		<text name="WidgetPQSCard">Card</text>
+		<text name="WidgetPQSGauge">Gauge</text>
 		<text name="WidgetTopStats">General Summary</text>
 		<text name="WidgetIncomeStatistics">Income Statistics</text>
 		<text name="WidgetEditionStatistics">Edition Statistics</text>
@@ -1495,13 +1517,81 @@
 		<text name="IS1HOUR">1 Hour</text>
 		<text name="OpenTreeSettings">Open tree settings</text>
 		<text name="HideTreeSettings">Hide tree settings</text>
-    <text name="AdvancedSettings">Advanced Settings</text>
-    <text name="UnsavedChangesWarning">You have unsaved changes in the dashboard. Proceed without saving?</text>
-    <text name="FilterEventBy">Filter event by:</text>
-    <text name="SortBy">Sort by:</text>
-    <text name="AdditionalParameters">Additional Parameters</text>
-    <text name="XUnits">X Units</text>
-    <text name="Series">Series</text>
-    <text name="SwapAxes">Swap axes</text>
+		<text name="AdvancedSettings">Advanced Settings</text>
+		<text name="UnsavedChangesWarning">You have unsaved changes in the dashboard. Proceed without saving?</text>
+		<text name="FilterEventBy">Filter event by:</text>
+		<text name="SortBy">Sort by:</text>
+		<text name="AdditionalParameters">Additional Parameters</text>
+		<text name="XUnits">X Units</text>
+		<text name="Series">Series</text>
+		<text name="SwapAxes">Swap axes</text>
+
+		<text name="RoundDial">Round Dial</text>
+		<text name="ClassicBox">Classic Box</text>
+		<text name="CompactHorizontal">Compact Horizontal</text>
+		<text name="IconTopValueBelow">Icon Top, Value Below</text>
+		<text name="StyleRequired">Style Required</text>
+		<text name="CardWidgetStyle">Card Widget Style</text>
+		<text name="RefreshRate">Refresh Rate</text>
+		<text name="RefreshRateRequired">Refresh Rate Required</text>
+		<text name="ValueRequired">Value Required</text>
+		<text name="CustomUnit">Custom Unit</text>
+		<text name="CustomUnitRequired">Custom Unit Required</text>
+
+		<text name="Never">Never</text>
+		<text name="Sec5">5 Seconds</text>
+		<text name="Sec10">10 Seconds</text>
+		<text name="Min1">1 Minute</text>
+		<text name="Min5">5 Minutes</text>
+		<text name="Min10">10 Minutes</text>
+		<text name="Hour1">1 Hour</text>
+		<text name="Hour12">12 Hours</text>
+		<text name="Day1">1 Day</text>
+		<text name="Interval">Interval</text>
+
+		<text name="Sec">Seconds</text>
+		<text name="Min">Minutes</text>
+		<text name="Hour">Hours</text>
+		<text name="Week">Weeks</text>
+		<text name="Month">Months</text>
+		<text name="Year">Years</text>
+
+		<text name="Horizontal">Horizontal</text>
+		<text name="Vertical">Vertical</text>
+		
+		<text name="Linear">Linear</text>
+		<text name="Circular">Circular</text>
+		
+		<text name="TopHalf">Top Half</text>
+		<text name="FullCircle">Full Circle</text>
+		<text name="BottomHalf">Bottom Half</text>
+		<text name="LeftHalf">Left Half</text>
+		<text name="RightHalf">Right Half</text>
+		<text name="ThreeQuarters">Three Quarters</text>
+		<text name="Quarter">Quarter</text>
+		<text name="Custom">Custom</text>
+		
+		<text name="GaugeStyleRequired">Gauge Style Required</text>
+		<text name="OrientationRequired">Orientation Required</text>
+		<text name="TrackWidthRequired">Track Width Required</text>
+		<text name="ArcWidthRequired">Arc Width Required</text>
+		<text name="ArcAngleRequired">Arc Angle Required</text>
+		<text name="StartAngleRequired">Start Angle Required</text>
+		<text name="EndAngleRequired">End Angle Required</text>
+
+		<text name="EndAngle">End Angle</text>
+		<text name="StartAngle">Start Angle</text>
+		<text name="ArcWidth">Arc Width</text>
+		<text name="TrackWidth">Track Width</text>
+		<text name="InvertScale">Invert Scale</text>
+		<text name="GaugeWidgetOrientation">Orientation</text>
+		<text name="GaugeWidgetStyle">Style</text>
+		<text name="ArcAngle">Arc Angle</text>
+		
+		<text name="NoRefresh">(No refresh)</text>
+		<text name="To">To</text>
+		<text name="Last">Last</text>
+		<text name="TimeIntervalAndRefreshRate">Time Interval and Refresh Rate</text>
+
 	</texts>
 </localizationDictionary>

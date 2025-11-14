@@ -4,26 +4,28 @@ using System.Text.RegularExpressions;
 
 namespace PQBI.CalculationEngine.Matrix;
 
-public class MatrixBase 
+public class MatrixBase
 {
     public const int Single_Resolution = -1;
 
-    protected readonly AggregationMatrix AggregationMatrix = new AggregationMatrix();
+    protected readonly AggregationMatrix AggregationMatrixObj = new AggregationMatrix();
     protected readonly OperatorMatrix OperatorMatrix = new OperatorMatrix();
 
-    public BasicValue[] AggregationCalculation { get; protected set; }
+    public BasicValue[] AggregationCalculation { get;  set; }
+    public DataUnitType DataUnitType { get; set; }
 
-
-    //protected string CleanFunctionId(string functionId)
-    //{
-    //    functionId = Regex.Replace(functionId, @"\(\s*\)", "");
-    //    return functionId.ToLower();
-    //}
 
     public static (string Name, double? Parameter) CleanFunctionId(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
+        {
             throw new ArgumentException("Input cannot be null or whitespace.", nameof(input));
+        }
+
+        if (input.StartsWith(AggregationMatrix.Arithmetic_Name,StringComparison.CurrentCultureIgnoreCase))
+        {
+            return (input, null);
+        }
 
         input = input.Trim();
         int open = input.IndexOf('(');
@@ -50,27 +52,6 @@ public class MatrixBase
         return (input, null);
     }
 
-
-public BasicValue CalcAggregationFunction(string funcId, SingleAxisInput input)
-    {
-        var result = default(BasicValue);
-
-        if (funcId.Contains('('))
-        {
-            if (TryExtracSingleParameter(funcId, out var singleParameter))
-            {
-
-            }
-        }
-        else
-        {
-
-
-        }
-
-        return result;
-    }
-
     public bool TryExtracSingleParameter(string funWithparameter, out double parameter)
     {
         var result = true;
@@ -90,14 +71,14 @@ public BasicValue CalcAggregationFunction(string funcId, SingleAxisInput input)
 
     }
 
-    public List<BasicValue[]> DevideByGroups(IEnumerable<BasicValue> points, int resolutionInSeconds , int syncInSeconds)
+    public List<BasicValue[]> DevideByGroups(IEnumerable<BasicValue> points, int resolutionInSeconds, int syncInSeconds)
     {
         if (resolutionInSeconds == Single_Resolution)
         {
             return [points.ToArray()];
         }
 
-  
+
         var result = new List<BasicValue[]>();
         int gVec = resolutionInSeconds / syncInSeconds;
 
@@ -122,6 +103,51 @@ public BasicValue CalcAggregationFunction(string funcId, SingleAxisInput input)
         if (bufferIndex > 0)
         {
             result.Add(buffer.Take(bufferIndex).ToArray());
+        }
+
+        return result;
+    }
+
+    public BasicValue[] CalculateAggregationFromMatrix(BasicValueWorkItem[,] matrix, double parameter, string functionName)
+    {
+        int rowLength = matrix.GetLength(0);
+        int columnLength = matrix.GetLength(1);
+
+        var result = new BasicValue[columnLength];
+
+        var buffer = new BasicValueWorkItem[rowLength];
+
+        for (int column = 0; column < columnLength; column++)
+        {
+            for (int row = 0; row < rowLength; row++)
+            {
+                buffer[row] = matrix[row, column];
+            }
+
+            result[column] = AggregationMatrixObj.Run(buffer, parameter, functionName);
+        }
+
+        return result;
+    }
+
+
+    public BasicValue[] CalculateAggregationFromMatrix(BasicValue[,] matrix, string functionName)
+    {
+        int rowLength = matrix.GetLength(0);
+        int columnLength = matrix.GetLength(1);
+
+        var result = new BasicValue[columnLength];
+
+        var buffer = new BasicValue[rowLength];
+
+        for (int column = 0; column < columnLength; column++)
+        {
+            for (int row = 0; row < rowLength; row++)
+            {
+                buffer[row] = matrix[row, column];
+            }
+
+            result[column] = AggregationMatrix.Run(buffer, -1, functionName);
         }
 
         return result;

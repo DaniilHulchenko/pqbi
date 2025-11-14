@@ -31,6 +31,7 @@ using PQBI.MultiTenancy.Payments;
 using PQBI.MultiTenancy.Subscription;
 using PQBI.Configuration;
 using Microsoft.Extensions.Options;
+using PQBI.Infrastructure;
 
 namespace PQBI.MultiTenancy
 {
@@ -62,7 +63,7 @@ namespace PQBI.MultiTenancy
 
         protected readonly IBackgroundJobManager _backgroundJobManager;
 
-        private readonly PQSComunication _pQsCommunication;
+        private readonly PQSComunication _pQsCommunicationConfig;
 
         public TenantManager(
             IRepository<Tenant> tenantRepository,
@@ -79,7 +80,7 @@ namespace PQBI.MultiTenancy
             IRepository<SubscribableEdition> subscribableEditionRepository,
             ISubscriptionPaymentRepository subscriptionPaymentRepository,
             EditionManager editionManager,
-            IOptions<PQSComunication> pQsCommunication,
+            IOptions<PQSComunication> pQsCommunicationConfig,
             IBackgroundJobManager backgroundJobManager, IPaymentManager paymentManager) : base(
             tenantRepository,
             tenantFeatureRepository,
@@ -104,7 +105,7 @@ namespace PQBI.MultiTenancy
             _backgroundJobManager = backgroundJobManager;
             _paymentManager = paymentManager;
             _subscriptionPaymentRepository = subscriptionPaymentRepository;
-            _pQsCommunication = pQsCommunication.Value;
+            _pQsCommunicationConfig = pQsCommunicationConfig.Value;
         }
 
         public async Task<int> CreateWithAdminUserAsync(
@@ -147,8 +148,8 @@ namespace PQBI.MultiTenancy
                     ConnectionString = connectionString.IsNullOrWhiteSpace()
                         ? null
                         : SimpleStringCipher.Instance.Encrypt(connectionString),
-                    PQSServiceUrl = _pQsCommunication.PQSServiceRestUrl,
-                    PQSCommunitcationType = _pQsCommunication.DefaultCommunicationType
+                    PQSServiceUrl = _pQsCommunicationConfig.PQSServiceRestUrl,
+                    PQSCommunitcationType = _pQsCommunicationConfig.DefaultCommunicationType
 
                 };
 

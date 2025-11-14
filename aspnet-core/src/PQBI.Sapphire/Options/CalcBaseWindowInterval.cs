@@ -24,11 +24,12 @@ public class CalcBaseWindowInterval : IEquatable<CalculationBase>, IEquatable<Ca
 
     public static implicit operator (CalcBase CalculationBase, WindowInterval? WindowInterval)(CalcBaseWindowInterval calcBaseWindowInterval) => (calcBaseWindowInterval.CalculationBase, calcBaseWindowInterval.WindowInterval);
 
+    public override int GetHashCode()
+    {
+        return CalculationBase.GetHashCode() ^ (WindowInterval?.GetHashCode() ?? 0);
+    }
 
-
-    public override int GetHashCode() => CalculationBase.GetHashCode();
-
-    public override string ToString() => WindowInterval == null ? CalculationBase.ToString() : $"{CalculationBase} {WindowInterval}";
+    public override string ToString() => WindowInterval == null ? CalculationBase.ToString() : $"{CalculationBase}_{WindowInterval}";
 
     public bool Equals(CalculationBase other)
     {

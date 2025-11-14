@@ -41,25 +41,25 @@ public class OperatorMatrix
     {
         if (basicValue.Value is not null)
         {
-            return new BasicValue((double)(basicValue.Value / parameter), basicValue.DataValueStatus);
+            return new BasicValue((double)(basicValue.Value / parameter), basicValue.StartTime, basicValue.DataValueStatus);
         }
 
-        return new BasicValue(basicValue.Value, basicValue.DataValueStatus);
+        return new BasicValue(basicValue.Value, basicValue.StartTime, basicValue.DataValueStatus);
     }
     private BasicValue MultCalc(BasicValue basicValue, double parameter)
     {
         if (basicValue.Value is not null)
         {
-            return new BasicValue(basicValue.Value * parameter, basicValue.DataValueStatus);
+            return new BasicValue(basicValue.Value * parameter, basicValue.StartTime, basicValue.DataValueStatus);
         }
-        return new BasicValue(basicValue.Value, basicValue.DataValueStatus);
+        return new BasicValue(basicValue.Value, basicValue.StartTime, basicValue.DataValueStatus);
     }
 
     public BasicValue AbsoluteCalc(BasicValue basicValue, double parameter)
     {
         if (basicValue.Value is not null)
         {
-            return new BasicValue(Math.Abs(basicValue.Value.Value), basicValue.DataValueStatus);
+            return new BasicValue(Math.Abs(basicValue.Value.Value), basicValue.StartTime, basicValue.DataValueStatus);
         }
 
         return basicValue;

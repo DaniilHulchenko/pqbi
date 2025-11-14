@@ -79,7 +79,7 @@ namespace PQBI.Migrations.Seed.Tenants
 {
     "Name": "TreeTable_CustomParameter",
     "AggregationFunction": "TBD()",
-                    "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+                    "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
     "Type": "MPSC",
     "TimeRange": null,
     "ApplyTo": null,
@@ -93,6 +93,7 @@ namespace PQBI.Migrations.Seed.Tenants
             }
         }
 
+
         private void MPSCCreateParameter(Tenant tenant)
         {
             var customerParameter = _context.CustomParameters.FirstOrDefault(x => x.Id == MPSC_CustomerParameterId);
@@ -101,7 +102,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
     "Name": "MPSC_CustomParameter",
-                    "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+                    "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
     "Type": "MPSC",
     "TimeRange": null,
     "ApplyTo": null,
@@ -126,7 +127,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
   "Name": "Exception_CustomParameter",
-"STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"feeder\":\"FEEDER_1\",\"group\":\"RMS\",\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"quantity\":\"QAVG\",\"resolution\":60,\"operator\":\"MULT(2)\",\"aggregationFunction\":\"AVG()\",\"fromComponents\":{\"componentId\":\"08c3912f-0275-4278-bf86-917168d88eef\",\"id\":1}},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"feeder\":null,\"group\":\"RMS\",\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"quantity\":\"QAVG\",\"resolution\":60,\"operator\":\"MULT(2)\",\"aggregationFunction\":\"AVG()\",\"fromComponents\":{\"componentId\":\"a059db13-2390-432a-a062-6ac41f213612\",\"id\":1},\"id\":\"RkA7g\"}]",
+"CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"feeder\":\"FEEDER_1\",\"group\":\"RMS\",\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"quantity\":\"QAVG\",\"resolution\":60,\"operator\":\"MULT(2)\",\"aggregationFunction\":\"AVG()\",\"fromComponents\":{\"componentId\":\"08c3912f-0275-4278-bf86-917168d88eef\",\"id\":1}},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"feeder\":null,\"group\":\"RMS\",\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"quantity\":\"QAVG\",\"resolution\":60,\"operator\":\"MULT(2)\",\"aggregationFunction\":\"AVG()\",\"fromComponents\":{\"componentId\":\"a059db13-2390-432a-a062-6ac41f213612\",\"id\":1},\"id\":\"RkA7g\"}]",
   
 
   "Type": "EXCEPTION",
@@ -153,7 +154,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
   "Name": "SPMC_CustomParameter",
-  "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"base\":\"BHCYC\",\"id\":\"6nCqj\"}]",
+  "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"}]",
   "Type": "SPMC",
   "TimeRange": null,
   "ApplyTo": null,
@@ -164,7 +165,7 @@ namespace PQBI.Migrations.Seed.Tenants
 
 
 """;
-                //"STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"base\":\"BHCYC\",\"id\":\"6nCqj\"}]",
+                //"CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"}]",
 
                 StoreCustomParameter(tenant, SPMC_CustomerParameterId, json);
             }
@@ -178,7 +179,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
     "Name": "BPCP",
-     "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"base\":\"BHCYC\",\"id\":\"6nCqj\"}]",
+     "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"}]",
          "Type": "BPCP",
          "Id":104,
    "ResolutionInSeconds":60
@@ -198,7 +199,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
   "Name": "SPMC_CustomParameter",
-  "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"LOGICAL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj5a\"}]",
+  "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"LOGICAL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj5a\"}]",
     "Type": "MPSC",
   "TimeRange": null,
   "ApplyTo": null,
@@ -228,7 +229,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
     "Name": "MPSC_CustomParameter_MIN_MAX",
-                    "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"min\",\"Operator\":\"Mult(2)\",\"quantity\":\"max\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"min\",\"quantity\":\"min\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+                    "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"min\",\"Operator\":\"Mult(2)\",\"quantity\":\"max\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"min\",\"quantity\":\"min\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
     "Type": "MPSC",
     "TimeRange": null,
     "ApplyTo": null,
@@ -256,7 +257,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
   "Name": "SingleParameter_Refactored",
-  "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"base\":\"BHCYC\",\"id\":\"6nCqj\"}]",
+  "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"}]",
   "Type": "SPMC",
   "TimeRange": null,
   "ApplyTo": null,
@@ -281,7 +282,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
   "Name": "SingleParameter_MaximumPointsRefactored",
-  "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"base\":\"BHCYC\",\"id\":\"6nCqj\"}]",
+  "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"}]",
   "Type": "SPMC",
   "TimeRange": null,
   "ApplyTo": null,
@@ -306,7 +307,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
     "Name": "MultiParameter_Refactored",
-                    "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+                    "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
     "Type": "MPSC",
     "TimeRange": null,
     "ApplyTo": null,
@@ -353,7 +354,7 @@ namespace PQBI.Migrations.Seed.Tenants
 {
   "name": "cust_test",
   "aggregationFunction": "PERCENTILE(0.2)",
-  "stdpqsParametersList": "[{\"type\":\"LOGICAL\",\"fromComponents\":null,\"group\":\"RMS\",\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"quantity\":\"AVG\",\"resolution\":60,\"operator\":null,\"aggregationFunction\":\"Avg()\",\"name\":\"bp1\",\"id\":\"GpNsX\"}]",
+  "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"fromComponents\":null,\"group\":\"RMS\",\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"quantity\":\"AVG\",\"resolution\":60,\"operator\":null,\"aggregationFunction\":\"Avg()\",\"name\":\"bp1\",\"id\":\"GpNsX\"}]",
   "type": "SPMC",
      "ResolutionInSeconds":60,
   "quantity": "AVG"
@@ -378,7 +379,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
         {
             "Name": "MultiParameter_With_SingleParameter_Refactored",
-            "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+            "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
             "Type": "MPSC",
             "TimeRange": null,
             "ApplyTo": null,
@@ -400,7 +401,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
         {
             "Name": "MultiParameter_With_SingleParameter_Refactored",
-            "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+            "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
             "Type": "MPSC",
             "TimeRange": null,
             "ApplyTo": null,
@@ -469,7 +470,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
 {
   "Name": "SingleParameter_Refactored",
-  "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"base\":\"BHCYC\",\"id\":\"6nCqj\"}]",
+  "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"}]",
   "Type": "SPMC",
   "TimeRange": null,
   "ApplyTo": null,
@@ -496,7 +497,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
         {
             "Name": "MultiParameter_Refactored",
-            "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+            "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
             "Type": "MPSC",
             "TimeRange": null,
             "ApplyTo": null,
@@ -521,7 +522,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
         {
             "Name": "Multi_Parameter_With_Multi_CustomParameter",
-            "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+            "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
             "Type": "MPSC",
             "TimeRange": null,
             "ApplyTo": null,
@@ -546,7 +547,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
         {
             "Name": "MultiParameter_With_SingleParameter_Refactored",
-            "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+            "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"MULT(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
             "Type": "SPMC",
             "TimeRange": null,
             "ApplyTo": null,
@@ -595,7 +596,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
         {
             "Name": "MultiParameter_Without_Interpolation_SingleParameter_Refactored",
-            "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+            "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
             "Type": "MPSC",
             "TimeRange": null,
             "ApplyTo": null,
@@ -619,7 +620,7 @@ namespace PQBI.Migrations.Seed.Tenants
                 var json = """
         {
             "Name": "MultiParameter_With_Interpolation_SingleParameter_Refactored",
-            "STDPQSParametersList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"base\":\"BHCYC\",\"id\":\"zD3e5\"}]",
+            "CustomBaseDataList": "[{\"type\":\"LOGICAL\",\"name\":\"bp1\",\"aggregationFunction\":\"Avg\",\"Operator\":\"Mult(2)\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"UV1N\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"6nCqj\"},{\"type\":\"CHANNEL\",\"name\":\"bp2\",\"aggregationFunction\":\"Avg\",\"quantity\":\"QAVG\",\"group\":\"RMS\",\"resolution\":60,\"phase\":\"CH_1\",\"harmonics\":{\"range\":null,\"rangeOn\":null},\"baseResolution\":\"BHCYC\",\"id\":\"zD3e5\"}]",
             "Type": "MPSC",
             "TimeRange": null,
             "ApplyTo": null,

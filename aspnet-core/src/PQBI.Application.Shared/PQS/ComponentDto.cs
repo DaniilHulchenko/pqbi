@@ -1,11 +1,13 @@
 ﻿using PQS.Data.Measurements;
+using PQS.Data.Measurements.CustomParameter;
 using System.Collections.Generic;
 
 namespace PQBI.PQS;
 
 public class AdditionalData
 {
-    public string PropertiesName { get; set; }
+    public string PropertyName { get; set; }
+    public string Base { get; set; }
     public MeasurmentsParameterDetails MeasurmentsParameterDetails { get; set; } = null;
 
     public override bool Equals(object obj)
@@ -31,7 +33,22 @@ public class AdditionalData
 
 public class ComponentSlimDto
 {
-    public ComponentSlimDto(string componentId, string componentName, List<FeederDescriptionDto> feeders, List<ChannelDescriptionDto> channels, IEnumerable<AdditionalData> additionalDatas )
+    public ComponentSlimDto(string componentId, IEnumerable<AdditionalData> additionalDatas)
+    {
+        ComponentId = componentId;      
+        AdditionalDatas = additionalDatas;
+    }
+
+    public ComponentSlimDto(string componentId, string componentName, List<FeederDescriptionDto> feeders, List<ChannelDescriptionDto> channels)
+    {
+        ComponentId = componentId;
+        ComponentName = componentName;
+        Feeders = feeders;
+        Channels = channels;
+        //AdditionalDatas = additionalDatas;
+    }
+
+    public ComponentSlimDto(string componentId, string componentName, List<FeederDescriptionDto> feeders, List<ChannelDescriptionDto> channels, IEnumerable<AdditionalData> additionalDatas)
     {
         ComponentId = componentId;
         ComponentName = componentName;
@@ -45,7 +62,9 @@ public class ComponentSlimDto
     public string ComponentName { get; }
     public List<FeederDescriptionDto> Feeders { get; }
     public List<ChannelDescriptionDto> Channels { get; }
-    public IEnumerable<AdditionalData> AdditionalDatas { get; }
+    public IEnumerable<AdditionalData> AdditionalDatas { get; set; }
+    public IEnumerable<CustomCalculationBaseInfo> CustomBaseList { get; set; }
+
 
 }
 

@@ -47,15 +47,15 @@ namespace PQBI.BackgroundTasks
                 try
                 {
                     var userInfos = _userSessionCacheRepository.PeekUserInfos();
-                    if (userInfos.IsCollectionEmpty())
-                    {
-                        _logger.LogInformation("Nop_NopBackgroundTask No Cache");
-                    }
-                    else
-                    {
-                        var serialized = JsonConvert.SerializeObject(userInfos);
-                        _logger.LogInformation("Nop_NopBackgroundTask {@nop_users}", userInfos);
-                    }
+                    //if (userInfos.IsCollectionEmpty())
+                    //{
+                    //    _logger.LogInformation("Nop_NopBackgroundTask No Cache");
+                    //}
+                    //else
+                    //{
+                    //    var serialized = JsonConvert.SerializeObject(userInfos);
+                    //    _logger.LogInformation("Nop_NopBackgroundTask {@nop_users}", userInfos);
+                    //}
 
                     if (userInfos.Any())
                     {

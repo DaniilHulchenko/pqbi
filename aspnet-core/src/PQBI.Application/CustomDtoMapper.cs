@@ -1,4 +1,10 @@
-﻿using PQBI.TrendWidgetConfigurations.Dtos;
+﻿using PQBI.GaugeWidgetConfigurations.Dtos;
+using PQBI.GaugeWidgetConfigurations;
+using PQBI.CardWidgetConfigurations.Dtos;
+using PQBI.CardWidgetConfigurations;
+using PQBI.Groups.Dtos;
+using PQBI.Groups;
+using PQBI.TrendWidgetConfigurations.Dtos;
 using PQBI.TrendWidgetConfigurations;
 using PQBI.DefaultValues.Dtos;
 using PQBI.DefaultValues;
@@ -61,6 +67,12 @@ namespace PQBI
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
+            configuration.CreateMap<CreateOrEditGaugeWidgetConfigurationDto, GaugeWidgetConfiguration>().ReverseMap();
+            configuration.CreateMap<GaugeWidgetConfigurationDto, GaugeWidgetConfiguration>().ReverseMap();
+            configuration.CreateMap<CreateOrEditCardWidgetConfigurationDto, CardWidgetConfiguration>().ReverseMap();
+            configuration.CreateMap<CardWidgetConfigurationDto, CardWidgetConfiguration>().ReverseMap();
+            configuration.CreateMap<CreateOrEditGroupDto, Group>().ReverseMap();
+            configuration.CreateMap<GroupDto, Group>().ReverseMap();
             configuration.CreateMap<CreateOrEditTrendWidgetConfigurationDto, TrendWidgetConfiguration>().ReverseMap();
             configuration.CreateMap<TrendWidgetConfigurationDto, TrendWidgetConfiguration>().ReverseMap();
             configuration.CreateMap<CreateOrEditDefaultValueDto, DefaultValue>().ReverseMap();

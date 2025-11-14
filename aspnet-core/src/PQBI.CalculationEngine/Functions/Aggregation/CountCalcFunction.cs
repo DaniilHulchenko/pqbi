@@ -10,6 +10,7 @@ public class CountCalcFunction : SingleCalculationFunction
     {
         double count = 0;
         var dataValueStatus = PqbiDataValueStatus.Ok;
+        DateTime? firstStartTime = null;
 
         foreach (var item in input.Data)
         {
@@ -17,11 +18,12 @@ public class CountCalcFunction : SingleCalculationFunction
             {
                 count++;
             }
-
+            if (firstStartTime is null)                 // this runs only once
+                firstStartTime = item.StartTime;
             dataValueStatus = dataValueStatus.Intersect(item.DataValueStatus);
-
         }
+        DateTime startTime = firstStartTime ?? DateTime.MinValue;
 
-        return new BasicValue(count, dataValueStatus);
+        return new BasicValue(count, startTime, dataValueStatus);
     }
 }

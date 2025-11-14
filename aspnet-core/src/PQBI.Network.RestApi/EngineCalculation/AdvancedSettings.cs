@@ -13,19 +13,25 @@ namespace PQBI.Network.RestApi.EngineCalculation
         public bool IsExcludeFlaggedData { get; set; }
         public bool IsIgnoreAligningFunction { get; set; }
         public string? ReplaceOuterAggregationWith { get; set; }
+        public List<GaugeMarkerDto>? Markers { get; set; }
 
         public AdvancedSettings(double? nominalVal, NormalizeEnum normalizeType, bool isExcludeFlaggedData, IEnumerable<EventClass> excludeFlaggedCollection, bool isIgnoreAligningFunction, string? replaceOuterAggregationWith)
         {
             NominalVal = nominalVal;
             NormalizeType = normalizeType;
-
-            if (isExcludeFlaggedData || (excludeFlaggedCollection != null && excludeFlaggedCollection.Count() > 0))
+            if (IsNeedToExcludeFlagged(isExcludeFlaggedData, excludeFlaggedCollection))
                 IsExcludeFlaggedData = true;
+
             FiltersGroup filtersGroup = GetFilterGroup(excludeFlaggedCollection);
 
             FiltersGroup = filtersGroup;
             IsIgnoreAligningFunction = isIgnoreAligningFunction;
             ReplaceOuterAggregationWith = replaceOuterAggregationWith;
+        }
+
+        public static bool IsNeedToExcludeFlagged(bool isExcludeFlaggedData, IEnumerable<EventClass> excludeFlaggedCollection)
+        {
+            return (isExcludeFlaggedData || (excludeFlaggedCollection != null && excludeFlaggedCollection.Count() > 0));     
         }
 
         public static FiltersGroup GetFilterGroup(IEnumerable<EventClass> excludeFlaggedCollection)

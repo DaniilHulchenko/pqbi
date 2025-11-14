@@ -43,6 +43,7 @@
     <PackageReference Include="OpenIddict.Core" Version="5.1.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PQBI.Application.Shared\PQBI.Application.Shared.csproj" />
     <ProjectReference Include="..\PQBI.Core.Shared\PQBI.Core.Shared.csproj" />
 	<ProjectReference Include="..\PQBI.Infrastructure\PQBI.Infrastructure.csproj" />
   </ItemGroup>

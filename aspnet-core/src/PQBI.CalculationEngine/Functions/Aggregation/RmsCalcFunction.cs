@@ -12,6 +12,7 @@ public class RmsCalcFunction : SingleCalculationFunction
         var data = input.Data;
         var count = 0;
         var dataValueStatus = PqbiDataValueStatus.Ok;
+        DateTime? firstStartTime = null;
 
         foreach (var item in data)
         {
@@ -20,16 +21,18 @@ public class RmsCalcFunction : SingleCalculationFunction
                 sum += (item.Value.Value * item.Value.Value);
                 count++;
             }
+            if (firstStartTime is null)                 // this runs only once
+                firstStartTime = item.StartTime;
             dataValueStatus = dataValueStatus.Intersect(item.DataValueStatus);
         }
-
+        DateTime startTime = firstStartTime ?? DateTime.MinValue;
         if (count == 0)
         {
-            return new BasicValue(null, dataValueStatus);
+            return new BasicValue(null, startTime, dataValueStatus);
         }
 
         sum = sum / count;
         var result = Math.Sqrt(sum);
-        return new BasicValue(result, dataValueStatus); ;
+        return new BasicValue(result, startTime, dataValueStatus); ;
     }
 }

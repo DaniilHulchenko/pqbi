@@ -13,12 +13,12 @@ namespace PQBI.PQS.CalcEngine;
 
 public class HarmonicsDto
 {
-    public List<int> HarmonicNums { get; set; } = new List<int>();
-    public string Range { get; set; }
-    public string RangeOn { get; set; }
+    //public List<int> HarmonicNums { get; set; } = new List<int>();
+    //public string Range { get; set; }
+    //public string RangeOn { get; set; }
     public int? Value { get; set; }
 
-    public int? Index { get; set; }
+    //public int? Index { get; set; }
 
 }
 
@@ -38,7 +38,7 @@ public class FeederComponentInfo
     public int? Id { get; set; }      // FeederId
     public string? Name { get; set; } //FeederName
     public Guid ComponentId { get; set; } //ComponentID
-
+    public string CompName { get; set; }
 
     public override int GetHashCode()
     {
@@ -47,7 +47,7 @@ public class FeederComponentInfo
             return ComponentId.GetHashCode();
         }
 
-        return ComponentId.GetHashCode() ^ Id.GetHashCode(); ;
+        return ComponentId.GetHashCode() ^ Id.GetHashCode();
     }
 
     public override bool Equals(object obj)

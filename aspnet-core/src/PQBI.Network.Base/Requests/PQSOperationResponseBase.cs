@@ -55,9 +55,14 @@ public abstract class PQBIResponseBase
     {
         ExtractResponseRecord(response, out operationRecord, out errorRecord);
     }
+
+    protected void ExtractGetBaseConfigurationRecord(PQSRecordsContainer response, out BaseConfigurationRecord operationRecord, out ErrorRecord errorRecord)
+    {
+        ExtractResponseRecord(response, out operationRecord, out errorRecord);
+    }
 }
 
-public abstract class PQSOperationResponseBase<TRequest> : PQBIResponseBase where TRequest : PQSRequestBase
+public abstract class PQSOperationResponseBase<TRequest> : PQBIResponseBase where TRequest : PQSRequest
 {
     public PQSOperationResponseBase(TRequest request, PQSResponse response)
     {
@@ -108,6 +113,33 @@ public abstract class PQSOperationResponseBase<TRequest> : PQBIResponseBase wher
             if (record != null)
             {
                 operations.Add(record);
+            }
+        }
+
+        configurationParameterAndValues = operations.ToArray();
+    }
+
+    protected void ExtractGetBaseConfigurationRecord(out BaseConfigurationRecord[] configurationParameterAndValues, out ErrorRecord errorRecord)
+    {
+        errorRecord = null;
+        configurationParameterAndValues = [];
+
+        var operations = new List<BaseConfigurationRecord>();
+        foreach (var responseRecord in Response.GetRecords())
+        {
+            if (responseRecord is BaseConfigurationRecord getBaseConfigurationRecord)
+            {
+                ExtractSingleRecord(responseRecord, out BaseConfigurationRecord record, out var error);
+                if (error != null)
+                {
+                    errorRecord = error;
+                    return;
+                }
+
+                if (record != null)
+                {
+                    operations.Add(record);
+                }
             }
         }
 
@@ -184,14 +216,14 @@ public abstract class PQSOperationResponseBase<TRequest> : PQBIResponseBase wher
 
     }
 
-    protected bool TryExtractOperationResponseRecord(out OperationResponseRecord operationResponseRecord)
+    public bool TryExtractOperationResponseRecord(out OperationResponseRecord operationResponseRecord)
     {
         ExtractOperationOrErrorRecord(Response, out operationResponseRecord, out var error);
         return error == null;
 
     }
 
-    protected bool TryExtractObjectsResponseRecord(out ObjectsResponseRecord operationResponseRecord)
+    public bool TryExtractObjectsResponseRecord(out ObjectsResponseRecord operationResponseRecord)
     {
         ExtractObjectsResponseRecord(Response, out operationResponseRecord, out var error);
         return error == null;
@@ -202,4 +234,6 @@ public abstract class PQSOperationResponseBase<TRequest> : PQBIResponseBase wher
         ExtractConfigurationResponseRecord(Response, out operationResponseRecord, out var error);
         return error == null;
     }
+
+
 }

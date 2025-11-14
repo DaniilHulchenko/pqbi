@@ -1,7 +1,4 @@
-﻿using PQBI.CalculationEngine.Functions.CalcSingleAxis;
-using PQS.Data.Common.Attributes;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace PQBI.CalculationEngine.Functions;
 
@@ -10,6 +7,26 @@ public class GroupByFunctionInput : SingleAxisInput
 {
     public int ResolutionInSeconds { get; set; }
     public int SyncInSeconds { get; set; }
+    public int NumInGroup { get; set; }
+
+    public GroupByFunctionInput(IEnumerable<BasicValue> data, int numInGroup)
+    {
+        Data = data;
+        NumInGroup = numInGroup;
+    }
+
+    public GroupByFunctionInput()
+    {
+    }
+
+    public GroupByFunctionInput(IEnumerable<BasicValue> data, int resolutionInSecond, int syncInSeconds)
+    {
+        Data = data;
+        ResolutionInSeconds = resolutionInSecond;
+        SyncInSeconds = syncInSeconds;
+
+        NumInGroup = ResolutionInSeconds / SyncInSeconds;        
+    }
 }
 
 
@@ -25,16 +42,17 @@ public class GroupByCalcFunction : CalcFunctionBase
     {
         var result = new List<BasicValue[]>();
 
-        if (input.ResolutionInSeconds == Single_Resolution)
+        if (input.ResolutionInSeconds == Single_Resolution || input.NumInGroup == 0)
         {
 
             result.Add(input.Data.ToArray());
             return result;
         }
 
-        int resolutionInSeconds = input.ResolutionInSeconds;
-        int syncInSeconds = input.SyncInSeconds;
-        int gVec = resolutionInSeconds / syncInSeconds;
+        //int resolutionInSeconds = input.ResolutionInSeconds;
+        //int syncInSeconds = input.SyncInSeconds;
+        //int gVec = resolutionInSeconds / syncInSeconds;
+        int gVec = input.NumInGroup;
 
         var data = input.Data as BasicValue[] ?? input.Data.ToArray();
         int dataCount = data.Length;
@@ -61,8 +79,6 @@ public class GroupByCalcFunction : CalcFunctionBase
 
         return result;
     }
-
-
 
     private static int ConvertToMinute(int number, string unit)
     {

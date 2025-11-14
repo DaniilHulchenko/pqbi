@@ -15,7 +15,7 @@ public class AvgCalcFunction : SingleCalculationFunction
         var data = input.Data;
         var dataValueStatus = PqbiDataValueStatus.Ok;
 
-
+        DateTime? firstStartTime = null;
         foreach (var item in data)
         {
             if (item.Value is not null)
@@ -23,15 +23,17 @@ public class AvgCalcFunction : SingleCalculationFunction
                 sum += item.Value;
                 count++;
             }
-
+            if (firstStartTime is null)                 // this runs only once
+                firstStartTime = item.StartTime;
             dataValueStatus = dataValueStatus.Intersect(item.DataValueStatus);
         }
+        DateTime startTime = firstStartTime ?? DateTime.MinValue;
 
         if (count == 0)
         {
-            return new BasicValue(null, dataValueStatus);
+            return new BasicValue(null, startTime, dataValueStatus);
         }
 
-        return new BasicValue(sum / count, dataValueStatus);
+        return new BasicValue(sum / count, startTime, dataValueStatus);
     }
 }

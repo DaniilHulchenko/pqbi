@@ -57,6 +57,7 @@ using Abp.Dependency;
 using Abp.Events.Bus.Exceptions;
 using Abp.Events.Bus.Handlers;
 using System.Diagnostics;
+using PQBI.Infrastructure;
 
 namespace PQBI.Web.Startup
 {
@@ -274,17 +275,16 @@ namespace PQBI.Web.Startup
                 .ConfigurePrimaryHttpMessageHandler(ConfigurePrimaryHttpMessageHandler);
 
 
-            services.AddGrpcClient<PQSCommunication.PQSCommunicationClient>(o =>
-            {
-                o.Address = new Uri(pQsCommunication.PQSServiceGrpcUrl);
+            //services.AddGrpcClient<PQSCommunication.PQSCommunicationClient>(o =>
+            //{
+            //    o.Address = new Uri(pQsCommunication.PQSServiceGrpcUrl);
 
-            })
-                .AddPolicyHandler((serviceProvider, response) =>
-                {
-                    var clientPolicy = serviceProvider.GetRequiredService<ClientPolicy>();
-                    return clientPolicy.PolicyWrap;
-                })
-                .ConfigurePrimaryHttpMessageHandler(ConfigurePrimaryHttpMessageHandler);
+            //}).AddPolicyHandler((serviceProvider, response) =>
+            //    {
+            //        var clientPolicy = serviceProvider.GetRequiredService<ClientPolicy>();
+            //        return clientPolicy.PolicyWrap;
+            //    })
+            //    .ConfigurePrimaryHttpMessageHandler(ConfigurePrimaryHttpMessageHandler);
 
 
             HttpMessageHandler ConfigurePrimaryHttpMessageHandler()

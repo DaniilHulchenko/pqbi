@@ -19,6 +19,8 @@ namespace PQBI.DashboardCustomization
 
         Task<GetWidgetConfigurationForEditOutput> GetWidgetConfigurationForEditByWidgetId(string widgetId);
 
+        Task<List<GetWidgetConfigurationForEditOutput>> GetWidgetConfigurationBatchesByWidgetIds(List<string> widgetIds);
+
         Task<GetWidgetConfigurationForEditOutput> CreateOrEdit(CreateOrEditWidgetConfigurationDto input);
 
         Task Delete(EntityDto<Guid> input);

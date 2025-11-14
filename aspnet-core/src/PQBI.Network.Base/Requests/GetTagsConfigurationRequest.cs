@@ -23,8 +23,8 @@ public class GetTagsConfigurationRequest : PQSCommonRequest
 
     protected override void AddConfigurations()
     {
-        var sessionConfigurations = new ConfigurationParameterAndValueContainer();
-        sessionConfigurations.AddParamWithValue(StandardConfigurationEnum.STD_SESSION_ID, Session);
+        //var sessionConfigurations = new ConfigurationParameterAndValueContainer();
+        //sessionConfigurations.AddParamWithValue(StandardConfigurationEnum.STD_SESSION_ID, Session);
 
         var tagMapRecord = new GetInstantConfigurationRecord(null, new List<ConfigurationParameterBase>() { new StandardConfiguration(StandardConfigurationEnum.STD_TAGS_MAP, PQSType.STRING) });
         AddRecord(tagMapRecord);
@@ -65,8 +65,6 @@ public class GetTagsConfigurationResponse : PQSOperationResponseBase<GetTagsConf
 
         var tagWithComponentDics = new Dictionary<string, TagWithComponents>();
         var compoWithTags = new Dictionary<Guid, ComponentWithTags>();
-
-
 
         if (TryExtractConfigurationResponseRecord(out var operationResponseRecord))
         {
@@ -136,8 +134,6 @@ public class GetTagsConfigurationResponse : PQSOperationResponseBase<GetTagsConf
                     componentWithTagList.Add(new ComponentWithTagsDto(item.Key.ToString(), tags));
                 }
 
-
-
                 result = true;
                 componentWithTags = componentWithTagList;
                 tagWithComponents = tagWithComponentDics.Values.ToArray();
@@ -146,7 +142,6 @@ public class GetTagsConfigurationResponse : PQSOperationResponseBase<GetTagsConf
 
         return result;
     }
-
 }
 
 //public class TagWithComponents

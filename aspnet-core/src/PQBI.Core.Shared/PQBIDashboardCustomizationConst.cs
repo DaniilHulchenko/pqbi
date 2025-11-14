@@ -25,6 +25,8 @@
                 //public const string PQS = "Widgets_Tenant_PQS";
                 public const string PQSTable = "Widgets_Tenant_PQSTable";
                 public const string PQSBarChart = "Widgets_Tenant_PQSBarChart";
+                public const string PQSCard = "Widgets_Tenant_PQSCard";
+                public const string PQSGauge = "Widgets_Tenant_PQSGauge";
             }
 
             public class Host

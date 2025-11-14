@@ -16,7 +16,7 @@ namespace PQBI.Network.Base
         Task<bool> CloseSessionForUserAsync(string url, string session);
         Task<string> RequestXmlAsync(string url, string request);
         Task<string> IndentifyAsync(string url);
-        Task<string> GetUserRole(string session, string url, string userName, string password);
+        Task<string> GetUserRole(string session, string url, string userName);
 
 
     }

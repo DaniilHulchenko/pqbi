@@ -1,6 +1,8 @@
 ﻿using Castle.MicroKernel.Registration;
 using PQBI.PQS;
 using PQBI.Sapphire.Options;
+using PQS.Data.Measurements.CustomParameter;
+using PQS.Data.Measurements.Enums;
 using System.Xml.Linq;
 
 namespace PQBI.IntegrationTests.Scenarios.PopulatingParameters;
@@ -19,7 +21,7 @@ public class CreationChannelOptions : PopulateBasicParameters
         CreateBasedOnGroups();
     }
 
-    public StaticTreeNode CreateDataAsync()
+    public StaticTreeNode CreateDataAsync(List<CustomCalculationBaseInfo> customCalcBaseInfoList)
     {
         var channelParameters = new List<ParameterNode>();
         var tree = new StaticTreeNode { Value = StaticTreeNode.ChannelLabel, Description = StaticTreeNode.ChannelLabel };
@@ -40,26 +42,75 @@ public class CreationChannelOptions : PopulateBasicParameters
 
             var baseOns = FillBasedOnColumnSortedByFeederNetwork(parameter.Group);
 
+            // Precompute which OldCalculationBaseEnum are actually present in baseOns
+            var allowedOldBases = new HashSet<OldCalculationBaseEnum>(
+                baseOns.Select(b => MapToOldEnum(b.Value?.CalculationBase?.CalculationBaseEnum))
+                       .Where(e => e.HasValue)
+                       .Select(e => e!.Value));
+
+            // Build base-on nodes once
+            var baseOnChildren = baseOns
+                .Select(b => NewNode(b.Value?.ToString() ?? string.Empty, b.Description ?? string.Empty))
+                .ToList();
+
+            // Build custom base nodes (dedup by Value string)
+            var customBaseNodes = new List<StaticTreeNode>();
+            //var seenCustomValues = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var ci in customCalcBaseInfoList)
+            {
+                var oldEnum = ci.CalcBase?.OldCalculationBaseEnum;
+                if (oldEnum == null || !allowedOldBases.Contains(oldEnum.Value))
+                    continue;
+
+                var valString = ci.WindowInterval == null
+                    ? ci.CalcBase.ToString()
+                    : $"{ci.CalcBase}_{ci.WindowInterval}";
+
+                if (string.IsNullOrEmpty(valString))
+                    //if (string.IsNullOrEmpty(valString) || !seenCustomValues.Add(valString))
+                    continue;
+
+                customBaseNodes.Add(NewNode(valString, ci.PresentedName));
+            }
+
+
             if (baseOns.Count > 0)
             {
-                for (var i = 1; i < 1001; i++)
+                for (var i = 1; i < 369; i++)
                 {
-                    var chaneelNode = new StaticTreeNode { Value = $"CH_{i}", Description = $"Channel {i}" };
-                    root.Children.Add(chaneelNode);
+                    var channelNode = new StaticTreeNode { Value = $"CH_{i}", Description = $"Channel {i}" };
+                    root.Children.Add(channelNode);
 
-                    foreach (var baseOn in baseOns)
+                    foreach (var baseOn in baseOnChildren)
+                    {                        
+                        channelNode.Children.Add(baseOn);
+                    }
+
+                    foreach (var baseOn in baseOnChildren)
                     {
-                        var baseOnRoot = new StaticTreeNode { Value = baseOn.Value.ToString(), Description = baseOn.Description };
-                        chaneelNode.Children.Add(baseOnRoot);
-
+                        channelNode.Children.Add(baseOn);
                     }
                 }
 
                 tree.Children.Add(root);
             }
         }
-
+     
         return tree;
+
+        static StaticTreeNode NewNode(string value, string description) =>
+           new StaticTreeNode { Value = value, Description = description, Children = new List<StaticTreeNode>() };
+       
+
+        static OldCalculationBaseEnum? MapToOldEnum(CalculationBase? calcBase) =>
+            calcBase switch
+            {
+                CalculationBase.BHCYC => OldCalculationBaseEnum.BHCYC,
+                CalculationBase.BCYC => OldCalculationBaseEnum.BCYC,
+                CalculationBase.B200MS => OldCalculationBaseEnum.B200MS,
+                _ => (OldCalculationBaseEnum?)null
+            };
     }
 
     protected override List<ParameterGroupItem> UnderLogical()

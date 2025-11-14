@@ -24,7 +24,7 @@ public abstract class PQSCommonRequest : PQSRequestBase
 }
 
 
-public abstract class PQSCommonResponse<TRequest> : PQSOperationResponseBase<TRequest> where TRequest : PQSRequestBase
+public class PQSCommonResponse<TRequest> : PQSOperationResponseBase<TRequest> where TRequest : PQSRequest
 {
     public PQSCommonResponse(TRequest request, PQSResponse response) : base(request, response)
     {

@@ -1,7 +1,4 @@
-﻿using Abp.Authorization;
-using Microsoft.Extensions.Logging;
-using PQBI.Configuration;
-using PQBI.Infrastructure.Extensions;
+﻿using Microsoft.Extensions.Logging;
 using PQBI.Network.Base;
 using PQBI.PQS;
 using PQBI.Requests;
@@ -9,12 +6,9 @@ using PQS.Data.Configurations;
 using PQS.Data.Configurations.Enums;
 using PQS.Data.RecordsContainer;
 using PQS.Data.RecordsContainer.Records;
-using PQS.Data.Permissions;
-using System;
 using Permission = PQS.Data.Permissions.Permission;
 using PQS.Data.Permissions.Enums;
 using Abp.Localization;
-using PQBI.Authorization;
 
 namespace PQBI.Network.RestApi
 {
@@ -68,8 +62,8 @@ namespace PQBI.Network.RestApi
 
             return response;
         }
-
-        public async Task<string> GetUserRole(string session, string url, string userName, string password)
+  
+        public async Task<string> GetUserRole(string session, string url, string userName)
         {
             ConfigurationParameterBase permissionUserNameConf = StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_USER_NAME);
             ConfigurationParameterBase permissionPerfConf = StandardConfigurationMapping.Instance.GetParameterBase(StandardConfigurationEnum.STD_PERMISSIONS);
@@ -126,7 +120,7 @@ namespace PQBI.Network.RestApi
                                         //throw new AbpAuthorizationException(_localizationManager.GetString(PQBIConsts.LocalizationSourceName, LoginStatusEnum.UserNotAuthorized.ToString()));
                                         return PQBIRoleEnum.Admin.ToString();
                                     default:
-                                        return null;
+                                        return PQBIRoleEnum.Admin.ToString();
                                 }
                             }
                         }

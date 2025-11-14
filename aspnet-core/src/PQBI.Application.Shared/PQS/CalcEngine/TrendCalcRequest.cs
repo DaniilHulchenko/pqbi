@@ -4,7 +4,6 @@ using Abp.Runtime.Validation;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PQBI.Infrastructure.Extensions;
-using System.Linq;
 
 namespace PQBI.PQS.CalcEngine;
 
@@ -12,6 +11,8 @@ public class WidgetValidationBase
 {
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    public int RefreshRateInSeconds { get; set; }
+    public bool IsRealTime { get; set; }
 
     public bool ValidationErrors(CustomValidationContext context)
     {
@@ -78,9 +79,9 @@ public static class BaseDataExtensions
             Group = trendBaseData.Group,
             Phase = trendBaseData.Phase,
             Harmonics = trendBaseData.Harmonics != null
-                ? new HarmonicsDto { Index = trendBaseData.Harmonics.Index }
+                ? new HarmonicsDto { Value = trendBaseData.Harmonics.Value }
                 : null,
-            Base = trendBaseData.BaseResolution,
+            BaseResolution = trendBaseData.BaseResolution,
             Quantity = trendBaseData.Quantity,
             //Id = trendBaseData.Id,
             //Name = trendBaseData.Name,
@@ -105,8 +106,9 @@ public class Harmonics
     public int? Index { get; set; }
 }
 
-public class TrendCalcRequest222 : WidgetValidationBase, ICustomValidate
+public class TrendCalcRequest : WidgetValidationBase, ICustomValidate
 {
+    public bool IsRealTime { get; set; }
     public bool IsAutoResolution { get; set; }
     public int ResolutionInSeconds { get; set; }
     //public string Resolution { get; set; }
@@ -191,12 +193,12 @@ public class TrendCalcRequest222 : WidgetValidationBase, ICustomValidate
 
                                     case ParameterListItemType.Channel:
 
-                                        if (param.Feeders.FirstOrDefault(x => x.Id is null) != null)
-                                        //if (param.ApplyToDos.Count <= 0)
-                                        {
-                                            context.Results.Add(new ValidationResult($"In BaseParameter (Channel) mode channels must be."));
-                                            return;
-                                        }
+                                        //if (param.Feeders.FirstOrDefault(x => x.Id is null) != null)
+                                        ////if (param.ApplyToDos.Count <= 0)
+                                        //{
+                                        //    context.Results.Add(new ValidationResult($"In BaseParameter (Channel) mode channels must be."));
+                                        //    return;
+                                        //}
                                         break;
 
                                     case ParameterListItemType.Exception:

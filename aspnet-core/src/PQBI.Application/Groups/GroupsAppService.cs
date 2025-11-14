@@ -1,21 +1,14 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Dynamic.Core;
+﻿using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using PQBI.Groups.Exporting;
 using PQBI.Groups.Dtos;
 using PQBI.Dto;
 using Abp.Application.Services.Dto;
 using PQBI.Authorization;
-using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Abp.UI;
-using PQBI.Storage;
-using System.Globalization;
+using PQBI.Network.RestApi;
 
 namespace PQBI.Groups;
 
@@ -102,6 +95,7 @@ public class GroupsAppService : PQBIAppServiceBase, IGroupsAppService
 
     public virtual async Task CreateOrEdit(CreateOrEditGroupDto input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
         if (input.Id == null)
         {
             await Create(input);
@@ -115,6 +109,7 @@ public class GroupsAppService : PQBIAppServiceBase, IGroupsAppService
     [AbpAuthorize(AppPermissions.Pages_Groups_Create)]
     protected virtual async Task Create(CreateOrEditGroupDto input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
         var group = ObjectMapper.Map<Group>(input);
 
         await _groupRepository.InsertAsync(group);
@@ -124,6 +119,7 @@ public class GroupsAppService : PQBIAppServiceBase, IGroupsAppService
     [AbpAuthorize(AppPermissions.Pages_Groups_Edit)]
     protected virtual async Task Update(CreateOrEditGroupDto input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
         var group = await _groupRepository.FirstOrDefaultAsync((Guid)input.Id);
         ObjectMapper.Map(input, group);
 
@@ -132,6 +128,7 @@ public class GroupsAppService : PQBIAppServiceBase, IGroupsAppService
     [AbpAuthorize(AppPermissions.Pages_Groups_Delete)]
     public virtual async Task Delete(EntityDto<Guid> input)
     {
+        ConfigurationVersionProvider.UpdateVersion();
         await _groupRepository.DeleteAsync(input.Id);
     }
 

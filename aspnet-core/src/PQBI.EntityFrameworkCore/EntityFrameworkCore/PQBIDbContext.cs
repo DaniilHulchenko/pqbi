@@ -1,10 +1,12 @@
-﻿using PQBI.TrendWidgetConfigurations;
+﻿using PQBI.GaugeWidgetConfigurations;
+using PQBI.CardWidgetConfigurations;
+using PQBI.Groups;
+using PQBI.TrendWidgetConfigurations;
 using PQBI.DefaultValues;
 using PQBI.BarChartWidgetConfigurations;
 using PQBI.TableWidgetConfigurations;
 using PQBI.DashboardCustomization;
 using PQBI.CustomParameters;
-using System.Collections.Generic;
 using System.Text.Json;
 using Abp.Zero.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +33,12 @@ namespace PQBI.EntityFrameworkCore
 {
     public class PQBIDbContext : AbpZeroDbContext<Tenant, Role, User, PQBIDbContext>, IOpenIddictDbContext
     {
+        public virtual DbSet<GaugeWidgetConfiguration> GaugeWidgetConfigurations { get; set; }
+
+        public virtual DbSet<CardWidgetConfiguration> CardWidgetConfigurations { get; set; }
+
+        public virtual DbSet<Group> Groups { get; set; }
+
         public virtual DbSet<TrendWidgetConfiguration> TrendWidgetConfigurations { get; set; }
 
         public virtual DbSet<DefaultValue> DefaultValues { get; set; }
@@ -81,12 +89,21 @@ namespace PQBI.EntityFrameworkCore
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            this.Database.Migrate();
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<CustomParameter>(c =>
+            modelBuilder.Entity<GaugeWidgetConfiguration>(g =>
             {
-                c.HasIndex(e => new { e.TenantId });
+                g.HasIndex(e => new { e.TenantId });
             });
+            modelBuilder.Entity<CardWidgetConfiguration>(c =>
+                       {
+                           c.HasIndex(e => new { e.TenantId });
+                       });
+            modelBuilder.Entity<CustomParameter>(c =>
+                       {
+                           c.HasIndex(e => new { e.TenantId });
+                       });
             modelBuilder.Entity<TrendWidgetConfiguration>(t =>
                        {
                            t.HasIndex(e => new { e.TenantId });

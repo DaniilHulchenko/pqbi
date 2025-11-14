@@ -4,6 +4,8 @@ using PQS.Data.Configurations;
 using PQS.Data.Configurations.Enums;
 using PQZTimeFormat;
 using PQS.Data.Common.Values;
+using PQS.PQZxml;
+using PQS.Data.Measurements.CustomParameter;
 
 namespace PQBI.Requests;
 
@@ -41,12 +43,16 @@ public class PQSGetAllObjectsResponse : PQSOperationResponseBase<PQSGetAllObject
 
     }
 
-    public void ExtractGetParametersOrError(out IReadOnlyDictionary<string, string[]> parameters, out ErrorRecord errorRecord)
+    public void ExtractGetParametersOrError(out IReadOnlyDictionary<string, string[]> parameters, out IReadOnlyDictionary<string, IEnumerable<CustomMeasurementParameter>> customParameters, out IReadOnlyDictionary<string, IEnumerable<CustomCalculationBaseInfo>> customBaseMap, out ErrorRecord errorRecord)
     {
         errorRecord = null;
         parameters = null;
+        customParameters = null;
+        customBaseMap = null;
 
         var list = new Dictionary<string, string[]>();
+        var customPrmList = new Dictionary<string, IEnumerable<CustomMeasurementParameter>>();
+        var customBaseList = new Dictionary<string, IEnumerable<CustomCalculationBaseInfo>>();
 
         ExtractOperationAllRecords(out var records, out var error);
         if (error != null)
@@ -61,9 +67,26 @@ public class PQSGetAllObjectsResponse : PQSOperationResponseBase<PQSGetAllObject
                 {
                     list.Add(record.ObjectID!.ToString(), supportedParametersStrList.ToArray());
                 }
+
+                if (record.OperationConfigurationResult.TryGetConfigurationValue<string>(StandardConfigurationEnum.STD_SUPPORTED_PARAMETERS_CUSTOM, out var customParametersStrList))
+                {
+                    var customPrms = PQZxmlReader.ReadCustomMeasurmentsParameters(customParametersStrList);
+                    if (customPrms.Count() > 0)
+                        customPrmList.Add(record.ObjectID!.ToString(), customPrms);
+                }
+
+                if (record.OperationConfigurationResult.TryGetConfigurationValue<string>(StandardConfigurationEnum.STD_CUSTOM_RESOLUTION_ARRAY, out var customBaseParametersStrList))
+                {
+                    List<CustomCalculationBaseInfo> customBase = CustomPrmSerializationUtill.DeserializeXmlToObject<List<CustomCalculationBaseInfo>>(customBaseParametersStrList);
+                    
+                    if (customBase.Count() > 0)
+                        customBaseList.Add(record.ObjectID!.ToString(), customBase);
+                }
             }
 
             parameters = list;
+            customParameters = customPrmList;
+            customBaseMap = customBaseList;
         }
     }
 }

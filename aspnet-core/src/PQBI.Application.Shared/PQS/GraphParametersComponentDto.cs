@@ -12,7 +12,7 @@ namespace PQBI.PQS;
 public class AxisValue
 {
     public long TimeStempInSeconds { get; init; }
-    public DateTime DateTime => DateTimeOffset.FromUnixTimeSeconds(TimeStempInSeconds).DateTime;
+    public DateTime DateTime { get; init; } // => DateTimeOffset.FromUnixTimeSeconds(TimeStempInSeconds).DateTime;
     public double? Value { get; init; }
     public DataValueStatus DataValueStatus { get; set; }
 }
@@ -45,7 +45,7 @@ public static class GraphParametersComponentDtoV3Extensions
 
     public static BasicValue ToBasicValue(this AxisValue axis)
     {
-        return new BasicValue(axis.Value, axis.DataValueStatus.ToPqbiDataValueStatus());
+        return new BasicValue(axis.Value, axis.DateTime, axis.DataValueStatus.ToPqbiDataValueStatus());
     }
 
 
@@ -68,6 +68,6 @@ public static class GraphParametersComponentDtoV3Extensions
             return axis.ToBasicValue();
         }
 
-        return new BasicValue(null, PqbiDataValueStatus.Missing);
+        return new BasicValue(null, DateTime.MinValue, PqbiDataValueStatus.Missing);
     }
 }

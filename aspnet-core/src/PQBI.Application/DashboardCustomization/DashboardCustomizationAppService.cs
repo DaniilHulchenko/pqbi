@@ -12,6 +12,7 @@ using Abp.UI;
 using PQBI.Configuration;
 using PQBI.DashboardCustomization.Definitions;
 using PQBI.DashboardCustomization.Dto;
+using PQBI.Network.RestApi;
 
 namespace PQBI.DashboardCustomization
 {
@@ -34,6 +35,7 @@ namespace PQBI.DashboardCustomization
 
         public async Task SavePage(SavePageInput input)
         {
+            ConfigurationVersionProvider.UpdateVersion();
             var dashboard = await GetDashboardWithAuthorizedWidgets(input.Application, input.DashboardName);
 
             foreach (var inputPage in input.Pages)
@@ -55,6 +57,7 @@ namespace PQBI.DashboardCustomization
 
         public async Task RenamePage(RenamePageInput input)
         {
+            ConfigurationVersionProvider.UpdateVersion();
             var dashboard = await GetDashboardWithAuthorizedWidgets(input.Application, input.DashboardName);
 
             var page = dashboard.Pages.FirstOrDefault(p => p.Id == input.Id);
@@ -70,6 +73,7 @@ namespace PQBI.DashboardCustomization
 
         public async Task<AddNewPageOutput> AddNewPage(AddNewPageInput input)
         {
+            ConfigurationVersionProvider.UpdateVersion();
             var dashboard = await GetDashboardWithAuthorizedWidgets(input.Application, input.DashboardName);
 
             var page = new Page($"Page_{Guid.NewGuid().ToString().Replace("-", "")}")
@@ -86,6 +90,7 @@ namespace PQBI.DashboardCustomization
 
         public async Task DeletePage(DeletePageInput input)
         {
+            ConfigurationVersionProvider.UpdateVersion();
             var dashboard = await GetDashboardWithAuthorizedWidgets(input.Application, input.DashboardName);
 
             dashboard.Pages.RemoveAll(p => p.Id == input.Id);

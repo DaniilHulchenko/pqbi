@@ -100,9 +100,10 @@ public static class PqbiDataValueStatusExtensions
 
 
 
-public readonly record struct BasicValue(double? Value, PqbiDataValueStatus DataValueStatus);
+public readonly record struct BasicValue(double? Value, DateTime StartTime, PqbiDataValueStatus DataValueStatus);
 
 public class SingleAxisInput
 {
+    //public bool IsIgnoreHoleForWidgetSync { get; set; }
     public IEnumerable<BasicValue> Data { get; set; }
 }
