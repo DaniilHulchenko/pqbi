@@ -382,6 +382,7 @@ export class CardWidgetChannelParameterSelectionTabComponent
                     BaseParameterType.Channel,
                     component.key,
                     component.parameterInfos,
+                    component.customBaseList ?? component.data?.customBaseList,
                 )[component.key];
             }
 
@@ -485,10 +486,10 @@ export class CardWidgetChannelParameterSelectionTabComponent
             });
         });
 
-        this.baseOptions = uniqBy(this.baseOptions, 'base');
+        this.baseOptions = uniqBy(this.baseOptions, 'phaseName');
         this.baseOptions = orderBy(this.baseOptions, 'description', 'asc');
         for (let base of this.baseOptions) {
-            if (this.componentBaseArrays.some((arr) => !arr.some((item) => item.base === base.base))) {
+            if (this.componentBaseArrays.some((arr) => !arr.some((item) => item.phaseName === base.phaseName))) {
                 base.disabled = true;
             }
         }
