@@ -76,11 +76,15 @@ export class GaugeWidgetStyleSelectorComponent extends AppComponentBase implemen
     }
 
     get isStartAngleValid(): boolean {
-        return this.isCircular && this.isCustomArc ? !!this.styleModel.startAngle : true;
+        return this.isCircular && this.isCustomArc
+            ? this.styleModel.startAngle != null && this.styleModel.startAngle != undefined
+            : true;
     }
 
     get isEndAngleValid(): boolean {
-        return this.isCircular && this.isCustomArc ? !!this.styleModel.endAngle : true;
+        return this.isCircular && this.isCustomArc
+            ? this.styleModel.endAngle != null && this.styleModel.endAngle != undefined
+            : true;
     }
 
     ngOnInit(): void {

@@ -415,6 +415,8 @@ export class ChannelParameterSelectionTabComponent
                     BaseParameterType.Channel,
                     component.key,
                     component.parameterInfos,
+                    component.customBaseInfo,
+                    component.channels
                 )[component.key];
             }
 

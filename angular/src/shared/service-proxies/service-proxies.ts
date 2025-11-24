@@ -23774,7 +23774,7 @@ export class ComponentDto implements IComponentDto {
     readonly feeders!: FeederDescriptionDto[] | undefined;
     readonly channels!: ChannelDescriptionDto[] | undefined;
     additionalDatas!: AdditionalData[] | undefined;
-    customBaseList!: CustomCalculationBaseInfo[] | undefined;
+    customBaseList!: CustomBaseInfo[] | undefined;
     tags!: TagDto[] | undefined;
     parameterInfos!: string[] | undefined;
 
@@ -23809,7 +23809,7 @@ export class ComponentDto implements IComponentDto {
             if (Array.isArray(_data["customBaseList"])) {
                 this.customBaseList = [] as any;
                 for (let item of _data["customBaseList"])
-                    this.customBaseList!.push(CustomCalculationBaseInfo.fromJS(item));
+                    this.customBaseList!.push(CustomBaseInfo.fromJS(item));
             }
             if (Array.isArray(_data["tags"])) {
                 this.tags = [] as any;
@@ -23875,7 +23875,7 @@ export interface IComponentDto {
     feeders: FeederDescriptionDto[] | undefined;
     channels: ChannelDescriptionDto[] | undefined;
     additionalDatas: AdditionalData[] | undefined;
-    customBaseList: CustomCalculationBaseInfo[] | undefined;
+    customBaseList: CustomBaseInfo[] | undefined;
     tags: TagDto[] | undefined;
     parameterInfos: string[] | undefined;
 }
@@ -23886,7 +23886,7 @@ export class ComponentSlimDto implements IComponentSlimDto {
     readonly feeders!: FeederDescriptionDto[] | undefined;
     readonly channels!: ChannelDescriptionDto[] | undefined;
     additionalDatas!: AdditionalData[] | undefined;
-    customBaseList!: CustomCalculationBaseInfo[] | undefined;
+    customBaseList!: CustomBaseInfo[] | undefined;
 
     constructor(data?: IComponentSlimDto) {
         if (data) {
@@ -23919,7 +23919,7 @@ export class ComponentSlimDto implements IComponentSlimDto {
             if (Array.isArray(_data["customBaseList"])) {
                 this.customBaseList = [] as any;
                 for (let item of _data["customBaseList"])
-                    this.customBaseList!.push(CustomCalculationBaseInfo.fromJS(item));
+                    this.customBaseList!.push(CustomBaseInfo.fromJS(item));
             }
         }
     }
@@ -23965,7 +23965,7 @@ export interface IComponentSlimDto {
     feeders: FeederDescriptionDto[] | undefined;
     channels: ChannelDescriptionDto[] | undefined;
     additionalDatas: AdditionalData[] | undefined;
-    customBaseList: CustomCalculationBaseInfo[] | undefined;
+    customBaseList: CustomBaseInfo[] | undefined;
 }
 
 export class ComponentWithTagDtos implements IComponentWithTagDtos {
@@ -25667,9 +25667,11 @@ export interface ICustomAttributeTypedArgument {
     value: any | undefined;
 }
 
-export class CustomCalculationBaseInfo implements ICustomCalculationBaseInfo {
+export class CustomBaseInfo implements ICustomBaseInfo {
+    baseXString!: string | undefined;
+    presentedName!: string | undefined;
 
-    constructor(data?: ICustomCalculationBaseInfo) {
+    constructor(data?: ICustomBaseInfo) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -25679,22 +25681,30 @@ export class CustomCalculationBaseInfo implements ICustomCalculationBaseInfo {
     }
 
     init(_data?: any) {
+        if (_data) {
+            this.baseXString = _data["baseXString"];
+            this.presentedName = _data["presentedName"];
+        }
     }
 
-    static fromJS(data: any): CustomCalculationBaseInfo {
+    static fromJS(data: any): CustomBaseInfo {
         data = typeof data === 'object' ? data : {};
-        let result = new CustomCalculationBaseInfo();
+        let result = new CustomBaseInfo();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["baseXString"] = this.baseXString;
+        data["presentedName"] = this.presentedName;
         return data;
     }
 }
 
-export interface ICustomCalculationBaseInfo {
+export interface ICustomBaseInfo {
+    baseXString: string | undefined;
+    presentedName: string | undefined;
 }
 
 export class CustomParameter implements ICustomParameter {

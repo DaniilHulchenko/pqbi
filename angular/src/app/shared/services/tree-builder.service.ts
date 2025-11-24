@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, share, tap } from 'rxjs';
 import { TagTreeRootDto, TreeBuilderServiceProxy } from '@shared/service-proxies/service-proxies';
 import { TreeNode } from 'primeng/api';
+import { channel } from 'node:diagnostics_channel';
 
 @Injectable({
     providedIn: 'root',
@@ -74,6 +75,8 @@ export class TreeBuilderService {
                                     leaf: true,
                                     parameterInfos: component.parameterInfos,
                                     additionalDatas: component.additionalDatas,
+                                    channels: component.channels,
+                                    customBaseInfo: component.customBaseList,
                                     selectable: true,
                                     data: {
                                         tags: component.tags.map((tag) => tag.tagDescription),

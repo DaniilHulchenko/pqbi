@@ -8,7 +8,6 @@ import { DefaultValuesService } from '@app/shared/services/default-values-servic
 import { TreeBuilderService } from '@app/shared/services/tree-builder.service';
 import { DxCheckBoxModule, DxButtonModule } from 'devextreme-angular';
 import { CommonModule } from '@angular/common';
-import { ArrayUtils } from '@app/shared/services/array-utils.service';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
 
 @Component({
@@ -75,6 +74,8 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
                                 label: component.componentName,
                                 leaf: true,
                                 parameterInfos: component.parameterInfos,
+                                channels: component.channels,
+                                customBaseInfo: component.customBaseList,
                                 selectable: true,
                                 data: {
                                     tags: component.tags.map((tag) => tag.tagDescription),

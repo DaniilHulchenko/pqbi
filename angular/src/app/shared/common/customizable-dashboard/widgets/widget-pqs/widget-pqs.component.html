@@ -11,10 +11,15 @@
         </div>
     </div>
 
-    <div *ngIf="editState" class="row align-items-center">
-        <div class="col-auto d-flex align-items-center">
+    <div class="row align-items-center">
+        <div *ngIf="editState" class="col-auto d-flex align-items-center">
             <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
             <label for="stepLineToggle" class="ms-2">{{ 'StepLine' | localize }}</label>
+        </div>
+    
+        <div class="col-auto d-flex align-items-center">
+            <input type="checkbox" id="linePointsToggle" [(ngModel)]="isLinePoints" (change)="toggleLinePoints()" />
+            <label for="linePointsToggle" class="ms-2">{{ 'LinePoints' | localize }}</label>
         </div>
     </div>
 
@@ -42,13 +47,13 @@
 
                     <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key">
                         <dxo-stepline *ngIf="isStepLine">
-                            <dxo-point [visible]="false"></dxo-point>
+                            <dxo-point [visible]="isLinePoints"></dxo-point>
                         </dxo-stepline>
                     </dxo-common-series-settings>
 
                     <dxi-series pane="top" *ngFor="let source of lineChart.chartConfiguration.lineLegend"
                         [name]="source.name" [valueField]="source.id">
-                        <dxo-point [visible]="false"></dxo-point>
+                        <dxo-point [visible]="isLinePoints"></dxo-point>
                     </dxi-series>
 
                     <dxo-legend verticalAlignment="bottom" horizontalAlignment="center"

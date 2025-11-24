@@ -727,6 +727,8 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
                     this.baseParameterType,
                     component.key,
                     component.parameterInfos,
+                    component.customBaseInfo,
+                    component.channels
                 )[component.key];
             }
 
@@ -789,6 +791,8 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
                         this.baseParameterType,
                         component.key,
                         component.parameterInfos,
+                        component.customBaseInfo,
+                        component.channels
                     )[component.key];
                 }
 
@@ -859,6 +863,7 @@ export class CpBaseParameterSelectionTabComponent extends EditableTabComponentBa
                     this.baseParameterType,
                     component.key,
                     component.parameterInfos,
+                    component.customBaseInfo
                 )[component.key];
             }
 

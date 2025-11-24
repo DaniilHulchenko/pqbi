@@ -398,6 +398,10 @@ export class ResolutionService {
                 return 1 * 1000 * 60 * 60 * 24;
             case CustomResolutionUnits.WEEK:
                 return 1 * 1000 * 60 * 60 * 24 * 7;
+            case CustomResolutionUnits.MONTH:
+                return 1 * 1000 * 60 * 60 * 24 * 30;
+            case CustomResolutionUnits.YEAR:
+                return 1 * 1000 * 60 * 60 * 24 * 365;
             default:
                 return 0;
         }

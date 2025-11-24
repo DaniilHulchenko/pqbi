@@ -255,6 +255,10 @@ export class ResolutionSelectorComponent extends AppComponentBase implements Con
                 return [1, 6];
             case CustomResolutionUnits.WEEK:
                 return [1, 999];
+            case CustomResolutionUnits.MONTH:
+                return [1, 999];
+            case CustomResolutionUnits.YEAR:
+                return [1, 999];
             default:
                 return [0, 0];
         }

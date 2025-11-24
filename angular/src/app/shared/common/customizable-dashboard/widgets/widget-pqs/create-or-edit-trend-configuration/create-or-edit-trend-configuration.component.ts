@@ -335,8 +335,6 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                         this._resolutionService.parseStateFromString(this.configuration.resolution, true)
                     );
 
-                    console.log()
-
                     this.parameters = JSON.parse(this.configuration.parameters);
 
                     for (let parameter of this.parameters.filter(

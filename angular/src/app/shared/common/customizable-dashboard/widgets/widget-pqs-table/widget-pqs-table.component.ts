@@ -306,7 +306,8 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         columnResolutions.push(...baseParameterResolutions);
         columnResolutions.push(...Array.from(customParameterChildrenResolutions));
 
-        if (this.tableWidgetConfiguration.dateRange?.refreshIntervalInSeconds) {
+        if (this.tableWidgetConfiguration.dateRange?.refreshIntervalInSeconds
+            && this.tableWidgetConfiguration.dateRange?.refreshIntervalInSeconds !== -1) {
             timer(0, this.tableWidgetConfiguration.dateRange.refreshIntervalInSeconds * 1000) // use minimum resulotion value(ms) to refresh table widget
                 .pipe(takeUntil(this.stopStream$))
                 .subscribe((result) => {

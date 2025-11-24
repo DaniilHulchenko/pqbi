@@ -382,6 +382,8 @@ export class CardWidgetChannelParameterSelectionTabComponent
                     BaseParameterType.Channel,
                     component.key,
                     component.parameterInfos,
+                    component.customBaseInfo,
+                    component.channels,
                 )[component.key];
             }
 

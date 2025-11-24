@@ -425,6 +425,7 @@ export class LogicalParameterSelectionTabComponent
                     BaseParameterType.Logical,
                     component.key,
                     component.parameterInfos,
+                    component.customBaseInfo
                 )[component.key];
             }
         });

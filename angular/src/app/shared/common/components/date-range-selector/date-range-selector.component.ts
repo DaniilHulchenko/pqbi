@@ -139,7 +139,9 @@ export class DateRangeSelectorComponent implements ControlValueAccessor, OnInit 
             this.selectedMode === DateRangeType.Relative ? this.relativeUnit : null,
             this.selectedMode === DateRangeType.Range ? this.fromDate : null,
             this.selectedMode === DateRangeType.Range ? this.toDate : null,
-            this.selectedRefreshValue?.ToValueInSeconds() ?? null,
+            this.selectedMode === DateRangeType.Relative 
+                ? this.selectedRefreshValue?.ToValueInSeconds() ?? null
+                : -1,
         );
         this.onChange(invoke);
     }

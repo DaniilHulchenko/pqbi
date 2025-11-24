@@ -220,7 +220,11 @@ export class CpCustomParameterSelectionTabComponent extends EditableTabComponent
     reset() {
         this.pqsForm?.reset();
         this.minResolution = this._defaultMinResolution;
-        this.resolutionState = this.minResolution;
+        this.resolutionState = new ResolutionState({
+            resolutionUnit: ResolutionUnits.CUSTOM,
+            customResolutionValue: 1,
+            customResolutionUnit: CustomResolutionUnits.MS,
+        });
     }
 
     private editSave() {

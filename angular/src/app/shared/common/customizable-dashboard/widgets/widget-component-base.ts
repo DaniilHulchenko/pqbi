@@ -4,6 +4,7 @@ import { timer, Subscription, of, switchMap } from 'rxjs';
 import { CreateOrEditWidgetConfigurationDto, GetWidgetConfigurationForEditOutput, WidgetConfigurationsServiceProxy } from '@shared/service-proxies/service-proxies';
 import { DateTime } from 'luxon';
 import { DateRangeService } from '@app/shared/services/date-range-service';
+import { WidgetUpdateModel } from '@app/shared/models/widget-update-model';
 
 @Component({ template: '' })
 export class WidgetComponentBaseComponent extends AppComponentBase implements OnInit, OnDestroy {
@@ -74,6 +75,15 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
             .subscribe((result: GetWidgetConfigurationForEditOutput) => {
                 this.widgetConfigurationInDB = result.widgetConfiguration;
                 this.refreshWidget();
+
+                let event: WidgetUpdateModel = {
+                    id: this.widgetConfigurationInDB.id,
+                    name: this.widgetConfigurationInDB.name,
+                    guid: this.widgetConfigurationInDB.widgetGuid,
+                    configuration: this.widgetConfigurationInDB.configuration,
+                };
+                
+                abp.event.trigger('app.dashboard.saveWidget', event);
             });
     }
 

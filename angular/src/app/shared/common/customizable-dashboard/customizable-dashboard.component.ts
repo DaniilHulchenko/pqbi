@@ -37,7 +37,8 @@ import * as rtlDetect from 'rtl-detect';
 import { Subject, forkJoin } from 'rxjs';
 import { GuidGeneratorService } from '@shared/utils/guid-generator.service';
 import { EditModeService } from '@app/shared/services/edit-mode-service.service';
-import { max } from 'lodash-es'
+import { max, set } from 'lodash-es'
+import { WidgetUpdateModel } from '@app/shared/models/widget-update-model';
 
 export const WIDGETONRESIZEEVENTHANDLERTOKEN = new InjectionToken<WidgetOnResizeEventHandler>(
     'WidgetOnResizeEventHandlerToken',
@@ -105,6 +106,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     ngOnInit() {
         this.loading = true;
+        this.subscribeToEvent('app.dashboard.removeWidget', (widgetGuid, widgetId) => this.removeItem(widgetGuid, widgetId, true));
+        this.subscribeToEvent('app.dashboard.saveWidget', (widgetUpdateModel: WidgetUpdateModel) => this.updateItem(widgetUpdateModel));
 
         forkJoin([
             this._dashboardCustomizationServiceProxy.getUserDashboard(
@@ -169,8 +172,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                     };
                     this.selectPageTab(this.userDashboard.pages[0].id);
                 });
-
-            this.subscribeToEvent('app.dashboard.removeWidget', (widgetGuid, widgetId) => this.removeItem(widgetGuid, widgetId, true));
         });
 
         this.subscribeToEvent('app.kt_aside_toggler.onClick', this.onMenuToggle);
@@ -234,6 +235,21 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         };
 
         this.createWidgetSubjects();
+    }
+
+    updateItem(widgetUpdateModel: WidgetUpdateModel) {
+        const page = this.userDashboard.pages.find(p => p.id === this.selectedPage.id);
+        const widget = page.widgets.find(w => w.guid === widgetUpdateModel.guid);
+
+        if (!widget) {
+            return;
+        }
+
+        widget.displayName = widgetUpdateModel.name;
+        widget.configuration = widgetUpdateModel.configuration;
+        widget.configurationId = widgetUpdateModel.id;
+        widget.guid = widgetUpdateModel.guid;
+        widget.isNew = undefined;
     }
 
     removeItem(widgetGuid: string, widgetId: string, isConfirmed: boolean) {
@@ -329,6 +345,10 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             this.initializeUserDashboardFilters();
 
             this.busy = false;
+
+            setTimeout(() => {
+                newWidget.isNew = false;
+            }, 5000);
             //this.notify.success(this.l('SavedSuccessfully'));
             // });
     }
@@ -418,6 +438,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             id: pageId,
             name: this.userDashboard.pages.find((page) => page.id === pageId).name,
         };
+
+        console.log(this.userDashboard.pages.find((page) => page.id === pageId));
 
         if (!this.loadedTabs[pageId]) {
             this.loadedTabs[pageId] = true;
@@ -552,7 +574,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
             this.busy = false;
             this.notify.success(this.l('SavedSuccessfully'));
-            window.location.reload();
+            //window.location.reload();
         });
     }
 

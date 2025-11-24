@@ -41,6 +41,7 @@ import { ColumnType } from '@app/shared/enums/column-type';
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
 import { TrendWidgetConfigurationService } from '@app/shared/services/widget-configurations/trend-widget-configuration.service';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
+import { DateRangeType } from '@app/shared/enums/date-range-type';
 
 type LineLegendType = {
     name: string,
@@ -238,6 +239,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     lineChart: LineChart;
 
     isStepLine = false;
+    isLinePoints = true;
     stopStream$ = new Subject();
     isActive = false;
 
@@ -313,7 +315,9 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                                 ),
                             );
                         }
-                        if (resulutionValueInMs) {
+                        var dateModel = DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange);
+
+                        if (dateModel.rangeUnit === DateRangeType.Relative && resulutionValueInMs) {
                             timer(0, resulutionValueInMs)
                                 .pipe(takeUntil(this.stopStream$))
                                 .subscribe((result) => {
@@ -473,6 +477,14 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     toggleStepLine() {
+        this.isStepLine = !this.isStepLine;
+
+        setTimeout(() => {
+            this.isStepLine = !this.isStepLine;
+        }, 0);
+    }
+
+    toggleLinePoints() {
         this.isStepLine = !this.isStepLine;
 
         setTimeout(() => {

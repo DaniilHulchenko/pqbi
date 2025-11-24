@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { ComponentsState } from '@app/shared/models/components-state';
-import { DxButtonModule, DxScrollViewModule, DxPopoverModule, DxLoadIndicatorComponent, DxLoadIndicatorModule } from 'devextreme-angular';
+import { DxButtonModule, DxScrollViewModule, DxPopoverModule, DxLoadIndicatorModule } from 'devextreme-angular';
 import { TreeModule } from 'primeng/tree';
 import { DynamicTreeBuilderComponent } from '../dynamic-tree-builder/dynamic-tree-builder.component';
 import { TreeBuilderService } from '@app/shared/services/tree-builder.service';

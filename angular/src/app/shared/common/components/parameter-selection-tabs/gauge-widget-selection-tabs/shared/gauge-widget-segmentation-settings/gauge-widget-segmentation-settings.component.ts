@@ -30,7 +30,7 @@ import { Guid } from 'guid-ts';
 })
 export class GaugeWidgetSegmentationSettingsComponent {
 
-    private readonly TOTAL_WEIGHT = 100;
+    readonly TOTAL_WEIGHT = 100;
     private readonly EPSILON = 0.001;
     private _segments: Segment[] = [];
 
@@ -73,7 +73,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
         if (!this.validateSegmentForm()) {
             return;
         }
-        const desiredWeight = this._segments.length === 0 ? this.TOTAL_WEIGHT : this.weight!;
+        const desiredWeight = this.weight!;
 
 
         const newSegment: Segment = {
@@ -83,17 +83,14 @@ export class GaugeWidgetSegmentationSettingsComponent {
             to: this.to!,
             colorMode: this.colorMode,
             color: this.colorMode === 'custom' ? this.color : null,
-            weight: desiredWeight,
+            weight: this.roundWeight(desiredWeight),
         };
 
         const plannedSegments = [...this._segments, newSegment];
-        const neighborId = this.resolveNeighborId(plannedSegments, newSegment.id);
-
+ 
         this.updateSegments(plannedSegments, {
             targetId: newSegment.id,
-            desiredWeight,
-            neighborId,
-            operation: 'add',
+ 
         });
         
         this.resetSegmentForm();
@@ -122,8 +119,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
         if (!this.validateSegmentForm(this.editingSegmentId)) {
             return;
         }
-        const previous = this._segments.find((segment) => segment.id === this.editingSegmentId);
-
+ 
 
         const updated = this._segments.map((segment) =>
             segment.id === this.editingSegmentId
@@ -134,19 +130,16 @@ export class GaugeWidgetSegmentationSettingsComponent {
                       to: this.to!,
                       colorMode: this.colorMode,
                       color: this.colorMode === 'custom' ? this.color : null,
-                      weight: this.weight!,
-                  }
+                      weight: this.roundWeight(this.weight!),
+
+                   }
                 : segment,
         );
 
-        const neighborId = this.resolveNeighborId(updated, this.editingSegmentId);
-
+ 
         this.updateSegments(updated, {
             targetId: this.editingSegmentId,
-            desiredWeight: this.weight!,
-            neighborId,
-            operation: 'edit',
-            previousWeight: previous?.weight,
+ 
         });
         this.cancelEditedSegment(false);
     }
@@ -168,24 +161,19 @@ export class GaugeWidgetSegmentationSettingsComponent {
             return;
         }
 
-        const removed = sorted[index];
-        const remaining = sorted.filter((_, idx) => idx !== index);
+         const remaining = sorted.filter((_, idx) => idx !== index);
 
         if (!remaining.length) {
             this.updateSegments([], { suppressHint: true });
             return;
         }
 
-        const neighborIndex = index > 0 ? index - 1 : 0;
-        const neighbor = remaining[neighborIndex];
-        const neighborWeight = (neighbor.weight ?? 0) + (removed.weight ?? 0);
+        const nextSelected = remaining[Math.min(index, remaining.length - 1)]?.id;
 
-        remaining[neighborIndex] = {
-            ...neighbor,
-            weight: this.roundWeight(neighborWeight),
-        };
-
-        this.updateSegments(remaining, { suppressHint: true });
+        this.updateSegments(remaining, { suppressHint: true, targetId: nextSelected ?? null });
+        if (!this.isEditingSegment) {
+            this.resetSegmentForm();
+        }
     }
 
     validateBeforeSave(): boolean {
@@ -203,7 +191,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
 
 
         if (!this.isTotalWeightValid) {
-            this.segmentError = 'Weights must sum to 100%. / Сума ваг повинна дорівнювати 100%.';
+            this.segmentError = 'Weights must sum to 100%.';
             this.emitState({ emitSegments: false });
             return false;
         }
@@ -214,24 +202,18 @@ export class GaugeWidgetSegmentationSettingsComponent {
     private updateSegments(
         segments: Segment[],
         options?: {
-            targetId?: string;
-            desiredWeight?: number;
-            neighborId?: string | null;
+            targetId?: string | null;
             suppressHint?: boolean;
-            operation?: 'add' | 'edit';
-            previousWeight?: number;
         },
     ): void {
         const normalized = segments.map((segment) => ({
             ...segment,
             from: +segment.from,
             to: +segment.to,
-            weight: segment.weight != null ? +segment.weight : segment.weight,
+            weight: segment.weight != null ? this.roundWeight(+segment.weight) : segment.weight,
         }));
-        const { segments: balanced, message } = this.balanceWeights(normalized, options);
-
-        this._segments = balanced;
-        this.segmentHint = options?.suppressHint ? null : message;
+        this._segments = normalized;
+        this.segmentHint = null;
         this.recalculateSegmentsState();
         this.segmentError = null;
         this.emitState({ emitSegments: true });
@@ -266,7 +248,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
         this.to = null;
         this.colorMode = 'scheme';
         this.color = null;
-        this.weight = this._segments.length === 0 ? this.TOTAL_WEIGHT : null;
+        this.weight = this.getDefaultWeight();
     }
 
     private prepareSegments(segments: Segment[]): Segment[] {
@@ -303,14 +285,13 @@ export class GaugeWidgetSegmentationSettingsComponent {
             }
         }
 
-        const { segments: balanced } = this.balanceWeights(prepared, { suppressHint: true });
+        return prepared;
 
-        return balanced;
     }
 
     private recalculateSegmentsState(): void {
         this._segments = this.sortSegments(this._segments);
-        const total = this._segments.reduce((sum, segment) => sum + (segment.weight ?? 0), 0);
+        const total = this.calculateTotalWeight(this._segments);
         this.totalWeight = this.roundWeight(total);
         this.updateAdjacencyState();
         this.ensureSelectedSegment(this.selectedSegmentId);
@@ -359,7 +340,19 @@ export class GaugeWidgetSegmentationSettingsComponent {
     }
 
     get isTotalWeightValid(): boolean {
-        return Math.abs(this.totalWeight - 100) < 0.01;
+        return Math.abs(this.totalWeight - this.TOTAL_WEIGHT) < 0.01;
+    }
+
+    get isTotalWeightExceeded(): boolean {
+        return this.totalWeight - this.TOTAL_WEIGHT > this.EPSILON;
+    }
+
+    get totalWeightOverflow(): number {
+        if (!this.isTotalWeightExceeded) {
+            return 0;
+        }
+
+        return this.roundWeight(this.totalWeight - this.TOTAL_WEIGHT);
     }
 
     get canSave(): boolean {
@@ -380,171 +373,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
         }
     }
 
-    private balanceWeights(
-        segments: Segment[],
-        options?: {
-            targetId?: string;
-            desiredWeight?: number;
-            neighborId?: string | null;
-            suppressHint?: boolean;
-            operation?: 'add' | 'edit';
-            previousWeight?: number;
-        },
-    ): { segments: Segment[]; message: string | null } {
-        if (!segments.length) {
-            return { segments: [], message: null };
-        }
-
-        const sorted = this.sortSegments(segments);
-
-        if (sorted.length === 1) {
-            sorted[0] = { ...sorted[0], weight: this.roundWeight(this.TOTAL_WEIGHT) };
-            return { segments: sorted, message: null };
-        }
-
-        const targetId = options?.targetId;
-        const desiredWeight = options?.desiredWeight;
-
-        if (targetId && desiredWeight !== undefined) {
-            const targetIndex = sorted.findIndex((segment) => segment.id === targetId);
-
-            if (targetIndex !== -1) {
-                if (options?.operation === 'add') {
-                    return this.balanceForAddition(sorted, targetIndex, desiredWeight, options?.suppressHint ?? false);
-                }
-                const neighborIndex = this.findNeighborIndex(sorted, targetIndex, options?.neighborId ?? null);
-
-                if (neighborIndex !== -1) {
-                        return this.balanceWithNeighbor(
-                        sorted,
-                        targetIndex,
-                        neighborIndex,
-                        desiredWeight,
-                        options?.suppressHint,
-                        options?.previousWeight,
-                    );                }
-            }
-        }
-
-        return this.normalizeByTrailingSegment(sorted);
-    }
-
-    private balanceWithNeighbor(
-        segments: Segment[],
-        targetIndex: number,
-        neighborIndex: number,
-        desiredWeight: number,
-        suppressHint?: boolean,
-        previousWeight?: number,
-
-    ): { segments: Segment[]; message: string | null } {
-        const otherSum = this.sumWeights(
-            segments.filter((_, index) => index !== targetIndex && index !== neighborIndex),
-        );
-        const pairTotal = this.roundWeight(Math.max(0, this.TOTAL_WEIGHT - otherSum));
-
-        const currentTargetWeight = this.ensureWeight(segments[targetIndex].weight);
-        const startingWeight = previousWeight != null ? +previousWeight : currentTargetWeight;
-        const desiredAdjustment = desiredWeight - startingWeight;
-
-
-        let actualWeight = Math.max(0, Math.min(desiredWeight, pairTotal));
-        actualWeight = this.roundWeight(actualWeight);
-
-        
-
-        const neighborWeight = this.roundWeight(Math.max(0, pairTotal - actualWeight));
-
-        segments[targetIndex] = {
-            ...segments[targetIndex],
-            weight: actualWeight,
-        };
-
-        segments[neighborIndex] = {
-            ...segments[neighborIndex],
-            weight: neighborWeight,
-        };
-
-        let hintMessage: string | null = null;
-
-        const actualAdjustment = actualWeight - startingWeight;
-
-        if (
-            !suppressHint &&
-            desiredAdjustment > this.EPSILON &&
-            actualAdjustment + this.EPSILON < desiredAdjustment
-        ) {
-            const formatted = this.formatWeight(actualWeight);
-            hintMessage = `Недостатньо відсотків. Доступно лише ${formatted}%.`;
-        }
-        return { segments, message: hintMessage };
-    }
-
-private balanceForAddition(
-    segments: Segment[],
-    targetIndex: number,
-    desiredWeight: number,
-    suppressHint: boolean,
-): { segments: Segment[]; message: string | null } {
-
-    const eps = this.EPSILON;
-    let remaining = Math.min(desiredWeight, this.TOTAL_WEIGHT);
-    let collected = 0;
-
-     const donorIndex = this.findLargestWeightIndex(segments, [targetIndex]);
-    if (donorIndex >= 0) {
-        const available = this.ensureWeight(segments[donorIndex].weight);
-        const taken = Math.min(available, remaining);
-        segments[donorIndex].weight = this.roundWeight(available - taken);
-        collected += taken;
-        remaining -= taken;
-    }
-
-     segments[targetIndex].weight = this.roundWeight(collected);
-
-     const diff = this.roundWeight(this.TOTAL_WEIGHT - this.sumWeights(segments));
-    if (Math.abs(diff) > eps) {
-        segments[targetIndex].weight = this.roundWeight(segments[targetIndex].weight + diff);
-    }
-
-    let message: string | null = null;
-    if (!suppressHint && collected + eps < desiredWeight) {
-        message = `Not enough total weight to allocate. Available only ${this.formatWeight(collected)}%.`;
-    }
-
-    return { segments, message };
-}
-
-    private normalizeByTrailingSegment(segments: Segment[]): { segments: Segment[]; message: string | null } {
-        const sorted = this.sortSegments(segments);
-        const balancingIndex = sorted.length - 1;
-        const fixedSum = this.sumWeights(sorted.slice(0, balancingIndex));
-        sorted[balancingIndex] = {
-            ...sorted[balancingIndex],
-            weight: this.roundWeight(Math.max(0, this.TOTAL_WEIGHT - fixedSum)),
-        };
-
-        return { segments: sorted, message: null };
-    }
-
-    private findNeighborIndex(segments: Segment[], targetIndex: number, neighborId: string | null): number {
-        if (neighborId) {
-            const explicitIndex = segments.findIndex((segment) => segment.id === neighborId);
-            if (explicitIndex !== -1 && explicitIndex !== targetIndex) {
-                return explicitIndex;
-            }
-        }
-
-        if (targetIndex > 0) {
-            return targetIndex - 1;
-        }
-
-        if (targetIndex + 1 < segments.length) {
-            return targetIndex + 1;
-        }
-
-        return -1;
-    }
+    
     private sortSegments(segments: Segment[]): Segment[] {
         return [...segments].sort((a, b) => {
             if (a.from !== b.from) {
@@ -559,40 +388,20 @@ private balanceForAddition(
         });
     }
 
-    private sumWeights(segments: Segment[]): number {
-        return segments.reduce((sum, segment) => sum + (segment.weight ?? 0), 0);
-    }
+    
 
     private roundWeight(value: number): number {
         return Math.round(value * 1000) / 1000;
     }
-    private ensureWeight(value: number | null | undefined): number {
-        return value != null ? +value : 0;
+    
+
+    private calculateTotalWeight(segments: Segment[]): number {
+        return segments.reduce((sum, segment) => sum + (segment.weight ?? 0), 0);
     }
 
-    private formatWeight(value: number): string {
-        const rounded = Math.round(value * 100) / 100;
-        return `${rounded}`;
-    }
-    private findLargestWeightIndex(segments: Segment[], excludedIndexes: number[]): number {
-        const excluded = new Set(excludedIndexes.filter((index) => index >= 0));
-        let maxIndex = -1;
-        let maxWeight = -1;
-
-        segments.forEach((segment, index) => {
-            if (excluded.has(index)) {
-                return;
-            }
-
-            const weight = this.ensureWeight(segment.weight);
-
-            if (weight > maxWeight + this.EPSILON) {
-                maxWeight = weight;
-                maxIndex = index;
-            }
-        });
-
-        return maxWeight > this.EPSILON ? maxIndex : -1;
+    private getDefaultWeight(): number {
+        const remaining = Math.max(0, this.TOTAL_WEIGHT - this.calculateTotalWeight(this._segments));
+        return this.roundWeight(remaining);
     }
 
 
@@ -632,25 +441,7 @@ private balanceForAddition(
     }
 
 
-    private resolveNeighborId(segments: Segment[], targetId: string): string | null {
-        const sorted = this.sortSegments(segments);
-        const targetIndex = sorted.findIndex((segment) => segment.id === targetId);
-
-        if (targetIndex === -1) {
-            return null;
-        }
-
-        if (targetIndex > 0) {
-            return sorted[targetIndex - 1].id;
-        }
-
-        if (targetIndex + 1 < sorted.length) {
-            return sorted[targetIndex + 1].id;
-        }
-
-        return null;
-    }
-
+ 
     private ensureSelectedSegment(preferredId: string | null | undefined): void {
         const candidate = preferredId ?? this.selectedSegmentId;
 

@@ -43,6 +43,13 @@ interface WeightedSegmentMeta extends Segment {
 }
 
 
+interface WeightedSegmentMeta extends Segment {
+    startPosition: number;
+    endPosition: number;
+    weight: number;
+}
+
+
 @Component({
     selector: 'app-widget-pqs-gauge',
     templateUrl: './widget-pqs-gauge.component.html',

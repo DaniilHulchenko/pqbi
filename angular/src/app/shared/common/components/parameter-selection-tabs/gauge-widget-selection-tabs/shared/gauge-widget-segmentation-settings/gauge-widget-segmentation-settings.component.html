@@ -33,6 +33,7 @@
   </div>
 
   <div class="table mt-4">
+    
     <dx-data-grid [dataSource]="segments" [showBorders]="true" keyExpr="id" [focusedRowEnabled]="true"
       [focusedRowKey]="selectedSegmentId" (onFocusedRowChanged)="onFocusedRowChanged($event)"
       (onRowPrepared)="onRowPrepared($event)">
@@ -67,5 +68,10 @@
     </div>  
     <div class="segment-hint" *ngIf="segmentHint">{{ segmentHint }}</div>
     <div class="boundary-error" *ngIf="boundaryErrorMessage">{{ boundaryErrorMessage }}</div>
-
+<div class="weight-indicator" [class.invalid]="isTotalWeightExceeded">
+      Total weight: {{ totalWeight | number: '1.0-3' }} / {{ TOTAL_WEIGHT }}
+    </div>
+    <div class="weight-error" *ngIf="isTotalWeightExceeded">
+      Total weight exceeds 100% by {{ totalWeightOverflow | number: '1.0-3' }}%. Adjust the segment weights.
+    </div>
 </div>

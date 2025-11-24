@@ -390,6 +390,7 @@ export class GaugeWidgetLogicalParameterSelectionTabComponent
                     BaseParameterType.Logical,
                     component.key,
                     component.parameterInfos,
+                    component.customBaseInfo
                 )[component.key];
             }
         });

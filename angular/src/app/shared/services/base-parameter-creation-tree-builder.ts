@@ -3,11 +3,12 @@ import {
     AdditionalData,
     BaseDataInfo,
     CalculationBase,
+    ChannelDescriptionDto,
+    CustomBaseInfo,
     Group,
     GroupDataInfo,
     PhaseDataInfo,
     PhaseMeasurementEnum,
-    PQSRestApiServiceProxy,
     QuantityDataInfo,
     QuantityEnum,
 } from '@shared/service-proxies/service-proxies';
@@ -32,7 +33,7 @@ export class BaseParameterCreationTreeBuilder {
     private readonly _parameterInfoSeparator = '_';
     private readonly _parameterQuantitiesSeparator = '#';
 
-    constructor(private _measurementsService: MeasurementsService) {
+    constructor(_measurementsService: MeasurementsService) {
         _measurementsService.groupMeasurements.subscribe((result: GroupDataInfo[]) => {
             this._groupMeasurements = result;
         });
@@ -81,7 +82,7 @@ export class BaseParameterCreationTreeBuilder {
         return tree;
     }
 
-    buildTree(baseParametrerType: BaseParameterType, componentId: string, componentParameterInfos: string[]): object {
+    buildTree(baseParametrerType: BaseParameterType, componentId: string, componentParameterInfos: string[], customBaseInfo: CustomBaseInfo[], channels: ChannelDescriptionDto[] = []): object {
         let tree = {};
 
         tree[componentId] = {
@@ -139,8 +140,11 @@ export class BaseParameterCreationTreeBuilder {
                 counter++;
             }
 
-            let base = parameterInfoArr[counter];
-            counter++;
+            
+            let customBase = customBaseInfo?.find(cb => parameterInfo.includes(cb.baseXString));
+            let base = customBase ? customBase.baseXString : parameterInfoArr[counter];
+
+            counter+= customBase?.baseXString.split(this._parameterInfoSeparator).length ?? 1;
 
             let phase: string;
             switch (baseParametrerType) {
@@ -160,7 +164,7 @@ export class BaseParameterCreationTreeBuilder {
                         phaseInGroup = { ...this.getParameterPhaseForLogical(phase) };
                         break;
                     case BaseParameterType.Channel:
-                        phaseInGroup = { ...this.getParameterPhaseForChannel(phase) };
+                        phaseInGroup = { ...this.getParameterPhaseForChannel(phase, channels) };
                         break;
                 }
                 phaseInGroup.bases = [];
@@ -169,8 +173,17 @@ export class BaseParameterCreationTreeBuilder {
 
             let baseInPhase = phaseInGroup.bases.find((baseInfo) => baseInfo.base === CalculationBase[base]);
             if (!baseInPhase) {
-                baseInPhase = { ...this.getParameterBase(base) };
+                if (customBase) {
+                    baseInPhase = new BaseDataInfo({
+                        base: null,
+                        description: customBase.presentedName,
+                        phaseName: customBase.baseXString,
+                    });
+                } else {
+                    baseInPhase = { ...this.getParameterBase(base) };
+                }
                 baseInPhase.quantities = [];
+                
                 phaseInGroup.bases.push(baseInPhase);
             }
 
@@ -208,9 +221,10 @@ export class BaseParameterCreationTreeBuilder {
         return null;
     }
 
-    private getParameterPhaseForChannel(phaseInfo: string): PhaseDataInfo {
+    private getParameterPhaseForChannel(phaseInfo: string, channels: ChannelDescriptionDto[]): PhaseDataInfo {
         let phaseId = phaseInfo.split(this._parameterInfoSeparator)[1];
-        return new PhaseDataInfo({ phaseName: phaseInfo, description: `Channel ${phaseId}`, phase: null });
+        let phaseName = channels?.find(c => c.id.toString() === phaseId)?.name || phaseId;
+        return new PhaseDataInfo({ phaseName: phaseInfo, description: `Channel ${phaseName}`, phase: null });
     }
 
     private filterParameterInfosByType(baseParametrerType: BaseParameterType, parameterInfos: string[]): string[] {
