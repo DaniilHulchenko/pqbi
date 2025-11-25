@@ -28,8 +28,7 @@ import { CustomParameterService } from '@app/shared/services/custom-parameter-se
 import { GaugeWidgetConfigurationService } from '@app/shared/services/widget-configurations/gauge-widget-configuration.service';
 import { EditableTabComponentBaseComponent } from '@app/shared/common/components/parameter-selection-tabs/editable-tab-component-base';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
-import { DateRangeType } from '@app/shared/enums/date-range-type';
-import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
+import { DateRangeSelectorComponent } from '@app/shared/common/components/date-range-selector/date-range-selector.component';
 
 @Component({
     selector: 'createOrEditGaugeConfiguration',
@@ -57,6 +56,7 @@ export class CreateOrEditGaugeConfigurationComponent
     @ViewChild('styleSelector') styleSelector: GaugeWidgetStyleSelectorComponent;
     @ViewChild('refreshSelector') refreshSelector: WidgetRefreshSelectorComponent;
     @Output() onSave = new EventEmitter<CreateOrEditGaugeWidgetConfigurationDto>();
+    @ViewChild('dateRangeSelector') dateRangeSelector: DateRangeSelectorComponent;
     @Output() onClose = new EventEmitter<boolean>();
 
     saving = false;
@@ -388,10 +388,8 @@ export class CreateOrEditGaugeConfigurationComponent
 
     isFormValid(): boolean {
         return (
-            this.refreshRateSelectionState &&
-            this.refreshRateSelectionState !== 0 &&
+            (this.dateRangeSelector?.isValid() ?? false) &&
             this.parameter &&
-            this.dateRangeSelectionState &&
             this.styleSelector.isValidState() &&
             (this.selectedTab ? this.selectedTab.isFormValid() : true)
         );

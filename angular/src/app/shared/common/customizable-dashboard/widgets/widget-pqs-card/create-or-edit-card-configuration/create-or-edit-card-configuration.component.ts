@@ -24,9 +24,8 @@ import { finalize, Subscription } from 'rxjs';
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { CardWidgetConfigurationService } from '@app/shared/services/widget-configurations/card-widget-configuration.service';
 import { EditableTabComponentBaseComponent } from '@app/shared/common/components/parameter-selection-tabs/editable-tab-component-base';
-import { DateRangeType } from '@app/shared/enums/date-range-type';
-import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
+import { DateRangeSelectorComponent } from '@app/shared/common/components/date-range-selector/date-range-selector.component';
 
 @Component({
     selector: 'createOrEditCardConfiguration',
@@ -50,6 +49,7 @@ export class CreateOrEditCardConfigurationComponent
     exceptionParameterSelectionTab: CardWidgetExceptionParameterSelectionTabComponent;
     @ViewChild('eventParameterSelectionTab')
     eventParameterSelectionTab: CardWidgetEventParameterSelectionTabComponent;
+    @ViewChild('dateRangeSelector') dateRangeSelector: DateRangeSelectorComponent;
     @ViewChild('tabPanel') tabPanel: DxTabPanelComponent;
     @Output() onSave = new EventEmitter<CreateOrEditCardWidgetConfigurationDto>();
     @Output() onClose = new EventEmitter<boolean>();
@@ -376,10 +376,8 @@ export class CreateOrEditCardConfigurationComponent
 
     isFormValid(): boolean {
         return (
-            this.refreshRateSelectionState &&
-            this.refreshRateSelectionState !== 0 &&
+            (this.dateRangeSelector?.isValid() ?? false) &&
             this.parameters?.length > 0 &&
-            this.dateRangeSelectionState &&
             this.selectedCardStyle != null &&
             (this.selectedTab ? this.selectedTab.isFormValid() : true)
         );

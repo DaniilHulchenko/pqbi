@@ -56,6 +56,7 @@ import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-r
 import { DateRangeType } from '@app/shared/enums/date-range-type';
 import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 import { DateTime } from 'luxon';
+import { DateRangeSelectorComponent } from '@app/shared/common/components/date-range-selector/date-range-selector.component';
 
 
 @Component({
@@ -74,6 +75,7 @@ export class CreateOrEditBarChartConfigurationComponent
     @ViewChild('additionalParameterSelectionTab')
     additionalParameterSelectionTab: AdditionalParameterSelectionTabComponent;
     @ViewChild('eventParameterSelectionTab') eventParameterSelectionTab: EventParameterSelectionTabComponent;
+    @ViewChild('dateRangeSelector') dateRangeSelector: DateRangeSelectorComponent;
     @ViewChild('tabPanel') tabPanel: DxTabPanelComponent;
     @ViewChild('scrollView') scrollView: DxScrollViewComponent;
     @ViewChild('grid') grid: DxDataGridComponent;
@@ -319,7 +321,8 @@ export class CreateOrEditBarChartConfigurationComponent
     }
 
     isFormValid(): boolean {
-        return this.pqsForm?.form?.valid ?? false;
+        return (this.dateRangeSelector?.isValid() ?? false)
+            && (this.pqsForm?.form?.valid ?? false);
     }
 
     changeExpandState() {

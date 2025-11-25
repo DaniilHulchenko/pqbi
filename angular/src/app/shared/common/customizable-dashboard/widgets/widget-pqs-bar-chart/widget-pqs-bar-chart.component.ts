@@ -228,11 +228,12 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
 
     edit(): void {
         this.isEditModalInitialized = true;
-        var sub = this._configurationVersionService.refreshVersion().subscribe();
+        var sub = this._configurationVersionService.refreshVersion().subscribe(() => {
+            setTimeout(() => {
+                this.createOrEditModal.show(this.widgetConfigurationInDB);
+            }, 200);
+        });
         this.subs.push(sub);
-        setTimeout(() => {
-            this.createOrEditModal.show(this.widgetConfigurationInDB);
-        }, 200);
     }
 
     onEditModelClose(isSaved) {

@@ -327,11 +327,12 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     edit() {
         this.isEditModalInitialized = true;
-        var sub = this._configurationVersionService.refreshVersion().subscribe();
+        var sub = this._configurationVersionService.refreshVersion().subscribe(() => {
+            setTimeout(() => {
+                this.createOrEditModal.show(this.widgetConfigurationInDB);
+            }, 0);
+        });
         this.subs.push(sub);
-        setTimeout(() => {
-            this.createOrEditModal.show(this.widgetConfigurationInDB);
-        }, 0);
     }
 
     onConfigurationChange(newConfig: CreateOrEditTableWidgetConfigurationDto) {

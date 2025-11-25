@@ -146,6 +146,12 @@ export class DateRangeSelectorComponent implements ControlValueAccessor, OnInit 
         this.onChange(invoke);
     }
 
+    isValid(): boolean {
+        return this.selectedMode === DateRangeType.Range
+            ? this.fromDate && this.toDate && this.fromDate < this.toDate
+            : this.relativeValue > 0 && !!this.relativeUnit && this.refreshValue > 0 && !!this.refreshUnit;
+    }
+
     private fillDateRangeOptions() {
         this.dateRangeOptions = [DateRangeType.Relative, DateRangeType.Range];
     }

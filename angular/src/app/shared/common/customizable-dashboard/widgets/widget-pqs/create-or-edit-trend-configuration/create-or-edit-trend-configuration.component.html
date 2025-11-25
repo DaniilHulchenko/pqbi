@@ -3,7 +3,7 @@
     <dx-scroll-view #scrollView [showScrollbar]="true">
         <form #pqsForm="ngForm" (ngSubmit)="save()" novalidate autocomplete="off">
             <div class="d-flex gap-3 mb-3">
-                <dateRangeAndResolutionSelector name="dateRangeAndResolution" [(ngModel)]="dateRangeAndResolutionSelectionState" required />
+                <dateRangeAndResolutionSelector #dateRangeResolutionSelector name="dateRangeAndResolution" [(ngModel)]="dateRangeAndResolutionSelectionState" required />
                 <!-- <datetimeRangeSelector name="dateRange" [(ngModel)]="dateRangeSelectionState" [isVertical]="false"
                     required />
                 <resolutionSelector name="resolution" [(ngModel)]="resolutionState"

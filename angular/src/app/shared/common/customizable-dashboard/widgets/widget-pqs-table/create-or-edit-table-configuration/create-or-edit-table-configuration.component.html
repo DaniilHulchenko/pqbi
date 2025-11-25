@@ -5,7 +5,7 @@
             autocomplete="off">
 
             <div class="d-flex align-items-center mb-3">
-                <dateRangeSelector name="dateRange" [(ngModel)]="dateRangeSelectionState" required></dateRangeSelector>
+                <dateRangeSelector name="dateRange" #dateRangeSelector [(ngModel)]="dateRangeSelectionState" required></dateRangeSelector>
                 <dx-button
                     text="{{ 'Design Options' | localize }}"
                     type="normal"

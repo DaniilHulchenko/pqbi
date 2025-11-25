@@ -41,6 +41,7 @@ import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/com
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { TableWidgetConfigurationService } from '@app/shared/services/widget-configurations/table-widget-configuration.service';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
+import { DateRangeSelectorComponent } from '@app/shared/common/components/date-range-selector/date-range-selector.component';
 
 @Component({
     selector: 'createOrEditTableConfiguration',
@@ -60,6 +61,7 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase im
     @ViewChild('tabPanel') tabPanel: DxTabPanelComponent;
     @ViewChild('scrollView') scrollView: DxScrollViewComponent;
     @ViewChild('grid') grid: DxDataGridComponent;
+    @ViewChild('dateRangeSelector') dateRangeSelector: DateRangeSelectorComponent;
     @Output() onSave = new EventEmitter<CreateOrEditTableWidgetConfigurationDto>();
     @Output() onClose = new EventEmitter<boolean>();
 
@@ -133,16 +135,9 @@ export class CreateOrEditTableConfigurationComponent extends AppComponentBase im
     }
 
     isFormValid(): boolean {
-        // const isDateRangeValid =
-        //     this.dateRangeSelectionState?.rangeOption &&
-        //     (this.dateRangeSelectionState.rangeOption !== DateRangeUnits.CUSTOM ||
-        //         (this.dateRangeSelectionState.startDate &&
-        //             this.dateRangeSelectionState.endDate &&
-        //             this.dateRangeSelectionState.startDate < this.dateRangeSelectionState.endDate));
-
         const isTableNotEmpty = this.parameters && this.parameters.length > 0;
 
-        return /*isDateRangeValid && */ isTableNotEmpty;
+        return (this.dateRangeSelector?.isValid() ?? false) && isTableNotEmpty;
     }
 
     getIconClass(tabID: number): string {

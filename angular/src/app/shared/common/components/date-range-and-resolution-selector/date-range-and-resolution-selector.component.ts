@@ -151,6 +151,12 @@ export class DateRangeAndResolutionSelectorComponent implements ControlValueAcce
         this.onChange(invoke);
     }
 
+    isValid(): boolean {
+        return this.selectedMode === DateRangeType.Range
+            ? this.fromDate && this.toDate && this.fromDate < this.toDate && this.resolutionValue > 0 && !!this.resolutionUnit
+            : this.relativeValue > 0 && !!this.relativeUnit && this.resolutionValue > 0 && !!this.resolutionUnit;
+    }
+
     private fillDateRangeOptions() {
         this.dateRangeOptions = [DateRangeType.Relative, DateRangeType.Range];
     }

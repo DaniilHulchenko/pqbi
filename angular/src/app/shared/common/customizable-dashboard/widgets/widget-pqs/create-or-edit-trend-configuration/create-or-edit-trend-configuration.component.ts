@@ -52,6 +52,7 @@ import { AdditionalParameterSelectionTabComponent } from '@app/shared/common/com
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { TrendWidgetConfigurationService } from '@app/shared/services/widget-configurations/trend-widget-configuration.service';
 import { DateRangeAndResolutionModel } from '@app/shared/models/date-range-and-resolution-model';
+import { DateRangeAndResolutionSelectorComponent } from '@app/shared/common/components/date-range-and-resolution-selector/date-range-and-resolution-selector.component';
 
 @Component({
     selector: 'createOrEditTrendConfiguration',
@@ -67,6 +68,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     @ViewChild('additionalParameterSelectionTab') additionalParameterSelectionTab: AdditionalParameterSelectionTabComponent;
     @ViewChild('exceptionParameterSelectionTab')
     exceptionParameterSelectionTab: ExceptionParameterSelectionTabComponent;
+    @ViewChild('dateRangeResolutionSelector') dateRangeResolutionSelector: DateRangeAndResolutionSelectorComponent;
     @ViewChild('tabPanel') tabPanel: DxTabPanelComponent;
     @ViewChild('scrollView') scrollView: DxScrollViewComponent;
     @ViewChild('grid') grid: DxDataGridComponent;
@@ -137,24 +139,9 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     }
 
     isFormValid(): boolean {
-        // const isDateRangeValid =
-        //     this.dateRangeSelectionState?.rangeOption &&
-        //     (this.dateRangeSelectionState.rangeOption !== DateRangeUnits.CUSTOM ||
-        //         (this.dateRangeSelectionState.startDate &&
-        //             this.dateRangeSelectionState.endDate &&
-        //             this.dateRangeSelectionState.startDate < this.dateRangeSelectionState.endDate));
-
-        // const isResolutionValid =
-        //     this.resolutionState?.resolutionUnit &&
-        //     (this.resolutionState.resolutionUnit !== ResolutionUnits.CUSTOM ||
-        //         (this.resolutionState.customResolutionValue &&
-        //             this.resolutionState.customResolutionValue >= this.minCustomArgument &&
-        //             this.resolutionState.customResolutionValue <= this.maxCustomArgument &&
-        //             this.resolutionState.customResolutionUnit));
-
         const isTableNotEmpty = this.parameters && this.parameters.length > 0;
 
-        return /*isDateRangeValid && isResolutionValid &&*/ isTableNotEmpty;
+        return (this.dateRangeResolutionSelector?.isValid() ?? false) && isTableNotEmpty;
     }
 
     getIconClass(tabID: number): string {

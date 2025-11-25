@@ -439,8 +439,6 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             name: this.userDashboard.pages.find((page) => page.id === pageId).name,
         };
 
-        console.log(this.userDashboard.pages.find((page) => page.id === pageId));
-
         if (!this.loadedTabs[pageId]) {
             this.loadedTabs[pageId] = true;
             

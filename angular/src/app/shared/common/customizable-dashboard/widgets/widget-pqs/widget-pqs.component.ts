@@ -284,10 +284,11 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     edit() {
         this.isEditModalInitialized = true;
-        this._configurationVersionService.refreshVersion().subscribe();
-        setTimeout(() => {
-            this.createOrEditModal.show(this.widgetConfigurationInDB);
-        }, 0);
+        this._configurationVersionService.refreshVersion().subscribe(() => {
+            setTimeout(() => {
+                this.createOrEditModal.show(this.widgetConfigurationInDB);
+            }, 0);
+        });
     }
 
     onNameEdit() {
