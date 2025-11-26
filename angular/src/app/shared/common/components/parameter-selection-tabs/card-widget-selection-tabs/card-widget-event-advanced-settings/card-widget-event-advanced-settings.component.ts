@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-settings-options';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +26,8 @@ import {
 import { AdvancedSettingsConfig } from '../../advanced-settings/advanced-settings.component';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
 import { EventService } from '@app/shared/services/event-service.service';
+import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'cardWidgetEventAdvancedSettings',
@@ -49,7 +51,7 @@ import { EventService } from '@app/shared/services/event-service.service';
     templateUrl: './card-widget-event-advanced-settings.component.html',
     styleUrl: './card-widget-event-advanced-settings.component.css',
 })
-export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChanges {
+export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy {
     @Input() isBaseParameter = false;
     @Input() config: CardWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<CardWidgetAdvancedSettingsConfig>();
@@ -102,7 +104,9 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
         { id: 'limits', text: 'show only if limits are exceeded' },
     ];
 
-    pqbiPages = [];
+    pqbiPages: { id: string; name: string }[] = [];
+
+    private subscription: Subscription;
 
     excludeFlaggedOptions = [
         { value: ExcludeFlagged.DefaultEvents, text: 'yes  (with Dip, Swell, Interrupt)' },
@@ -130,13 +134,17 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
         { value: 'MIN', text: 'Minimum' },
     ];
 
-    constructor(private _eventService: EventService) {}
+    constructor(private _eventService: EventService, private dashboardPagesService: DashboardPagesService) {}
 
     ngOnInit() {
         this.normalizationOptions = this.getNormalizationOptions();
         this._eventService.pqsEvents().subscribe((evts) => {
             this.flaggingEvents = evts;
             this.flaggingEvents = uniqBy(this.flaggingEvents, (x) => x.eventClass);
+        });
+
+        this.subscription = this.dashboardPagesService.getPages().subscribe((pages) => {
+            this.pqbiPages = pages.map((page) => ({ id: page.id, name: page.name }));
         });
     }
 
@@ -153,6 +161,10 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
             this.titleFont = c.titleFont;
             this.valueFont = c.valueFont;
         }
+    }
+
+    ngOnDestroy(): void {
+        this.subscription?.unsubscribe();
     }
 
     onFileChanged(e: any) {

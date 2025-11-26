@@ -39,6 +39,7 @@ import { GuidGeneratorService } from '@shared/utils/guid-generator.service';
 import { EditModeService } from '@app/shared/services/edit-mode-service.service';
 import { max, set } from 'lodash-es'
 import { WidgetUpdateModel } from '@app/shared/models/widget-update-model';
+import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
 
 export const WIDGETONRESIZEEVENTHANDLERTOKEN = new InjectionToken<WidgetOnResizeEventHandler>(
     'WidgetOnResizeEventHandlerToken',
@@ -99,7 +100,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         private _dashboardCustomizationServiceProxy: DashboardCustomizationServiceProxy,
         private _widgetConfigurationsServiceProxy: WidgetConfigurationsServiceProxy,
         private _guidGenerator: GuidGeneratorService,
-        private editModeService: EditModeService
+        private editModeService: EditModeService,
+        private dashboardPagesService: DashboardPagesService,
     ) {
         super(_injector);
     }
@@ -108,6 +110,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         this.loading = true;
         this.subscribeToEvent('app.dashboard.removeWidget', (widgetGuid, widgetId) => this.removeItem(widgetGuid, widgetId, true));
         this.subscribeToEvent('app.dashboard.saveWidget', (widgetUpdateModel: WidgetUpdateModel) => this.updateItem(widgetUpdateModel));
+        this.subscribeToEvent('app.dashboard.navigateToPage', (pageId: string) => this.onNavigateToPage(pageId));
 
         forkJoin([
             this._dashboardCustomizationServiceProxy.getUserDashboard(
@@ -235,6 +238,18 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         };
 
         this.createWidgetSubjects();
+        this.updatePagesStore();
+    }
+
+    onNavigateToPage(pageId: string): void {
+        const targetPage = this.userDashboard?.pages?.find((page) => page.id === pageId);
+
+        if (!targetPage) {
+            this.notify.error('Selected page no longer exists.');
+            return;
+        }
+
+        this.selectPageTab(pageId);
     }
 
     updateItem(widgetUpdateModel: WidgetUpdateModel) {
@@ -413,6 +428,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                     widgets: [],
                 });
 
+                this.updatePagesStore();
+
                 this.busy = false;
                 this.notify.success(this.l('SavedSuccessfully'));
 
@@ -483,6 +500,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                 dashboardPage.name = pageName;
                 this.notify.success(this.l('Renamed'));
                 this.busy = false;
+                this.updatePagesStore();
             });
 
         this.dropdownRenamePage.hide();
@@ -509,6 +527,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                         this.options.pop(); // since all of our gridster has same options, its not important which options we are removing
                         this.userDashboard.pages.splice(this.userDashboard.pages.indexOf(dashboardPage), 1);
                         this.activateFirstPage();
+
+                        this.updatePagesStore();
 
                         this.busy = false;
                         this.notify.success(this.l('SuccessfullyRemoved'));
@@ -626,6 +646,10 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                 parent: this._injector,
             }),
         };
+    }
+
+    private updatePagesStore(): void {
+        this.dashboardPagesService.setPages(this.userDashboard?.pages ?? []);
     }
 
     private getWidgetViewDefinition(id: string): WidgetViewDefinition {

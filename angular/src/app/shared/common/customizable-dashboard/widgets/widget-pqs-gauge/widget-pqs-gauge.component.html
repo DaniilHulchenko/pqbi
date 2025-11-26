@@ -7,6 +7,14 @@
                     <i class="fa fa-edit"></i>
                 </button>
                 <button class="btn btn-primary btn-sm" *ngIf="editState" (click)="edit()">{{ 'Edit' | localize }}</button>
+                <button
+                    class="btn btn-outline-primary btn-sm"
+                    *ngIf="canNavigateToPage"
+                    (click)="onNavigateToPage()"
+                    title="Navigate to page"
+                >
+                    <i class="fa fa-arrow-right"></i>
+                </button>
             </h3>
         </div>
     </div>

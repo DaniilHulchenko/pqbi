@@ -91,7 +91,13 @@
         <h5>Link</h5>
         <div class="link-section">
           <label>select PQBI page</label>
-          <dx-select-box [items]="pqbiPages" [(value)]="link.page" placeholder="Select PQBI page">
+          <dx-select-box
+            [items]="pqbiPages"
+            displayExpr="name"
+            valueExpr="id"
+            [(value)]="link.page"
+            placeholder="Select PQBI page"
+          >
           </dx-select-box>
         </div>
       </div>
