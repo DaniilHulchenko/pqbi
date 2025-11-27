@@ -32,6 +32,8 @@ import { ConfigurationVersionService } from '@app/shared/services/configuration-
 import { BarchartWidgetConfigurationService } from '@app/shared/services/widget-configurations/barchart-widget-configuration.service';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateTime } from 'luxon';
+import { DateTimeService } from '@app/shared/common/timing/date-time.service';
+
 
 @Component({
     selector: 'widgetPqsBarChart',
@@ -60,6 +62,8 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
         elementReference: ElementRef,
         dateRangeService: DateRangeService,
         private _configurationVersionService: ConfigurationVersionService,
+        private _dateTimeService: DateTimeService,
+
     ) {
         super(injector, elementReference, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSBarChart');
@@ -166,7 +170,7 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
                 widgetName: this.widgetConfigurationInDB?.name,
                 startDate: null,
                 endDate: null,
-                userTimeZone: 1,
+                userTimeZone: this._dateTimeService.getUserTimeZoneName(),
                 refreshRateInSeconds: 0,
                 isRealTime: false,
             });

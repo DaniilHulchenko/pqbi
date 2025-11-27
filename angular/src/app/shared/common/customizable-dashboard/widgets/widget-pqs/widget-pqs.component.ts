@@ -42,6 +42,7 @@ import { ConfigurationVersionService } from '@app/shared/services/configuration-
 import { TrendWidgetConfigurationService } from '@app/shared/services/widget-configurations/trend-widget-configuration.service';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateRangeType } from '@app/shared/enums/date-range-type';
+import { DateTimeService } from '@app/shared/common/timing/date-time.service';
 
 type LineLegendType = {
     name: string,
@@ -261,6 +262,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         dateRangeService: DateRangeService,
         private _resolutionService: ResolutionService,
         private _configurationVersionService: ConfigurationVersionService,
+        private _dateTimeService: DateTimeService,
     ) {
         super(injector, elementRef, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSTrend');
@@ -386,7 +388,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
             let request: TrendCalcRequest = new TrendCalcRequest({
                 isAutoResolution,
                 resolutionInSeconds,
-                userTimeZone: 1,
+                userTimeZone: this._dateTimeService.getUserTimeZoneName(),
                 widgetName: this.widgetConfigurationInDB?.name,
                 startDate: DateTime.fromJSDate(dateRange[0]),
                 endDate: DateTime.fromJSDate(dateRange[1]),

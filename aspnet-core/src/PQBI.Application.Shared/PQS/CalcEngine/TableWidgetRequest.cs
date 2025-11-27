@@ -7,6 +7,7 @@ using PQBI.CalculationEngine.Matrix;
 using PQBI.Infrastructure.Extensions;
 using PQS.Data.Common;
 using PQS.Data.Events.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -56,7 +57,6 @@ public enum WidgetTableParameterType : uint
 public class TableWidgetRequest : WidgetValidationBase, ICustomValidate
 {
     public string WidgetName { get; set; }
-    public int UserTimeZone { get; set; }
     public RowWidgetTable Rows { get; set; }
     public List<ColumnWidgetTable> ColumnWidgetTables { get; set; }
 
@@ -99,11 +99,11 @@ public class TableWidgetRequest : WidgetValidationBase, ICustomValidate
                     return;
                 }
 
-                if (tag.Name.IsNullOrEmpty())
-                {
-                    context.Results.Add(new ValidationResult($"{nameof(TagTableWidget.Name)} - Should not be empty."));
-                    return;
-                }
+                //if (tag.Name.IsNullOrEmpty())
+                //{
+                //    context.Results.Add(new ValidationResult($"{nameof(TagTableWidget.Name)} - Should not be empty."));
+                //    return;
+                //}
 
                 if (tag.Feeders.IsCollectionEmpty())
                 {
@@ -137,18 +137,15 @@ public class TagTableWidget
     public List<FeederComponentInfo> Feeders { get; set; } = new List<FeederComponentInfo>();
 
     public override int GetHashCode()
-    {
-        return Id.GetHashCode() ^ Name.GetHashCode(); ;
-    }
+          => HashCode.Combine(Id, Name);
 
     public override bool Equals(object obj)
     {
-        if (obj is TagTableWidget tag)
-        {
-            return tag.Id.Equals(tag.Id) && tag.Name.Equals(tag.Name);
-        }
+        if (obj is not TagTableWidget other)
+            return false;
 
-        return false;
+        return string.Equals(Id, other.Id, StringComparison.Ordinal) &&
+               string.Equals(Name, other.Name, StringComparison.Ordinal);
     }
 }
 
@@ -232,7 +229,7 @@ public class ColumnWidgetTable : IWidgetParameter
 
     [JsonProperty("exclude_flagged")]
     public List<EventClass> ExcludeFlagged { get; set; } = new List<EventClass>();
-  
+
     public bool IsExcludeFlaggedData { get; set; }
 
     [JsonProperty("ignore_aligning_function")]

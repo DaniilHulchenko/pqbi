@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +19,8 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { NormalizeEnum } from '@shared/service-proxies/service-proxies';
 import { GaugeWidgetAdvancedSettingsConfig, Segment } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
 import { GaugeWidgetSegmentationSettingsComponent } from '../shared/gauge-widget-segmentation-settings/gauge-widget-segmentation-settings.component';
+import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -44,7 +46,7 @@ import { GaugeWidgetSegmentationSettingsComponent } from '../shared/gauge-widget
     templateUrl: './gauge-widget-event-advanced-settings.component.html',
     styleUrl: './gauge-widget-event-advanced-settings.component.css',
 })
-export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChanges {
+    export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy {
     @Input() config: GaugeWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
 
@@ -102,7 +104,9 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
         { id: 'limits', text: 'show only if limits are exceeded' },
     ];
 
-    pqbiPages = [];
+    pqbiPages: { id: string; name: string }[] = [];
+
+    private subscription: Subscription;
 
     limitOptions = [
         { value: Limit.Fixed, text: 'lower limit / upper limit' },
@@ -129,10 +133,13 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
 
     colorSchemaTypes = ColorSchema;
 
-    constructor() {}
+    constructor(private dashboardPagesService: DashboardPagesService) {}
 
     ngOnInit() {
         this.normalizationOptions = this.getNormalizationOptions();
+        this.subscription = this.dashboardPagesService.getPages().subscribe((pages) => {
+            this.pqbiPages = pages.map((page) => ({ id: page.id, name: page.name }));
+        });
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -157,6 +164,9 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
             this.colorScheme = c.colorScheme;
             this.outOfLimitColor = c.outOfLimitColor;
         }
+    }
+    ngOnDestroy(): void {
+        this.subscription?.unsubscribe();
     }
 
     getNormalizationOptions() {

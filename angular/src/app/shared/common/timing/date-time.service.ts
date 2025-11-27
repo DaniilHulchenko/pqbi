@@ -203,6 +203,26 @@ export class DateTimeService {
         return DateTime.fromJSDate(date);
     }
 
+    getUserTimeZoneName(): string {
+     const abpTz = abp?.timing?.timeZoneInfo?.iana?.timeZoneId;
+    if (abp?.clock?.provider?.supportsMultipleTimezone && abpTz) {
+        return abpTz;
+    }
+
+     const luxonTz = DateTime.local().zoneName;
+    if (luxonTz && luxonTz !== "local" && luxonTz !== "UTC") {
+        return luxonTz;
+    }
+
+     const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (browserTz) {
+        return browserTz;
+    }
+
+     return "UTC";
+}
+
+
     fromNow(date: DateTime | Date): string {
         if (date instanceof Date) {
             return this.fromNow(this.fromJSDate(date));

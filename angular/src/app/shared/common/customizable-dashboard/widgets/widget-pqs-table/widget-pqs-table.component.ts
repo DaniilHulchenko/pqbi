@@ -57,6 +57,8 @@ import { ComponentsService } from '@app/shared/services/components-service.servi
 import { TableWidgetConfigurationService } from '@app/shared/services/widget-configurations/table-widget-configuration.service';
 import { dxTreeListColumn } from '@node_modules/devextreme/ui/tree_list';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
+import { DateTimeService } from '@app/shared/common/timing/date-time.service';
+
 
 
 interface TreeWidgetParametersColumn extends WidgetParametersColumn {
@@ -125,6 +127,8 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         elementReference: ElementRef,
         dateRangeService: DateRangeService,
         private _configurationVersionService: ConfigurationVersionService,
+        private _dateTimeService: DateTimeService,
+
     ) {
         super(injector, elementReference, dateRangeService);
 
@@ -276,7 +280,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
             }),
             startDate: range[0],
             endDate: range[1],
-            userTimeZone: 1,
+            userTimeZone: this._dateTimeService.getUserTimeZoneName(),
             refreshRateInSeconds: 0,
             isRealTime: false,
         });

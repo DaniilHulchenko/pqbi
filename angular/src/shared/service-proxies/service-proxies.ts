@@ -8,7 +8,7 @@
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
-import { mergeMap as _observableMergeMap, catchError as _observableCatch, share } from 'rxjs/operators';
+import { mergeMap as _observableMergeMap, catchError as _observableCatch } from 'rxjs/operators';
 import { Observable, throwError as _observableThrow, of as _observableOf } from 'rxjs';
 import { Injectable, Inject, Optional, InjectionToken } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angular/common/http';
@@ -11938,7 +11938,7 @@ export class PQSRestApiServiceProxy {
     /**
      * @return Success
      */
-    confVersion(): Observable<number> {
+    confVersion(): Observable<void> {
         let url_ = this.baseUrl + "/api/services/app/PQSRestApi/ConfVersion";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -11956,14 +11956,14 @@ export class PQSRestApiServiceProxy {
                 try {
                     return this.processConfVersion(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<number>;
+                    return _observableThrow(e) as any as Observable<void>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<number>;
+                return _observableThrow(response_) as any as Observable<void>;
         }));
     }
 
-    protected processConfVersion(response: HttpResponseBase): Observable<number> {
+    protected processConfVersion(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -11972,7 +11972,7 @@ export class PQSRestApiServiceProxy {
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(Number.parseInt(_responseText));
+            return _observableOf(null as any);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -22360,8 +22360,8 @@ export class BarChartRequest implements IBarChartRequest {
     endDate!: DateTime;
     refreshRateInSeconds!: number;
     isRealTime!: boolean;
+    userTimeZone!: string | undefined;
     widgetName!: string | undefined;
-    userTimeZone!: number;
     category!: DimensionSelector;
     seriesBy!: DimensionSelector;
     feeders!: FeederComponentInfo[] | undefined;
@@ -22382,8 +22382,8 @@ export class BarChartRequest implements IBarChartRequest {
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
             this.refreshRateInSeconds = _data["refreshRateInSeconds"];
             this.isRealTime = _data["isRealTime"];
-            this.widgetName = _data["widgetName"];
             this.userTimeZone = _data["userTimeZone"];
+            this.widgetName = _data["widgetName"];
             this.category = _data["category"] ? DimensionSelector.fromJS(_data["category"]) : <any>undefined;
             this.seriesBy = _data["seriesBy"] ? DimensionSelector.fromJS(_data["seriesBy"]) : <any>undefined;
             if (Array.isArray(_data["feeders"])) {
@@ -22412,8 +22412,8 @@ export class BarChartRequest implements IBarChartRequest {
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
         data["refreshRateInSeconds"] = this.refreshRateInSeconds;
         data["isRealTime"] = this.isRealTime;
-        data["widgetName"] = this.widgetName;
         data["userTimeZone"] = this.userTimeZone;
+        data["widgetName"] = this.widgetName;
         data["category"] = this.category ? this.category.toJSON() : <any>undefined;
         data["seriesBy"] = this.seriesBy ? this.seriesBy.toJSON() : <any>undefined;
         if (Array.isArray(this.feeders)) {
@@ -22435,8 +22435,8 @@ export interface IBarChartRequest {
     endDate: DateTime;
     refreshRateInSeconds: number;
     isRealTime: boolean;
+    userTimeZone: string | undefined;
     widgetName: string | undefined;
-    userTimeZone: number;
     category: DimensionSelector;
     seriesBy: DimensionSelector;
     feeders: FeederComponentInfo[] | undefined;
@@ -33588,6 +33588,38 @@ export class IntPtr implements IIntPtr {
 export interface IIntPtr {
 }
 
+export enum IntervalSynchronized {
+    IS1YEAR = 0,
+    IS1MONTH = 1,
+    IS1WEEK = 2,
+    IS1DAY = 3,
+    IS2HOUR = 4,
+    IS1HOUR = 5,
+    IS30MIN = 6,
+    IS15MIN = 7,
+    IS10MIN = 8,
+    IS5MIN = 9,
+    IS3MIN = 10,
+    IS1MIN = 11,
+    IS30SEC = 12,
+    IS10SEC = 13,
+    IS5SEC = 14,
+    IS1SEC = 15,
+    IS3SEC = 16,
+    IS200MS = 17,
+    ISX = 18,
+    ISN = 19,
+    ISHC = 20,
+    ISCYC = 21,
+    IS16PC = 22,
+    IS32PC = 23,
+    IS64PC = 24,
+    IS128PC = 25,
+    IS256PC = 26,
+    IS512PC = 27,
+    IS1024PC = 28,
+}
+
 export class InvoiceDto implements IInvoiceDto {
     items!: SubscriptionPaymentProductDto[] | undefined;
     totalAmount!: number;
@@ -39119,10 +39151,10 @@ export enum QuantityEnum {
     QMIN = 0,
     QMAX = 1,
     QAVG = 2,
-    // QSAMPLE = 3,
-    // QSUM = 4,
-    // QCOUNTER = 5,
-    // NONE = 6,
+    QSAMPLE = 3,
+    QSUM = 4,
+    QCOUNTER = 5,
+    NONE = 6,
 }
 
 export class RecentTenant implements IRecentTenant {
@@ -41612,8 +41644,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
     endDate!: DateTime;
     refreshRateInSeconds!: number;
     isRealTime!: boolean;
+    userTimeZone!: string | undefined;
     widgetName!: string | undefined;
-    userTimeZone!: number;
     rows!: RowWidgetTable;
     columnWidgetTables!: ColumnWidgetTable[] | undefined;
 
@@ -41632,8 +41664,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
             this.refreshRateInSeconds = _data["refreshRateInSeconds"];
             this.isRealTime = _data["isRealTime"];
-            this.widgetName = _data["widgetName"];
             this.userTimeZone = _data["userTimeZone"];
+            this.widgetName = _data["widgetName"];
             this.rows = _data["rows"] ? RowWidgetTable.fromJS(_data["rows"]) : <any>undefined;
             if (Array.isArray(_data["columnWidgetTables"])) {
                 this.columnWidgetTables = [] as any;
@@ -41656,8 +41688,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
         data["refreshRateInSeconds"] = this.refreshRateInSeconds;
         data["isRealTime"] = this.isRealTime;
-        data["widgetName"] = this.widgetName;
         data["userTimeZone"] = this.userTimeZone;
+        data["widgetName"] = this.widgetName;
         data["rows"] = this.rows ? this.rows.toJSON() : <any>undefined;
         if (Array.isArray(this.columnWidgetTables)) {
             data["columnWidgetTables"] = [];
@@ -41673,8 +41705,8 @@ export interface ITableWidgetRequest {
     endDate: DateTime;
     refreshRateInSeconds: number;
     isRealTime: boolean;
+    userTimeZone: string | undefined;
     widgetName: string | undefined;
-    userTimeZone: number;
     rows: RowWidgetTable;
     columnWidgetTables: ColumnWidgetTable[] | undefined;
 }
@@ -43190,11 +43222,12 @@ export class TrendCalcRequest implements ITrendCalcRequest {
     endDate!: DateTime;
     refreshRateInSeconds!: number;
     isRealTime!: boolean;
+    userTimeZone!: string | undefined;
     isAutoResolution!: boolean;
     resolutionInSeconds!: number;
     widgetName!: string | undefined;
-    userTimeZone!: number;
     parameters!: TrendParameter[] | undefined;
+    selectedResolution!: IntervalSynchronized;
 
     constructor(data?: ITrendCalcRequest) {
         if (data) {
@@ -43211,15 +43244,16 @@ export class TrendCalcRequest implements ITrendCalcRequest {
             this.endDate = _data["endDate"] ? DateTime.fromISO(_data["endDate"].toString()) : <any>undefined;
             this.refreshRateInSeconds = _data["refreshRateInSeconds"];
             this.isRealTime = _data["isRealTime"];
+            this.userTimeZone = _data["userTimeZone"];
             this.isAutoResolution = _data["isAutoResolution"];
             this.resolutionInSeconds = _data["resolutionInSeconds"];
             this.widgetName = _data["widgetName"];
-            this.userTimeZone = _data["userTimeZone"];
             if (Array.isArray(_data["parameters"])) {
                 this.parameters = [] as any;
                 for (let item of _data["parameters"])
                     this.parameters!.push(TrendParameter.fromJS(item));
             }
+            this.selectedResolution = _data["selectedResolution"];
         }
     }
 
@@ -43236,15 +43270,16 @@ export class TrendCalcRequest implements ITrendCalcRequest {
         data["endDate"] = this.endDate ? this.endDate.toString() : <any>undefined;
         data["refreshRateInSeconds"] = this.refreshRateInSeconds;
         data["isRealTime"] = this.isRealTime;
+        data["userTimeZone"] = this.userTimeZone;
         data["isAutoResolution"] = this.isAutoResolution;
         data["resolutionInSeconds"] = this.resolutionInSeconds;
         data["widgetName"] = this.widgetName;
-        data["userTimeZone"] = this.userTimeZone;
         if (Array.isArray(this.parameters)) {
             data["parameters"] = [];
             for (let item of this.parameters)
                 data["parameters"].push(item.toJSON());
         }
+        data["selectedResolution"] = this.selectedResolution;
         return data;
     }
 }
@@ -43254,11 +43289,12 @@ export interface ITrendCalcRequest {
     endDate: DateTime;
     refreshRateInSeconds: number;
     isRealTime: boolean;
+    userTimeZone: string | undefined;
     isAutoResolution: boolean;
     resolutionInSeconds: number;
     widgetName: string | undefined;
-    userTimeZone: number;
     parameters: TrendParameter[] | undefined;
+    selectedResolution: IntervalSynchronized;
 }
 
 export class TrendCustomWidgetData implements ITrendCustomWidgetData {
@@ -46398,7 +46434,7 @@ function throwException(message: string, status: number, response: string, heade
         return _observableThrow(new ApiException(message, status, response, headers, null));
 }
 
-export function blobToText(blob: any): Observable<string> {
+function blobToText(blob: any): Observable<string> {
     return new Observable<string>((observer: any) => {
         if (!blob) {
             observer.next("");

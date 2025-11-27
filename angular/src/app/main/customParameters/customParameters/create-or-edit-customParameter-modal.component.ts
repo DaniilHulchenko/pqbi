@@ -100,7 +100,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
 
     private readonly _defaultMinAllowedResolution: ResolutionState = new ResolutionState({
         resolutionUnit: ResolutionUnits.CUSTOM,
-        customResolutionValue: 3,
+        customResolutionValue: 1,
         customResolutionUnit: CustomResolutionUnits.MIN,
     });
 
@@ -337,7 +337,8 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
 
     updateResolutionModel() {
         // this.customParameter.resolution = this._resolutionService.formatForRequest(this.selectedResolution).toString();
-        this.customParameter.resolutionInSeconds = this._resolutionService.resolutionValueInSeconds(this.selectedResolution);
+        const selectedResolutionInMs = this._resolutionService.resolutionValueInMs(this.selectedResolution);
+        this.customParameter.resolutionInSeconds = selectedResolutionInMs / 1000;    
     }
 
     updateMinResolution() {
@@ -413,6 +414,8 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
             this.customParameter = new CreateOrEditCustomParameterDto();
             this.customParameter.id = customParameterId;
             this.selectedType = null;
+            this.selectedResolution = new ResolutionState(this._defaultMinAllowedResolution);
+            this.updateResolutionModel();
             this.updateMinResolution();
 
             this.active = true;
@@ -521,6 +524,15 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
             return;
         }
 
+        const selectedResolutionInMs = this.getSelectedResolutionInMs();
+
+        if (selectedResolutionInMs === null || selectedResolutionInMs === undefined) {
+            this.showMessage('Resolution is invalid.', 'error');
+            this.saving = false;
+            return;
+        }
+
+        this.customParameter.resolutionInSeconds = selectedResolutionInMs / 1000;
         this.customParameter.aggregationFunction = this.combinedAggregationFunctionValues;
         this.customParameter.innerCustomParameters = safestringify(this.innerCustomParameters);
         this.customParameter.customBaseDataList = safestringify(this.baseParameters);
@@ -609,6 +621,18 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
     private validate(): boolean {
         let result = true;
 
+        const selectedResolutionInMs = this.getSelectedResolutionInMs();
+
+        if (selectedResolutionInMs === null || selectedResolutionInMs === undefined) {
+            this.showMessage('Resolution is invalid.', 'error');
+            return false;
+        }
+
+        if (selectedResolutionInMs < 180000) {
+            this.showMessage('Resolution must be at least 3 minutes.', 'error');
+            return false;
+        }
+
         let incorrectParameters: string[] = [];
         for (let parameter of this.parameters) {
             if (
@@ -632,6 +656,20 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
         }
 
         return result;
+    }
+
+     private getSelectedResolutionInMs(): number | null {
+        if (!this.selectedResolution) {
+            return null;
+        }
+
+        const selectedResolutionInMs = this._resolutionService.resolutionValueInMs(this.selectedResolution);
+
+        if (Number.isNaN(selectedResolutionInMs)) {
+            return null;
+        }
+
+        return selectedResolutionInMs;
     }
 }
 

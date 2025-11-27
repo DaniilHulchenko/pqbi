@@ -6,6 +6,7 @@ using PQZTimeFormat;
 using PQS.Data.Common.Values;
 using PQS.PQZxml;
 using PQS.Data.Measurements.CustomParameter;
+using PQBI.PQS;
 
 namespace PQBI.Requests;
 
@@ -43,7 +44,7 @@ public class PQSGetAllObjectsResponse : PQSOperationResponseBase<PQSGetAllObject
 
     }
 
-    public void ExtractGetParametersOrError(out IReadOnlyDictionary<string, string[]> parameters, out IReadOnlyDictionary<string, IEnumerable<CustomMeasurementParameter>> customParameters, out IReadOnlyDictionary<string, IEnumerable<CustomCalculationBaseInfo>> customBaseMap, out ErrorRecord errorRecord)
+    public void ExtractGetParametersOrError(out IReadOnlyDictionary<string, string[]> parameters, out IReadOnlyDictionary<string, IEnumerable<CustomMeasurementParameter>> customParameters, out IReadOnlyDictionary<string, IEnumerable<CustomBaseInfo>> customBaseMap, out ErrorRecord errorRecord)
     {
         errorRecord = null;
         parameters = null;
@@ -52,8 +53,8 @@ public class PQSGetAllObjectsResponse : PQSOperationResponseBase<PQSGetAllObject
 
         var list = new Dictionary<string, string[]>();
         var customPrmList = new Dictionary<string, IEnumerable<CustomMeasurementParameter>>();
-        var customBaseList = new Dictionary<string, IEnumerable<CustomCalculationBaseInfo>>();
-
+        var customBaseList = new Dictionary<string, IEnumerable<CustomBaseInfo>>();      
+      
         ExtractOperationAllRecords(out var records, out var error);
         if (error != null)
         {
@@ -78,13 +79,26 @@ public class PQSGetAllObjectsResponse : PQSOperationResponseBase<PQSGetAllObject
                 if (record.OperationConfigurationResult.TryGetConfigurationValue<string>(StandardConfigurationEnum.STD_CUSTOM_RESOLUTION_ARRAY, out var customBaseParametersStrList))
                 {
                     List<CustomCalculationBaseInfo> customBase = CustomPrmSerializationUtill.DeserializeXmlToObject<List<CustomCalculationBaseInfo>>(customBaseParametersStrList);
-                    
+
+                    List<CustomBaseInfo> customBaseInfoList = new List<CustomBaseInfo>();
+
+                    foreach (var baseInfo in customBase)
+                    {
+                        string basexVal = baseInfo.WindowInterval == null ? baseInfo.CalcBase.ToString() : $"{baseInfo.CalcBase}_{baseInfo.WindowInterval}";
+                        customBaseInfoList.Add(new CustomBaseInfo
+                        {
+                            BaseXString = basexVal,
+                            PresentedName = baseInfo.PresentedName,
+                        });
+                    }                   
+
                     if (customBase.Count() > 0)
-                        customBaseList.Add(record.ObjectID!.ToString(), customBase);
+                        customBaseList.Add(record.ObjectID!.ToString(), customBaseInfoList);
                 }
             }
 
             parameters = list;
+
             customParameters = customPrmList;
             customBaseMap = customBaseList;
         }

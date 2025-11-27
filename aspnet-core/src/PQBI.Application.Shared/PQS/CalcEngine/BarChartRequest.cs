@@ -12,7 +12,6 @@ namespace PQBI.PQS.CalcEngine
     public class BarChartRequest : WidgetValidationBase, ICustomValidate
     {
         public string WidgetName { get; set; }
-        public int UserTimeZone { get; set; }
         public required DimensionSelector Category { get; set; }
         public required DimensionSelector SeriesBy { get; set; }
         public List<FeederComponentInfo> Feeders { get; set; } = [];

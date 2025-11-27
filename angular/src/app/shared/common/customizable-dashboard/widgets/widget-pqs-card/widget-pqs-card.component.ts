@@ -29,6 +29,9 @@ import { ConfigurationVersionService } from '@app/shared/services/configuration-
 import { CardWidgetConfigurationService } from '@app/shared/services/widget-configurations/card-widget-configuration.service';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
+import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
+import { DateTimeService } from '@app/shared/common/timing/date-time.service';
+
 
 @Component({
     selector: 'app-widget-pqs-card',
@@ -55,6 +58,8 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     titleFontColor = '#000';
     iconColor: string = '#5b9bd5';
     isIconVisible: boolean = true;
+    navigationPageId: string | null = null;
+    canNavigateToPage = false;
 
     calculatedColorSchema: string | null;
 
@@ -68,6 +73,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         private dateRangeService: DateRangeService,
         private _tenantDashboardService: TenantDashboardServiceProxy,
         private _configurationVersionService: ConfigurationVersionService,
+        private dashboardPagesService: DashboardPagesService,
+
+        private _dateTimeService: DateTimeService,
     ) {
         super(injector, elementReference, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSCard');
@@ -75,6 +83,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
     ngOnInit(): void {
         super.ngOnInit();
+        this.subs.push(
+            this.dashboardPagesService.getPages().subscribe(() => this.updateNavigationAvailability()),
+        );
         if (this.isNew) {
             this.runDelayed(() => this.edit());
         }
@@ -110,6 +121,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                     if (this.cardWidgetConfiguration) {
                         let parameters = JSON.parse(this.cardWidgetConfiguration.parameters);
                         this.parameter = parameters.at(0);
+                        this.setNavigationTarget();
                         this.fetch();
                     }
                 });
@@ -121,7 +133,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         let request = new TableWidgetRequest();
 
         request.widgetName = this.widgetConfigurationInDB?.name;
-        request.userTimeZone = 1;
+        request.userTimeZone = this._dateTimeService.getUserTimeZoneName();
         request.rows = new RowWidgetTable({
             tags: null,
             feeders: this.getFormattedFeedersAndComponents(),
@@ -406,13 +418,31 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             } else if (leadingZeros >= 7 && leadingZeros <= 9) {
                 value *= 1e9;
                 suffix = 'n';
-            }
+            
         }
-
+    }
+        
         this.value = this.roundValue(value);
         this.unit = `${suffix}${token}`;
     }
 
+    onNavigateToPage(): void {
+        if (!this.navigationPageId) {
+            return;
+        }
+
+        abp.event.trigger('app.dashboard.navigateToPage', this.navigationPageId);
+    }
+
+    private setNavigationTarget(): void {
+        this.navigationPageId = this.parameter?.cardWidgetAdvancedSettings?.linkPage ?? null;
+        this.updateNavigationAvailability();
+    }
+
+    private updateNavigationAvailability(): void {
+        this.canNavigateToPage = !!this.dashboardPagesService.findPage(this.navigationPageId);
+    }
+    
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();

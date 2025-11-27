@@ -63,7 +63,7 @@ public class ComponentSlimDto
     public List<FeederDescriptionDto> Feeders { get; }
     public List<ChannelDescriptionDto> Channels { get; }
     public IEnumerable<AdditionalData> AdditionalDatas { get; set; }
-    public IEnumerable<CustomCalculationBaseInfo> CustomBaseList { get; set; }
+    public IEnumerable<CustomBaseInfo> CustomBaseList { get; set; }
 
 
 }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-settings-options';
 import { uniqBy } from 'lodash-es';
 import {
@@ -26,6 +26,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
 import { EventService } from '@app/shared/services/event-service.service';
+import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'cardWidgetParameterAdvancedSettings',
@@ -49,7 +51,7 @@ import { EventService } from '@app/shared/services/event-service.service';
     templateUrl: './card-widget-parameter-advanced-settings.component.html',
     styleUrl: './card-widget-parameter-advanced-settings.component.css',
 })
-export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnChanges {
+export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy {
     @Output() advancedSettingsChanged = new EventEmitter<AdvancedSettingsConfig>();
     @Input() config: CardWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<CardWidgetAdvancedSettingsConfig>();
@@ -116,7 +118,9 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         { id: 'limits', text: 'show only if limits are exceeded' },
     ];
 
-    pqbiPages = [];
+    pqbiPages: { id: string; name: string }[] = [];
+
+    private subscription: Subscription;
 
     excludeFlaggedOptions = [
         { value: ExcludeFlagged.DefaultEvents, text: 'yes  (with Dip, Swell, Interrupt)' },
@@ -144,7 +148,7 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         { value: 'MIN', text: 'Minimum' },
     ];
 
-    constructor(private _eventService: EventService) {}
+    constructor(private _eventService: EventService, private dashboardPagesService: DashboardPagesService) {}
 
     onFileChanged(e: any) {
         const file = e.value[0];
@@ -162,6 +166,9 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         this._eventService.pqsEvents().subscribe((evts) => {
             this.flaggingEvents = evts;
             this.flaggingEvents = uniqBy(this.flaggingEvents, (x) => x.eventClass);
+        });
+            this.subscription = this.dashboardPagesService.getPages().subscribe((pages) => {
+            this.pqbiPages = pages.map((page) => ({ id: page.id, name: page.name }));
         });
     }
 
@@ -191,6 +198,9 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
             this.titleFont = c.titleFont;
             this.valueFont = c.valueFont;
         }
+    }
+    ngOnDestroy(): void {
+        this.subscription?.unsubscribe();
     }
 
     getNormalizationOptions() {

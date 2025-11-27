@@ -4,6 +4,7 @@ using Abp.Runtime.Validation;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PQBI.Infrastructure.Extensions;
+using PQS.Data.Measurements.Enums;
 
 namespace PQBI.PQS.CalcEngine;
 
@@ -13,6 +14,8 @@ public class WidgetValidationBase
     public DateTime EndDate { get; set; }
     public int RefreshRateInSeconds { get; set; }
     public bool IsRealTime { get; set; }
+    public string UserTimeZone { get; set; }
+
 
     public bool ValidationErrors(CustomValidationContext context)
     {
@@ -21,6 +24,8 @@ public class WidgetValidationBase
             context.Results.Add(new ValidationResult($"{nameof(WidgetValidationBase.StartDate)} <  {nameof(WidgetValidationBase.EndDate)}"));
             return false;
         }
+        if (RefreshRateInSeconds <= 0)
+            IsRealTime = false;
 
         return true;
 
@@ -107,15 +112,13 @@ public class Harmonics
 }
 
 public class TrendCalcRequest : WidgetValidationBase, ICustomValidate
-{
-    public bool IsRealTime { get; set; }
+{  
     public bool IsAutoResolution { get; set; }
     public int ResolutionInSeconds { get; set; }
     //public string Resolution { get; set; }
     public string WidgetName { get; set; }
-    public int UserTimeZone { get; set; }
     public List<TrendParameter> Parameters { get; set; } = new List<TrendParameter>();
-
+    public IntervalSynchronized SelectedResolution { get; set; }
 
     public void AddValidationErrors(CustomValidationContext context)
     {

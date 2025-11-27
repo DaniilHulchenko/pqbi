@@ -57,6 +57,8 @@ import { DateRangeType } from '@app/shared/enums/date-range-type';
 import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 import { DateTime } from 'luxon';
 import { DateRangeSelectorComponent } from '@app/shared/common/components/date-range-selector/date-range-selector.component';
+import { DateTimeService } from '@app/shared/common/timing/date-time.service';
+
 
 
 @Component({
@@ -131,6 +133,8 @@ export class CreateOrEditBarChartConfigurationComponent
         private _tenantDashboardService: TenantDashboardServiceProxy,
         private _dateRangeService: DateRangeService,
         private _groupServiceProxy: GroupsServiceProxy,
+        private _dateTimeService: DateTimeService,
+
     ) {
         super(injector);
     }
@@ -653,7 +657,7 @@ export class CreateOrEditBarChartConfigurationComponent
             widgetName: '',
             startDate: DateTime.fromJSDate(startDate),
             endDate: DateTime.fromJSDate(endDate),
-            userTimeZone: 1,
+            userTimeZone: this._dateTimeService.getUserTimeZoneName(),
             refreshRateInSeconds: 0,
             isRealTime: false,
         });

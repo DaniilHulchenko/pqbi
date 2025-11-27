@@ -35,6 +35,10 @@ import { ConfigurationVersionService } from '@app/shared/services/configuration-
 import { GaugeWidgetConfigurationService } from '@app/shared/services/widget-configurations/gauge-widget-configuration.service';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
+import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
+import { DateTimeService } from '@app/shared/common/timing/date-time.service';
+
+
 
 interface WeightedSegmentMeta extends Segment {
     startPosition: number;
@@ -91,6 +95,9 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     titleFontColor = '#000';
 
     calculatedColorSchema: string | null;
+   
+    navigationPageId: string | null = null;
+    canNavigateToPage = false;
 
     private dataUnitType: DataUnitType;
     private stopStream$ = new Subject();
@@ -108,6 +115,9 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         private dateRangeService: DateRangeService,
         private _tenantDashboardService: TenantDashboardServiceProxy,
         private _configurationVersionService: ConfigurationVersionService,
+        private dashboardPagesService: DashboardPagesService,
+        private _dateTimeService: DateTimeService,
+
     ) {
         super(injector, elementReference, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSGauge');
@@ -130,6 +140,9 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
 
     ngOnInit(): void {
         super.ngOnInit();
+        this.subs.push(
+            this.dashboardPagesService.getPages().subscribe(() => this.updateNavigationAvailability()),
+        );
         if (this.isNew) {
             this.runDelayed(() => this.edit());
         }
@@ -165,6 +178,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                     if (this.gaugeWidgetConfiguration) {
                         this.parameter = JSON.parse(this.gaugeWidgetConfiguration.parameter);
                         this.style = JSON.parse(this.gaugeWidgetConfiguration.style) as GaugeStyle;
+                        this.setNavigationTarget();
                         this.prepareStyle();
                         this.fetch();
                     }
@@ -177,7 +191,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         let request = new TableWidgetRequest();
 
         request.widgetName = this.widgetConfigurationInDB?.name;
-        request.userTimeZone = 1;
+        request.userTimeZone = this._dateTimeService.getUserTimeZoneName();
         request.rows = new RowWidgetTable({
             tags: null,
             feeders: this.getFormattedFeedersAndComponents(),
@@ -820,6 +834,22 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         return [roundedValue, unit];
     }
 
+    onNavigateToPage(): void {
+        if (!this.navigationPageId) {
+            return;
+        }
+
+        abp.event.trigger('app.dashboard.navigateToPage', this.navigationPageId);
+    }
+
+    private setNavigationTarget(): void {
+        this.navigationPageId = this.parameter?.gaugeWidgetAdvancedSettings?.linkPage ?? null;
+        this.updateNavigationAvailability();
+    }
+
+    private updateNavigationAvailability(): void {
+        this.canNavigateToPage = !!this.dashboardPagesService.findPage(this.navigationPageId);
+    }
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();

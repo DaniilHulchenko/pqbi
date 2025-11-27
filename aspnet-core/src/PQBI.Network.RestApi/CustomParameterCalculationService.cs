@@ -2481,6 +2481,7 @@ namespace PQBI.Network.RestApi
                     node.Markers = advancedSettings?.Markers;
                     outerAggFunction = node.OuterAggregationFunction;
 
+                    node.Feeders = [feeder];
                     int? feederId = feeder.Id;
 
                     if (node.CustomParameterType == CustomParameterType.BPCP)

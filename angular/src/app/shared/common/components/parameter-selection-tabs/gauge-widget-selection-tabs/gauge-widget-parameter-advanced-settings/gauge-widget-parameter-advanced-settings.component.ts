@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -25,6 +25,8 @@ import { uniqBy } from 'lodash-es';
 import { GaugeWidgetAdvancedSettingsConfig, Segment } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
 import { EventService } from '@app/shared/services/event-service.service';
 import { GaugeWidgetSegmentationSettingsComponent } from '../shared/gauge-widget-segmentation-settings/gauge-widget-segmentation-settings.component';
+import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
+import { Subscription } from 'rxjs';
 
 
 
@@ -53,7 +55,7 @@ import { GaugeWidgetSegmentationSettingsComponent } from '../shared/gauge-widget
     templateUrl: './gauge-widget-parameter-advanced-settings.component.html',
     styleUrl: './gauge-widget-parameter-advanced-settings.component.css',
 })
-export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, OnChanges {
+export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy {
     @Output() advancedSettingsChanged = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
     @Input() config: GaugeWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
@@ -110,8 +112,9 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         { id: 'limits', text: 'show only if limits are exceeded' },
     ];
 
-    pqbiPages = [];
+    pqbiPages: { id: string; name: string }[] = [];
 
+    private subscription: Subscription;
     excludeFlaggedOptions = [
         { value: ExcludeFlagged.DefaultEvents, text: 'yes  (with Dip, Swell, Interrupt)' },
         { value: ExcludeFlagged.UserSelected, text: 'yes - with selected events' },
@@ -145,13 +148,16 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         { text: 'MAX', value: 'MAX' },
     ];
 
-    constructor(private _eventService: EventService) {}
+    constructor(private _eventService: EventService, private dashboardPagesService: DashboardPagesService) {}
 
     ngOnInit() {
         this.normalizationOptions = this.getNormalizationOptions();
         this._eventService.pqsEvents().subscribe((evts) => {
             this.flaggingEvents = evts;
             this.flaggingEvents = uniqBy(this.flaggingEvents, (x) => x.eventClass);
+        });
+        this.subscription = this.dashboardPagesService.getPages().subscribe((pages) => {
+            this.pqbiPages = pages.map((page) => ({ id: page.id, name: page.name }));
         });
     }
 
@@ -180,6 +186,10 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         }
     }
 
+    ngOnDestroy(): void {
+        this.subscription?.unsubscribe();
+    }
+    
     getNormalizationOptions() {
         const opts = [];
         // if (this.isBaseParameter) {
