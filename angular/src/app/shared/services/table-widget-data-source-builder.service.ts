@@ -10,6 +10,10 @@ import { TableWidgetResponseItem } from '@shared/service-proxies/service-proxies
 })
 export class TableWidgetDataSourceBuilderService {
     convertComponentsTagsArrayToProps(components: ComponentsState, items: any[]) {
+        const selectedTagKeys = (components.tags ?? [])
+            .map((tag) => this.extractTagKey(tag))
+            .filter((key) => !!key);
+
         return items.map((item) => {
             let component = components.components.find((component) => component.key === item.componentId);
 
@@ -19,9 +23,10 @@ export class TableWidgetDataSourceBuilderService {
 
             component.data.tags.map((tag) => {
                 const keyValue = tag.split(':');
-                const key = keyValue[0];
-                const value = keyValue[1];
-                if (key && value) {
+                const key = keyValue[0]?.trim();
+                const value = keyValue[1]?.trim();
+                const isTagSelected = selectedTagKeys.length === 0 || selectedTagKeys.includes(key);
+                if (key && value && isTagSelected) {
                     item[key] = value;
                 }
             });
@@ -38,7 +43,7 @@ export class TableWidgetDataSourceBuilderService {
 
         data.forEach((item) => {
             item.tags?.forEach((tag) => {
-                const key = tag.split(':')[0];
+                const key = tag.split(':')[0]?.trim();
                 if (!keys.includes(key)) {
                     keys.push(key);
                 }
@@ -46,6 +51,27 @@ export class TableWidgetDataSourceBuilderService {
         });
 
         return keys;
+    }
+
+    private extractTagKey(tag: any): string {
+        if (!tag) {
+            return '';
+        }
+
+        if (tag.tagKey) {
+            return tag.tagKey;
+        }
+
+        if (tag.label) {
+            return tag.label.split(':')[0]?.trim();
+        }
+
+        if (tag.key) {
+            const segments = `${tag.key}`.split(';').pop();
+            return segments?.split(':')[0]?.trim();
+        }
+
+        return '';
     }
 
     formatParameterNames(parameters: TableWidgetResponseItem[]) {

@@ -223,10 +223,12 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
             rows: new RowWidgetTable({
                 feeders: [...formattedFeeders, ...formattedComponents],
                 tags: tagsList.map((t) => {
-                    const [key, value] = t.label.split(':');
+                    const tagKey = this.extractTagKeyFromLabel(t.label);
+                    const tagValue = t.label.split(':')[1]?.trim();
                     return new TagTableWidget({
-                        id: key,
-                        name: value,
+                        id: t.key ?? tagKey,
+                        name: tagValue,
+                        tagKey,
                         feeders: this.getFeedersByTagModel(t, formattedFeeders),
                     });
                 }),
@@ -412,10 +414,18 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
                     this.pqsTableDataResponse = response;
 
-                    extractedTags = input.rows.tags.map((t) => `${t.id}`);
-                    extractedTags = this.tableWidgetConfiguration.components.pickListState.target
-                        .map((x) => x.key)
-                        .filter((option) => extractedTags.includes(option));
+                    const requestedTagKeys = input.rows.tags
+                        .map((t) => t.tagKey || this.extractTagKeyFromId(t.id))
+                        .filter(Boolean);
+
+                    const pickListTagKeys = this.tableWidgetConfiguration.components.pickListState.target
+                        .map((x) => this.extractTagKeyFromLabel(x.label))
+                        .filter(Boolean);
+
+                    extractedTags = pickListTagKeys.filter((option) => requestedTagKeys.includes(option));
+                    if (extractedTags.length === 0) {
+                        extractedTags = requestedTagKeys;
+                    }
                     const getComponentByTagsRequest = new GetComponentByTagsRequest();
                     getComponentByTagsRequest.tags = extractedTags;
                     return this._componentsService.componentByTags(getComponentByTagsRequest).pipe(
@@ -718,6 +728,23 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         return 0;
     }
 
+    private extractTagKeyFromLabel(label?: string): string {
+        if (!label) {
+            return '';
+        }
+
+        return label.split(':')[0]?.trim();
+    }
+
+    private extractTagKeyFromId(id?: string): string {
+        if (!id) {
+            return '';
+        }
+
+        const lastSegment = id.split(';').pop()?.trim();
+        return this.extractTagKeyFromLabel(lastSegment);
+    }
+
     private processParameters(node: any, criteria: (item: any, field: string) => boolean): void {
         this.tableWidgetConfiguration.parameters.forEach((param) => {
             const field = param.name;
@@ -760,7 +787,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                     this.processParameters(
                         tagNode,
                         (item, field) =>
-                            item.tag?.tagId === extractedTags[index] &&
+                            this.extractTagKeyFromId(item.tag?.tagId) === extractedTags[index] &&
                             item.tag?.tagValue === tag &&
                             item.parameterName === field,
                     );
