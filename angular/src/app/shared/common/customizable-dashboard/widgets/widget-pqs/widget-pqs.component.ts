@@ -21,6 +21,7 @@ import {
     BaseData,
     CalculatedDataItem,
     TrendResponse,
+    IntervalSynchronized,
 } from '@shared/service-proxies/service-proxies';
 import { DashboardChartBase } from '../dashboard-chart-base';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
@@ -43,6 +44,8 @@ import { TrendWidgetConfigurationService } from '@app/shared/services/widget-con
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateRangeType } from '@app/shared/enums/date-range-type';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
+import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selection-units';
+
 
 type LineLegendType = {
     name: string,
@@ -394,6 +397,8 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 endDate: DateTime.fromJSDate(dateRange[1]),
                 refreshRateInSeconds: 0,
                 isRealTime: false,
+                selectedResolution: this.getSelectedIntervalResolution(state.customResolutionUnit, isAutoResolution),
+
                 // resolution:
                 //     this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO
                 //         ? `AUTO(${this.calculateAutoResolution().toServer})`
@@ -472,6 +477,30 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         this.stopStream$.complete();
         this.subs.forEach(sub => sub.unsubscribe());
     }
+
+private getSelectedIntervalResolution(
+    unit: CustomResolutionUnits | undefined,
+    isAutoResolution: boolean,
+): IntervalSynchronized {
+    if (isAutoResolution) {
+        return IntervalSynchronized.ISX;
+    }
+
+    if (!unit) {
+        return IntervalSynchronized.IS1SEC;
+    }
+
+     const unitName = unit.toString().toUpperCase();
+
+     const key = Object.keys(IntervalSynchronized).find(k =>
+        k.startsWith('IS1') && k.endsWith(unitName),
+    );
+
+    return key
+        ? (IntervalSynchronized as any)[key]
+        : IntervalSynchronized.IS1SEC;
+}
+
 
     save(configuration: CreateOrEditTrendWidgetConfigurationDto) {
         this.stopStream$.next(null);

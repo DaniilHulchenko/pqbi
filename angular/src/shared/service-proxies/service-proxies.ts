@@ -11938,7 +11938,7 @@ export class PQSRestApiServiceProxy {
     /**
      * @return Success
      */
-    confVersion(): Observable<void> {
+    confVersion(): Observable<number> {
         let url_ = this.baseUrl + "/api/services/app/PQSRestApi/ConfVersion";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -11956,14 +11956,14 @@ export class PQSRestApiServiceProxy {
                 try {
                     return this.processConfVersion(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<number>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<number>;
         }));
     }
 
-    protected processConfVersion(response: HttpResponseBase): Observable<void> {
+    protected processConfVersion(response: HttpResponseBase): Observable<number> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -11972,7 +11972,7 @@ export class PQSRestApiServiceProxy {
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            return _observableOf(Number.parseInt(_responseText));
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -39151,10 +39151,10 @@ export enum QuantityEnum {
     QMIN = 0,
     QMAX = 1,
     QAVG = 2,
-    QSAMPLE = 3,
-    QSUM = 4,
-    QCOUNTER = 5,
-    NONE = 6,
+    //QSAMPLE = 3,
+    //QSUM = 4,
+    //QCOUNTER = 5,
+    //NONE = 6,
 }
 
 export class RecentTenant implements IRecentTenant {
@@ -46434,7 +46434,7 @@ function throwException(message: string, status: number, response: string, heade
         return _observableThrow(new ApiException(message, status, response, headers, null));
 }
 
-function blobToText(blob: any): Observable<string> {
+export function blobToText(blob: any): Observable<string> {
     return new Observable<string>((observer: any) => {
         if (!blob) {
             observer.next("");
