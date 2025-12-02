@@ -61,7 +61,7 @@ export class TablePreviewComponent {
             return new TagComponentInfo(treeNode.key, treeNode.label, treeNode.data?.tags);
         });
         let extractedTags = this._tableWidgetDataSourseBuilder.extractTagKeys(components);
-        const orderedTags = this._componentsState.tags.map(t => t.key);
+        const orderedTags = (this._componentsState.tags || []).map((t) => this.extractTagKey(t));
         if (orderedTags.length === 0) {
             orderedTags.push(...extractedTags);
         }
@@ -158,6 +158,27 @@ export class TablePreviewComponent {
             }
         }
         return result;
+    }
+
+    private extractTagKey(tag: any): string {
+        if (!tag) {
+            return '';
+        }
+
+        if (tag.tagKey) {
+            return tag.tagKey;
+        }
+
+        if (tag.label) {
+            return tag.label.split(':')[0]?.trim();
+        }
+
+        if (tag.key) {
+            const lastSegment = `${tag.key}`.split(';').pop();
+            return lastSegment?.split(':')[0]?.trim();
+        }
+
+        return '';
     }
 
 }
