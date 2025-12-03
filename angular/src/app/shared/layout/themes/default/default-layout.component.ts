@@ -14,6 +14,8 @@ import { DateTimeService } from '@app/shared/common/timing/date-time.service';
 export class DefaultLayoutComponent extends ThemesLayoutBaseComponent implements OnInit {
 
     remoteServiceBaseUrl: string = AppConsts.remoteServiceBaseUrl;
+    releaseDate: string;
+    webAppGuiVersion: string;
 
     constructor(
         injector: Injector,
@@ -27,6 +29,9 @@ export class DefaultLayoutComponent extends ThemesLayoutBaseComponent implements
         if (this.currentTheme.baseSettings.menu.defaultMinimizedAside) {
             this.document.body.setAttribute('data-kt-aside-minimize', 'on');
         }
+
+        this.releaseDate = this.appSession.application.releaseDate.toFormat('yyyyLLdd');
+        this.webAppGuiVersion = AppConsts.WebAppGuiVersion;
     }
 
     getMobileMenuSkin(): string {
