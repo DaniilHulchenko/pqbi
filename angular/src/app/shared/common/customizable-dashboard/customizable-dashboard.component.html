@@ -26,9 +26,14 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12" style="z-index: 0">
-                <tabset #dashboardTabs [justified]="false" [ngClass]="{ 'nav-hidden': !moreThanOnePage() }">
+        <div class="row dashboard-grid-row">
+            <div class="col-md-12 dashboard-grid-col" style="z-index: 0">
+                <tabset
+                    #dashboardTabs
+                    class="dashboard-tabset"
+                    [justified]="false"
+                    [ngClass]="{ 'nav-hidden': !moreThanOnePage() }"
+                >
                     <tab
                         *ngFor="let page of userDashboard?.pages || []; let i = index"
                         heading="{{ page.name }}"
