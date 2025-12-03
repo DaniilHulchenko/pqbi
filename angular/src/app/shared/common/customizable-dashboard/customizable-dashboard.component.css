@@ -91,24 +91,87 @@ input:checked + .slider:before {
     border: 0 !important;
     z-index: 1002;
 }
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 70px);
+}
+
+.dashboard-subheader .toolbar {
+  padding-top: 0.25rem;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-actions {
+  position: sticky;
+  top: 70px;
+  gap: 12px;
+  z-index: 2;
+}
+
+@media (max-width: 991.98px) {
+  .dashboard-actions {
+    position: static;
+  }
+}
 
 
+.dashboard-content {
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 
-gridster {
-  height: calc(100vh - 300px);
+.dashboard-grid-row {
+  flex: 1;
+  min-height: 0;
+}
+
+.dashboard-grid-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dashboard-tabset {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+:host ::ng-deep .dashboard-tabset .tab-content {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+:host ::ng-deep .dashboard-tabset .tab-content .tab-pane {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.dashboard-grid {
+  flex: 1;
+  min-height: 0;
+  height: 100% ;
   background: none;
 }
 
-gridster.no-tab{
-  height: calc(100vh - 230px);
+.dashboard-grid.no-tab{
+  height: 100%
 }
 
-:host ::ng-deep gridster .gridster-row{
+:host ::ng-deep .dashboard-grid .gridster-row{
     border-top: 1px dotted #c1c1c1 !important;
     border-bottom: 1px dotted #c1c1c1 !important;
 }
 
-:host ::ng-deep gridster .gridster-column {
+:host ::ng-deep .dashboard-grid .gridster-column {
     border-left: 1px dotted #c1c1c1 !important;
     border-right: 1px dotted #c1c1c1 !important;
 }
@@ -137,9 +200,6 @@ gridster.no-tab{
   padding-bottom: 1px !important;
 }
 
-.btn-filter{
-  margin-right: 8px;
-}
 
 :host ::ng-deep gridster .kt-portlet{
     margin: 0;
