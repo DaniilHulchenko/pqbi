@@ -175,7 +175,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         });
 
         if (this.isNew) {
-            this.runDelayed(() => this.edit());
+            this.runDelayed(() => this.onEditRequested(null));
         }
     }
 
@@ -188,6 +188,14 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     onNameEdit() {
         this.renameModal.show(this.widgetConfigurationInDB?.name);
+    }
+
+    protected override onEditRequested(_payload: any): void {
+        this.edit();
+    }
+
+    protected override onRenameRequested(_payload: any): void {
+        this.onNameEdit();
     }
 
     createTableWidgetEvent(json: string, quantity: string): TableWidgetEvent {

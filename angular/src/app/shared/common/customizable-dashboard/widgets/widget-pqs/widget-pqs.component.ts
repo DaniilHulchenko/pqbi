@@ -281,7 +281,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     ngAfterViewInit() {
         this.runDelayed(() => {
             if (this.isNew) {
-                this.edit();
+                this.onEditRequested(null);
             }
             this.chartWidth = this.chartComponent.instance.element().clientWidth;
         });
@@ -298,6 +298,14 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     onNameEdit() {
         this.renameModal.show(this.widgetConfigurationInDB?.name);
+    }
+
+    protected override onEditRequested(_payload: any): void {
+        this.edit();
+    }
+
+    protected override onRenameRequested(_payload: any): void {
+        this.onNameEdit();
     }
 
     refreshWidget(): void {
