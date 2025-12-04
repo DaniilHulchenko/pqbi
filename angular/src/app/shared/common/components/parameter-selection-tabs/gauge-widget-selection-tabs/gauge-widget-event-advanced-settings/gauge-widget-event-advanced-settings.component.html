@@ -57,11 +57,7 @@
 
             <div class="font-color">
               <label>font color</label>
-              <dx-radio-group [items]="colorOptions" displayExpr="text" valueExpr="id" [(value)]="titleFont.colorMode">
-              </dx-radio-group>
-
-              <dx-color-box *ngIf="titleFont.colorMode === 'custom'" [(value)]="titleFont.customColor"
-                [editAlphaChannel]="true">
+              <dx-color-box [(value)]="titleFont.customColor" [editAlphaChannel]="true">
               </dx-color-box>
             </div>
           </div>
@@ -76,11 +72,7 @@
 
             <div class="font-color">
               <label>font color</label>
-              <dx-radio-group [items]="colorOptions" displayExpr="text" valueExpr="id" [(value)]="valueFont.colorMode">
-              </dx-radio-group>
-
-              <dx-color-box *ngIf="valueFont.colorMode === 'custom'" [(value)]="valueFont.customColor"
-                [editAlphaChannel]="true">
+              <dx-color-box [(value)]="valueFont.customColor" [editAlphaChannel]="true">
               </dx-color-box>
             </div>
           </div>

@@ -73,19 +73,19 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
         size: 16,
-        colorMode: 'scheme',
+        colorMode: 'custom',
         customColor: '#000000',
     };
     valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
         size: 26,
-        colorMode: 'scheme',
+        colorMode: 'custom',
         customColor: '#000000',
     };
     icon: { file: string; appearance: 'always' | 'limits'; colorMode: 'scheme' | 'custom'; customColor: string } = {
         file: null,
         appearance: 'always',
-        colorMode: 'scheme',
+        colorMode: 'custom',
         customColor: '#000000',
     };
     link = { page: null };
@@ -93,11 +93,6 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     decimalPointOptions = [0, 1, 2, 3];
 
     fontFamilies = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
-
-    colorOptions = [
-        { id: 'scheme', text: 'use color scheme' },
-        { id: 'custom', text: 'set color' },
-    ];
 
     appearanceOptions = [
         { id: 'always', text: 'show always' },
@@ -155,9 +150,9 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
             this.selectedFlagEvents = c.defaultFlagEvent ?? null;
             this.decimalPoints = c.decimalPoints;
             this.link.page = c.linkPage;
-            this.icon = c.icon;
-            this.titleFont = c.titleFont;
-            this.valueFont = c.valueFont;
+            this.icon = this.normalizeIconSettings(c.icon);
+            this.titleFont = this.normalizeFontSettings(c.titleFont, 16);
+            this.valueFont = this.normalizeFontSettings(c.valueFont, 26);
         }
     }
 
@@ -246,8 +241,31 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
         // this.showNoDataColor = false;
         this.decimalPoints = 2;
         this.link.page = null;
-        this.icon = { file: null, appearance: 'always', colorMode: 'scheme', customColor: '#000000' };
-        this.titleFont = { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' };
-        this.valueFont = { family: '', size: 26, colorMode: 'scheme', customColor: '#000000' };
+        this.icon = this.normalizeIconSettings(null);
+        this.titleFont = this.normalizeFontSettings(null, 16);
+        this.valueFont = this.normalizeFontSettings(null, 26);
+    }
+
+    private normalizeFontSettings(
+        font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+        defaultSize: number,
+    ): { family: string; size: number; colorMode: 'custom'; customColor: string } {
+        return {
+            family: font?.family ?? '',
+            size: font?.size ?? defaultSize,
+            colorMode: 'custom',
+            customColor: font?.customColor ?? '#000000',
+        };
+    }
+
+    private normalizeIconSettings(
+        icon: { file?: string; appearance?: 'always' | 'limits'; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+    ): { file: string; appearance: 'always' | 'limits'; colorMode: 'custom'; customColor: string } {
+        return {
+            file: icon?.file ?? null,
+            appearance: icon?.appearance ?? 'always',
+            colorMode: 'custom',
+            customColor: icon?.customColor ?? '#000000',
+        };
     }
 }
