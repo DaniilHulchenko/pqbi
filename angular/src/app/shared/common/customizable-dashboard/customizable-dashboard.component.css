@@ -91,6 +91,30 @@ input:checked + .slider:before {
     border: 0 !important;
     z-index: 1002;
 }
+
+.widget-action-buttons .deleteWidgetButton {
+  position: static;
+  border-radius: 4px;
+  width: 22px;
+}
+
+.widget-action-buttons {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  z-index: 1002;
+}
+
+.widget-action-buttons .btn {
+  box-shadow: none;
+  padding: 0 7px;
+  height: 22px;
+  min-width: 22px;
+  line-height: 1;
+}
 .dashboard-page {
   display: flex;
   flex-direction: column;

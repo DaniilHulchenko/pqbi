@@ -107,6 +107,22 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         super(_injector);
     }
 
+    requestWidgetEdit(widget: any): void {
+        abp.event.trigger('app.dashboard.editWidgetRequested', {
+            widgetGuid: widget.guid,
+            widgetId: widget.id,
+            configurationId: widget.configurationId,
+        });
+    }
+
+    requestWidgetRename(widget: any): void {
+        abp.event.trigger('app.dashboard.renameWidgetRequested', {
+            widgetGuid: widget.guid,
+            widgetId: widget.id,
+            currentName: widget.displayName,
+        });
+    }
+
     ngOnInit() {
         this.loading = true;
         this.subscribeToEvent('app.dashboard.removeWidget', (widgetGuid, widgetId) => this.removeItem(widgetGuid, widgetId, true));

@@ -87,7 +87,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             this.dashboardPagesService.getPages().subscribe(() => this.updateNavigationAvailability()),
         );
         if (this.isNew) {
-            this.runDelayed(() => this.edit());
+            this.runDelayed(() => this.onEditRequested(null));
         }
     }
 
@@ -103,6 +103,14 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             }, 0);
         });
         this.subs.push(sub);
+    }
+
+    protected override onEditRequested(_payload: any): void {
+        this.edit();
+    }
+
+    protected override onRenameRequested(_payload: any): void {
+        this.onNameEdit();
     }
 
     onConfigurationChange(newConfig: CreateOrEditWidgetConfigurationDto): void {

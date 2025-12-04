@@ -64,13 +64,28 @@
                                             injector: this.widgetSubjects[widget.guid].injector;
                                         "
                                     ></ng-container>
-                                    <button
-                                        class="btn btn-sm bg-danger deleteWidgetButton"
-                                        *ngIf="editModeEnabled"
-                                        (click)="removeItem(widget.guid, widget.id, false)"
-                                    >
-                                        <i class="la la-times text-white"></i>
-                                    </button>
+                                    <div class="widget-action-buttons" *ngIf="editModeEnabled">
+                                        <button
+                                            class="btn btn-sm bg-primary text-white"
+                                            (click)="requestWidgetEdit(widget)"
+                                            title="{{ 'Edit' | localize }}"
+                                        >
+                                            <i class="fa fa-edit"></i>
+                                        </button>
+                                        <button
+                                            class="btn btn-sm bg-info text-white"
+                                            (click)="requestWidgetRename(widget)"
+                                            title="{{ 'Rename' | localize }}"
+                                        >
+                                            <i class="fa fa-i-cursor"></i>
+                                        </button>
+                                        <button
+                                            class="btn btn-sm bg-danger deleteWidgetButton"
+                                            (click)="removeItem(widget.guid, widget.id, false)"
+                                        >
+                                            <i class="la la-times text-white"></i>
+                                        </button>
+                                    </div>
                                 </gridster-item>
                             </gridster>
                         </ng-container>

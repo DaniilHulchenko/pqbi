@@ -16,6 +16,9 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
     protected isEditModalInitialized = false;
     protected _defaultWidgetName: string;
 
+    private editRequestHandler: (payload: any) => void;
+    private renameRequestHandler: (payload: any) => void;
+
     private widgetConfigurationServiceProxy: WidgetConfigurationsServiceProxy;
 
     constructor(injector: Injector, protected elementRef: ElementRef, protected _dateRangeService: DateRangeService) {
@@ -41,8 +44,31 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
             setTimeout(() => {this.editState = editState; this.isEditModalInitialized = false;},0);
         });
 
+        this.registerDashboardActionHandlers();
+
         this.refreshWidget();
     }
+
+    protected registerDashboardActionHandlers(): void {
+        this.editRequestHandler = (payload: any) => {
+            if (payload?.widgetGuid === this.widgetConfigurationInDB?.widgetGuid) {
+                this.onEditRequested(payload);
+            }
+        };
+
+        this.renameRequestHandler = (payload: any) => {
+            if (payload?.widgetGuid === this.widgetConfigurationInDB?.widgetGuid) {
+                this.onRenameRequested(payload);
+            }
+        };
+
+        abp.event.on('app.dashboard.editWidgetRequested', this.editRequestHandler);
+        abp.event.on('app.dashboard.renameWidgetRequested', this.renameRequestHandler);
+    }
+
+    protected onEditRequested(payload: any): void {}
+
+    protected onRenameRequested(payload: any): void {}
 
     /**
      * Run methods delayed. If runDelay called multiple time before its delay, only run last called.
@@ -101,6 +127,8 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
         if (this.timer && !this.timer.closed) {
             this.timer.unsubscribe();
         }
+        abp.event.off('app.dashboard.editWidgetRequested', this.editRequestHandler);
+        abp.event.off('app.dashboard.renameWidgetRequested', this.renameRequestHandler);
         super.ngOnDestroy();
     }
 }

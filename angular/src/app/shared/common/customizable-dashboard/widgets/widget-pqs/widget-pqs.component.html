@@ -3,10 +3,6 @@
         <div class="kt-portlet__head-label">
             <h3 class="kt-portlet__head-title">
                 {{ widgetConfigurationInDB?.name }}
-                <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
-                    <i class="fa fa-edit"></i>
-                </button>
-                <button class="btn btn-primary btn-sm" *ngIf="editState" (click)="edit()">{{ 'Edit' | localize }}</button>
             </h3>
         </div>
     </div>
