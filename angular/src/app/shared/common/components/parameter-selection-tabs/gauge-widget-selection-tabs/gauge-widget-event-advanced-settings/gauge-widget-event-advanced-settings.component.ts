@@ -49,6 +49,7 @@ import { Subscription } from 'rxjs';
     @Output() configChange = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
 
     modalVisible = false;
+    parameterName = '';
     normalizationOptions: any[];
     normalizeTypes = NormalizeEnum;
 
@@ -138,6 +139,7 @@ import { Subscription } from 'rxjs';
     ngOnChanges(changes: SimpleChanges) {
         if (changes.config && this.config) {
             const c = this.config;
+            this.parameterName = c.parameterName ?? '';
             this.normalizeValue = c.normalizeValue;
             this.normalizeNominalValue = +c.normalizeNominalValue;
             this.setLimits = c.setLimits;
@@ -203,6 +205,7 @@ import { Subscription } from 'rxjs';
             return;
         }
         const config: GaugeWidgetAdvancedSettingsConfig = {
+            parameterName: this.parameterName?.trim(),
             normalizeValue: this.normalizeValue,
             normalizeNominalValue: this.normalizeNominalValue,
             setLimits: this.setLimits,
@@ -239,6 +242,7 @@ import { Subscription } from 'rxjs';
         this.setLimits = Limit.None;
         this.lowerLimit = 0;
         this.upperLimit = 0;
+        this.parameterName = '';
         this.decimalPoints = 2;
         this.link.page = null;
         this.titleFont = this.normalizeFontSettings(null, 12);

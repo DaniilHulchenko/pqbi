@@ -57,6 +57,7 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     @Output() configChange = new EventEmitter<CardWidgetAdvancedSettingsConfig>();
 
     modalVisible = false;
+    parameterName = '';
     normalizationOptions: any[];
     normalizeTypes = NormalizeEnum;
     excludeFlaggedTypes = ExcludeFlagged;
@@ -170,6 +171,7 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     ngOnChanges(changes: SimpleChanges) {
         if (changes.config && this.config) {
             const c = this.config;
+            this.parameterName = c.parameterName ?? '';
             this.normalizeValue = c.normalizeValue;
             this.normalizeNominalValue = +c.normalizeNominalValue;
             this.excludeFlagged = c.excludeFlagged;
@@ -226,6 +228,7 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
 
     save() {
         const config: CardWidgetAdvancedSettingsConfig = {
+            parameterName: this.parameterName?.trim(),
             normalizeValue: this.normalizeValue,
             normalizeNominalValue: this.normalizeNominalValue,
             excludeFlagged: this.excludeFlagged,
@@ -277,6 +280,7 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         this.normalizeNominalValue = 0;
         this.excludeFlagged = ExcludeFlagged.None;
         this.selectedFlagEvents = [];
+        this.parameterName = '';
         this.setLimits = Limit.None;
         this.lowerLimit = 0;
         this.upperLimit = 0;

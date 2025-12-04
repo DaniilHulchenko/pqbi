@@ -305,6 +305,12 @@ export class CardWidgetChannelParameterSelectionTabComponent
     }
 
     showAdvancedSettingsModal() {
+        const parameterName = this.parameter?.name;
+        this.advancedSettingsConfig = {
+            ...(this.advancedSettingsConfig ?? {}),
+            parameterName: this.advancedSettingsConfig?.parameterName ?? parameterName,
+        } as CardWidgetAdvancedSettingsConfig;
+
         this.advancedSettingsModal.show(this.advancedSettingsConfig);
     }
 

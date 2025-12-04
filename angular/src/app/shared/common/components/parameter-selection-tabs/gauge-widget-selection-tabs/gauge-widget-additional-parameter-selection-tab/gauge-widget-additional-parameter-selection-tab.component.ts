@@ -266,6 +266,12 @@ export class GaugeWidgetAdditionalParameterSelectionTabComponent
     }
 
     showAdvancedSettingsModal() {
+        const parameterName = this.parameter?.name;
+        this.advancedSettingsConfig = {
+            ...(this.advancedSettingsConfig ?? {}),
+            parameterName: this.advancedSettingsConfig?.parameterName ?? parameterName,
+        } as GaugeWidgetAdvancedSettingsConfig;
+
         this.advancedSettingsModal.show(this.advancedSettingsConfig);
     }
 

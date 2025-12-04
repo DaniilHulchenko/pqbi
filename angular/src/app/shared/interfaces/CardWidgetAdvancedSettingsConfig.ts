@@ -2,6 +2,7 @@ import { EventClass, NormalizeEnum } from "@shared/service-proxies/service-proxi
 import { ColorSchema, ExcludeFlagged, Limit } from "../enums/advanced-settings-options";
 
 export interface CardWidgetAdvancedSettingsConfig {
+    parameterName?: string;
     // normalization
     normalizeValue?: NormalizeEnum;
     normalizeNominalValue?: number;

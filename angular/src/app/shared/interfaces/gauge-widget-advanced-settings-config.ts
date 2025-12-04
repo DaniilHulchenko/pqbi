@@ -2,6 +2,7 @@ import { NormalizeEnum, EventClass } from '@shared/service-proxies/service-proxi
 import { ColorSchema, ExcludeFlagged, Limit } from '../enums/advanced-settings-options';
 
 export interface GaugeWidgetAdvancedSettingsConfig {
+    parameterName?: string;
     // normalization
     normalizeValue?: NormalizeEnum;
     normalizeNominalValue?: number;

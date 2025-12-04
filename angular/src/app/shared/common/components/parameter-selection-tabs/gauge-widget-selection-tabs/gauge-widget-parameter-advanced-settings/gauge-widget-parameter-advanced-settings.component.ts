@@ -59,6 +59,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     @Output() configChange = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
 
     modalVisible = false;
+    parameterName = '';
     normalizationOptions: any[];
     normalizeTypes = NormalizeEnum;
     excludeFlaggedTypes = ExcludeFlagged;
@@ -157,6 +158,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     ngOnChanges(changes: SimpleChanges) {
         if (changes.config && this.config) {
             const c = this.config;
+            this.parameterName = c.parameterName ?? '';
             this.normalizeValue = c.normalizeValue;
             this.normalizeNominalValue = +c.normalizeNominalValue;
             this.excludeFlagged = c.excludeFlagged;
@@ -234,6 +236,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
             return;
         }
         const config: GaugeWidgetAdvancedSettingsConfig = {
+            parameterName: this.parameterName?.trim(),
             normalizeValue: this.normalizeValue,
             normalizeNominalValue: this.normalizeNominalValue,
             excludeFlagged: this.excludeFlagged,
@@ -301,6 +304,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         this.normalizeNominalValue = 0;
         this.excludeFlagged = ExcludeFlagged.None;
         this.selectedFlagEvents = [];
+        this.parameterName = '';
         this.decimalPoints = 2;
         this.link.page = null;
         this.titleFont = this.normalizeFontSettings(null, 12);
