@@ -251,10 +251,14 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     }
 
     onConfigurationChange(newConfig: CreateOrEditBarChartWidgetConfigurationDto): void {
-        this.saveConfiguration(newConfig.id.toString());
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        this.refreshWidget();
+        
+        if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
+            this.saveConfiguration(newConfig.id.toString());
+        } else {
+            this.refreshWidget();
+        }
     }
 
     refreshWidget(): void {

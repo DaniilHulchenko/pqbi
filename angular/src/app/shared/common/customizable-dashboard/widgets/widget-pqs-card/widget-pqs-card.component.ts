@@ -106,10 +106,14 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     }
 
     onConfigurationChange(newConfig: CreateOrEditWidgetConfigurationDto): void {
-        this.saveConfiguration(newConfig.id.toString());
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        this.refreshWidget();
+        
+        if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
+            this.saveConfiguration(newConfig.id.toString());
+        } else {
+            this.refreshWidget();
+        }
     }
 
     refreshWidget(): void {
