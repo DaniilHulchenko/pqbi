@@ -178,7 +178,7 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
         };
 
         this.tree = this.addComponentsRecursively(
-            this.generateTreeNodes(this.pickListState.target),
+            this.convertToTreeNode(this.generateTreeData(this.pickListState.target)),
             this.components,
         );
 
@@ -196,28 +196,52 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
         this.emitEvent();
     }
 
-    private generateTreeNodes(data: TreeNode<any>[], level = 0, parentPath: string[] = []): TreeNode<any>[] {
-        if (!data?.length || level >= data.length) {
+    private convertToTreeNode(data) {
+        function createNode(key, value) {
+            if (Array.isArray(value)) {
+                return {
+                    key: key,
+                    label: key,
+                    expanded: true,
+                    children: value.map((item) => {
+                        const itemKey = Object.keys(item)[0];
+                        return createNode(itemKey, item[itemKey]);
+                    }),
+                };
+            } else if (typeof value === 'object') {
+                return {
+                    key: key,
+                    label: key,
+                    children: Object.keys(value).map((subKey) => createNode(subKey, value[subKey])),
+                };
+            } else {
+                return {
+                    key: value,
+                    label: `${key}: ${value}`,
+                };
+            }
+        }
+
+        return data.map((item) => {
+            const key = Object.keys(item)[0];
+            return createNode(key, item[key]);
+        });
+    }
+
+    private generateTreeData(data, level = 0): any[] {
+        if (level >= data.length) {
             return [];
         }
 
-        const treeNodes: TreeNode<any>[] = [];
-        const currentTag = data[level];
+        const treeData = [];
 
-                currentTag.children?.forEach((child) => {
-            const currentSegment = `${currentTag.label}:${child.label}`;
-            const currentPath = [...parentPath, currentSegment];
-            const children = this.generateTreeNodes(data, level + 1, currentPath);
-
-            treeNodes.push({
-                key: currentPath.join('; '),
-                label: currentSegment,
-                expanded: true,
-                children,
-            });
+        data[level].children.forEach((child) => {
+            const children = this.generateTreeData(data, level + 1);
+            const node = { [`${data[level].label}:${child.label}`]: children.length ? children : [] };
+            treeData.push(node);
         });
 
-        return treeNodes;
+        return treeData;
     }
 
     private addComponentsRecursively(targetTree, components) {

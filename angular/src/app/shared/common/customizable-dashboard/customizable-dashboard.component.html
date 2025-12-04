@@ -1,18 +1,10 @@
-<div [@routerTransition]>
-    <sub-header [title]="'Dashboard' | localize" [description]="'DashboardHeaderInfo' | localize">
-        <div role="actions" class="d-flex align-items-center">
-            <button
-                type="button"
-                *ngIf="!loading && userDashboard && userDashboard.filters && userDashboard.filters.length > 0"
-                class="btn btn-light-primary btn-filter"
-                (click)="filterModal.show()"
+<div [@routerTransition] class="dashboard-page">
+    <sub-header [title]="'Dashboard' | localize" [description]="'DashboardHeaderInfo' | localize" class="dashboard-subheader">
+        <div role="actions" class="d-flex align-items-center dashboard-actions">
+            <label
+                class="form-check form-check-custom form-check-solid form-switch mb-0"
+                *ngIf="isGranted('Pages.Tenant.Dashboard.Edit')"
             >
-                <i class="fa fa-filter"></i>
-                {{ 'Filter' | localize }}
-            </button>
-
-            <strong>
-                <label class="form-check form-check-custom form-check-solid form-switch"  *ngIf="isGranted('Pages.Tenant.Dashboard.Edit')">
                 <input
                     type="checkbox"
                     class="form-check-input"
@@ -23,11 +15,10 @@
                     {{ 'EditMode' | localize }}
                 </span>
             </label>
-            </strong>
         </div>
     </sub-header>
 
-    <div [class]="containerClass" *ngIf="!loading">
+    <div [ngClass]="containerClass" class="dashboard-content" *ngIf="!loading">
         <div class="row" *ngIf="!userDashboard?.pages?.length">
             <div class="col-md-12">
                 <div class="alert alert-warning" role="alert">
@@ -35,16 +26,27 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12" style="z-index: 0">
-                <tabset #dashboardTabs [justified]="false" [ngClass]="{ 'nav-hidden': !moreThanOnePage() }">
+        <div class="row dashboard-grid-row">
+            <div class="col-md-12 dashboard-grid-col" style="z-index: 0">
+                <tabset
+                    #dashboardTabs
+                    class="dashboard-tabset"
+                    [justified]="false"
+                    [ngClass]="{ 'nav-hidden': !moreThanOnePage() }"
+                >
                     <tab
                         *ngFor="let page of userDashboard?.pages || []; let i = index"
                         heading="{{ page.name }}"
                         (selectTab)="selectPageTab(page.id)"
                     >
                         <ng-container *ngIf="selectedPage.id === page.id">
-                            <gridster [options]="options[i]" perfectScrollbar [perfectScrollOptions]="{ wheelPropagation: false }" [ngClass]="{ 'no-tab': !moreThanOnePage()}">
+                            <gridster
+                                class="dashboard-grid"
+                                [options]="options[i]"
+                                perfectScrollbar
+                                [perfectScrollOptions]="{ wheelPropagation: false }"
+                                [ngClass]="{ 'no-tab': !moreThanOnePage() }"
+                            >
                                 <gridster-item
                                     [ngStyle]="{'background-color' : bgColor, 'padding': '10px', 'border-radius': '10px'}"
                                     *ngFor="let widget of page.widgets"

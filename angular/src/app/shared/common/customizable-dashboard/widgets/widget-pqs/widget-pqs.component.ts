@@ -397,11 +397,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 endDate: DateTime.fromJSDate(dateRange[1]),
                 refreshRateInSeconds: 0,
                 isRealTime: false,
-                selectedResolution: this.getSelectedIntervalResolution(
-                    state.customResolutionUnit,
-                    isAutoResolution,
-                    state.customResolutionValue,
-                ),
+                selectedResolution: this.getSelectedIntervalResolution(state.customResolutionUnit, isAutoResolution),
 
                 // resolution:
                 //     this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO
@@ -485,8 +481,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 private getSelectedIntervalResolution(
     unit: CustomResolutionUnits | undefined,
     isAutoResolution: boolean,
-    value?: number,
-
 ): IntervalSynchronized {
     if (isAutoResolution) {
         return IntervalSynchronized.ISX;
@@ -496,40 +490,22 @@ private getSelectedIntervalResolution(
         return IntervalSynchronized.IS1SEC;
     }
 
-     const normalizedValue = Number(value);
+     const unitName = unit.toString().toUpperCase();
 
-    switch (unit) {
-        case CustomResolutionUnits.MS:
-            return IntervalSynchronized.IS200MS;
-        case CustomResolutionUnits.SEC:
-            return IntervalSynchronized.IS1SEC;
-        case CustomResolutionUnits.MIN:
-            return IntervalSynchronized.IS1MIN;
-        case CustomResolutionUnits.HOUR:
-            return IntervalSynchronized.IS1HOUR;
-        case CustomResolutionUnits.DAY:
-            return IntervalSynchronized.IS1DAY;
-        case CustomResolutionUnits.WEEK:
-            return IntervalSynchronized.IS1WEEK;
-        case CustomResolutionUnits.MONTH:
-            return IntervalSynchronized.IS1MONTH;
-        case CustomResolutionUnits.YEAR:
-            return IntervalSynchronized.IS1YEAR;
-        default:
-            return IntervalSynchronized.IS1SEC;
-    }
+     const key = Object.keys(IntervalSynchronized).find(k =>
+        k.startsWith('IS1') && k.endsWith(unitName),
+    );
+
+    return key
+        ? (IntervalSynchronized as any)[key]
+        : IntervalSynchronized.IS1SEC;
 }
 
 
-    save(newConfig: CreateOrEditTrendWidgetConfigurationDto) {
+    save(configuration: CreateOrEditTrendWidgetConfigurationDto) {
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        
-        if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
-            this.saveConfiguration(newConfig.id.toString());
-        } else {
-            this.refreshWidget();
-        }
+        this.saveConfiguration(configuration.id.toString());
     }
 
     toggleStepLine() {

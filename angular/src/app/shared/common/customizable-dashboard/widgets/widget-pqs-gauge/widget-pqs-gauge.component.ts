@@ -163,14 +163,10 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     }
 
     onConfigurationChange(newConfig: CreateOrEditWidgetConfigurationDto): void {
+        this.saveConfiguration(newConfig.id.toString());
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        
-        if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
-            this.saveConfiguration(newConfig.id.toString());
-        } else {
-            this.refreshWidget();
-        }
+        this.refreshWidget();
     }
 
     refreshWidget(): void {
