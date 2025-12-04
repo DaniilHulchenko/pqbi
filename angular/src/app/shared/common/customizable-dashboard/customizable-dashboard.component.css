@@ -1,5 +1,5 @@
- /* The switch - the box around the slider */
- .switch {
+/* The switch - the box around the slider */
+.switch {
   position: relative;
   display: inline-block;
   width: 50px;
@@ -8,13 +8,14 @@
   top: 0;
 }
 
-  /* Hide default HTML checkbox */
-  .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-  }
-  /* The slider */
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
 .slider {
   position: absolute;
   cursor: pointer;
@@ -27,17 +28,17 @@
   transition: .4s;
 }
 
-  .slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      -webkit-transition: .4s;
-      transition: .4s;
-  }
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
 
 input:checked + .slider {
   background-color: #2196F3;
@@ -52,7 +53,6 @@ input:checked + .slider:before {
   -ms-transform: translateX(26px);
   transform: translateX(26px);
 }
-
 
 .edit-mode-switch {
   background-color: #003d80;
@@ -73,42 +73,63 @@ input:checked + .slider:before {
   border-radius: 34px;
 }
 
-  .slider.round:before {
-      border-radius: 50%;
-  }
-
-  .deleteWidgetButton {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 22px;
-    padding: 0 7px !important;
-    height: 22px;
-    border-radius: 0 0 0 10px;
-    box-shadow: none;
-    outline: none;
-    text-align: center;
-    border: 0 !important;
-    z-index: 1002;
+.slider.round:before {
+    border-radius: 50%;
 }
 
+.deleteWidgetButton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  padding: 0 7px !important;
+  height: 22px;
+  border-radius: 0 0 0 10px;
+  box-shadow: none;
+  outline: none;
+  text-align: center;
+  border: 0 !important;
+  z-index: 1002;
+}
 
+.dashboard-subheader .toolbar {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
 
-gridster {
-  height: calc(100vh - 300px);
+.dashboard-actions {
+  position: sticky;
+  top: 70px;
+  gap: 12px;
+  z-index: 2;
+}
+
+@media (max-width: 991.98px) {
+  .dashboard-actions {
+    position: static;
+  }
+}
+
+.dashboard-content {
+  padding-bottom: 0;
+}
+
+.dashboard-grid {
+  height: calc(100vh - 220px);
   background: none;
 }
 
-gridster.no-tab{
-  height: calc(100vh - 230px);
+.dashboard-grid.no-tab{
+  height: calc(100vh - 190px);
 }
 
-:host ::ng-deep gridster .gridster-row{
+:host ::ng-deep .dashboard-grid .gridster-row{
     border-top: 1px dotted #c1c1c1 !important;
     border-bottom: 1px dotted #c1c1c1 !important;
 }
 
-:host ::ng-deep gridster .gridster-column {
+:host ::ng-deep .dashboard-grid .gridster-column {
     border-left: 1px dotted #c1c1c1 !important;
     border-right: 1px dotted #c1c1c1 !important;
 }
@@ -120,13 +141,13 @@ gridster.no-tab{
     z-index: 120;
     background-color: #cecece;
     border-radius: 10px;
-    padding: 15px
+    padding: 15px;
 }
 
 .div-dashboard-customization .vr {
     border-right: 1px solid white;
     float: left;
-    margin-right: 8px
+    margin-right: 8px;
 }
 
 :host ::ng-deep tabset.nav-hidden .nav-tabs {
@@ -135,10 +156,6 @@ gridster.no-tab{
 
 :host ::ng-deep tabset .nav-tabs {
   padding-bottom: 1px !important;
-}
-
-.btn-filter{
-  margin-right: 8px;
 }
 
 :host ::ng-deep gridster .kt-portlet{
@@ -155,21 +172,21 @@ gridster.no-tab{
 }
 
 .filterModal h5{
-  margin-bottom:10px
+  margin-bottom:10px;
 }
 
- gridster-item{
-     background:none;
- }
+gridster-item{
+    background:none;
+}
 
- #dropdownMenuAddPage, #dropdownMenuRenamePage{
-     min-width:250px;
- }
+#dropdownMenuAddPage, #dropdownMenuRenamePage{
+    min-width:250px;
+}
 
- .div-dashboard-customization .border-right {
-     border-right: 1px solid white;
- }
+.div-dashboard-customization .border-right {
+    border-right: 1px solid white;
+}
 
- #PagesDiv{
+#PagesDiv{
   margin-left: -20px;
 }
