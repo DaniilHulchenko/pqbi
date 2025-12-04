@@ -8,16 +8,6 @@
       hint="How much of the gauge this segment occupies visually." [focusStateEnabled]="true"></dx-number-box>
 
     <div class="mt-2">
-      <dx-radio-group [(value)]="colorMode"
-        [items]="[
-        { text: 'use color scheme', value: 'scheme' },
-        { text: 'set color', value: 'custom' }
-      ]"
-        layout="vertical" valueExpr="value" displayExpr="text">
-      </dx-radio-group>
-    </div>
-
-    <div *ngIf="colorMode === 'custom'" class="mt-2">
       <dx-color-box [(value)]="color"></dx-color-box>
     </div>
 
@@ -47,13 +37,8 @@
       <dxi-column caption="Actions" [cellTemplate]="'actionsCell'"></dxi-column>
 
       <div *dxTemplate="let data of 'colorCell'">
-        <div *ngIf="data.data.colorMode !== 'custom'; else customColor" style="font-style: italic;">
-          Scheme
+        <div [style.background]="data.data.color" style="width:20px;height:20px;border:1px solid #000;">
         </div>
-        <ng-template #customColor>
-          <div [style.background]="data.data.color" style="width:20px;height:20px;border:1px solid #000;">
-          </div>
-        </ng-template>
       </div>
 
       <div *dxTemplate="let data of 'actionsCell'">

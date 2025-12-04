@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import {
     DxPopupModule,
     DxScrollViewModule,
-    DxRadioGroupModule,
     DxTextBoxModule,
     DxColorBoxModule,
     DxButtonModule,
@@ -38,7 +37,6 @@ import { Subscription } from 'rxjs';
     imports: [
         DxPopupModule,
         DxScrollViewModule,
-        DxRadioGroupModule,
         DxTextBoxModule,
         DxColorBoxModule,
         DxButtonModule,
@@ -77,13 +75,13 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
         size: 20,
-        colorMode: 'scheme',
+        colorMode: 'custom',
         customColor: '#000000',
     };
     valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
         size: 20,
-        colorMode: 'scheme',
+        colorMode: 'custom',
         customColor: '#000000',
     };
     link = { page: null };
@@ -101,11 +99,6 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     decimalPointOptions = [0, 1, 2, 3];
 
     fontFamilies = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
-
-    colorOptions = [
-        { id: 'scheme', text: 'use color scheme' },
-        { id: 'custom', text: 'set color' },
-    ];
 
     appearanceOptions = [
         { id: 'always', text: 'show always' },
@@ -172,8 +165,8 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
             this.selectedFlagEvents = c.defaultFlagEvent ?? [];
             this.decimalPoints = c.decimalPoints;
             this.link.page = c.linkPage;
-            this.titleFont = c.titleFont;
-            this.valueFont = c.valueFont;
+            this.titleFont = this.normalizeFontSettings(c.titleFont, 20);
+            this.valueFont = this.normalizeFontSettings(c.valueFont, 20);
             this.isSegmentsValid = false;
             this.totalWeight = 0;
             this.segments = c.segments ? c.segments.map((segment) => ({ ...segment })) : [];
@@ -302,7 +295,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     }
 
 
-    
+
     reset() {
         this.normalizeValue = NormalizeEnum.NO;
         this.normalizeNominalValue = 0;
@@ -310,8 +303,8 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         this.selectedFlagEvents = [];
         this.decimalPoints = 2;
         this.link.page = null;
-        this.titleFont = { family: '', size: 20, colorMode: 'scheme', customColor: '#000000' };
-        this.valueFont = { family: '', size: 20, colorMode: 'scheme', customColor: '#000000' };
+        this.titleFont = this.normalizeFontSettings(null, 20);
+        this.valueFont = this.normalizeFontSettings(null, 20);
         this.segments = [];
         this.isSegmentsValid = false;
         this.totalWeight = 0;
@@ -321,5 +314,17 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         this.marker2 = null;
         this.colorScheme = ColorSchema.None;
         this.outOfLimitColor = '';
+    }
+
+    private normalizeFontSettings(
+        font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+        defaultSize: number,
+    ): { family: string; size: number; colorMode: 'custom'; customColor: string } {
+        return {
+            family: font?.family ?? '',
+            size: font?.size ?? defaultSize,
+            colorMode: 'custom',
+            customColor: font?.customColor ?? '#000000',
+        };
     }
 }
