@@ -1,14 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-    DxTextBoxModule,
-    DxNumberBoxModule,
-    DxRadioGroupModule,
-    DxColorBoxModule,
-    DxButtonModule,
-    DxDataGridModule,
-} from 'devextreme-angular';
+import { DxTextBoxModule, DxNumberBoxModule, DxColorBoxModule, DxButtonModule, DxDataGridModule } from 'devextreme-angular';
 import { Segment } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
 import { Guid } from 'guid-ts';
 
@@ -20,7 +13,6 @@ import { Guid } from 'guid-ts';
         FormsModule,
         DxTextBoxModule,
         DxNumberBoxModule,
-        DxRadioGroupModule,
         DxColorBoxModule,
         DxButtonModule,
         DxDataGridModule,
@@ -30,6 +22,7 @@ import { Guid } from 'guid-ts';
 })
 export class GaugeWidgetSegmentationSettingsComponent {
 
+    private readonly DEFAULT_COLOR = '#000000';
     readonly TOTAL_WEIGHT = 100;
     private readonly EPSILON = 0.001;
     private _segments: Segment[] = [];
@@ -59,8 +52,8 @@ export class GaugeWidgetSegmentationSettingsComponent {
     name: string = '';
     from: number | null = null;
     to: number | null = null;
-    colorMode: 'scheme' | 'custom' = 'scheme';
-    color: string | null = null;
+    colorMode: 'custom' = 'custom';
+    color: string | null = this.DEFAULT_COLOR;
     weight: number | null = null;
 
     segmentError: string | null = null;
@@ -81,8 +74,8 @@ export class GaugeWidgetSegmentationSettingsComponent {
             name: this.name.trim(),
             from: this.from!,
             to: this.to!,
-            colorMode: this.colorMode,
-            color: this.colorMode === 'custom' ? this.color : null,
+            colorMode: 'custom',
+            color: this.color ?? this.DEFAULT_COLOR,
             weight: this.roundWeight(desiredWeight),
         };
 
@@ -103,8 +96,8 @@ export class GaugeWidgetSegmentationSettingsComponent {
         this.name = data.name;
         this.from = data.from;
         this.to = data.to;
-        this.color = data.color;
-        this.colorMode = data.colorMode;
+        this.colorMode = 'custom';
+        this.color = data.color ?? this.DEFAULT_COLOR;
         this.weight = data.weight ?? null;
         this.segmentError = null;
         this.segmentHint = null;
@@ -128,8 +121,8 @@ export class GaugeWidgetSegmentationSettingsComponent {
                       name: this.name.trim(),
                       from: this.from!,
                       to: this.to!,
-                      colorMode: this.colorMode,
-                      color: this.colorMode === 'custom' ? this.color : null,
+                      colorMode: 'custom',
+                      color: this.color ?? this.DEFAULT_COLOR,
                       weight: this.roundWeight(this.weight!),
 
                    }
@@ -246,8 +239,8 @@ export class GaugeWidgetSegmentationSettingsComponent {
         this.name = '';
         this.from = null;
         this.to = null;
-        this.colorMode = 'scheme';
-        this.color = null;
+        this.colorMode = 'custom';
+        this.color = this.DEFAULT_COLOR;
         this.weight = this.getDefaultWeight();
     }
 
@@ -261,6 +254,8 @@ export class GaugeWidgetSegmentationSettingsComponent {
             from: +segment.from,
             to: +segment.to,
             weight: segment.weight != null ? +segment.weight : segment.weight,
+            colorMode: 'custom',
+            color: segment.color ?? this.DEFAULT_COLOR,
         }));
 
         const hasMissingWeights = prepared.some((segment) => segment.weight == null);
@@ -306,7 +301,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
             return false;
         }
 
-        if (this.colorMode === 'custom' && !this.color) {
+        if (!this.color) {
             this.segmentError = 'Color is required for custom segments.';
             return false;
         }
