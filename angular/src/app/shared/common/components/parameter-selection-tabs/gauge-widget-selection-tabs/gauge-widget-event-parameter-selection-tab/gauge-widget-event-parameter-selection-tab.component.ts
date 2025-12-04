@@ -125,6 +125,12 @@ export class GaugeWidgetEventParameterSelectionTabComponent
     }
 
     showEventAdvancedSettingsModal() {
+        const parameterName = this.getCurrentParameterName();
+        this.eventAdvancedSettingsConfig = {
+            ...(this.eventAdvancedSettingsConfig ?? {}),
+            parameterName: this.eventAdvancedSettingsConfig?.parameterName ?? parameterName,
+        } as GaugeWidgetAdvancedSettingsConfig;
+
         this.eventAdvancedSettingsModal.show(this.eventAdvancedSettingsConfig);
     }
 
@@ -282,6 +288,20 @@ export class GaugeWidgetEventParameterSelectionTabComponent
         if (!isSilentInvoke){
             this.finishEdit();
         }
+    }
+
+    private getCurrentParameterName(): string {
+        if (!this.selectedEvent || !this.selectedParameter) {
+            return '';
+        }
+
+        const phaseNames = ArrayUtils.ensureArray(this.selectedPhases)
+            .map((phase) => (phase as EventPhaseOptions)?.name ?? (phase as EventPhaseOptions)?.phaseName ?? phase)
+            .join(', ');
+
+        const eventName = this.selectedEvent.name ?? this.selectedEvent.eventClass ?? '';
+
+        return `${eventName}${phaseNames ? ` (${phaseNames})` : ''} ${this.selectedParameter}`.trim();
     }
 }
 

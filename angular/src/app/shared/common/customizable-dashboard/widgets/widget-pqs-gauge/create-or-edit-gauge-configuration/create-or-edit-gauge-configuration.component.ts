@@ -156,10 +156,12 @@ export class CreateOrEditGaugeConfigurationComponent
     }
 
     onAddBaseParameter(event: AddBaseParameterEventCallBack) {
+        const parameterName = this.applyCustomParameterName(event.parameter.name, event.gaugeWidgetAdvancedSettings);
+        event.parameter.name = parameterName;
         this.parameter = {
             id: Guid.newGuid().toString(),
             componentsState: event.componentsState,
-            name: event.parameter.name,
+            name: parameterName,
             quantity: event.quantity,
             type: ColumnType.BaseParameter,
             data: safeStringify(event.parameter),
@@ -171,10 +173,11 @@ export class CreateOrEditGaugeConfigurationComponent
 
     onAddCustomParameter(event: AddGaugeCustomParameterEventCallBack) {
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
+            const parameterName = this.applyCustomParameterName(parameter.name, event.advancedSettings);
             this.parameter = {
                 id: Guid.newGuid().toString(),
                 componentsState: event.componentsState,
-                name: parameter.name,
+                name: parameterName,
                 quantity: event.quantity,
                 type: ColumnType.CustomParameter,
                 data: event.customParameterId,
@@ -182,16 +185,18 @@ export class CreateOrEditGaugeConfigurationComponent
                 resolution: 0,
                 style: null,
             };
+            this.parameter.gaugeWidgetAdvancedSettings = event.advancedSettings;
         });
         this.subs.push(sub);
     }
 
     onAddException(event: AddGaugeWidgetExceptionEventCallBack) {
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
+            const parameterName = this.applyCustomParameterName(parameter.name, event.gaugeWidgetAdvancedSettings);
             this.parameter = {
                 id: Guid.newGuid().toString(),
                 componentsState: null,
-                name: parameter.name,
+                name: parameterName,
                 quantity: event.quantity,
                 type: ColumnType.Exception,
                 data: event.customParameterId,
@@ -206,11 +211,12 @@ export class CreateOrEditGaugeConfigurationComponent
     onAddEvent(event: AddGaugeWidgetEventParameterEventCallBack) {
         const phaseNames = event.phases.map((phase) => phase).join(', ');
         const formattedName = `${event.event.name} (${phaseNames}) ${event.parameter}`;
+        const parameterName = this.applyCustomParameterName(formattedName, event.advancedSettings);
 
         const newItem = {
             id: Guid.newGuid().toString(),
             componentsState: event.componentState,
-            name: formattedName,
+            name: parameterName,
             quantity: event.quantity,
             type: ColumnType.Event,
             resolution: 0,
@@ -237,7 +243,7 @@ export class CreateOrEditGaugeConfigurationComponent
 
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
             tableParameter.componentsState = event.componentsState;
-            tableParameter.name = parameter.name;
+            tableParameter.name = this.applyCustomParameterName(parameter.name, event.advancedSettings);
             tableParameter.quantity = event.quantity;
             tableParameter.data = event.customParameterId;
             tableParameter.gaugeWidgetAdvancedSettings = event.advancedSettings;
@@ -253,7 +259,7 @@ export class CreateOrEditGaugeConfigurationComponent
         }
 
         tableParameter.componentsState = event.componentsState;
-        tableParameter.name = event.parameter.name;
+        tableParameter.name = this.applyCustomParameterName(event.parameter.name, event.gaugeWidgetAdvancedSettings);
         tableParameter.quantity = event.quantity;
         tableParameter.data = safeStringify(event.parameter);
         tableParameter.gaugeWidgetAdvancedSettings = event.gaugeWidgetAdvancedSettings;
@@ -267,7 +273,7 @@ export class CreateOrEditGaugeConfigurationComponent
         }
 
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
-            tableParameter.name = parameter.name;
+            tableParameter.name = this.applyCustomParameterName(parameter.name, event.gaugeWidgetAdvancedSettings);
             tableParameter.quantity = event.quantity;
             tableParameter.data = event.customParameterId;
             tableParameter.gaugeWidgetAdvancedSettings = event.gaugeWidgetAdvancedSettings;
@@ -280,7 +286,10 @@ export class CreateOrEditGaugeConfigurationComponent
         if (!tableParameter || tableParameter.type !== ColumnType.Event) return;
 
         const phaseNames = event.phases.map((phase) => phase).join(', ');
-        tableParameter.name = `${event.event.name} (${phaseNames}) ${event.parameter}`;
+        tableParameter.name = this.applyCustomParameterName(
+            `${event.event.name} (${phaseNames}) ${event.parameter}`,
+            event.advancedSettings,
+        );
         tableParameter.quantity = event.quantity;
         tableParameter.data = safeStringify({
             event: event.event,
@@ -496,5 +505,12 @@ export class CreateOrEditGaugeConfigurationComponent
 
     ngOnDestroy(): void {
         this.subs.forEach((sub) => sub.unsubscribe());
+    }
+
+    private applyCustomParameterName(
+        currentName: string,
+        settings?: GaugeWidgetAdvancedSettingsConfig,
+    ): string {
+        return settings?.parameterName?.trim() || currentName;
     }
 }
