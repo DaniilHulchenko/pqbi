@@ -9,6 +9,7 @@ import {
     DxButtonModule,
     DxFileUploaderModule,
     DxNumberBoxModule,
+    DxRadioGroupModule,
     DxSelectBoxModule,
 } from 'devextreme-angular';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -43,6 +44,7 @@ import { Subscription } from 'rxjs';
         DxFileUploaderModule,
         CommonModule,
         DxNumberBoxModule,
+        DxRadioGroupModule,
         DxSelectBoxModule,
         MultiSelectModule,
         FormsModule,
