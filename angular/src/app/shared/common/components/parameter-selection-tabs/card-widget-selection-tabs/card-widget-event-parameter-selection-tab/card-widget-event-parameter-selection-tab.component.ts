@@ -98,8 +98,8 @@ export class CardWidgetEventParameterSelectionTabComponent
         decimalPoints: 2,
         linkPage: null,
         icon: { file: null, appearance: 'always', colorMode: 'scheme', customColor: '#000000' },
-        titleFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
-        valueFont: { family: '', size: 26, colorMode: 'scheme', customColor: '#000000' },
+        titleFont: { family: '', size: 12, colorMode: 'scheme', customColor: '#000000' },
+        valueFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
     };
 
     edit(parameter: WidgetParametersColumn) {
