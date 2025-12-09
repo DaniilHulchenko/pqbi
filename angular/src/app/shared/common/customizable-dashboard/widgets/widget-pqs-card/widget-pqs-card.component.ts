@@ -56,6 +56,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     titleFontSize = '1.2em';
     titleFontFamily = '';
     titleFontColor = '#000';
+    widgetNameFontSize?: string;
     iconColor: string = '#5b9bd5';
     isIconVisible: boolean = true;
     navigationPageId: string | null = null;
@@ -342,6 +343,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                 ? this.parameter.cardWidgetAdvancedSettings?.titleFont?.customColor
                 : this.titleFontColor;
         this.titleFontFamily = this.parameter.cardWidgetAdvancedSettings?.titleFont?.family;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize(
+            this.parameter.cardWidgetAdvancedSettings?.titleFont?.size,
+        );
 
         this.valueFontSize = this.parameter.cardWidgetAdvancedSettings?.valueFont?.size
             ? `${this.parameter.cardWidgetAdvancedSettings?.valueFont?.size}px`

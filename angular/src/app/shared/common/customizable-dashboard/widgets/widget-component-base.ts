@@ -15,6 +15,9 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
     protected isNew: boolean;
     protected isEditModalInitialized = false;
     protected _defaultWidgetName: string;
+    protected globalWidgetNameFontSize?: number;
+
+    widgetNameFontSize?: string;
 
     private widgetConfigurationServiceProxy: WidgetConfigurationsServiceProxy;
 
@@ -31,6 +34,9 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
         this.widgetConfigurationInDB.widgetGuid = this.elementRef.nativeElement.parentElement.dataset.guid;
         this.widgetConfigurationInDB.name = this.elementRef.nativeElement.parentElement.dataset.displayname;
         this.widgetConfigurationInDB.configuration = this.elementRef.nativeElement.parentElement.dataset.configuration;
+        const globalFontSize = this.elementRef.nativeElement.parentElement.dataset.widgetNameFontSize;
+        this.globalWidgetNameFontSize = globalFontSize ? Number(globalFontSize) : undefined;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize();
 
         if (this.isNew) {
             this.editState = true;
@@ -91,6 +97,18 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
         this.widgetConfigurationInDB.name = newName;
         this.saveConfiguration(this.widgetConfigurationInDB.configuration);
         abp.event.trigger('app.dashboard.renameWidget', this.widgetConfigurationInDB.widgetGuid, newName);
+    }
+
+    protected resolveWidgetNameFontSize(localSize?: number, defaultSize?: string): string | undefined {
+        if (this.globalWidgetNameFontSize) {
+            return `${this.globalWidgetNameFontSize}px`;
+        }
+
+        if (localSize) {
+            return `${localSize}px`;
+        }
+
+        return defaultSize;
     }
 
     //This method should be overriten for refreshing widget

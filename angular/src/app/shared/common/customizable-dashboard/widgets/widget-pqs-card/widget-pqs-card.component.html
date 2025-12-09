@@ -1,7 +1,7 @@
 <div class="kt-portlet kt-portlet--height-fluid">
     <div class="kt-portlet__head">
         <div class="kt-portlet__head-label">
-            <h3 class="kt-portlet__head-title">
+            <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
                 {{ widgetConfigurationInDB?.name }}
                 <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
                     <i class="fa fa-edit"></i>
