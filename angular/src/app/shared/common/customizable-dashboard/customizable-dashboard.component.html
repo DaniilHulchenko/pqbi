@@ -15,6 +15,17 @@
                     {{ 'EditMode' | localize }}
                 </span>
             </label>
+            <div class="ms-3" *ngIf="editModeEnabled">
+                <label class="form-label mb-0 me-2">{{ 'FontSize' | localize }}</label>
+                <select
+                    class="form-select form-select-sm d-inline-block w-auto"
+                    [ngModel]="dashboardConfiguration?.widgetNameFontSize"
+                    (ngModelChange)="dashboardConfiguration.widgetNameFontSize = $event ? +$event : undefined"
+                >
+                    <option [ngValue]="undefined">{{ 'Default' | localize }}</option>
+                    <option *ngFor="let size of widgetNameFontSizes" [ngValue]="size">{{ size }} px</option>
+                </select>
+            </div>
         </div>
     </sub-header>
 
@@ -56,6 +67,7 @@
                                     [attr.data-isNew]="widget.isNew"
                                     [attr.data-configuration]="widget.configuration"
                                     [attr.data-displayName]="widget.displayName"
+                                    [attr.data-widget-name-font-size]="dashboardConfiguration?.widgetNameFontSize"
                                     (itemResize)="onGridSterItemResize(widget)"
                                 >
                                     <ng-container

@@ -20,7 +20,6 @@ import {
     AddNewPageInput,
     AddNewPageOutput,
     RenamePageInput,
-    SavePageInput,
     Page,
     Widget,
     WidgetFilterOutput,
@@ -75,6 +74,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     dashboardDefinition: DashboardOutput;
     userDashboard: any;
+    dashboardConfiguration: { widgetNameFontSize?: number } = {};
 
     selectedPage = {
         id: '',
@@ -94,6 +94,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     } = {};
 
     myinjector: Injector;
+
+    widgetNameFontSizes = [12, 14, 16, 18, 20, 22, 24];
 
     constructor(
         private _injector: Injector,
@@ -195,9 +197,11 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         userDashboardResultFromServer: Dashboard,
         dashboardDefinitionResult: DashboardOutput,
     ) {
+        this.dashboardConfiguration = (userDashboardResultFromServer as any)?.configuration ?? {};
         this.userDashboard = {
             dashboardName: this.dashboardName,
             filters: [],
+            configuration: this.dashboardConfiguration,
             pages: userDashboardResultFromServer.pages.map((page) => {
                 //gridster should has its own options
                 const cfg = this.getGridsterConfig();
@@ -579,8 +583,9 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
         abp.event.trigger('app.dashboardEdit.onSave');
 
-        let savePageInput = new SavePageInput({
+        const savePageInput: any = {
             dashboardName: this.dashboardName,
+            configuration: this.dashboardConfiguration,
             pages: this.userDashboard.pages.map(
                 (page) =>
                     new Page({
@@ -603,7 +608,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                     }),
             ),
             application: DashboardCustomizationConst.Applications.Angular,
-        });
+        };
 
         this._dashboardCustomizationServiceProxy.savePage(savePageInput).subscribe(() => {
             this.changeEditMode(); //after changes saved close edit mode

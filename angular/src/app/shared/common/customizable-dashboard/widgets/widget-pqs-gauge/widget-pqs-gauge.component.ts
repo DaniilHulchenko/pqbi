@@ -93,6 +93,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     titleFontSize = 20;
     titleFontFamily = '';
     titleFontColor = '#000';
+    widgetNameFontSize?: string;
 
     calculatedColorSchema: string | null;
    
@@ -446,6 +447,9 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                 ? this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.customColor
                 : this.titleFontColor;
         this.titleFontFamily = this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.family;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize(
+            this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.size,
+        );
 
         this.valueFontSize = this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.size
             ? this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.size
