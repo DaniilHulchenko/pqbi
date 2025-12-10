@@ -19,7 +19,7 @@ using PQBI.Exporting;
 
 namespace PQBI.TableWidgetConfigurations
 {
-    [AbpAuthorize(AppPermissions.Pages_TableWidgetConfigurations)]
+    //[AbpAuthorize(AppPermissions.Pages_TableWidgetConfigurations)]
     public class TableWidgetConfigurationsAppService : PQBIAppServiceBase, ITableWidgetConfigurationsAppService
     {
         private readonly IRepository<TableWidgetConfiguration> _tableWidgetConfigurationRepository;
@@ -90,7 +90,7 @@ namespace PQBI.TableWidgetConfigurations
             return output;
         }
 
-        [AbpAuthorize(AppPermissions.Pages_TableWidgetConfigurations_Edit)]
+        //[AbpAuthorize(AppPermissions.Pages_TableWidgetConfigurations_Edit)]
         public virtual async Task<GetTableWidgetConfigurationForEditOutput> GetTableWidgetConfigurationForEdit(EntityDto input)
         {
             var tableWidgetConfiguration = await _tableWidgetConfigurationRepository.FirstOrDefaultAsync(input.Id);
@@ -140,7 +140,7 @@ namespace PQBI.TableWidgetConfigurations
             await _tableWidgetConfigurationRepository.InsertAsync(tableWidgetConfiguration);
 
         }
-
+        
         [AbpAuthorize(AppPermissions.Pages_TableWidgetConfigurations_Edit)]
         protected virtual async Task Update(CreateOrEditTableWidgetConfigurationDto input)
         {

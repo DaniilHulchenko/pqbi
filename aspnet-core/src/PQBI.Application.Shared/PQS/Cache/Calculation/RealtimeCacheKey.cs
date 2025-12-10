@@ -12,7 +12,7 @@ namespace PQBI.PQS.Cache.Calculation
     {
         public static string For(Guid componentId, int? feederId, int durationInSec, int refreshInSec, string parameter, FiltersGroup filtersGroup)
         {
-            var filterHash = filtersGroup == null ? "nofilters" : HashFilters(filtersGroup);
+            var filterHash = filtersGroup == null || filtersGroup.FiltersCount == 0 ? "nofilters" : HashFilters(filtersGroup);
             //return $"{componentId:D}:{(feederId ?? -1)}:{parameter}:{filterHash}";
             return $"{componentId:D}:{(feederId ?? -1)}:{durationInSec}:{refreshInSec}:{parameter}:{filterHash}";
         }

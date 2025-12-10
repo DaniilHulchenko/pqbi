@@ -175,7 +175,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         });
 
         if (this.isNew) {
-            this.runDelayed(() => this.edit());
+            this.runDelayed(() => this.onEditRequested(null));
         }
     }
 
@@ -190,6 +190,13 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         this.renameModal.show(this.widgetConfigurationInDB?.name);
     }
 
+    protected override onEditRequested(_payload: any): void {
+        this.edit();
+    }
+
+    protected override onRenameRequested(_payload: any): void {
+        this.onNameEdit();
+    }
     createTableWidgetEvent(json: string, quantity: string): TableWidgetEvent {
         const event = JSON.parse(json);
         const tableWidgetEvent = new TableWidgetEvent({
@@ -225,7 +232,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                 tags: tagsList.map((t) => {
                     const [key, value] = t.label.split(':');
                     return new TagTableWidget({
-                        id: key,
+                        id: t.key,
                         name: value,
                         feeders: this.getFeedersByTagModel(t, formattedFeeders),
                     });
@@ -340,12 +347,14 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     }
 
     onConfigurationChange(newConfig: CreateOrEditTableWidgetConfigurationDto) {
-        if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
-            this.saveConfiguration(newConfig.id.toString());
-        }
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        this.refreshWidget();
+        
+        if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
+            this.saveConfiguration(newConfig.id.toString());
+        } else {
+            this.refreshWidget();
+        }
     }
 
     refreshWidget(): void {
@@ -412,7 +421,12 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
                     this.pqsTableDataResponse = response;
 
-                    extractedTags = input.rows.tags.map((t) => `${t.id}`);
+                    extractedTags = input.rows.tags.map((t) => {
+                        let lastTag = t.id.split('; ').at(-1);
+                        let [key, value] = lastTag.split(':');
+                        return key;
+                    });
+
                     extractedTags = this.tableWidgetConfiguration.components.pickListState.target
                         .map((x) => x.key)
                         .filter((option) => extractedTags.includes(option));
@@ -756,13 +770,19 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
             tagPath.forEach((tag, index) => {
                 const tagKey = `tag_${tagPath.slice(0, index + 1).join('_')}`;
                 if (!treeMap.has(tagKey)) {
+                    let neededExtractedTags = extractedTags.slice(0, index + 1);
+                    for (let i = 0; i < neededExtractedTags.length; i++) {
+                        neededExtractedTags[i] += `:${tagPath[i]}`;
+                    }
+                    let totalTreeTagId: string = neededExtractedTags.join('; ');
                     const tagNode = this.createNode(tagKey, parentId, tag, transformedItem.dataUnitType);
                     this.processParameters(
                         tagNode,
-                        (item, field) =>
-                            item.tag?.tagId === extractedTags[index] &&
+                        (item, field) =>{
+                            return item.tag?.tagId === totalTreeTagId &&
                             item.tag?.tagValue === tag &&
-                            item.parameterName === field,
+                            item.parameterName === field
+                        }
                     );
                     treeData.push(tagNode);
                     treeMap.set(tagKey, tagNode);

@@ -112,6 +112,12 @@ public class PQSRestApiController : PQBIControllerBase
             var tenant = await _tenantCacheRepository.GetTenantByIdAsync(tenantId);
 
             var session = await _userSessionCacheRepository.GetCacheSessionAsync(AbpSession.UserId.Value);
+
+            if (string.IsNullOrEmpty(session))
+            {
+                throw new SessionEmptyException();
+            }
+
             var componentWithTagss = await _pQSComponentOperation.GetObjectAsync(tenant.PQSServiceUrl, session);
 
             response = new GetAllComponentsResponse(componentWithTagss.Components.ToArray());
@@ -275,8 +281,13 @@ public class PQSRestApiController : PQBIControllerBase
             var tenant = await _tenantCacheRepository.GetTenantByIdAsync(tenantId);
 
             var session = await _userSessionCacheRepository.GetCacheSessionAsync(AbpSession.UserId.Value);
-            response = await _pQSComponentOperation.GetStaticTree(tenant.PQSServiceUrl, session);
 
+            if (string.IsNullOrEmpty(session))
+            {
+                throw new SessionEmptyException();
+            }
+
+            response = await _pQSComponentOperation.GetStaticTree(tenant.PQSServiceUrl, session);
         }
 
         var options = new JsonSerializerOptions { WriteIndented = true };

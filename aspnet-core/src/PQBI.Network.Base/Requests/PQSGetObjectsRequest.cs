@@ -40,7 +40,7 @@ namespace PQBI.Requests
  
     public class PQSGetObjectsResponse : PQSOperationResponseBase<PQSGetObjectsRequest>
     {
-        public PQSGetObjectsResponse(PQSGetObjectsRequest request, PQSResponse response) : base(request, response)
+        public PQSGetObjectsResponse(PQSGetObjectsRequest request, PQSResponse response, string timezone) : base(request, response, timezone)
         {
 
         }

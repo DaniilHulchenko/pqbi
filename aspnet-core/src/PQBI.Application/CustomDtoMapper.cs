@@ -1,4 +1,6 @@
-﻿using PQBI.GaugeWidgetConfigurations.Dtos;
+﻿using PQBI.FileInfos.Dtos;
+using PQBI.FileInfos;
+using PQBI.GaugeWidgetConfigurations.Dtos;
 using PQBI.GaugeWidgetConfigurations;
 using PQBI.CardWidgetConfigurations.Dtos;
 using PQBI.CardWidgetConfigurations;
@@ -67,6 +69,8 @@ namespace PQBI
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
+            configuration.CreateMap<CreateOrEditFileInfoDto, FileInfos.FileInfo>().ReverseMap();
+            configuration.CreateMap<FileInfoDto, FileInfos.FileInfo>().ReverseMap();
             configuration.CreateMap<CreateOrEditGaugeWidgetConfigurationDto, GaugeWidgetConfiguration>().ReverseMap();
             configuration.CreateMap<GaugeWidgetConfigurationDto, GaugeWidgetConfiguration>().ReverseMap();
             configuration.CreateMap<CreateOrEditCardWidgetConfigurationDto, CardWidgetConfiguration>().ReverseMap();

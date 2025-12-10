@@ -1,4 +1,5 @@
-﻿using PQBI.GaugeWidgetConfigurations;
+﻿using PQBI.FileInfos;
+using PQBI.GaugeWidgetConfigurations;
 using PQBI.CardWidgetConfigurations;
 using PQBI.Groups;
 using PQBI.TrendWidgetConfigurations;
@@ -33,6 +34,8 @@ namespace PQBI.EntityFrameworkCore
 {
     public class PQBIDbContext : AbpZeroDbContext<Tenant, Role, User, PQBIDbContext>, IOpenIddictDbContext
     {
+        public virtual DbSet<FileInfo> FileInfos { get; set; }
+
         public virtual DbSet<GaugeWidgetConfiguration> GaugeWidgetConfigurations { get; set; }
 
         public virtual DbSet<CardWidgetConfiguration> CardWidgetConfigurations { get; set; }
@@ -92,10 +95,14 @@ namespace PQBI.EntityFrameworkCore
             this.Database.Migrate();
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<GaugeWidgetConfiguration>(g =>
+            modelBuilder.Entity<FileInfo>(f =>
             {
-                g.HasIndex(e => new { e.TenantId });
+                f.HasIndex(e => new { e.TenantId });
             });
+            modelBuilder.Entity<GaugeWidgetConfiguration>(g =>
+                       {
+                           g.HasIndex(e => new { e.TenantId });
+                       });
             modelBuilder.Entity<CardWidgetConfiguration>(c =>
                        {
                            c.HasIndex(e => new { e.TenantId });

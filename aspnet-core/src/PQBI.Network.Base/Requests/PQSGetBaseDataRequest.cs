@@ -14,15 +14,17 @@ using PQZTimeFormat;
 using PQS.Data.Configurations;
 using PayPalCheckoutSdk.Orders;
 using PQS.Data.Events;
+using TimeZoneConverter;
 
 namespace PQBI.Requests;
 
 public record GetBaseDataInfoInput(Guid ComponentId, long StartTime, long EndTime, IEnumerable<MeasurementParameterBase> Parameters, CalculationTypeEnum CalculationType = CalculationTypeEnum.FORCE_DB_DATA, int whishedPoints = 0, FiltersGroup filtersGroup = null);
 
 public class PQSGetBaseDataRequest : PQSCommonRequest
-{
-    public PQSGetBaseDataRequest(string session, params GetBaseDataInfoInput[] inputs) : base(session)
+{    
+    public PQSGetBaseDataRequest(string session, uint? timeZoneID, params GetBaseDataInfoInput[] inputs) : base(session)
     {
+        TimeZoneID = timeZoneID;
         Inputs = inputs;
         AddConfigurations();
     }
@@ -34,7 +36,7 @@ public class PQSGetBaseDataRequest : PQSCommonRequest
         var configurationRecords = new List<GetBaseConfigurationRecord>();
         foreach (var input in Inputs.SafeList())
         {
-            var opRec = new GetBaseDataRecord(input.ComponentId, input.StartTime, input.EndTime, input.Parameters.ToList(), input.CalculationType, input.whishedPoints, classFilter: input.filtersGroup);
+            var opRec = new GetBaseDataRecord(input.ComponentId, input.StartTime, input.EndTime, input.Parameters.ToList(), input.CalculationType, input.whishedPoints, timeZoneID: TimeZoneID, classFilter: input.filtersGroup);
             AddRecord(opRec);
 
             var configurations = new List<ConfigurationParameterBase>();
@@ -65,7 +67,7 @@ public class PQSGetBaseDataRequest : PQSCommonRequest
 
 public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataRequest>
 {
-    public PQSGetBaseDataResponse(PQSGetBaseDataRequest request, PQSResponse response) : base(request, response)
+    public PQSGetBaseDataResponse(PQSGetBaseDataRequest request, PQSResponse response, string timezone) : base(request, response, timezone)
     {
 
     }
@@ -142,6 +144,7 @@ public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataReq
                     }
                 }
 
+                var tz = TimeZoneInfo.FindSystemTimeZoneById(TZConvert.IanaToWindows(Timezone));
                 var dataTimeStemps = new List<PQBIDataTimeStampDto>();
                 paramName = paramAndVal.ToString();
                 var nominal = paramAndVal.Nominal;
@@ -161,7 +164,9 @@ public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataReq
                             val = (double)point.Value;
                         }
 
-                        dataTimeStemps.Add(new PQBIDataTimeStampDto(dateTime.DateTimeUTC, val, point.Status));
+                        var userLocalDateTime = TimeZoneInfo.ConvertTimeFromUtc(dateTime.DateTimeUTC, tz);
+
+                        dataTimeStemps.Add(new PQBIDataTimeStampDto(userLocalDateTime, val, point.Status));
                     }
 
                     paramList.Add(new PQBIAxisData(compId, feederId, paramName, nominal, dataTimeStemps.ToArray(), container.Status, dataUnitType));
@@ -180,7 +185,7 @@ public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataReq
 
 public class EmptyPQSGetBaseDataResponse : PQSGetBaseDataResponse
 {
-    public EmptyPQSGetBaseDataResponse(PQSGetBaseDataRequest request, PQSResponse response) : base(request, response)
+    public EmptyPQSGetBaseDataResponse(PQSGetBaseDataRequest request, PQSResponse response) : base(request, response, null)
     {
     }
 

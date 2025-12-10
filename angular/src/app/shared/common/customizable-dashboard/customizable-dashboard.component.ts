@@ -20,7 +20,6 @@ import {
     AddNewPageInput,
     AddNewPageOutput,
     RenamePageInput,
-    SavePageInput,
     Page,
     Widget,
     WidgetFilterOutput,
@@ -40,6 +39,7 @@ import { EditModeService } from '@app/shared/services/edit-mode-service.service'
 import { max, set } from 'lodash-es'
 import { WidgetUpdateModel } from '@app/shared/models/widget-update-model';
 import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
+import { DashboardConfigurationService } from './dashboard-configuration.service';
 
 
 export const WIDGETONRESIZEEVENTHANDLERTOKEN = new InjectionToken<WidgetOnResizeEventHandler>(
@@ -76,6 +76,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     dashboardDefinition: DashboardOutput;
     userDashboard: any;
 
+    dashboardConfiguration: { widgetNameFontSize?: number } = {};
+
     selectedPage = {
         id: '',
         name: '',
@@ -95,6 +97,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     myinjector: Injector;
 
+    widgetNameFontSizes = [12, 14, 16, 18, 20, 22, 24];
+
     constructor(
         private _injector: Injector,
         private _dashboardViewConfiguration: DashboardViewConfigurationService,
@@ -103,10 +107,26 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         private _guidGenerator: GuidGeneratorService,
         private editModeService: EditModeService,
         private dashboardPagesService: DashboardPagesService,
+        private dashboardConfigurationService: DashboardConfigurationService,
     ) {
         super(_injector);
     }
 
+        requestWidgetEdit(widget: any): void {
+        abp.event.trigger('app.dashboard.editWidgetRequested', {
+            widgetGuid: widget.guid,
+            widgetId: widget.id,
+            configurationId: widget.configurationId,
+        });
+    }
+
+    requestWidgetRename(widget: any): void {
+        abp.event.trigger('app.dashboard.renameWidgetRequested', {
+            widgetGuid: widget.guid,
+            widgetId: widget.id,
+            currentName: widget.displayName,
+        });
+    }
     ngOnInit() {
         this.loading = true;
         this.subscribeToEvent('app.dashboard.removeWidget', (widgetGuid, widgetId) => this.removeItem(widgetGuid, widgetId, true));
@@ -195,9 +215,12 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         userDashboardResultFromServer: Dashboard,
         dashboardDefinitionResult: DashboardOutput,
     ) {
+        this.dashboardConfiguration = (userDashboardResultFromServer as any)?.configuration ?? {};
+        this.dashboardConfigurationService.setConfiguration(this.dashboardConfiguration);
         this.userDashboard = {
             dashboardName: this.dashboardName,
             filters: [],
+            configuration: this.dashboardConfiguration,
             pages: userDashboardResultFromServer.pages.map((page) => {
                 //gridster should has its own options
                 const cfg = this.getGridsterConfig();
@@ -579,8 +602,9 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
         abp.event.trigger('app.dashboardEdit.onSave');
 
-        let savePageInput = new SavePageInput({
+        const savePageInput: any = {
             dashboardName: this.dashboardName,
+            configuration: this.dashboardConfiguration,
             pages: this.userDashboard.pages.map(
                 (page) =>
                     new Page({
@@ -603,7 +627,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                     }),
             ),
             application: DashboardCustomizationConst.Applications.Angular,
-        });
+        };
 
         this._dashboardCustomizationServiceProxy.savePage(savePageInput).subscribe(() => {
             this.changeEditMode(); //after changes saved close edit mode
@@ -669,6 +693,16 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     private updatePagesStore(): void {
         this.dashboardPagesService.setPages(this.userDashboard?.pages ?? []);
+    }
+
+     onWidgetNameFontSizeChange(size: number | undefined): void {
+        const widgetNameFontSize = size ? +size : undefined;
+        this.dashboardConfiguration = {
+            ...this.dashboardConfiguration,
+            widgetNameFontSize,
+        };
+
+        this.dashboardConfigurationService.updateWidgetNameFontSize(widgetNameFontSize);
     }
 
     private getWidgetViewDefinition(id: string): WidgetViewDefinition {

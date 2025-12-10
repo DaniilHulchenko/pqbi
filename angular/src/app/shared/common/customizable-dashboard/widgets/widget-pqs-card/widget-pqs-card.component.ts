@@ -56,6 +56,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     titleFontSize = '1.2em';
     titleFontFamily = '';
     titleFontColor = '#000';
+    widgetNameFontSize?: string;
     iconColor: string = '#5b9bd5';
     isIconVisible: boolean = true;
     navigationPageId: string | null = null;
@@ -87,7 +88,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             this.dashboardPagesService.getPages().subscribe(() => this.updateNavigationAvailability()),
         );
         if (this.isNew) {
-            this.runDelayed(() => this.edit());
+            this.runDelayed(() => this.onEditRequested(null));
         }
     }
 
@@ -105,11 +106,23 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         this.subs.push(sub);
     }
 
+    protected override onEditRequested(_payload: any): void {
+        this.edit();
+    }
+
+    protected override onRenameRequested(_payload: any): void {
+        this.onNameEdit();
+    }
+    
     onConfigurationChange(newConfig: CreateOrEditWidgetConfigurationDto): void {
-        this.saveConfiguration(newConfig.id.toString());
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        this.refreshWidget();
+        
+        if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
+            this.saveConfiguration(newConfig.id.toString());
+        } else {
+            this.refreshWidget();
+        }
     }
 
     refreshWidget(): void {
@@ -342,6 +355,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                 ? this.parameter.cardWidgetAdvancedSettings?.titleFont?.customColor
                 : this.titleFontColor;
         this.titleFontFamily = this.parameter.cardWidgetAdvancedSettings?.titleFont?.family;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize(
+            this.parameter.cardWidgetAdvancedSettings?.titleFont?.size,
+        );
 
         this.valueFontSize = this.parameter.cardWidgetAdvancedSettings?.valueFont?.size
             ? `${this.parameter.cardWidgetAdvancedSettings?.valueFont?.size}px`

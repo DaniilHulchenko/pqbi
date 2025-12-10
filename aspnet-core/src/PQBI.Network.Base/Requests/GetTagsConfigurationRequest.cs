@@ -34,7 +34,7 @@ public class GetTagsConfigurationRequest : PQSCommonRequest
 
 public class GetTagsConfigurationResponse : PQSOperationResponseBase<GetTagsConfigurationRequest>
 {
-    public GetTagsConfigurationResponse(GetTagsConfigurationRequest request, PQSResponse response) : base(request, response)
+    public GetTagsConfigurationResponse(GetTagsConfigurationRequest request, PQSResponse response, string timezone = null) : base(request, response, timezone)
     {
 
     }

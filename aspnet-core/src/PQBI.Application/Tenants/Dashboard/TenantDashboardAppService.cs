@@ -34,6 +34,7 @@ namespace PQBI.Tenants.Dashboard
             _groupRepository = groupRepository;
             _customParameterCalculationService = customParameterCalculationService;
         }
+
         public GetMemberActivityOutput GetMemberActivity()
         {
             return new GetMemberActivityOutput
@@ -176,15 +177,13 @@ namespace PQBI.Tenants.Dashboard
 
                 try
                 {
+                    request.Logger = Logger;
                     response = await _customParameterCalculationService.CalculateTrendChartAsync(tenant.PQSServiceUrl, session, request);
-                }
-                catch (PQBIException chattoException)
-                {
-                    //response = new CalculationDto([], false, chattoException.Message);
-                }
+                }               
                 catch (Exception ex)
                 {
-                    //response = new CalculationDto([], false, ex.Message);
+                    //Logger.LogError($"PQSTrendData exception: baseUrl = {url}, request = {requestXML}, response = {responseXML}");
+
                 }
             }
 
@@ -252,6 +251,7 @@ namespace PQBI.Tenants.Dashboard
                     throw new SessionEmptyException();
                 }
 
+                request.Logger = Logger;
                 List<SubGroup> subgroups = null;
                 //switch (request.Category.Type)
                 //{
@@ -323,6 +323,8 @@ namespace PQBI.Tenants.Dashboard
                     throw new SessionEmptyException();
                 }
 
+                request.Logger = Logger;
+
                 response = await _customParameterCalculationService.CalculateTableAsync(tenant.PQSServiceUrl, session, request);
                 //response.Config = request.Config;
 
@@ -346,6 +348,7 @@ namespace PQBI.Tenants.Dashboard
                     throw new SessionEmptyException();
                 }
 
+                request.Logger = Logger;
                 response = await _customParameterCalculationService.CalculateCardAsync(tenant.PQSServiceUrl, session, request);               
 
             }
@@ -368,6 +371,7 @@ namespace PQBI.Tenants.Dashboard
                     throw new SessionEmptyException();
                 }
 
+                request.Logger = Logger;
                 response = await _customParameterCalculationService.CalculateGaugeAsync(tenant.PQSServiceUrl, session, request);
 
             }

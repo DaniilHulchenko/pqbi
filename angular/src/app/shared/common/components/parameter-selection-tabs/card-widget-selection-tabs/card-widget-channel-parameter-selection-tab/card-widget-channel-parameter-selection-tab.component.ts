@@ -120,8 +120,8 @@ export class CardWidgetChannelParameterSelectionTabComponent
         decimalPoints: 2,
         linkPage: null,
         icon: { file: null, appearance: 'always', colorMode: 'scheme', customColor: '#000000' },
-        titleFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
-        valueFont: { family: '', size: 26, colorMode: 'scheme', customColor: '#000000' },
+        titleFont: { family: '', size: 12, colorMode: 'scheme', customColor: '#000000' },
+        valueFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
     };
 
     private trees = {};
@@ -305,6 +305,11 @@ export class CardWidgetChannelParameterSelectionTabComponent
     }
 
     showAdvancedSettingsModal() {
+        const parameterName = this.parameter?.name;
+        this.advancedSettingsConfig = {
+            ...(this.advancedSettingsConfig ?? {}),
+            parameterName: this.advancedSettingsConfig?.parameterName ?? parameterName,
+        } as CardWidgetAdvancedSettingsConfig;
         this.advancedSettingsModal.show(this.advancedSettingsConfig);
     }
 

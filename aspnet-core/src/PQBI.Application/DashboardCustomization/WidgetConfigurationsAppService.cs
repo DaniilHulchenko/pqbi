@@ -107,7 +107,7 @@ namespace PQBI.DashboardCustomization
             return output;
         }
 
-        [AbpAuthorize(AppPermissions.WidgetConfigurations_Edit)]
+        //[AbpAuthorize(AppPermissions.WidgetConfigurations_Edit)]
         public async Task<List<GetWidgetConfigurationForEditOutput>> GetWidgetConfigurationBatchesByWidgetIds(List<string> widgetIds)
         {
             var widgetConfigurations = await _widgetConfigurationRepository

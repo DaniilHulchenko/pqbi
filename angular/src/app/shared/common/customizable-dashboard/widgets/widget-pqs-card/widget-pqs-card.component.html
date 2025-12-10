@@ -1,13 +1,8 @@
 <div class="kt-portlet kt-portlet--height-fluid">
     <div class="kt-portlet__head">
         <div class="kt-portlet__head-label">
-            <h3 class="kt-portlet__head-title">
+            <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
                 {{ widgetConfigurationInDB?.name }}
-                <button class="btn btn-sm btn-elevate-hover" *ngIf="editState" (click)="onNameEdit()">
-                    <i class="fa fa-edit"></i>
-                </button>
-                
-                <button class="btn btn-primary btn-sm" *ngIf="editState" (click)="edit()">{{ 'Edit' | localize }}</button>
                 <button
                     class="btn btn-outline-primary btn-sm"
                     *ngIf="canNavigateToPage"
@@ -48,13 +43,13 @@
                             </div>
                         </div>
                     </div>
-                    <div *ngIf="isIconVisible">
-                        <div *ngIf="parameter?.cardWidgetAdvancedSettings?.icon?.file; else defaultImage">
-                            <img [src]="parameter?.cardWidgetAdvancedSettings?.icon?.file" style="width: 15%;" />
-                        </div>
+                    <div *ngIf="isIconVisible" class="card-icon">
+                        <div *ngIf="parameter?.cardWidgetAdvancedSettings?.icon?.file; else defaultImage" class="card-icon-image">
+                            <img [src]="parameter?.cardWidgetAdvancedSettings?.icon?.file" />                        </div>
                         <ng-template #defaultImage>
-                            <i class="fa fa-bolt" [ngStyle]="{'color': iconColor}"
-                                style="font-size:3em; margin-top:8px;"></i>
+                            <div class="card-icon-fallback">
+                                <i class="fa fa-bolt" [ngStyle]="{'color': iconColor}"></i>
+                            </div>
                         </ng-template>
                     </div>
                     <div class="fw-bold" [ngStyle]="{

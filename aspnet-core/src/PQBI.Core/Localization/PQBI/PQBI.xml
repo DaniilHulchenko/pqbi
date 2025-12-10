@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-	<texts>
+	<texts>    <text name="FileInfos">File infos</text>
+    <text name="FileInfo">File info</text>
+    <text name="PQBI.FileInfos.FileInfo">FileInfo</text>
+    <text name="Content">Content</text>
+    <text name="FileInfosHeaderInfo">File infos header info</text>
+    <text name="CreateNewFileInfo">Create new file info</text>
+    <text name="EditFileInfo">Edit file info</text>
+    <text name="DeleteFileInfo">Delete file info</text>
+
 		<text name="GaugeWidgetConfigurations">Gauge widget configurations</text>
 		<text name="GaugeWidgetConfiguration">Gauge widget configuration</text>
 		<text name="CreateNewGaugeWidgetConfiguration">Create new gauge widget configuration</text>

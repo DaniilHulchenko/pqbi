@@ -55,7 +55,7 @@ public class PQSGetEventRequest : PQSCommonRequest
 
 public class PQSAddEventResponse : PQSOperationResponseBase<PQSGetEventRequest>
 {
-    public PQSAddEventResponse(PQSGetEventRequest request, PQSResponse response) : base(request, response)
+    public PQSAddEventResponse(PQSGetEventRequest request, PQSResponse response, string timezone) : base(request, response, timezone)
     {
 
     }

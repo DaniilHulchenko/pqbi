@@ -48,7 +48,7 @@ public record FlickerDto(string ComponentId, double Value);
 
 public class FlickerPQSGetBaseDataResponse : PQSOperationResponseBase<FlickerPQSGetBaseDataRequest>
 {
-    public FlickerPQSGetBaseDataResponse(FlickerPQSGetBaseDataRequest request, PQSResponse response) : base(request, response)
+    public FlickerPQSGetBaseDataResponse(FlickerPQSGetBaseDataRequest request, PQSResponse response, string timezone) : base(request, response, timezone)
     {
 
     }

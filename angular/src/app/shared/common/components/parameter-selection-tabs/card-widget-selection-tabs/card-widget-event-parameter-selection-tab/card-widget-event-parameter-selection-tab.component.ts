@@ -98,8 +98,8 @@ export class CardWidgetEventParameterSelectionTabComponent
         decimalPoints: 2,
         linkPage: null,
         icon: { file: null, appearance: 'always', colorMode: 'scheme', customColor: '#000000' },
-        titleFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
-        valueFont: { family: '', size: 26, colorMode: 'scheme', customColor: '#000000' },
+        titleFont: { family: '', size: 12, colorMode: 'scheme', customColor: '#000000' },
+        valueFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
     };
 
     edit(parameter: WidgetParametersColumn) {
@@ -124,6 +124,11 @@ export class CardWidgetEventParameterSelectionTabComponent
     }
 
     showEventAdvancedSettingsModal() {
+        const parameterName = this.getCurrentParameterName();
+        this.eventAdvancedSettingsConfig = {
+            ...(this.eventAdvancedSettingsConfig ?? {}),
+            parameterName: this.eventAdvancedSettingsConfig?.parameterName ?? parameterName,
+        } as CardWidgetAdvancedSettingsConfig;
         this.eventAdvancedSettingsModal.show(this.eventAdvancedSettingsConfig);
     }
 
@@ -284,6 +289,33 @@ export class CardWidgetEventParameterSelectionTabComponent
         if (!isSilentInvoke){
             this.finishEdit();
         }
+    }
+     private getCurrentParameterName(): string {
+        if (!this.selectedEvent || !this.selectedParameter) {
+            return '';
+        }
+
+        const phaseNames = ArrayUtils.ensureArray(this.selectedPhases)
+            .map((phase) => this.getPhaseName(phase))
+            .filter((phaseName) => !!phaseName)
+            .join(', ');
+
+        const eventName = this.selectedEvent.name ?? this.selectedEvent.eventClass ?? '';
+
+        return `${eventName}${phaseNames ? ` (${phaseNames})` : ''} ${this.selectedParameter}`.trim();
+    }
+    private getPhaseName(
+        phase: EventPhaseOptions | { name?: string; phaseName?: string } | string
+    ): string {
+        if (typeof phase === 'string') {
+            return phase;
+        }
+
+        if (phase && typeof phase === 'object') {
+            return phase.name ?? phase.phaseName ?? '';
+        }
+
+        return '';
     }
 }
 

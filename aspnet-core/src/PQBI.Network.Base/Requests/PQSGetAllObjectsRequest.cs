@@ -39,7 +39,7 @@ public class PQSGetAllObjectsRequest : PQSCommonRequest
 
 public class PQSGetAllObjectsResponse : PQSOperationResponseBase<PQSGetAllObjectsRequest>
 {
-    public PQSGetAllObjectsResponse(PQSGetAllObjectsRequest request, PQSResponse response) : base(request, response)
+    public PQSGetAllObjectsResponse(PQSGetAllObjectsRequest request, PQSResponse response, string timezone) : base(request, response, timezone)
     {
 
     }

@@ -1833,6 +1833,30 @@ namespace PQBI.Migrations
                     b.ToTable("DefaultValues");
                 });
 
+            modelBuilder.Entity("PQBI.FileInfos.FileInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TenantId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("FileInfos");
+                });
+
             modelBuilder.Entity("PQBI.Friendships.Friendship", b =>
                 {
                     b.Property<long>("Id")

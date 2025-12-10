@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="PQZProtocolSapphire" Version="1.9.6" />
+		<PackageReference Include="TimeZoneConverter" Version="7.2.0" />
 
 	</ItemGroup>	
 

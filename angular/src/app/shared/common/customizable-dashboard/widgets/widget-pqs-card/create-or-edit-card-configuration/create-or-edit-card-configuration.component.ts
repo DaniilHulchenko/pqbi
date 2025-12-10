@@ -26,6 +26,7 @@ import { CardWidgetConfigurationService } from '@app/shared/services/widget-conf
 import { EditableTabComponentBaseComponent } from '@app/shared/common/components/parameter-selection-tabs/editable-tab-component-base';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateRangeSelectorComponent } from '@app/shared/common/components/date-range-selector/date-range-selector.component';
+import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
 
 @Component({
     selector: 'createOrEditCardConfiguration',
@@ -147,11 +148,13 @@ export class CreateOrEditCardConfigurationComponent
     }
 
     onAddBaseParameter(event: AddBaseParameterEventCallBack) {
+        const parameterName = this.applyCustomParameterName(event.parameter.name, event.cardWidgetAdvancedSettings);
+        event.parameter.name = parameterName;
         this.parameters = [
             {
                 id: Guid.newGuid().toString(),
                 componentsState: event.componentsState,
-                name: event.parameter.name,
+                name: parameterName,
                 quantity: event.quantity,
                 type: ColumnType.BaseParameter,
                 data: safeStringify(event.parameter),
@@ -164,11 +167,12 @@ export class CreateOrEditCardConfigurationComponent
 
     onAddCustomParameter(event: AddCustomParameterEventCallBack) {
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
+            const parameterName = this.applyCustomParameterName(parameter.name, event.advancedSettings);
             this.parameters = [
                 {
                     id: Guid.newGuid().toString(),
                     componentsState: event.componentsState,
-                    name: parameter.name,
+                    name: parameterName,
                     quantity: event.quantity,
                     type: ColumnType.CustomParameter,
                     data: event.customParameterId,
@@ -183,11 +187,12 @@ export class CreateOrEditCardConfigurationComponent
 
     onAddException(event: AddCardWidgetExceptionEventCallBack) {
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
+            const parameterName = this.applyCustomParameterName(parameter.name, event.cardWidgetAdvancedSettings);
             this.parameters = [
                 {
                     id: Guid.newGuid().toString(),
                     componentsState: null,
-                    name: parameter.name,
+                    name: parameterName,
                     quantity: event.quantity,
                     type: ColumnType.Exception,
                     data: event.customParameterId,
@@ -203,11 +208,11 @@ export class CreateOrEditCardConfigurationComponent
     onAddEvent(event: AddCardWidgetEventParameterEventCallBack) {
         const phaseNames = event.phases.map((phase) => phase).join(', ');
         const formattedName = `${event.event.name} (${phaseNames}) ${event.parameter}`;
-
+        const parameterName = this.applyCustomParameterName(formattedName, event.advancedSettings);
         const newItem = {
             id: Guid.newGuid().toString(),
             componentsState: event.componentState,
-            name: formattedName,
+            name: parameterName,
             quantity: event.quantity,
             type: ColumnType.Event,
             resolution: 0,
@@ -234,7 +239,7 @@ export class CreateOrEditCardConfigurationComponent
 
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
             tableParameter.componentsState = event.componentsState;
-            tableParameter.name = parameter.name;
+            tableParameter.name = this.applyCustomParameterName(parameter.name, event.advancedSettings);
             tableParameter.quantity = event.quantity;
             tableParameter.data = event.customParameterId;
             tableParameter.cardWidgetAdvancedSettings = event.advancedSettings;
@@ -246,7 +251,7 @@ export class CreateOrEditCardConfigurationComponent
         const tableParameter: WidgetParametersColumn = this.parameters.find((p) => p.id === event.id);
 
         tableParameter.componentsState = event.componentsState;
-        tableParameter.name = event.parameter.name;
+        tableParameter.name = this.applyCustomParameterName(event.parameter.name, event.cardWidgetAdvancedSettings);
         tableParameter.quantity = event.quantity;
         tableParameter.data = safeStringify(event.parameter);
         tableParameter.cardWidgetAdvancedSettings = event.cardWidgetAdvancedSettings;
@@ -260,7 +265,7 @@ export class CreateOrEditCardConfigurationComponent
         }
 
         var sub = this._customParameterService.getById(event.customParameterId).subscribe((parameter) => {
-            tableParameter.name = parameter.name;
+            tableParameter.name = this.applyCustomParameterName(parameter.name, event.cardWidgetAdvancedSettings);
             tableParameter.quantity = event.quantity;
             tableParameter.data = event.customParameterId;
             tableParameter.cardWidgetAdvancedSettings = event.cardWidgetAdvancedSettings;
@@ -273,7 +278,10 @@ export class CreateOrEditCardConfigurationComponent
         if (!tableParameter) return;
 
         const phaseNames = event.phases.map((phase) => phase).join(', ');
-        tableParameter.name = `${event.event.name} (${phaseNames}) ${event.parameter}`;
+        tableParameter.name = this.applyCustomParameterName(
+            `${event.event.name} (${phaseNames}) ${event.parameter}`,
+            event.advancedSettings,
+        );
         tableParameter.quantity = event.quantity;
         tableParameter.data = safeStringify({
             event: event.event,
@@ -486,5 +494,11 @@ export class CreateOrEditCardConfigurationComponent
 
     ngOnDestroy(): void {
         this.subs.forEach((sub) => sub.unsubscribe());
+    }
+    private applyCustomParameterName(
+        currentName: string,
+        settings?: CardWidgetAdvancedSettingsConfig,
+    ): string {
+        return settings?.parameterName?.trim() || currentName;
     }
 }

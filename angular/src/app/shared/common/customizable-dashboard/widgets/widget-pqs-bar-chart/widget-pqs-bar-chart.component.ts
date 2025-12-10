@@ -76,12 +76,20 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     ngOnInit(): void {
         super.ngOnInit();
         if (this.isNew) {
-            this.runDelayed(() => this.edit());
+            this.runDelayed(() => this.onEditRequested(null));
         }
     }
 
     onNameEdit(): void {
         this.renameModal.show(this.widgetConfigurationInDB?.name);
+    }
+
+    protected override onEditRequested(_payload: any): void {
+        this.edit();
+    }
+
+    protected override onRenameRequested(_payload: any): void {
+        this.onNameEdit();
     }
 
     customizeLabelText = (e: any) => {
@@ -251,10 +259,14 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     }
 
     onConfigurationChange(newConfig: CreateOrEditBarChartWidgetConfigurationDto): void {
-        this.saveConfiguration(newConfig.id.toString());
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        this.refreshWidget();
+        
+        if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
+            this.saveConfiguration(newConfig.id.toString());
+        } else {
+            this.refreshWidget();
+        }
     }
 
     refreshWidget(): void {

@@ -7,6 +7,7 @@ import {
     DxTextBoxModule,
     DxColorBoxModule,
     DxButtonModule,
+    DxRadioGroupModule,
     DxFileUploaderModule,
     DxNumberBoxModule,
     DxSelectBoxModule,
@@ -44,6 +45,7 @@ import { Subscription } from 'rxjs';
         CommonModule,
         DxNumberBoxModule,
         DxSelectBoxModule,
+        DxRadioGroupModule,
         MultiSelectModule,
         FormsModule,
         CheckboxModule,
@@ -59,6 +61,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     @Output() configChange = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
 
     modalVisible = false;
+    parameterName = '';
     normalizationOptions: any[];
     normalizeTypes = NormalizeEnum;
     excludeFlaggedTypes = ExcludeFlagged;
@@ -157,6 +160,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     ngOnChanges(changes: SimpleChanges) {
         if (changes.config && this.config) {
             const c = this.config;
+            this.parameterName = c.parameterName ?? '';
             this.normalizeValue = c.normalizeValue;
             this.normalizeNominalValue = +c.normalizeNominalValue;
             this.excludeFlagged = c.excludeFlagged;
@@ -234,6 +238,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
             return;
         }
         const config: GaugeWidgetAdvancedSettingsConfig = {
+            parameterName: this.parameterName?.trim(),
             normalizeValue: this.normalizeValue,
             normalizeNominalValue: this.normalizeNominalValue,
             excludeFlagged: this.excludeFlagged,
@@ -295,12 +300,13 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     }
 
 
-
+    
     reset() {
         this.normalizeValue = NormalizeEnum.NO;
         this.normalizeNominalValue = 0;
         this.excludeFlagged = ExcludeFlagged.None;
         this.selectedFlagEvents = [];
+        this.parameterName = '';
         this.decimalPoints = 2;
         this.link.page = null;
         this.titleFont = this.normalizeFontSettings(null, 20);
@@ -315,7 +321,6 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         this.colorScheme = ColorSchema.None;
         this.outOfLimitColor = '';
     }
-
     private normalizeFontSettings(
         font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
         defaultSize: number,

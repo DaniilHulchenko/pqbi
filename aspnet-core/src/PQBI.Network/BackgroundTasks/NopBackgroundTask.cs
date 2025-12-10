@@ -70,7 +70,7 @@ namespace PQBI.BackgroundTasks
 
                                 if (result == true)
                                 {
-                                    userSessionManager.KeepAliveAsync(userInfo.UserId);
+                                    await userSessionManager.KeepAliveAsync(userInfo.UserId);
                                 }
                             }
                         }
@@ -78,7 +78,7 @@ namespace PQBI.BackgroundTasks
                 }
                 catch (Exception e)
                 {
-
+                    _logger.LogError(e, "Error in NopBackgroundTask while processing NOPs.");
                 }
 
                 await Task.Delay(delayInSecond, stoppingToken);

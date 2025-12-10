@@ -30,7 +30,7 @@ namespace PQBI.Requests
 
     public class PQSNopResponse : PQSOperationResponseBase<PQSNopRequest>
     {   
-        public PQSNopResponse(PQSNopRequest request, PQSResponse response) : base(request, response)
+        public PQSNopResponse(PQSNopRequest request, PQSResponse response, string timezone) : base(request, response, timezone)
         {
 
         }

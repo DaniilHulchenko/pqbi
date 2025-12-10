@@ -81,7 +81,7 @@ namespace PQBI.Requests
 
     public class PQSGetComponentsResponse : PQSCommonResponse<PQSRequestBase>
     {
-        public PQSGetComponentsResponse(PQSGetComponentsRequest request, PQSResponse response) : base(request, response)
+        public PQSGetComponentsResponse(PQSGetComponentsRequest request, PQSResponse response) : base(request, response, null)
         {
 
         }

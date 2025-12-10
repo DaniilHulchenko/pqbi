@@ -189,14 +189,14 @@ namespace PQBI.Network.RestApi
             }
         }
 
-        private int GetTrendResolutionInSec(TrendCalcRequest input)
+        private int GetTrendResolutionInSec(TrendCalcRequest input, DateTime startDate, DateTime endDate)
         {
             var syncStr = string.Empty;
             if (input.IsAutoResolution)
             //if (AutoCalcFunction.TryExtracMaxPoints(input.Resolution, out var maxPoints))
             {
                 double periodInSeconds = 0;
-                var period = input.EndDate - input.StartDate;
+                var period = endDate - startDate;
                 if (input.ResolutionInSeconds != 0)
                     periodInSeconds = (double)period.TotalSeconds / input.ResolutionInSeconds;
                 //var paramSync = SyncInterval.GetSyncEnum(periodInSeconds);
@@ -231,6 +231,7 @@ namespace PQBI.Network.RestApi
               string session,
               DateTime start,
               DateTime end,
+              Infrastructure.TimeZone usertimezoneinfo,
               int widgetResolutionInSeconds,
               bool isAutoResolution,
               string parameterQuantity,
@@ -300,12 +301,12 @@ namespace PQBI.Network.RestApi
                 {
                     foreach (var feed in feeders)
                     {
-                        await CalcInnerAndOuter(url, session, start, end, advancedSettings, isIgnoreAligningFunction, node, baseParams, [feed]);
+                        await CalcInnerAndOuter(url, session, start, end, usertimezoneinfo, advancedSettings, isIgnoreAligningFunction, node, baseParams, [feed]);
                     }
                 }
                 else
                 {
-                    await CalcInnerAndOuter(url, session, start, end, advancedSettings, isIgnoreAligningFunction, node, baseParams, feeders);
+                    await CalcInnerAndOuter(url, session, start, end, usertimezoneinfo, advancedSettings, isIgnoreAligningFunction, node, baseParams, feeders);
                 }
                 node.AddFinalMatrixCalculation();
 
@@ -342,10 +343,10 @@ namespace PQBI.Network.RestApi
             //    return await BuildAsync(customParameterId, feeders, null);
         }
 
-        private async Task CalcInnerAndOuter(string url, string session, DateTime start, DateTime end, AdvancedSettings? advancedSettings, bool isIgnoreAligningFunction, CustomParameterNodeCalculator node, BaseParameter[] baseParams, IEnumerable<FeederComponentInfo> feeders)
+        private async Task CalcInnerAndOuter(string url, string session, DateTime start, DateTime end, Infrastructure.TimeZone usertimezoneinfo, AdvancedSettings? advancedSettings, bool isIgnoreAligningFunction, CustomParameterNodeCalculator node, BaseParameter[] baseParams, IEnumerable<FeederComponentInfo> feeders)
         {
             var reqs = baseParams.CreateBaseParameterComponents(feeders);
-            var prmMatrix = await SetAndCalculateInnerAggregation(url, session, start, end, node, reqs, advancedSettings);
+            var prmMatrix = await SetAndCalculateInnerAggregation(url, session, start, end, usertimezoneinfo, node, reqs, advancedSettings);
 
             // 2b) outer-aggregation
             node.CalculatedParameterOuterMatrixAndAggregation(prmMatrix, isIgnoreAligningFunction);
@@ -454,14 +455,12 @@ namespace PQBI.Network.RestApi
         //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        private async Task<ParameterMatrix> SetAndCalculateInnerAggregation(string url, string session, DateTime start, DateTime end, CustomParameterNodeCalculator node, IEnumerable<BaseParameterComponent> ptr, AdvancedSettings? advancedSettings)
+        private async Task<ParameterMatrix> SetAndCalculateInnerAggregation(string url, string session, DateTime start, DateTime end, Infrastructure.TimeZone userTimeZone, CustomParameterNodeCalculator node, IEnumerable<BaseParameterComponent> ptr, AdvancedSettings? advancedSettings)
         {
             node.PopulateWithBaseParameterComponents(ptr);
-            await SendingAndStoringDataAsync(url, session, start, end, (false, null), ptr, advancedSettings?.FiltersGroup, false, 0);
+            await SendingAndStoringDataAsync(url, session, start, end, userTimeZone, (false, null), ptr, advancedSettings?.FiltersGroup, false, 0);
             return node.CalculatedInnerAlignment(ptr, advancedSettings);
         }
-
-
         //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -473,6 +472,8 @@ namespace PQBI.Network.RestApi
             var calculationDataItems = new PqbiSafeEntityLockerSlim<List<CalculatedDataItem>>([]);
             var timeStamps = new PqbiSafeEntityLockerSlim<List<long>>([]);
 
+            (DateTime startDate, DateTime endDate) = input.NormalizeDatesToUtc();
+            Infrastructure.TimeZone userTimeZone = new Infrastructure.TimeZone(input.UserTimeZoneID, input.UserTimeZone);
             if (input.IsAutoResolution && input.ResolutionInSeconds == 0)
                 input.ResolutionInSeconds = 1334;
 
@@ -489,12 +490,12 @@ namespace PQBI.Network.RestApi
 
             using (var mainLogger = PqbiStopwatch.AnchorAsync($"Trender - {input.WidgetName} {nameof(CalculateTrendChartAsync)}", Logger))
             {
-                int resolutionInSec = GetTrendResolutionInSec(input);
+                int resolutionInSec = GetTrendResolutionInSec(input, startDate, endDate);
                 foreach (var parameter in parameters)
                 {
-                    PreparePrmMapForTrendReq(input.StartDate, input.EndDate, parameter.Feeders, resolutionInSec, baseParametersHashSet, parameter);
+                    PreparePrmMapForTrendReq(startDate, endDate, parameter.Feeders, resolutionInSec, baseParametersHashSet, parameter);
                 }
-                await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+                await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
 
                 //var list = new List<Task>();
                 foreach (TrendParameter parameter in parameters)
@@ -504,7 +505,7 @@ namespace PQBI.Network.RestApi
                         using (var subLogger = mainLogger.CreateSubLogger("Parameter Calculation"))
                         {
 
-                            var graphes = await CalculateTrendChartIntristicAsync(url, session, input, parameter, resolutionInSec);
+                            var graphes = await CalculateTrendChartIntristicAsync(url, session, input, startDate, endDate, userTimeZone, parameter, resolutionInSec);
 
                             //var graphes = await CalculateTrendChartIntristicAsync(url, session, input, parameter);
                             foreach (var graph in graphes)
@@ -565,7 +566,7 @@ namespace PQBI.Network.RestApi
             //return new CalculationDto(result, true, string.Empty);
         }
 
-        private async Task<IEnumerable<GraphParametersComponentDtoV3>> CalculateTrendChartIntristicAsync(string url, string session, TrendCalcRequest input, TrendParameter parameter, int resolutionInSec)
+        private async Task<IEnumerable<GraphParametersComponentDtoV3>> CalculateTrendChartIntristicAsync(string url, string session, TrendCalcRequest input, DateTime startDate, DateTime endDate, Infrastructure.TimeZone timezoneinfo, TrendParameter parameter, int resolutionInSec)
         {
             var result = new List<GraphParametersComponentDtoV3>();
 
@@ -578,7 +579,7 @@ namespace PQBI.Network.RestApi
                     TrendCustomWidgetData customWidgetData = parameter.CustomData;
                     var customParameterId = customWidgetData.Id;
 
-                    var calculationNode = await AssembleCustomParameterTree(customParameterId, url, session, input.StartDate, input.EndDate, input.ResolutionInSeconds, input.IsAutoResolution, parameter.CustomData.Quantity, parameter.Feeders, null, false);
+                    var calculationNode = await AssembleCustomParameterTree(customParameterId, url, session, startDate, endDate, new Infrastructure.TimeZone(input.UserTimeZoneID, input.UserTimeZone), input.ResolutionInSeconds, input.IsAutoResolution, parameter.CustomData.Quantity, parameter.Feeders, null, false);
                     var results = _engineControllerService.RootCalculation(calculationNode);
                     result.AddRange(results);
 
@@ -592,14 +593,14 @@ namespace PQBI.Network.RestApi
 
                     //SetAutoResolution(baseParameter, input);// input.StartDate, input.EndDate, input.Resolution,input.ResolutionInSeconds, input.IsAutoResolution);
 
-                    var root = new CustomParameterNodeCalculator(CustomParameterType.BPCP, -1, input.IsAutoResolution, string.Empty, input.StartDate, input.EndDate, input.ResolutionInSeconds, baseParameter.Quantity);
+                    var root = new CustomParameterNodeCalculator(CustomParameterType.BPCP, -1, input.IsAutoResolution, string.Empty, startDate, endDate, input.ResolutionInSeconds, baseParameter.Quantity);
                     var baseParameterRequests = baseParameter.CreateBaseParameterComponents(parameter.Feeders);
 
                     root.PopulateWithBaseParameterComponents(baseParameterRequests);
 
                     //SelectAssemble(root, parameter.Feeders);
 
-                    await SendingAndStoringDataAsync(url, session, input.StartDate, input.EndDate, (false, null), root.BaseParameterComponents, null, input.IsRealTime, input.RefreshRateInSeconds);
+                    await SendingAndStoringDataAsync(url, session, startDate, endDate, timezoneinfo, (false, null), root.BaseParameterComponents, null, input.IsRealTime, input.RefreshRateInSeconds);
                     //var baseParameterGraph = _engineControllerService.FullCalculation(root);
                     //result.Add(baseParameterGraph);
 
@@ -615,7 +616,7 @@ namespace PQBI.Network.RestApi
                     TrendCustomWidgetData exceptionCustomWidgetData = parameter.CustomData;
                     var exceptionCustomParameterId = exceptionCustomWidgetData.Id;
 
-                    var exceptionnode = await AssembleCustomParameterTree(exceptionCustomParameterId, url, session, input.StartDate, input.EndDate, input.ResolutionInSeconds, input.IsAutoResolution, parameter.CustomData.Quantity, [], null, false);
+                    var exceptionnode = await AssembleCustomParameterTree(exceptionCustomParameterId, url, session, startDate, endDate, new Infrastructure.TimeZone(input.UserTimeZoneID, input.UserTimeZone), input.ResolutionInSeconds, input.IsAutoResolution, parameter.CustomData.Quantity, [], null, false);
                     //foreach (var exceptionnode in exceptionNodes)
                     {
                         var exceptionGraphes = _engineControllerService.RootCalculation(exceptionnode);
@@ -645,6 +646,8 @@ namespace PQBI.Network.RestApi
             List<BarParameter> otherColWidgetTableList = new List<BarParameter>();
             Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet = new Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>>();
 
+            (DateTime startDate, DateTime endDate) = input.NormalizeDatesToUtc();
+            Infrastructure.TimeZone userTimeZone = new Infrastructure.TimeZone(input.UserTimeZoneID, input.UserTimeZone);
             List<BarGroup>? barGroups = null;
             DataUnitType dataUnitType = null;
             switch (input.Category.Type)
@@ -655,7 +658,7 @@ namespace PQBI.Network.RestApi
                         case DimensionType.Parameters:
                         case DimensionType.Feeders:
                             {
-                                (TimeBucket timeBucket, IntervalSynchronized intervalSynchronized, IEnumerable<(DateTime barStart, DateTime barEnd)>? barTimeRangeList, int resolutionInSec) = await GetDatesForBars(url, session, input, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
+                                (TimeBucket timeBucket, IntervalSynchronized intervalSynchronized, IEnumerable<(DateTime barStart, DateTime barEnd)>? barTimeRangeList, int resolutionInSec) = await GetDatesForBars(url, session, input, userTimeZone, startDate, endDate, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
 
                                 barGroups = barTimeRangeList?
                                     .Select(r => new BarGroup(
@@ -678,7 +681,7 @@ namespace PQBI.Network.RestApi
                                   .ToList();
                                 Guid sessionID = Guid.Parse(session);
 
-                                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(input.StartDate), new PQZDateTime(input.EndDate), input.Feeders, null!, null!, 0, false, barTimeRangeList);
+                                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(startDate), new PQZDateTime(endDate), input.Feeders, null!, null!, 0, false, barTimeRangeList);
 
                                 int evIdx = 0;
                                 int numOfEvPrms = dtoList.Count;
@@ -713,7 +716,7 @@ namespace PQBI.Network.RestApi
                                                 break;
 
                                             case TableWidgetParameterType.BaseParameter:
-                                                barItemList = (await BaseParameterCreateBarAsync(url, session, input, barPrm, resolutionInSec, false, barTimeRangeList, intervalSynchronized)).ToList();
+                                                barItemList = (await BaseParameterCreateBarAsync(url, session, input, userTimeZone, startDate, endDate, barPrm, resolutionInSec, false, barTimeRangeList, intervalSynchronized)).ToList();
                                                 break;
 
                                             default:
@@ -748,7 +751,7 @@ namespace PQBI.Network.RestApi
                     {
                         case DimensionType.Dates:
                             {
-                                (dataUnitType, barGroups) = await ParametersFeedersDatesBarChart(url, session, input, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
+                                (dataUnitType, barGroups) = await ParametersFeedersDatesBarChart(url, session, input, userTimeZone, startDate, endDate, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
                             }
                             break;
                         case DimensionType.Feeders:
@@ -762,7 +765,7 @@ namespace PQBI.Network.RestApi
                                 barGroups = new List<BarGroup>();
                                 foreach (var parameter in input.BarPrmList)
                                 {
-                                    PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                                    PreparePrmMapForReq(startDate, endDate, true, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
                                 }
 
                                 //List<TableWidgetResponseItem> tableEventWidgetResponseItemList = null;
@@ -772,7 +775,7 @@ namespace PQBI.Network.RestApi
                                 //    responseItems.AddRange(tableEventWidgetResponseItemList);
                                 //}
 
-                                int resInSec = await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+                                int resInSec = await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
 
                                 List<EventParameterDto> dtoList = eventColWidgetTableList
                                        .Select(c => new EventParameterDto
@@ -786,7 +789,7 @@ namespace PQBI.Network.RestApi
                                        .ToList();
                                 Guid sessionID = Guid.Parse(session);
 
-                                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(input.StartDate), new PQZDateTime(input.EndDate), input.Feeders, null!, null!, 0, true);
+                                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(startDate), new PQZDateTime(endDate), input.Feeders, null!, null!, 0, true);
 
                                 int numOfEvPrms = dtoList.Count;
                                 for (int i = 0; i < dtoList.Count; i++)
@@ -836,7 +839,7 @@ namespace PQBI.Network.RestApi
 
                                                     case TableWidgetParameterType.BaseParameter:
 
-                                                        barItemList = (await BaseParameterCreateBarAsync(url, session, input, barPrm, resInSec, true, isHideMsrPointName: true)).ToList();
+                                                        barItemList = (await BaseParameterCreateBarAsync(url, session, input, userTimeZone, startDate, endDate, barPrm, resInSec, true, isHideMsrPointName: true)).ToList();
                                                         break;
 
                                                     default:
@@ -872,7 +875,7 @@ namespace PQBI.Network.RestApi
                             break;
                         case DimensionType.CustomGroup:
                             {
-                                (barGroups, dataUnitType) = await ParametersAndFeedersCustomGroupBarChart(url, session, input, subgroups, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
+                                (barGroups, dataUnitType) = await ParametersAndFeedersCustomGroupBarChart(url, session, input, userTimeZone, startDate, endDate, subgroups, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
                             }
                             break;
                         default:
@@ -895,7 +898,7 @@ namespace PQBI.Network.RestApi
 
                                 foreach (var parameter in input.BarPrmList)
                                 {
-                                    PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                                    PreparePrmMapForReq(startDate, endDate, true, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
                                 }
 
                                 //List<TableWidgetResponseItem> tableEventWidgetResponseItemList = null;
@@ -905,7 +908,7 @@ namespace PQBI.Network.RestApi
                                 //    responseItems.AddRange(tableEventWidgetResponseItemList);
                                 //}
 
-                                int resInSec = await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+                                int resInSec = await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
                                 List<EventParameterDto> dtoList = eventColWidgetTableList
                                     .Select(c => new EventParameterDto
                                     {
@@ -919,7 +922,7 @@ namespace PQBI.Network.RestApi
                                 Guid sessionID = Guid.Parse(session);
 
                                 int numOfEvPrms = dtoList.Count;
-                                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(input.StartDate), new PQZDateTime(input.EndDate), input.Feeders, null!, null!, 0, true);
+                                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(startDate), new PQZDateTime(endDate), input.Feeders, null!, null!, 0, true);
                                 int barGroupIndex = -1;
                                 for (int barItemNum = 0; barItemNum < feedersTableWidgetResponseItemList.Count; barItemNum++)
                                 {
@@ -956,7 +959,7 @@ namespace PQBI.Network.RestApi
 
                                                     case TableWidgetParameterType.BaseParameter:
 
-                                                        barItemList = (await BaseParameterCreateBarAsync(url, session, input, barPrm, isHideMsrPointName: true, resolutionInSec: resInSec, isExpectedSingleRes: true)).ToList();
+                                                        barItemList = (await BaseParameterCreateBarAsync(url, session, input, userTimeZone, startDate, endDate, barPrm, isHideMsrPointName: true, resolutionInSec: resInSec, isExpectedSingleRes: true)).ToList();
                                                         break;
 
                                                     default:
@@ -984,12 +987,12 @@ namespace PQBI.Network.RestApi
                             break;
                         case DimensionType.CustomGroup:
                             {
-                                (barGroups, dataUnitType) = await ParametersAndFeedersCustomGroupBarChart(url, session, input, subgroups, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
+                                (barGroups, dataUnitType) = await ParametersAndFeedersCustomGroupBarChart(url, session, input, userTimeZone, startDate, endDate, subgroups, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
                             }
                             break;
                         case DimensionType.Dates:
                             {
-                                (dataUnitType, barGroups) = await ParametersFeedersDatesBarChart(url, session, input, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
+                                (dataUnitType, barGroups) = await ParametersFeedersDatesBarChart(url, session, input, userTimeZone, startDate, endDate, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
                             }
                             break;
                         default:
@@ -1002,7 +1005,7 @@ namespace PQBI.Network.RestApi
                         case DimensionType.Parameters:
                         case DimensionType.Feeders:
                             {
-                                (barGroups, dataUnitType) = await CustomGroupPrmAndFeedersBarChart(url, session, input, subgroups, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
+                                (barGroups, dataUnitType) = await CustomGroupPrmAndFeedersBarChart(url, session, input, userTimeZone, startDate, endDate, subgroups, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
                             }
                             break;
                     }
@@ -1016,11 +1019,11 @@ namespace PQBI.Network.RestApi
             return barChartResponse;
         }
 
-        private async Task<(DataUnitType, List<BarGroup>)> ParametersFeedersDatesBarChart(string url, string session, BarChartRequest input, List<BarParameter> eventColWidgetTableList, List<BarParameter> otherColWidgetTableList, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet)
+        private async Task<(DataUnitType, List<BarGroup>)> ParametersFeedersDatesBarChart(string url, string session, BarChartRequest input, Infrastructure.TimeZone userTimeZone, DateTime startDate, DateTime endDate, List<BarParameter> eventColWidgetTableList, List<BarParameter> otherColWidgetTableList, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet)
         {
             List<BarGroup> barGroups = new List<BarGroup>();
             DataUnitType? dataUnitType = null;
-            (TimeBucket timeBucket, IntervalSynchronized intervalSynchronized, IEnumerable<(DateTime barStart, DateTime barEnd)> barTimeRangeList, int resolutionInSec) = await GetDatesForBars(url, session, input, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
+            (TimeBucket timeBucket, IntervalSynchronized intervalSynchronized, IEnumerable<(DateTime barStart, DateTime barEnd)> barTimeRangeList, int resolutionInSec) = await GetDatesForBars(url, session, input, userTimeZone, startDate, endDate, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet);
             int numOfFeeders = input.Feeders.Count;
 
             int numOfDates = barTimeRangeList.Count();
@@ -1045,7 +1048,7 @@ namespace PQBI.Network.RestApi
             .ToList();
             Guid sessionID = Guid.Parse(session);
 
-            List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(input.StartDate), new PQZDateTime(input.EndDate), input.Feeders, null!, null!, 0, false, barTimeRangeList);
+            List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(startDate), new PQZDateTime(endDate), input.Feeders, null!, null!, 0, false, barTimeRangeList);
 
             int numOfEvPrms = dtoList.Count;
             for (int barItemNum = 0; barItemNum < feedersTableWidgetResponseItemList.Count; barItemNum++)
@@ -1083,7 +1086,7 @@ namespace PQBI.Network.RestApi
 
                         case TableWidgetParameterType.BaseParameter:
 
-                            barItemList = (await BaseParameterCreateBarAsync(url, session, input, barPrm, resolutionInSec, false, barTimeRangeList, intervalSynchronized)).ToList();
+                            barItemList = (await BaseParameterCreateBarAsync(url, session, input, userTimeZone, startDate, endDate, barPrm, resolutionInSec, false, barTimeRangeList, intervalSynchronized)).ToList();
                             break;
 
                         default:
@@ -1123,23 +1126,23 @@ namespace PQBI.Network.RestApi
             return (dataUnitType, barGroups);
         }
 
-        private async Task<(List<BarGroup>? barGroups, DataUnitType dataUnitType)> ParametersAndFeedersCustomGroupBarChart(string url, string session, BarChartRequest input, List<SubGroup> subgroups, List<BarParameter> eventColWidgetTableList, List<BarParameter> otherColWidgetTableList, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet)
+        private async Task<(List<BarGroup>? barGroups, DataUnitType dataUnitType)> ParametersAndFeedersCustomGroupBarChart(string url, string session, BarChartRequest input, Infrastructure.TimeZone userTimeZone, DateTime startDate, DateTime endDate, List<SubGroup> subgroups, List<BarParameter> eventColWidgetTableList, List<BarParameter> otherColWidgetTableList, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet)
         {
             DataUnitType? dataUnitType = null;
             List<BarGroup>? barGroups = new List<BarGroup>();
             foreach (var parameter in input.BarPrmList)
             {
-                PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                PreparePrmMapForReq(startDate, endDate, true, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
             }
 
             //List<TableWidgetResponseItem> tableEventWidgetResponseItemList = null;
             //if (eventColWidgetTableList.IsCollectionExists())
             //{
-            //    tableEventWidgetResponseItemList = await WidgetTableEventCalculation(url, session, input, eventColWidgetTableList, input.StartDate, input.EndDate);
+            //    tableEventWidgetResponseItemList = await WidgetTableEventCalculation(url, session, input, eventColWidgetTableList, input.StartDate, endDate);
             //    responseItems.AddRange(tableEventWidgetResponseItemList);
             //}
 
-            int resInSec = await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+            int resInSec = await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
 
             List<EventParameterDto> dtoList = eventColWidgetTableList
                    .Select(c => new EventParameterDto
@@ -1162,7 +1165,7 @@ namespace PQBI.Network.RestApi
             int numOfGroups = subgroups.Count;
             if (isCountQuantity)
             {
-                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(input.StartDate), new PQZDateTime(input.EndDate), input.Feeders, null!, null!, 0, false, subgroups: subgroups);
+                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(startDate), new PQZDateTime(endDate), input.Feeders, null!, null!, 0, false, subgroups: subgroups);
 
                 List<BarItem>? barItemList = null;
                 for (int barItemNum = 0; barItemNum < feedersTableWidgetResponseItemList.Count; barItemNum++)
@@ -1183,7 +1186,7 @@ namespace PQBI.Network.RestApi
             }
             else
             {
-                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(input.StartDate), new PQZDateTime(input.EndDate), input.Feeders, null!, null!, 0, false);
+                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(startDate), new PQZDateTime(endDate), input.Feeders, null!, null!, 0, false);
 
                 foreach (var item in feedersTableWidgetResponseItemList) // your List<TableWidgetResponseItem>
                 {
@@ -1232,7 +1235,7 @@ namespace PQBI.Network.RestApi
 
                                 case TableWidgetParameterType.BaseParameter:
 
-                                    barItemList = (await BaseParameterCreateBarAsync(url, session, input, barPrm, resInSec, true, null)).ToList();
+                                    barItemList = (await BaseParameterCreateBarAsync(url, session, input, userTimeZone, startDate, endDate, barPrm, resInSec, true, null)).ToList();
                                     break;
 
                                 default:
@@ -1275,7 +1278,8 @@ namespace PQBI.Network.RestApi
             return (barGroups, dataUnitType);
         }
 
-        private async Task<(List<BarGroup>? barGroups, DataUnitType dataUnitType)> CustomGroupPrmAndFeedersBarChart(string url, string session, BarChartRequest input, List<SubGroup> subgroups, List<BarParameter> eventColWidgetTableList, List<BarParameter> otherColWidgetTableList, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet)
+        private async Task<(List<BarGroup>? barGroups, DataUnitType dataUnitType)> CustomGroupPrmAndFeedersBarChart(string url, string session, BarChartRequest input, Infrastructure.TimeZone userTimeZone,
+                DateTime startDate, DateTime endDate, List<SubGroup> subgroups, List<BarParameter> eventColWidgetTableList, List<BarParameter> otherColWidgetTableList, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet)
         {
             DataUnitType? dataUnitType = null;
             List<BarGroup>? barGroups;
@@ -1287,7 +1291,7 @@ namespace PQBI.Network.RestApi
 
             foreach (var parameter in input.BarPrmList)
             {
-                PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                PreparePrmMapForReq(startDate, endDate, true, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
             }
 
             //List<TableWidgetResponseItem> tableEventWidgetResponseItemList = null;
@@ -1297,7 +1301,7 @@ namespace PQBI.Network.RestApi
             //    responseItems.AddRange(tableEventWidgetResponseItemList);
             //}
 
-            int resInSec = await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+            int resInSec = await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
             List<EventParameterDto> dtoList = eventColWidgetTableList
                 .Select(c => new EventParameterDto
                 {
@@ -1320,7 +1324,7 @@ namespace PQBI.Network.RestApi
             //numOfEvPrms * subgroups.
             if (isCountQuantity)
             {
-                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(input.StartDate), new PQZDateTime(input.EndDate), input.Feeders, null!, null!, 0, false, subgroups: subgroups);
+                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(startDate), new PQZDateTime(endDate), input.Feeders, null!, null!, 0, false, subgroups: subgroups);
 
                 int barGroupIndex = -1;
                 for (int barItemNum = 0; barItemNum < feedersTableWidgetResponseItemList.Count; barItemNum++)
@@ -1335,7 +1339,7 @@ namespace PQBI.Network.RestApi
             }
             else
             {
-                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(input.StartDate), new PQZDateTime(input.EndDate), input.Feeders, null!, null!, 0, false);
+                List<TableWidgetResponseItem> feedersTableWidgetResponseItemList = await PopulateEventsValForFeedersInTable(url, dtoList, sessionID, new PQZDateTime(startDate), new PQZDateTime(endDate), input.Feeders, null!, null!, 0, false);
 
                 foreach (var item in feedersTableWidgetResponseItemList) // your List<TableWidgetResponseItem>
                 {
@@ -1384,7 +1388,7 @@ namespace PQBI.Network.RestApi
 
                                 case TableWidgetParameterType.BaseParameter:
 
-                                    barItemList = (await BaseParameterCreateBarAsync(url, session, input, barPrm, resInSec, true)).ToList();
+                                    barItemList = (await BaseParameterCreateBarAsync(url, session, input, userTimeZone, startDate, endDate, barPrm, resInSec, true)).ToList();
                                     break;
 
                                 default:
@@ -1424,16 +1428,16 @@ namespace PQBI.Network.RestApi
             return (barGroups, dataUnitType);
         }
 
-        private async Task<(TimeBucket timeBucket, IntervalSynchronized syncEnum, IEnumerable<(DateTime barStart, DateTime barEnd)>? barTimeRangeList, int resolutionInSec)> GetDatesForBars(string url, string session, BarChartRequest input, List<BarParameter> eventColWidgetTableList, List<BarParameter> otherColWidgetTableList, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet)
+        private async Task<(TimeBucket timeBucket, IntervalSynchronized syncEnum, IEnumerable<(DateTime barStart, DateTime barEnd)>? barTimeRangeList, int resolutionInSec)> GetDatesForBars(string url, string session, BarChartRequest input, Infrastructure.TimeZone userTimeZone, DateTime startDate, DateTime endDate, List<BarParameter> eventColWidgetTableList, List<BarParameter> otherColWidgetTableList, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet)
         {
             int numOfPrms = 0;
             foreach (var parameter in input.BarPrmList)
             {
-                numOfPrms += PreparePrmMapForReq(input.StartDate, input.EndDate, false, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                numOfPrms += PreparePrmMapForReq(startDate, endDate, false, input.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
             }
 
             int barsPerParam = Math.Max(1, MAX_NUM_BARS / numOfPrms);
-            (var bucketSize, IEnumerable<(DateTime barStart, DateTime barEnd)>? barTimeRangeList) = CalendarBuckets.ChooseBucket(input.StartDate, input.EndDate, barsPerParam);
+            (var bucketSize, IEnumerable<(DateTime barStart, DateTime barEnd)>? barTimeRangeList) = CalendarBuckets.ChooseBucket(startDate, endDate, barsPerParam);
 
 
             //(DateTime startSyncedUtc, DateTime endSyncedUtc) = ScadaRequestPlanner.Plan(input.StartDate, input.EndDate, bucketSize);
@@ -1476,7 +1480,7 @@ namespace PQBI.Network.RestApi
 
             }
 
-            await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+            await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
             return (bucketSize, syncEnum, barTimeRangeList, resolutionInSec);
         }
 
@@ -1519,7 +1523,7 @@ namespace PQBI.Network.RestApi
         //    return responseItems;
         //}
 
-        private async Task<IEnumerable<BarItem>> BaseParameterCreateBarAsync(string url, string session, BarChartRequest input, BarParameter parameter, int resolutionInSec, bool isExpectedSingleRes, IEnumerable<(DateTime barStart, DateTime barEnd)>? barTimeRangeList = null, IntervalSynchronized intervalSync = IntervalSynchronized.ISX, bool isHideMsrPointName = false, AdvancedSettings? advancedSettings = null)
+        private async Task<IEnumerable<BarItem>> BaseParameterCreateBarAsync(string url, string session, BarChartRequest input, Infrastructure.TimeZone userTimeZone, DateTime startDate, DateTime endDate, BarParameter parameter, int resolutionInSec, bool isExpectedSingleRes, IEnumerable<(DateTime barStart, DateTime barEnd)>? barTimeRangeList = null, IntervalSynchronized intervalSync = IntervalSynchronized.ISX, bool isHideMsrPointName = false, AdvancedSettings? advancedSettings = null)
         {
             var baseParameter = JsonConvert.DeserializeObject<BaseParameter>(parameter.BaseData);
             //baseParameter.SetISXResolution(input.StartDate, input.EndDate);
@@ -1534,7 +1538,7 @@ namespace PQBI.Network.RestApi
             {
                 baseParameter.Resolution = resolutionInSec;
                 baseParameter.IntervalSync = intervalSync;
-                node = new CustomParameterNodeCalculator(CustomParameterType.BPCP, -1, false, string.Empty, input.StartDate, input.EndDate, widgetResolutionInSecond: resolutionInSec, baseParameter.Quantity, isHideMsrPointName: isHideMsrPointName, barTimeRangeList: barTimeRangeList, advancedSettingsForTable: advancedSettings);
+                node = new CustomParameterNodeCalculator(CustomParameterType.BPCP, -1, false, string.Empty, startDate, endDate, widgetResolutionInSecond: resolutionInSec, baseParameter.Quantity, isHideMsrPointName: isHideMsrPointName, barTimeRangeList: barTimeRangeList, advancedSettingsForTable: advancedSettings);
                 node.IsSinglePointRes = isExpectedSingleRes;
             }
             else
@@ -1544,7 +1548,7 @@ namespace PQBI.Network.RestApi
                 //{
                 //    baseParameter.Resolution = (int)((input.EndDate - input.StartDate).TotalSeconds);
                 //}
-                node = new CustomParameterNodeCalculator(CustomParameterType.BPCP, -1, false, string.Empty, input.StartDate, input.EndDate, -1, baseParameter.Quantity, isHideMsrPointName: isHideMsrPointName, advancedSettingsForTable: advancedSettings);
+                node = new CustomParameterNodeCalculator(CustomParameterType.BPCP, -1, false, string.Empty, startDate, endDate, -1, baseParameter.Quantity, isHideMsrPointName: isHideMsrPointName, advancedSettingsForTable: advancedSettings);
                 node.IsSinglePointRes = isExpectedSingleRes;
             }
 
@@ -1556,7 +1560,7 @@ namespace PQBI.Network.RestApi
 
                 //SelectAssemble(node, feeders);
 
-                await SendingAndStoringDataAsync(url, session, input.StartDate, input.EndDate, (false, null), parameterComponents, advancedSettings?.FiltersGroup, input.IsRealTime, input.RefreshRateInSeconds);
+                await SendingAndStoringDataAsync(url, session, startDate, endDate, userTimeZone, (false, null), parameterComponents, advancedSettings?.FiltersGroup, input.IsRealTime, input.RefreshRateInSeconds);
 
                 return [node];
             };
@@ -1610,6 +1614,8 @@ namespace PQBI.Network.RestApi
 
         public async Task<TableWidgetResponse> CalculateTableAsync(string url, string session, TableWidgetRequest input)
         {
+            (DateTime startDate, DateTime endDate) = input.NormalizeDatesToUtc();
+            Infrastructure.TimeZone userTimeZone = new Infrastructure.TimeZone(input.UserTimeZoneID, input.UserTimeZone);
             var responseItems = new List<TableWidgetResponseItem>();
             var paramComponents = new List<BaseParameterComponent>();
 
@@ -1621,17 +1627,17 @@ namespace PQBI.Network.RestApi
             {
                 foreach (var parameter in input.ColumnWidgetTables)
                 {
-                    PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                    PreparePrmMapForReq(startDate, endDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
                 }
 
                 List<TableWidgetResponseItem> tableEventWidgetResponseItemList = null;
                 if (eventColWidgetTableList.IsCollectionExists())
                 {
-                    tableEventWidgetResponseItemList = await WidgetTableEventCalculation(url, session, input, eventColWidgetTableList, input.StartDate, input.EndDate);
+                    tableEventWidgetResponseItemList = await WidgetTableEventCalculation(url, session, input, eventColWidgetTableList, startDate, endDate);
                     responseItems.AddRange(tableEventWidgetResponseItemList);
                 }
 
-                int resInSec = await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+                int resInSec = await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
 
                 foreach (var parameter in otherColWidgetTableList)
                 {
@@ -1656,7 +1662,7 @@ namespace PQBI.Network.RestApi
 
                                 case TableWidgetParameterType.BaseParameter:
 
-                                    var baseParamaterItems = await BaseParameterCreateTableNodeAsync(url, session, input, parameter, false, resInSec, true, advancedSettings);
+                                    var baseParamaterItems = await BaseParameterCreateTableNodeAsync(url, session, input, startDate, endDate, parameter, false, resInSec, true, advancedSettings);
                                     responseItems.AddRange(baseParamaterItems);
                                     break;
 
@@ -1855,6 +1861,8 @@ namespace PQBI.Network.RestApi
 
         public async Task<TableWidgetResponse> CalculateCardAsync(string url, string session, TableWidgetRequest input)
         {
+            (DateTime startDate, DateTime endDate) = input.NormalizeDatesToUtc();
+            Infrastructure.TimeZone userTimeZone = new Infrastructure.TimeZone(input.UserTimeZoneID, input.UserTimeZone);
             var responseItems = new List<TableWidgetResponseItem>();
             var paramComponents = new List<BaseParameterComponent>();
 
@@ -1866,19 +1874,19 @@ namespace PQBI.Network.RestApi
             {
                 foreach (var parameter in input.ColumnWidgetTables)
                 {
-                    PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                    PreparePrmMapForReq(startDate, endDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
                 }
 
                 List<TableWidgetResponseItem> tableEventWidgetResponseItemList = null;
                 if (eventColWidgetTableList.IsCollectionExists())
                 {
-                    tableEventWidgetResponseItemList = await WidgetTableEventCalculationForCard(url, session, input, eventColWidgetTableList, input.StartDate, input.EndDate);
+                    tableEventWidgetResponseItemList = await WidgetTableEventCalculationForCard(url, session, input, eventColWidgetTableList, startDate, endDate);
                     responseItems.AddRange(tableEventWidgetResponseItemList);
 
                     //tableEventWidgetResponseItemList = await WidgetTableEventCalculation(url, session, input, eventColWidgetTableList, input.StartDate, input.EndDate);                   
                 }
 
-                int resInSec = await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+                int resInSec = await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
 
                 foreach (var parameter in otherColWidgetTableList)
                 {
@@ -1903,7 +1911,7 @@ namespace PQBI.Network.RestApi
 
                                 case TableWidgetParameterType.BaseParameter:
 
-                                    var baseParamaterItems = await BaseParameterCreateTableNodeAsync(url, session, input, parameter, true, resInSec, true, advancedSettings);
+                                    var baseParamaterItems = await BaseParameterCreateTableNodeAsync(url, session, input, startDate, endDate, parameter, true, resInSec, true, advancedSettings);
                                     responseItems.AddRange(baseParamaterItems);
                                     break;
 
@@ -1935,6 +1943,8 @@ namespace PQBI.Network.RestApi
 
         public async Task<TableWidgetResponse> CalculateGaugeAsync(string url, string session, TableWidgetRequest input)
         {
+            (DateTime startDate, DateTime endDate) = input.NormalizeDatesToUtc();
+            Infrastructure.TimeZone userTimeZone = new Infrastructure.TimeZone(input.UserTimeZoneID, input.UserTimeZone);
             var responseItems = new List<TableWidgetResponseItem>();
             var paramComponents = new List<BaseParameterComponent>();
 
@@ -1962,18 +1972,18 @@ namespace PQBI.Network.RestApi
                     TableWidgetParameterType widgetTableType = CalculationStaticTypes.GetTableWidgetParameterType(parameter.ParameterType);
                     if (widgetTableType == TableWidgetParameterType.BaseParameter)
                     {
-                        PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                        PreparePrmMapForReq(startDate, endDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
                         if (parameter.Markers != null)
                         {
                             foreach (var marker in parameter.Markers)
                             {
-                                PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds, marker);
+                                PreparePrmMapForReq(startDate, endDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds, marker);
                             }
                         }
                     }
                     else if (widgetTableType == TableWidgetParameterType.Event)
                     {
-                        PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                        PreparePrmMapForReq(startDate, endDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
                         if (parameter.Markers != null)
                         {
                             foreach (var marker in parameter.Markers)
@@ -1995,12 +2005,12 @@ namespace PQBI.Network.RestApi
                         }
                     }
                     else
-                        PreparePrmMapForReq(input.StartDate, input.EndDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
+                        PreparePrmMapForReq(startDate, endDate, true, input.Rows.Feeders, eventColWidgetTableList, otherColWidgetTableList, baseParametersHashSet, parameter, input.RefreshRateInSeconds);
                 }
 
                 if (eventColWidgetTableList.IsCollectionExists())
                 {
-                    List<TableWidgetResponseItem> tableEventWidgetResponseItemList = await WidgetTableEventCalculationForCard(url, session, input, eventColWidgetTableList, input.StartDate, input.EndDate);
+                    List<TableWidgetResponseItem> tableEventWidgetResponseItemList = await WidgetTableEventCalculationForCard(url, session, input, eventColWidgetTableList, startDate, endDate);
 
                     if (tableEventWidgetResponseItemList.Count > 0)
                     {
@@ -2008,7 +2018,7 @@ namespace PQBI.Network.RestApi
                     }
                 }
 
-                int resInSec = await LoadPrmToCache(url, session, input.StartDate, input.EndDate, baseParametersHashSet, input.IsRealTime);
+                int resInSec = await LoadPrmToCache(url, session, startDate, endDate, userTimeZone, baseParametersHashSet, input.IsRealTime);
 
                 for (int i = 0; i < otherColWidgetTableList.Count; i++)
                 {
@@ -2041,7 +2051,7 @@ namespace PQBI.Network.RestApi
                                             advancedSettings.Markers = [parameter.Markers[i - 1]];
                                         else
                                             advancedSettings.Markers = null;
-                                        var baseParamaterItems = await BaseParameterCreateTableNodeAsync(url, session, input, parameter, true, resInSec, true, advancedSettings);
+                                        var baseParamaterItems = await BaseParameterCreateTableNodeAsync(url, session, input, startDate, endDate, parameter, true, resInSec, true, advancedSettings);
 
                                         if (i == 0)
                                         {
@@ -2246,7 +2256,7 @@ namespace PQBI.Network.RestApi
             }
         }
 
-        private async Task<IEnumerable<TableWidgetResponseItem>> BaseParameterCreateTableNodeAsync(string url, string session, TableWidgetRequest input, ColumnWidgetTable parameter, bool isFeedersAreShared, int resInSec, bool isExpectedSingleRes, AdvancedSettings? advancedSettings = null)
+        private async Task<IEnumerable<TableWidgetResponseItem>> BaseParameterCreateTableNodeAsync(string url, string session, TableWidgetRequest input, DateTime startDate, DateTime endDate, ColumnWidgetTable parameter, bool isFeedersAreShared, int resInSec, bool isExpectedSingleRes, AdvancedSettings? advancedSettings = null)
         {
             var baseParameter = JsonConvert.DeserializeObject<BaseParameter>(parameter.BaseData);
             //baseParameter.SetISXResolution(input.StartDate, input.EndDate);
@@ -2269,13 +2279,16 @@ namespace PQBI.Network.RestApi
 
             baseParameter.Resolution = resInSec;
             //if (!isNeedFilterByEvents)
-            //    baseParameter.Resolution = (int)((input.EndDate - input.StartDate).TotalSeconds);
+            //    baseParameter.Resolution = (int)((endDate - input.StartDate).TotalSeconds);
             //else
             //    baseParameter.Resolution = (int)(new SyncInterval(IntervalSynchronized.IS1MIN).TimeIntervalInSec);
 
-            var node = new CustomParameterNodeCalculator(CustomParameterType.BPCP, -1, false, string.Empty, input.StartDate, input.EndDate, -1, baseParameter.Quantity, advancedSettingsForTable: advancedSettings);
+            var node = new CustomParameterNodeCalculator(CustomParameterType.BPCP, -1, false, string.Empty, startDate, endDate, -1, baseParameter.Quantity, advancedSettingsForTable: advancedSettings);
             node.IsSinglePointRes = isExpectedSingleRes;
             node.Markers = quantityForMarker;
+
+            Logger.LogWarning(
+                       $"BaseParameterCreateTableNodeAsync: startDate: {startDate}");
 
             Func<IEnumerable<FeederComponentInfo>, bool, Task<IEnumerable<CustomParameterNodeCalculator>>> selector = async (feeders, isTag) =>
             {
@@ -2285,7 +2298,7 @@ namespace PQBI.Network.RestApi
 
                 //SelectAssemble(node, feeders);
 
-                await SendingAndStoringDataAsync(url, session, input.StartDate, input.EndDate, (false, null), parameterComponents, advancedSettings?.FiltersGroup, input.IsRealTime, input.RefreshRateInSeconds);
+                await SendingAndStoringDataAsync(url, session, startDate, endDate, new Infrastructure.TimeZone(input.UserTimeZoneID, input.UserTimeZone), (false, null), parameterComponents, advancedSettings?.FiltersGroup, input.IsRealTime, input.RefreshRateInSeconds);
 
                 return [node];
             };
@@ -2404,6 +2417,7 @@ namespace PQBI.Network.RestApi
                 url, session,
                 (request as dynamic).StartDate,   // Both request types expose these two props
                 (request as dynamic).EndDate,
+                (request as dynamic).UserTimeZone,
                 (parameter as dynamic).CustomData.Quantity,
                 barTimeRangeList,
                 advanced);
@@ -2419,6 +2433,7 @@ namespace PQBI.Network.RestApi
                     string session,
                     DateTime start,
                     DateTime end,
+                    Infrastructure.TimeZone userTimeZoneInfo,
                     string quantity,
                     IEnumerable<(DateTime barStart, DateTime barEnd)> barTimeRangeList,
                     AdvancedSettings? advanced)
@@ -2427,7 +2442,7 @@ namespace PQBI.Network.RestApi
             {
                 var node = await AssembleCustomParameterTree(
                     customParameterId, url, session,
-                    start, end,
+                    start, end, userTimeZoneInfo,
                     widgetResolutionInSeconds: -1,
                     isAutoResolution: false,
                     quantity,
@@ -3278,8 +3293,6 @@ namespace PQBI.Network.RestApi
             tagQuantity = string.IsNullOrEmpty(columnWidgetTable.ReplaceAggregationWith) ? tagQuantity : columnWidgetTable.ReplaceAggregationWith;
             Enum.TryParse<PQBIQuantityType>(tagQuantity.ToLower(), out PQBIQuantityType tagQuantityType);
 
-
-
             calcValue = Compute(pqEventList, tableWidgetEvent.Parameter, quantityType, normalizeBy, columnWidgetTable.Normalize);
             PrepareEventDataForTagCalculation(columnToFeederEventsMap, columnToFeederEventsResMap, tagCount, feederComponentInfo, calcValue, columnWidgetTable, pqEventList, tagQuantityType);
             tableResItem = new TableWidgetResponseItem()
@@ -3753,8 +3766,6 @@ namespace PQBI.Network.RestApi
             return false;
         }
 
-
-
         private static Dictionary<uint, (EventClass, GeneratedByEnum)> GetEventGeneratedBy(Dictionary<uint, (EventClass, bool)> eventTypeMap, List<uint> runningEvents)
         {
             Dictionary<uint, (EventClass, GeneratedByEnum)> confIDToGeneratedBy = new Dictionary<uint, (EventClass, GeneratedByEnum)>();
@@ -3865,7 +3876,7 @@ namespace PQBI.Network.RestApi
                 return feeder.Name;
         }
 
-        private async Task<int> LoadPrmToCache(string url, string session, DateTime startDate, DateTime endDate, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet, bool isRealTime)
+        private async Task<int> LoadPrmToCache(string url, string session, DateTime startDate, DateTime endDate, Infrastructure.TimeZone timezoneinfo, Dictionary<Guid, Dictionary<FiltersGroup, HashSet<BaseParameterComponent>>> baseParametersHashSet, bool isRealTime)
         {
             int resInSec = 0;
             if (baseParametersHashSet.IsCollectionExists())
@@ -3878,7 +3889,7 @@ namespace PQBI.Network.RestApi
                         FiltersGroup filterGroup = item.Key;
                         HashSet<BaseParameterComponent> prmCompSet = item.Value;
                         resInSec = (int)prmCompSet.First().Parameter.Resolution;
-                        await SendingAndStoringDataAsync(url, session, startDate, endDate, (false, null), prmCompSet, filterGroup, isRealTime, resInSec);
+                        await SendingAndStoringDataAsync(url, session, startDate, endDate, timezoneinfo, (false, null), prmCompSet, filterGroup, isRealTime, resInSec);
                     }
                 }
             }
@@ -4051,7 +4062,7 @@ namespace PQBI.Network.RestApi
             return numOfPrms;
         }
 
-        private async Task SendingAndStoringDataAsync(string url, string session, DateTime startDatetime, DateTime endDatetime, (bool isNominalCalculate, double? nominalValue) calculationData, IEnumerable<BaseParameterComponent> paramComponents, FiltersGroup? filterGroup, bool isRealTime, int realTimeRefreshRate)
+        private async Task SendingAndStoringDataAsync(string url, string session, DateTime startDatetime, DateTime endDatetime, Infrastructure.TimeZone timeZone, (bool isNominalCalculate, double? nominalValue) calculationData, IEnumerable<BaseParameterComponent> paramComponents, FiltersGroup? filterGroup, bool isRealTime, int realTimeRefreshRate)
         {
             //Should be refactored!!!!
             if (paramComponents.IsCollectionEmpty())
@@ -4209,7 +4220,7 @@ namespace PQBI.Network.RestApi
 
                 if (getBaseDataInfoInputs.SafeAny())
                 {
-                    var request = new PQSGetBaseDataRequest(session, getBaseDataInfoInputs.ToArray());
+                    var request = new PQSGetBaseDataRequest(session, timeZone.TimeZoneID, getBaseDataInfoInputs.ToArray());
                     request.ID = Guid.NewGuid();
 
                     using (var sendingLogger = mainLogger.CreateSubLogger($"SendingToScada)"))
@@ -4232,7 +4243,7 @@ namespace PQBI.Network.RestApi
 
 #endif
 
-                        var getBaseResponse = new PQSGetBaseDataResponse(request, response);
+                        var getBaseResponse = new PQSGetBaseDataResponse(request, response, timeZone.TimeZoneInfo);
 
 
 

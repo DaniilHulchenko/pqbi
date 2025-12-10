@@ -228,7 +228,7 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
         var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
 
-        var respose = new PQSAddEventResponse(request, pqsResponse);
+        var respose = new PQSAddEventResponse(request, pqsResponse, null);
         var events = respose.Events;
 
         var tmp = input.ComponentIds.First();
@@ -236,7 +236,7 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
         var flickerRequest = new FlickerPQSGetBaseDataRequest(session, new GetBaseDataInfoInput(componentId, start.TicksPQZTimeFormat, end.TicksPQZTimeFormat, null, CalculationTypeEnum.FORCE_DB_DATA, 1));
         var flickerResponse = await SendRecordsContainerPostBinaryRequestAndException(url, flickerRequest);
-        var getBaseDataResponse = new FlickerPQSGetBaseDataResponse(flickerRequest, flickerResponse);
+        var getBaseDataResponse = new FlickerPQSGetBaseDataResponse(flickerRequest, flickerResponse, null);
 
 
         getBaseDataResponse.ExtractFlickersOrError(out var axisses, out var errors);
@@ -365,7 +365,7 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
         request.AddRecord(operationRequestRecord);
         PQSResponse pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
-        var response = new PQSCommonResponse<PQSRequest>(request, pqsResponse);
+        var response = new PQSCommonResponse<PQSRequest>(request, pqsResponse, null);
         if (response.TryExtractOperationResponseRecord(out var operationResponseRecord))
         {
             operationResponseRecord.OperationConfigurationResult.TryGetConfigurationValue<string>(StandardConfigurationEnum.STD_CUSTOM_RESOLUTION_ARRAY, out string baseRes);
@@ -490,7 +490,7 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
         var request = new PQSGetAllObjectsRequest(session, ids);
         var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
-        var response = new PQSGetAllObjectsResponse(request, pqsResponse);
+        var response = new PQSGetAllObjectsResponse(request, pqsResponse, null);
 
         response.ExtractGetParametersOrError(out var parameters, out var customPrmsMap, out var customBaseMap, out var errors);
 
@@ -645,7 +645,7 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
                 mesurnmentParameters.Add(msrParm);
             }
 
-            var request = new PQSGetBaseDataRequest(session, new GetBaseDataInfoInput(Guid.Parse(keyAndVal.Key), start.TicksPQZTimeFormat, end.TicksPQZTimeFormat, mesurnmentParameters, CalculationTypeEnum.FORCE_DB_DATA));
+            var request = new PQSGetBaseDataRequest(session, null, new GetBaseDataInfoInput(Guid.Parse(keyAndVal.Key), start.TicksPQZTimeFormat, end.TicksPQZTimeFormat, mesurnmentParameters, CalculationTypeEnum.FORCE_DB_DATA));
             requests.Add((async () => await SendRecordsContainerPostBinaryRequestAndException(url, request), request));
             //var tmp = PQZxmlWriter.WriteMessage(request, true);
         }
@@ -654,7 +654,7 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
 
         for (int index = 0; index < requests.Count; index++)
         {
-            var response = new PQSGetBaseDataResponse(requests[index].Item2, pqsResponses[index]);
+            var response = new PQSGetBaseDataResponse(requests[index].Item2, pqsResponses[index], null);
             response.ExtractGetParametersOrError(out var axisses);
 
             //if (errors is not null)
@@ -714,13 +714,13 @@ public class PQSComponentOperationService : PQSRestApiServiceBase, IPQSComponent
                 mesurnmentParameters.Add(msrParm);
             }
 
-            var request = new PQSGetBaseDataRequest(session, new GetBaseDataInfoInput(Guid.Parse(keyAndVal.Key), start.TicksPQZTimeFormat, end.TicksPQZTimeFormat, mesurnmentParameters, CalculationTypeEnum.FORCE_DB_DATA));
+            var request = new PQSGetBaseDataRequest(session, null, new GetBaseDataInfoInput(Guid.Parse(keyAndVal.Key), start.TicksPQZTimeFormat, end.TicksPQZTimeFormat, mesurnmentParameters, CalculationTypeEnum.FORCE_DB_DATA));
             var tmp = PQZxmlWriter.WriteMessage(request, true);
 
 
             var pqsResponses = await _taskOrchestrator.DispatchBatch(async () => await SendRecordsContainerPostBinaryRequestAndException(url, request));
             //var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
-            var response = new PQSGetBaseDataResponse(request, pqsResponses.First());
+            var response = new PQSGetBaseDataResponse(request, pqsResponses.First(), null);
             response.ExtractGetParametersOrError(out var axisses);
 
             //if (errors is not null)

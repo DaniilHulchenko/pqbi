@@ -266,18 +266,18 @@ namespace PQBI.Authorization.Users
                         throw new UserFriendlyException("Failed to create user: " + string.Join(", ", createResult.Errors.Select(e => e.Description)));
                     }
 
-                    var role = await RoleManager.FindByNameAsync("Admin");
-                    if (role != null)
-                    {
-                        await AddToRoleAsync(user, role.Name);
-                    }
-                    //string viewer = PQBIRoleEnum.Viewer.ToString();
-                    //var role = await RoleManager.FindByNameAsync(viewer);
+                    //var role = await RoleManager.FindByNameAsync("Admin");
                     //if (role != null)
                     //{
-                    //    await AddToRoleAsync(user, viewer);                        
-                    //    //await AddToRoleAsync(user, role.Name);
+                    //    await AddToRoleAsync(user, role.Name);
                     //}
+                    string viewer = PQBIRoleEnum.Viewer.ToString();
+                    var role = await RoleManager.FindByNameAsync(viewer);
+                    if (role != null)
+                    {
+                        await AddToRoleAsync(user, viewer);
+                        //await AddToRoleAsync(user, role.Name);
+                    }
 
                     await uow.CompleteAsync();
 

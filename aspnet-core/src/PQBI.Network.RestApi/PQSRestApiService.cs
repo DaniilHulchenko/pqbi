@@ -56,7 +56,7 @@ namespace PQBI.Network.RestApi
 
             if (pqsResponse != null)
             {
-                response = new PQSGetSessionResponse(request, pqsResponse);
+                response = new PQSGetSessionResponse(request, pqsResponse, null);
 
             }
 
@@ -143,7 +143,7 @@ namespace PQBI.Network.RestApi
             var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
             if (pqsResponse != null)
             {
-                var response = new PQSNopResponse(request, pqsResponse);
+                var response = new PQSNopResponse(request, pqsResponse, null);
                 status = response.IsValid;
             }
 

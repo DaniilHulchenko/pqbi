@@ -64,12 +64,14 @@ public abstract class PQBIResponseBase
 
 public abstract class PQSOperationResponseBase<TRequest> : PQBIResponseBase where TRequest : PQSRequest
 {
-    public PQSOperationResponseBase(TRequest request, PQSResponse response)
+    public PQSOperationResponseBase(TRequest request, PQSResponse response, string timezone)
     {
+        Timezone = timezone;
         Request = request;
         Response = response;
     }
 
+    public string Timezone { get; set; }
     public TRequest Request { get; set; }
     public PQSResponse Response { get; }
 

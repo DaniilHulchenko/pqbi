@@ -304,7 +304,13 @@ export class GaugeWidgetChannelParameterSelectionTabComponent
     }
 
     showAdvancedSettingsModal() {
-        this.advancedSettingsModal.show();
+        const parameterName = this.parameter?.name;
+        this.advancedSettingsConfig = {
+            ...(this.advancedSettingsConfig ?? {}),
+            parameterName: this.advancedSettingsConfig?.parameterName ?? parameterName,
+        } as GaugeWidgetAdvancedSettingsConfig;
+
+        this.advancedSettingsModal.show(this.advancedSettingsConfig);
     }
 
     protected cancelEdit() {

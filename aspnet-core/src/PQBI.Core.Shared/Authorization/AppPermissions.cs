@@ -6,6 +6,11 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_FileInfos = "Pages.FileInfos";
+        public const string Pages_FileInfos_Create = "Pages.FileInfos.Create";
+        public const string Pages_FileInfos_Edit = "Pages.FileInfos.Edit";
+        public const string Pages_FileInfos_Delete = "Pages.FileInfos.Delete";
+
         public const string Pages_GaugeWidgetConfigurations = "Pages.GaugeWidgetConfigurations";
         public const string Pages_GaugeWidgetConfigurations_Create = "Pages.GaugeWidgetConfigurations.Create";
         public const string Pages_GaugeWidgetConfigurations_Edit = "Pages.GaugeWidgetConfigurations.Edit";

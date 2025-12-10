@@ -297,7 +297,7 @@ public class PQSTreeBuilderService : PQSRestApiServiceBase, IPQSTreeBuilderServi
         var request = new PQSGetAllObjectsRequest(session, [componentId]);
         var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
 
-        var response = new PQSGetAllObjectsResponse(request, pqsResponse);
+        var response = new PQSGetAllObjectsResponse(request, pqsResponse, null);
         response.ExtractGetParametersOrError(out var @params, out var customParams, out var customBaseMap, out var error);
 
         DynamicTreeNode tree = null;
@@ -321,7 +321,7 @@ public class PQSTreeBuilderService : PQSRestApiServiceBase, IPQSTreeBuilderServi
         var request = new PQSGetAllObjectsRequest(session, [componentId]);
         var pqsResponse = await SendRecordsContainerPostBinaryRequestAndException(url, request);
 
-        var response = new PQSGetAllObjectsResponse(request, pqsResponse);
+        var response = new PQSGetAllObjectsResponse(request, pqsResponse, null);
         response.ExtractGetParametersOrError(out var @params, out var customParams, out var customBaseMap, out var error);
 
         var start = new PQZDateTime(DateTime.Now.AddDays(-100));
@@ -340,7 +340,7 @@ public class PQSTreeBuilderService : PQSRestApiServiceBase, IPQSTreeBuilderServi
                 var tmpppp = MeasurementParameterFactory.GenerateNewMesurmentParameterWithoutSplit("STD_HRMSINCYC_3_IS1MIN_BHCYC_QMIN_UV1N_FEEDER_1");
                 if (msrParm.IsHarmonicParameter)
                 {
-                    var getDataRequest = new PQSGetBaseDataRequest(session, new GetBaseDataInfoInput(Guid.Parse(componentId), start.TicksPQZTimeFormat, end.TicksPQZTimeFormat, [msrParm], CalculationTypeEnum.FORCE_DB_DATA));
+                    var getDataRequest = new PQSGetBaseDataRequest(session, null, new GetBaseDataInfoInput(Guid.Parse(componentId), start.TicksPQZTimeFormat, end.TicksPQZTimeFormat, [msrParm], CalculationTypeEnum.FORCE_DB_DATA));
                     var tmp = PQZxmlWriter.WriteMessage(request, true);
                     var pqsResponses = await SendRecordsContainerPostBinaryRequestAndException(url, getDataRequest);
 

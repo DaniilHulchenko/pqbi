@@ -30,6 +30,11 @@ namespace PQBI.Authorization
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
 
+            var fileInfos = pages.CreateChildPermission(AppPermissions.Pages_FileInfos, L("FileInfos"));
+            fileInfos.CreateChildPermission(AppPermissions.Pages_FileInfos_Create, L("CreateNewFileInfo"));
+            fileInfos.CreateChildPermission(AppPermissions.Pages_FileInfos_Edit, L("EditFileInfo"));
+            fileInfos.CreateChildPermission(AppPermissions.Pages_FileInfos_Delete, L("DeleteFileInfo"));
+
             var gaugeWidgetConfigurations = pages.CreateChildPermission(AppPermissions.Pages_GaugeWidgetConfigurations, L("GaugeWidgetConfigurations"));
             gaugeWidgetConfigurations.CreateChildPermission(AppPermissions.Pages_GaugeWidgetConfigurations_Create, L("CreateNewGaugeWidgetConfiguration"));
             gaugeWidgetConfigurations.CreateChildPermission(AppPermissions.Pages_GaugeWidgetConfigurations_Edit, L("EditGaugeWidgetConfiguration"));

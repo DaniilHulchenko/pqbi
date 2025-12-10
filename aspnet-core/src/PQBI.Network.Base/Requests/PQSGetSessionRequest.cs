@@ -40,7 +40,7 @@ namespace PQBI.Requests
 
     public class PQSGetSessionResponse : PQSOperationResponseBase<PQSGetSessionRequest>
     {
-        public PQSGetSessionResponse(PQSGetSessionRequest request, PQSResponse response) : base(request, response)
+        public PQSGetSessionResponse(PQSGetSessionRequest request, PQSResponse response, string timezone) : base(request, response, timezone)
         {
         }
 

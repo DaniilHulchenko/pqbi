@@ -5,6 +5,8 @@ using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PQBI.Infrastructure.Extensions;
 using PQS.Data.Measurements.Enums;
+using TimeZoneConverter;
+using Castle.Core.Logging;
 
 namespace PQBI.PQS.CalcEngine;
 
@@ -16,6 +18,92 @@ public class WidgetValidationBase
     public bool IsRealTime { get; set; }
     public string UserTimeZone { get; set; }
 
+    public ILogger Logger { get; set; } = NullLogger.Instance;
+    public uint? UserTimeZoneID { get; set; }
+
+    public (DateTime, DateTime) NormalizeDatesToUtc()
+
+    {
+
+        // Parse exactly as provided — preserves the offset
+
+        var start = DateTimeOffset.Parse(StartDate.ToString());
+        var end = DateTimeOffset.Parse(EndDate.ToString());
+        return (start.UtcDateTime, end.UtcDateTime);      
+
+    }
+
+
+
+    //public (DateTime, DateTime) NormalizeDatesToUtc()
+    //{
+    //    // Local helper to normalize a single DateTime
+    //    DateTime NormalizeSingleDate(DateTime value, TimeZoneInfo tz)
+    //    {
+    //        switch (value.Kind)
+    //        {
+    //            case DateTimeKind.Utc:
+    //                // Already UTC, don't touch
+    //                return value;
+
+    //            case DateTimeKind.Local:
+    //                // Interpreted as *server* local time. If that's incorrect in your scenario,
+    //                // you might want to treat Local the same as Unspecified and use tz instead.
+    //                return value.ToUniversalTime();
+
+    //            case DateTimeKind.Unspecified:
+    //            default:
+    //                // Interpret as time in the user's time zone and convert once
+    //                return TimeZoneInfo.ConvertTimeToUtc(value, tz);
+    //        }
+    //    }
+
+    //    // No user time zone: just "remove offset" without shifting the clock
+    //    // (assume the given values are already UTC times, but Kind may be wrong)
+    //    if (string.IsNullOrWhiteSpace(UserTimeZone))
+    //    {
+    //        var startUtcFallback = DateTime.SpecifyKind(StartDate, DateTimeKind.Utc);
+    //        var endUtcFallback = DateTime.SpecifyKind(EndDate, DateTimeKind.Utc);
+    //        return (startUtcFallback, endUtcFallback);
+    //    }
+
+    //    TimeZoneInfo tz;
+
+    //    try
+    //    {
+    //        tz = TZConvert.GetTimeZoneInfo(UserTimeZone);
+    //        Logger.Warn($"tz = TZConvert.GetTimeZoneInfo(UserTimeZone): {tz.Id}");
+    //    }
+    //    catch (TimeZoneNotFoundException ex)
+    //    {
+    //        Logger.Error(
+    //            $"NormalizeDatesToUtc FAILED, TimeZoneNotFoundException. UserTimeZone={UserTimeZone}, StartDate={StartDate}, EndDate={EndDate}",
+    //            ex);
+
+    //        var startUtcFallback = DateTime.SpecifyKind(StartDate, DateTimeKind.Utc);
+    //        var endUtcFallback = DateTime.SpecifyKind(EndDate, DateTimeKind.Utc);
+    //        return (startUtcFallback, endUtcFallback);
+    //    }
+    //    catch (InvalidTimeZoneException ex)
+    //    {
+    //        Logger.Error(
+    //            $"NormalizeDatesToUtc FAILED, InvalidTimeZoneException. UserTimeZone={UserTimeZone}, StartDate={StartDate}, EndDate={EndDate}",
+    //            ex);
+
+    //        var startUtcFallback = DateTime.SpecifyKind(StartDate, DateTimeKind.Utc);
+    //        var endUtcFallback = DateTime.SpecifyKind(EndDate, DateTimeKind.Utc);
+    //        return (startUtcFallback, endUtcFallback);
+    //    }
+
+    //    var startUtc = NormalizeSingleDate(StartDate, tz);
+    //    var endUtc = NormalizeSingleDate(EndDate, tz);
+
+    //    Logger.Warn($"NormalizeDatesToUtc: StartDate={StartDate:o}, StartUtc={startUtc:o}, Kind={StartDate.Kind}");
+    //    Logger.Warn($"NormalizeDatesToUtc: EndDate={EndDate:o}, EndUtc={endUtc:o}, Kind={EndDate.Kind}");
+
+    //    return (startUtc, endUtc);
+    //}
+
 
     public bool ValidationErrors(CustomValidationContext context)
     {
@@ -26,6 +114,15 @@ public class WidgetValidationBase
         }
         if (RefreshRateInSeconds <= 0)
             IsRealTime = false;
+
+        if (TimeZoneNumericMap.TryGetNumericId(UserTimeZone, out int numericID))
+        {
+            UserTimeZoneID = (uint)numericID;
+        }
+        else
+        {
+            UserTimeZoneID = null;
+        }
 
         return true;
 
@@ -112,7 +209,7 @@ public class Harmonics
 }
 
 public class TrendCalcRequest : WidgetValidationBase, ICustomValidate
-{  
+{
     public bool IsAutoResolution { get; set; }
     public int ResolutionInSeconds { get; set; }
     //public string Resolution { get; set; }
@@ -153,7 +250,7 @@ public class TrendCalcRequest : WidgetValidationBase, ICustomValidate
                             context.Results.Add(new ValidationResult($"{nameof(TrendCustomWidgetData.Quantity)} - Cannot be empty"));
                             return;
                         }
-                      
+
                         if (param.Feeders.IsCollectionEmpty())
                         {
                             context.Results.Add(new ValidationResult($"Both feeders and Channels - Cannot be empty."));

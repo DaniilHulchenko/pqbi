@@ -79,7 +79,12 @@ public class TreeBuilderController : PQBIControllerBase
             var tenantId = AbpSession.GetTenantId();
             var tenant = await _tenantCacheRepository.GetTenantByIdAsync(tenantId);
 
-            var session = await _userSessionCacheRepository.GetCacheSessionAsync(AbpSession.UserId.Value);
+            string session = await _userSessionCacheRepository.GetCacheSessionAsync(AbpSession.UserId.Value);
+
+            if (string.IsNullOrEmpty(session))
+            {
+                throw new SessionEmptyException();
+            }
 
             using (var mainLogger = PqbiStopwatch.AnchorAsync($"{nameof(GetAllComponentsAsync)} - Begin", _logger))
             {

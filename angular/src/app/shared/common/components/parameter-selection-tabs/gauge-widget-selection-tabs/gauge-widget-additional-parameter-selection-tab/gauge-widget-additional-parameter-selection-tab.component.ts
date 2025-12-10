@@ -108,8 +108,8 @@ export class GaugeWidgetAdditionalParameterSelectionTabComponent
         limitFromNormalization: false,
         decimalPoints: 2,
         linkPage: null,
-        titleFont: { family: '', size: 20, colorMode: 'scheme', customColor: '#000000' },
-        valueFont: { family: '', size: 20, colorMode: 'scheme', customColor: '#000000' },
+        titleFont: { family: '', size: 12, colorMode: 'scheme', customColor: '#000000' },
+        valueFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
         segments: [],
         unit: { unitType: 'auto', selectedUnit: '' },
         marker1: null,
@@ -266,6 +266,11 @@ export class GaugeWidgetAdditionalParameterSelectionTabComponent
     }
 
     showAdvancedSettingsModal() {
+        const parameterName = this.parameter?.name;
+        this.advancedSettingsConfig = {
+            ...(this.advancedSettingsConfig ?? {}),
+            parameterName: this.advancedSettingsConfig?.parameterName ?? parameterName,
+        } as GaugeWidgetAdvancedSettingsConfig;
         this.advancedSettingsModal.show(this.advancedSettingsConfig);
     }
 

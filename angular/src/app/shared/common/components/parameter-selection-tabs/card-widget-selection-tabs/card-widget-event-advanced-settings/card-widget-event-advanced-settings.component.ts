@@ -57,6 +57,7 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     @Output() configChange = new EventEmitter<CardWidgetAdvancedSettingsConfig>();
 
     modalVisible = false;
+    parameterName = '';
     normalizationOptions: any[];
     normalizeTypes = NormalizeEnum;
     excludeFlaggedTypes = ExcludeFlagged;
@@ -93,6 +94,7 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     decimalPointOptions = [0, 1, 2, 3];
 
     fontFamilies = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
+
 
     appearanceOptions = [
         { id: 'always', text: 'show always' },
@@ -144,6 +146,7 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     ngOnChanges(changes: SimpleChanges) {
         if (changes.config && this.config) {
             const c = this.config;
+            this.parameterName = c.parameterName ?? '';
             this.normalizeValue = c.normalizeValue;
             this.normalizeNominalValue = +c.normalizeNominalValue;
             this.excludeFlagged = c.excludeFlagged;
@@ -199,6 +202,7 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
 
     save() {
         const config: CardWidgetAdvancedSettingsConfig = {
+            parameterName: this.parameterName?.trim(),
             normalizeValue: this.normalizeValue,
             normalizeNominalValue: this.normalizeNominalValue,
             excludeFlagged: this.excludeFlagged,
@@ -224,6 +228,7 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
         this.normalizeNominalValue = 0;
         this.excludeFlagged = ExcludeFlagged.None;
         this.selectedFlagEvents = [];
+        this.parameterName = '';
         // this.setLimits = Limit.None;
         // this.lowerLimit = 0;
         // this.upperLimit = 0;

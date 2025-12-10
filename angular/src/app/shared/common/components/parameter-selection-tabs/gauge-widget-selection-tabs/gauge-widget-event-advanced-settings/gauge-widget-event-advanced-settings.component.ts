@@ -8,6 +8,7 @@ import {
     DxTextBoxModule,
     DxColorBoxModule,
     DxButtonModule,
+    DxRadioGroupModule,
     DxNumberBoxModule,
     DxSelectBoxModule,
     DxFileUploaderModule,
@@ -31,6 +32,7 @@ import { Subscription } from 'rxjs';
         DxTextBoxModule,
         DxColorBoxModule,
         DxButtonModule,
+        DxRadioGroupModule,
         CommonModule,
         DxNumberBoxModule,
         DxSelectBoxModule,
@@ -49,6 +51,7 @@ import { Subscription } from 'rxjs';
     @Output() configChange = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
 
     modalVisible = false;
+    parameterName = '';
     normalizationOptions: any[];
     normalizeTypes = NormalizeEnum;
 
@@ -91,6 +94,7 @@ import { Subscription } from 'rxjs';
     decimalPointOptions = [0, 1, 2, 3];
 
     fontFamilies = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
+
 
     appearanceOptions = [
         { id: 'always', text: 'show always' },
@@ -138,6 +142,7 @@ import { Subscription } from 'rxjs';
     ngOnChanges(changes: SimpleChanges) {
         if (changes.config && this.config) {
             const c = this.config;
+            this.parameterName = c.parameterName ?? '';
             this.normalizeValue = c.normalizeValue;
             this.normalizeNominalValue = +c.normalizeNominalValue;
             this.setLimits = c.setLimits;
@@ -203,6 +208,7 @@ import { Subscription } from 'rxjs';
             return;
         }
         const config: GaugeWidgetAdvancedSettingsConfig = {
+            parameterName: this.parameterName?.trim(),
             normalizeValue: this.normalizeValue,
             normalizeNominalValue: this.normalizeNominalValue,
             setLimits: this.setLimits,
@@ -239,6 +245,7 @@ import { Subscription } from 'rxjs';
         this.setLimits = Limit.None;
         this.lowerLimit = 0;
         this.upperLimit = 0;
+        this.parameterName = '';
         this.decimalPoints = 2;
         this.link.page = null;
         this.titleFont = this.normalizeFontSettings(null, 20);
@@ -253,8 +260,7 @@ import { Subscription } from 'rxjs';
         this.colorScheme = ColorSchema.None;
         this.outOfLimitColor = '';
     }
-
-    private normalizeFontSettings(
+     private normalizeFontSettings(
         font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
         defaultSize: number,
     ): { family: string; size: number; colorMode: 'custom'; customColor: string } {

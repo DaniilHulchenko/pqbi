@@ -26,7 +26,7 @@ namespace PQBI.Requests
 
     public class PQSCloseSessionResponse : PQSOperationResponseBase<PQSCloseSessionRequest>
     {
-        public PQSCloseSessionResponse(PQSCloseSessionRequest request, PQSResponse response) : base(request, response)
+        public PQSCloseSessionResponse(PQSCloseSessionRequest request, PQSResponse response) : base(request, response, null)
         {
 
         }

@@ -121,7 +121,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
                       name: this.name.trim(),
                       from: this.from!,
                       to: this.to!,
-                      colorMode: 'custom',
+                      colorMode: 'custom' as const,
                       color: this.color ?? this.DEFAULT_COLOR,
                       weight: this.roundWeight(this.weight!),
 
@@ -254,7 +254,7 @@ export class GaugeWidgetSegmentationSettingsComponent {
             from: +segment.from,
             to: +segment.to,
             weight: segment.weight != null ? +segment.weight : segment.weight,
-            colorMode: 'custom',
+            colorMode: 'custom' as const,
             color: segment.color ?? this.DEFAULT_COLOR,
         }));
 

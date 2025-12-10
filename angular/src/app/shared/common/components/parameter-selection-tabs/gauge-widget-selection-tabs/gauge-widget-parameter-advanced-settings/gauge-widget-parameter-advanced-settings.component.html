@@ -4,6 +4,8 @@
     <div style="margin: 20px; display: flex; gap: 40px; flex-wrap: wrap">
       <!-- left block -->
       <div style="flex: 1; min-width: 300px;">
+        <h5>Name</h5>
+        <dx-text-box [(value)]="parameterName" placeholder="Parameter name"></dx-text-box>
         <h5>Normalize Values:</h5>
         <div *ngFor="let opt of normalizationOptions" class="mb-2">
           <p-checkbox [binary]="true" [label]="opt.text" [value]="opt.value" [ngModel]="normalizeValue === opt.value"
@@ -52,7 +54,7 @@
 
             <div class="font-color">
               <label>font color</label>
-              <dx-color-box [(value)]="titleFont.customColor" [editAlphaChannel]="true">
+                 <dx-color-box [(value)]="titleFont.customColor" [editAlphaChannel]="true">
               </dx-color-box>
             </div>
           </div>
@@ -67,7 +69,7 @@
 
             <div class="font-color">
               <label>font color</label>
-              <dx-color-box [(value)]="valueFont.customColor" [editAlphaChannel]="true">
+                  <dx-color-box [(value)]="valueFont.customColor" [editAlphaChannel]="true">
               </dx-color-box>
             </div>
           </div>

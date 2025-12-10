@@ -15,6 +15,18 @@
                     {{ 'EditMode' | localize }}
                 </span>
             </label>
+            <div class="ms-3" *ngIf="editModeEnabled">
+                <label class="form-label mb-0 me-2">{{ 'FontSize' | localize }}</label>
+                <select
+                    class="form-select form-select-sm d-inline-block w-auto"
+                    [ngModel]="dashboardConfiguration?.widgetNameFontSize"
+                    (ngModelChange)="onWidgetNameFontSizeChange($event)"
+                >
+                    <option [ngValue]="undefined">{{ 'Default' | localize }}</option>
+                    <option *ngFor="let size of widgetNameFontSizes" [ngValue]="size">{{ size }} px</option>
+                </select>
+            </div>
+
         </div>
     </sub-header>
 
@@ -56,6 +68,7 @@
                                     [attr.data-isNew]="widget.isNew"
                                     [attr.data-configuration]="widget.configuration"
                                     [attr.data-displayName]="widget.displayName"
+                                    [attr.data-widget-name-font-size]="dashboardConfiguration?.widgetNameFontSize"
                                     (itemResize)="onGridSterItemResize(widget)"
                                 >
                                     <ng-container
@@ -64,13 +77,26 @@
                                             injector: this.widgetSubjects[widget.guid].injector;
                                         "
                                     ></ng-container>
-                                    <button
-                                        class="btn btn-sm bg-danger deleteWidgetButton"
-                                        *ngIf="editModeEnabled"
-                                        (click)="removeItem(widget.guid, widget.id, false)"
-                                    >
-                                        <i class="la la-times text-white"></i>
-                                    </button>
+                                    <div class="widget-action-buttons" *ngIf="editModeEnabled">
+                                        <button
+                                            class="btn btn-sm bg-primary editWidgetButton"
+                                            (click)="requestWidgetEdit(widget)"
+                                        >
+                                            <i class="las la-edit text-white" style="font-size: 18px;"></i>
+                                        </button>
+                                        <button
+                                            class="btn btn-sm bg-info renameWidgetButton"
+                                            (click)="requestWidgetRename(widget)"
+                                        >
+                                            <i class="la la-i-cursor text-white" style="font-size: 18px;"></i>
+                                        </button>
+                                        <button
+                                            class="btn btn-sm bg-danger deleteWidgetButton"
+                                            (click)="removeItem(widget.guid, widget.id, false)"
+                                        >
+                                            <i class="la la-times text-white" style="font-size: 18px;"></i>
+                                        </button>
+                                    </div>
                                 </gridster-item>
                             </gridster>
                         </ng-container>

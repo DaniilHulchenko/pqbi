@@ -1,17 +1,13 @@
 ﻿//using Azure;
-using Azure;
 using Microsoft.Extensions.Logging;
 using PQBI.Infrastructure.Extensions;
 using PQBI.Network.Base;
-using PQBI.Network.RestApi.Validations;
 using PQBI.PQS;
 using PQBI.Requests;
 using PQS.Data.Common;
 using PQS.Data.RecordsContainer;
 using PQS.Data.RecordsContainer.Records;
-using PQS.PQZBinary;
 using PQS.PQZxml;
-using Twilio.Http;
 
 namespace PQBI.Network.RestApi;
 
@@ -61,11 +57,16 @@ public abstract class PQSRestApiServiceBase : PQSServiceBase
         url = UrlBinaryUrl(url);
         var result = await SendRecordsContainerPostRequest(url, stream);
 
-       
-        var requestXML = PQZxmlWriter.WriteMessage(request, true);
-        var responseXML = PQZxmlWriter.WriteMessage(result, true);
-        Logger.LogWarning($"PQSIndentifyAsync  baseUrl = {url}, request = {requestXML}, response = {responseXML}");
+        if (request.GetRecords().Count > 0)
+        {
 
+            if (request.GetRecord(0) is GetBaseDataRecord baseData)
+            {
+                var requestXML = PQZxmlWriter.WriteMessage(request, true);
+                var responseXML = PQZxmlWriter.WriteMessage(result, true);
+                Logger.LogWarning($"PQSIndentifyAsync  baseUrl = {url}, request = {requestXML}, response = {responseXML}");
+            }                      
+        }
        
         foreach (var record in result.GetRecords())
         {
