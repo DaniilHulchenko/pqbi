@@ -87,14 +87,14 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     decimalPoints = 2;
     titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
-        size: 12,
-        colorMode: 'scheme',
+        size: 16,
+        colorMode: 'custom',
         customColor: '#000000',
     };
     valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
-        size: 16,
-        colorMode: 'scheme',
+        size: 26,
+        colorMode: 'custom',
         customColor: '#000000',
     };
     icon: { file: string; appearance: 'always' | 'limits'; colorMode: 'scheme' | 'custom'; customColor: string } = {
@@ -299,8 +299,31 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         this.showNoDataColor = false;
         this.decimalPoints = 2;
         this.link.page = null;
-        this.icon = { file: null, appearance: 'always', colorMode: 'scheme', customColor: '#000000' };
-        this.titleFont = { family: '', size: 12, colorMode: 'scheme', customColor: '#000000' };
-        this.valueFont = { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' };
+        this.icon = this.normalizeIconSettings(null);
+        this.titleFont = this.normalizeFontSettings(null, 16);
+        this.valueFont = this.normalizeFontSettings(null, 26);
+    }
+
+    private normalizeFontSettings(
+        font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+        defaultSize: number,
+    ): { family: string; size: number; colorMode: 'custom'; customColor: string } {
+        return {
+            family: font?.family ?? '',
+            size: font?.size ?? defaultSize,
+            colorMode: 'custom',
+            customColor: font?.customColor ?? '#000000',
+        };
+    }
+
+    private normalizeIconSettings(
+        icon: { file?: string; appearance?: 'always' | 'limits'; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+    ): { file: string; appearance: 'always' | 'limits'; colorMode: 'custom'; customColor: string } {
+        return {
+            file: icon?.file ?? null,
+            appearance: icon?.appearance ?? 'always',
+            colorMode: 'custom',
+            customColor: icon?.customColor ?? '#000000',
+        };
     }
 }

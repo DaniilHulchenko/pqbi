@@ -68,14 +68,14 @@ import { Subscription } from 'rxjs';
     decimalPoints = 2;
     titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
-        size: 12,
-        colorMode: 'scheme',
+        size: 20,
+        colorMode: 'custom',
         customColor: '#000000',
     };
     valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
-        size: 16,
-        colorMode: 'scheme',
+        size: 20,
+        colorMode: 'custom',
         customColor: '#000000',
     };
     link = { page: null };
@@ -248,8 +248,8 @@ import { Subscription } from 'rxjs';
         this.parameterName = '';
         this.decimalPoints = 2;
         this.link.page = null;
-        this.titleFont = { family: '', size: 12, colorMode: 'scheme', customColor: '#000000' };
-        this.valueFont = { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' };
+        this.titleFont = this.normalizeFontSettings(null, 20);
+        this.valueFont = this.normalizeFontSettings(null, 20);
         this.segments = [];
         this.isSegmentsValid = false;
         this.totalWeight = 0;
