@@ -73,13 +73,13 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     decimalPoints = 2;
     titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
-        size: 16,
+        size: 12,
         colorMode: 'custom',
         customColor: '#000000',
     };
     valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
-        size: 26,
+        size: 16,
         colorMode: 'custom',
         customColor: '#000000',
     };
@@ -154,8 +154,8 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
             this.decimalPoints = c.decimalPoints;
             this.link.page = c.linkPage;
             this.icon = this.normalizeIconSettings(c.icon);
-            this.titleFont = this.normalizeFontSettings(c.titleFont, 16);
-            this.valueFont = this.normalizeFontSettings(c.valueFont, 26);
+            this.titleFont = this.normalizeFontSettings(c.titleFont, 12);
+            this.valueFont = this.normalizeFontSettings(c.valueFont, 16);
         }
     }
 
@@ -247,8 +247,8 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
         this.decimalPoints = 2;
         this.link.page = null;
         this.icon = this.normalizeIconSettings(null);
-        this.titleFont = this.normalizeFontSettings(null, 16);
-        this.valueFont = this.normalizeFontSettings(null, 26);
+        this.titleFont = this.normalizeFontSettings(null, 12);
+        this.valueFont = this.normalizeFontSettings(null, 16);
     }
 
     private normalizeFontSettings(

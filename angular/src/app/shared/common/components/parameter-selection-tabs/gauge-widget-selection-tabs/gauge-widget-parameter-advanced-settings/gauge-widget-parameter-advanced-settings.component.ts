@@ -77,13 +77,13 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     decimalPoints = 2;
     titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
-        size: 20,
+        size: 12,
         colorMode: 'custom',
         customColor: '#000000',
     };
     valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
         family: '',
-        size: 20,
+        size: 16,
         colorMode: 'custom',
         customColor: '#000000',
     };
@@ -169,8 +169,8 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
             this.selectedFlagEvents = c.defaultFlagEvent ?? [];
             this.decimalPoints = c.decimalPoints;
             this.link.page = c.linkPage;
-            this.titleFont = this.normalizeFontSettings(c.titleFont, 20);
-            this.valueFont = this.normalizeFontSettings(c.valueFont, 20);
+            this.titleFont = this.normalizeFontSettings(c.titleFont, 12);
+            this.valueFont = this.normalizeFontSettings(c.valueFont, 16);
             this.isSegmentsValid = false;
             this.totalWeight = 0;
             this.segments = c.segments ? c.segments.map((segment) => ({ ...segment })) : [];
@@ -309,8 +309,8 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         this.parameterName = '';
         this.decimalPoints = 2;
         this.link.page = null;
-        this.titleFont = this.normalizeFontSettings(null, 20);
-        this.valueFont = this.normalizeFontSettings(null, 20);
+        this.titleFont = this.normalizeFontSettings(null, 12);
+        this.valueFont = this.normalizeFontSettings(null, 16);
         this.segments = [];
         this.isSegmentsValid = false;
         this.totalWeight = 0;
