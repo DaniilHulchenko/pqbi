@@ -65,6 +65,13 @@
           <dx-file-uploader selectButtonText="select file" [multiple]="false" [allowedFileExtensions]="['.svg']" (onValueChanged)="onFileChanged($event)">
           </dx-file-uploader>
 
+          <div class="d-flex align-items-center gap-3 mt-2">
+            <dx-button text="Reset to default icon" stylingMode="outlined" type="normal" (onClick)="resetIconToDefault()"></dx-button>
+
+            <p-checkbox *ngIf="showSetAsDefaultIconOption" [(ngModel)]="icon.setAsDefaultIcon" binary="true" label="Set as default icon">
+            </p-checkbox>
+          </div>
+
           <div>
             <label>appearance</label>
             <dx-radio-group [items]="appearanceOptions" displayExpr="text" valueExpr="id" [(value)]="icon.appearance">

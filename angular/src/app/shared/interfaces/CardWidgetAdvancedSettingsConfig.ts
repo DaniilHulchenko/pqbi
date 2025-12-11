@@ -34,7 +34,16 @@ export interface CardWidgetAdvancedSettingsConfig {
 
     linkPage: string | null;
 
-    icon: { file: string; appearance: 'always' | 'limits'; colorMode: 'scheme' | 'custom'; customColor: string };
+    icon: {
+        file: string;
+        iconId?: string | null;
+        defaultIconId?: string | null;
+        defaultValueKey?: string | null;
+        setAsDefaultIcon?: boolean;
+        appearance: 'always' | 'limits';
+        colorMode: 'scheme' | 'custom';
+        customColor: string;
+    };
 
     titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string };
     valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string };
