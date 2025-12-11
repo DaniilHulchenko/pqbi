@@ -17,8 +17,6 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
     protected isEditModalInitialized = false;
     protected _defaultWidgetName: string;
     protected globalWidgetNameFontSize?: number;
-    private editRequestHandler: (payload: any) => void;
-    private renameRequestHandler: (payload: any) => void;
 
     widgetNameFontSize?: string;
 
