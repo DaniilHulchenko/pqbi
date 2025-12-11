@@ -97,8 +97,21 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         colorMode: 'custom',
         customColor: '#000000',
     };
-    icon: { file: string; appearance: 'always' | 'limits'; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    icon: {
+        file: string;
+        iconId: string | null;
+        defaultIconId: string | null;
+        defaultValueKey: string | null;
+        setAsDefaultIcon: boolean;
+        appearance: 'always' | 'limits';
+        colorMode: 'scheme' | 'custom';
+        customColor: string;
+    } = {
         file: null,
+        iconId: null,
+        defaultIconId: null,
+        defaultValueKey: null,
+        setAsDefaultIcon: false,
         appearance: 'always',
         colorMode: 'custom',
         customColor: '#000000',
@@ -153,6 +166,8 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
             const reader = new FileReader();
             reader.onload = () => {
                 this.icon.file = reader.result as string;
+                this.icon.iconId = null;
+                this.icon.setAsDefaultIcon = false;
             };
             reader.readAsDataURL(file);
         }
@@ -193,6 +208,8 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
             this.decimalPoints = c.decimalPoints;
             this.link.page = c.linkPage;
             this.icon = this.normalizeIconSettings(c.icon);
+            this.icon.setAsDefaultIcon =
+                this.icon.setAsDefaultIcon || (!!this.icon.iconId && this.icon.iconId === this.icon.defaultIconId);
             this.titleFont = this.normalizeFontSettings(c.titleFont, 16);
             this.valueFont = this.normalizeFontSettings(c.valueFont, 26);
         }
@@ -277,6 +294,8 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         }
     }
     reset() {
+        const defaultIconId = this.icon.defaultIconId;
+        const defaultValueKey = this.icon.defaultValueKey;
         this.normalizeValue = NormalizeEnum.NO;
         this.normalizeNominalValue = 0;
         this.excludeFlagged = ExcludeFlagged.None;
@@ -299,9 +318,19 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         this.showNoDataColor = false;
         this.decimalPoints = 2;
         this.link.page = null;
-        this.icon = this.normalizeIconSettings(null);
+        this.icon = this.normalizeIconSettings({ defaultIconId, defaultValueKey });
         this.titleFont = this.normalizeFontSettings(null, 16);
         this.valueFont = this.normalizeFontSettings(null, 26);
+    }
+
+    resetIconToDefault(): void {
+        this.icon.iconId = null;
+        this.icon.file = null;
+        this.icon.setAsDefaultIcon = false;
+    }
+
+    get showSetAsDefaultIconOption(): boolean {
+        return !!this.icon.iconId || !!this.icon.file;
     }
 
     private normalizeFontSettings(
@@ -317,10 +346,34 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     }
 
     private normalizeIconSettings(
-        icon: { file?: string; appearance?: 'always' | 'limits'; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
-    ): { file: string; appearance: 'always' | 'limits'; colorMode: 'custom'; customColor: string } {
+        icon:
+            | {
+                  file?: string;
+                  iconId?: string;
+                  defaultIconId?: string;
+                  defaultValueKey?: string;
+                  setAsDefaultIcon?: boolean;
+                  appearance?: 'always' | 'limits';
+                  colorMode?: 'scheme' | 'custom';
+                  customColor?: string;
+              }
+            | null,
+    ): {
+        file: string;
+        iconId: string | null;
+        defaultIconId: string | null;
+        defaultValueKey: string | null;
+        setAsDefaultIcon: boolean;
+        appearance: 'always' | 'limits';
+        colorMode: 'custom';
+        customColor: string;
+    } {
         return {
             file: icon?.file ?? null,
+            iconId: icon?.iconId ?? null,
+            defaultIconId: icon?.defaultIconId ?? null,
+            defaultValueKey: icon?.defaultValueKey ?? null,
+            setAsDefaultIcon: icon?.setAsDefaultIcon ?? false,
             appearance: icon?.appearance ?? 'always',
             colorMode: 'custom',
             customColor: icon?.customColor ?? '#000000',
