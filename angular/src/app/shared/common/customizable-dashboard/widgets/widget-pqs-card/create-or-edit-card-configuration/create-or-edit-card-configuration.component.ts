@@ -103,6 +103,9 @@ export class CreateOrEditCardConfigurationComponent
     private cardWidgetConfiguration: CreateOrEditCardWidgetConfigurationDto =
         new CreateOrEditCardWidgetConfigurationDto();
 
+    private defaultIconId: string | null = null;
+    private shouldApplyDefaultIconOnInit = false;
+
     private subs: Subscription[] = [];
 
     constructor(
@@ -163,6 +166,9 @@ export class CreateOrEditCardConfigurationComponent
                 style: null,
             },
         ];
+
+        this.defaultIconId = this.defaultIconId ?? this.extractDefaultIconIdFromParameters(this.parameters);
+        this.applyDefaultIconForNewCard();
     }
 
     onAddCustomParameter(event: AddCustomParameterEventCallBack) {
@@ -181,6 +187,9 @@ export class CreateOrEditCardConfigurationComponent
                     style: null,
                 },
             ];
+
+            this.defaultIconId = this.defaultIconId ?? this.extractDefaultIconIdFromParameters(this.parameters);
+            this.applyDefaultIconForNewCard();
         });
         this.subs.push(sub);
     }
@@ -201,6 +210,9 @@ export class CreateOrEditCardConfigurationComponent
                     style: null,
                 },
             ];
+
+            this.defaultIconId = this.defaultIconId ?? this.extractDefaultIconIdFromParameters(this.parameters);
+            this.applyDefaultIconForNewCard();
         });
         this.subs.push(sub);
     }
@@ -228,6 +240,9 @@ export class CreateOrEditCardConfigurationComponent
         };
 
         this.parameters = [newItem];
+
+        this.defaultIconId = this.defaultIconId ?? this.extractDefaultIconIdFromParameters(this.parameters);
+        this.applyDefaultIconForNewCard();
     }
 
     onEditCustomParameter(event: EditCustomParameterEventCallBack) {
@@ -363,10 +378,13 @@ export class CreateOrEditCardConfigurationComponent
                 .getForEdit(+configuration.configuration)
                 .subscribe((result) => {
                     this.cardWidgetConfiguration = result.cardWidgetConfiguration;
+                    this.defaultIconId = this.extractDefaultIconId(result);
                     this.dateRangeSelectionState = DateRangeAndRefreshModelNew.createItem(result.cardWidgetConfiguration.dateRange);
                     this.refreshRateSelectionState = result.cardWidgetConfiguration.refreshRate;
                     this.selectedCardStyle = result.cardWidgetConfiguration.styleType;
                     this.parameters = JSON.parse(result.cardWidgetConfiguration.parameters);
+                    this.defaultIconId = this.defaultIconId ?? this.extractDefaultIconIdFromParameters(this.parameters);
+                    this.applyDefaultIconForNewCard();
                     setTimeout(() => {
                         this.handleParameter(this.parameters[0], 'edit');
                         this.isEditMode = true;
@@ -379,6 +397,8 @@ export class CreateOrEditCardConfigurationComponent
             this.parameters = [];
             this.refreshRateSelectionState = 0;
             this.selectedCardStyle = null;
+            this.defaultIconId = this.extractDefaultIconId(configuration);
+            this.shouldApplyDefaultIconOnInit = true;
         }
     }
 
@@ -504,6 +524,7 @@ export class CreateOrEditCardConfigurationComponent
     }
 
     private normalizeParametersIconSettings(): void {
+        const defaultIconId = this.defaultIconId;
         this.parameters = this.parameters.map((parameter) => {
             const iconSettings = parameter.cardWidgetAdvancedSettings?.icon;
 
@@ -511,7 +532,16 @@ export class CreateOrEditCardConfigurationComponent
                 return parameter;
             }
 
-            const iconId = iconSettings.iconId !== undefined ? iconSettings.iconId : iconSettings.defaultIconId ?? null;
+            const resolvedDefaultIconId = iconSettings.defaultIconId ?? defaultIconId ?? null;
+            let iconId = iconSettings.iconId;
+
+            if (iconId === undefined) {
+                iconId = resolvedDefaultIconId;
+            }
+
+            if (this.shouldApplyDefaultIconOnInit && (iconId === null || iconId === undefined) && resolvedDefaultIconId) {
+                iconId = resolvedDefaultIconId;
+            }
 
             return {
                 ...parameter,
@@ -519,10 +549,64 @@ export class CreateOrEditCardConfigurationComponent
                     ...parameter.cardWidgetAdvancedSettings,
                     icon: {
                         ...iconSettings,
-                        iconId,
+                        iconId: iconId ?? null,
+                        defaultIconId: resolvedDefaultIconId,
                     },
                 },
             };
         });
+
+        if (this.shouldApplyDefaultIconOnInit) {
+            this.shouldApplyDefaultIconOnInit = false;
+        }
+    }
+
+    private extractDefaultIconId(data: any): string | null {
+        return (data as any)?.defaultIconId ?? (data as any)?.cardWidgetConfiguration?.defaultIconId ?? null;
+    }
+
+    private extractDefaultIconIdFromParameters(parameters: WidgetParametersColumn[]): string | null {
+        const parameterWithDefaultIcon = parameters.find(
+            (parameter) => parameter.cardWidgetAdvancedSettings?.icon?.defaultIconId,
+        );
+
+        return parameterWithDefaultIcon?.cardWidgetAdvancedSettings?.icon?.defaultIconId ?? null;
+    }
+
+    private applyDefaultIconForNewCard(): void {
+        if (!this.shouldApplyDefaultIconOnInit || !this.defaultIconId) {
+            return;
+        }
+
+        let defaultApplied = false;
+
+        this.parameters = this.parameters.map((parameter) => {
+            const iconSettings = parameter.cardWidgetAdvancedSettings?.icon;
+
+            if (!iconSettings) {
+                return parameter;
+            }
+
+            if (iconSettings.iconId === null || iconSettings.iconId === undefined) {
+                defaultApplied = true;
+                return {
+                    ...parameter,
+                    cardWidgetAdvancedSettings: {
+                        ...parameter.cardWidgetAdvancedSettings,
+                        icon: {
+                            ...iconSettings,
+                            iconId: this.defaultIconId,
+                            defaultIconId: iconSettings.defaultIconId ?? this.defaultIconId,
+                        },
+                    },
+                };
+            }
+
+            return parameter;
+        });
+
+        if (defaultApplied || this.parameters.length > 0) {
+            this.shouldApplyDefaultIconOnInit = false;
+        }
     }
 }
