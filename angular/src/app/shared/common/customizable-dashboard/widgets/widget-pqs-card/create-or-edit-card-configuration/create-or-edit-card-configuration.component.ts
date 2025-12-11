@@ -393,6 +393,7 @@ export class CreateOrEditCardConfigurationComponent
 
     save() {
         this.saving = true;
+        this.normalizeParametersIconSettings();
         this.cardWidgetConfiguration.dateRange = safeStringify(this.dateRangeSelectionState);
         this.cardWidgetConfiguration.parameters = safeStringify(this.parameters);
         this.cardWidgetConfiguration.refreshRate = this.refreshRateSelectionState;
@@ -500,5 +501,28 @@ export class CreateOrEditCardConfigurationComponent
         settings?: CardWidgetAdvancedSettingsConfig,
     ): string {
         return settings?.parameterName?.trim() || currentName;
+    }
+
+    private normalizeParametersIconSettings(): void {
+        this.parameters = this.parameters.map((parameter) => {
+            const iconSettings = parameter.cardWidgetAdvancedSettings?.icon;
+
+            if (!parameter.cardWidgetAdvancedSettings || !iconSettings) {
+                return parameter;
+            }
+
+            const iconId = iconSettings.iconId !== undefined ? iconSettings.iconId : iconSettings.defaultIconId ?? null;
+
+            return {
+                ...parameter,
+                cardWidgetAdvancedSettings: {
+                    ...parameter.cardWidgetAdvancedSettings,
+                    icon: {
+                        ...iconSettings,
+                        iconId,
+                    },
+                },
+            };
+        });
     }
 }

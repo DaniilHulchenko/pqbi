@@ -36,7 +36,7 @@ export interface CardWidgetAdvancedSettingsConfig {
 
     icon: {
         file: string;
-        iconId?: string | null;
+        iconId: string | null;
         defaultIconId?: string | null;
         defaultValueKey?: string | null;
         setAsDefaultIcon?: boolean;

@@ -319,6 +319,7 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         this.decimalPoints = 2;
         this.link.page = null;
         this.icon = this.normalizeIconSettings({ defaultIconId, defaultValueKey });
+        this.icon.iconId = null;
         this.titleFont = this.normalizeFontSettings(null, 16);
         this.valueFont = this.normalizeFontSettings(null, 26);
     }
@@ -368,9 +369,10 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         colorMode: 'custom';
         customColor: string;
     } {
+        const iconId = icon?.iconId ?? icon?.defaultIconId ?? null;
         return {
             file: icon?.file ?? null,
-            iconId: icon?.iconId ?? null,
+            iconId,
             defaultIconId: icon?.defaultIconId ?? null,
             defaultValueKey: icon?.defaultValueKey ?? null,
             setAsDefaultIcon: icon?.setAsDefaultIcon ?? false,
