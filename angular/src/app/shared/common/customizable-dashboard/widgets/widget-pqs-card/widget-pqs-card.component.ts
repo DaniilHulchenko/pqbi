@@ -143,14 +143,14 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     }
 
     fetch() {
-        let request = new TableWidgetRequest();
-
-        request.widgetName = this.widgetConfigurationInDB?.name;
-        request.userTimeZone = this._dateTimeService.getUserTimeZoneName();
-        request.rows = new RowWidgetTable({
-            tags: null,
-            feeders: this.getFormattedFeedersAndComponents(),
-        });
+        const request: any = {
+            widgetName: this.widgetConfigurationInDB?.name,
+            userTimeZone: this._dateTimeService.getUserTimeZoneName(),
+            rows: new RowWidgetTable({
+                tags: null,
+                feeders: this.getFormattedFeedersAndComponents(),
+            }),
+        };
         const parameters = JSON.parse(this.cardWidgetConfiguration.parameters) as WidgetParametersColumn[];
 
         if (parameters.some((p) => p)) {
@@ -158,6 +158,12 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                 let baseData: string = null;
                 let customData: CustomWidgetTableData = null;
                 let tableEvent: TableWidgetEvent = null;
+                const iconSettings = column.cardWidgetAdvancedSettings?.icon;
+                const iconId = iconSettings
+                    ? iconSettings.iconId !== undefined
+                        ? iconSettings.iconId
+                        : iconSettings.defaultIconId ?? null
+                    : null;
 
                 switch (column.type) {
                     case ColumnType.Exception:
@@ -183,7 +189,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                         break;
                 }
 
-                return new ColumnWidgetTable({
+                const columnWidget = new ColumnWidgetTable({
                     parameterType: column.type,
                     normalize: column.cardWidgetAdvancedSettings?.normalizeValue,
                     normalValue: column.cardWidgetAdvancedSettings?.normalizeNominalValue,
@@ -201,6 +207,11 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                         column.cardWidgetAdvancedSettings?.excludeFlagged === ExcludeFlagged.DefaultEvents,
                     markers: null,
                 });
+
+                return {
+                    ...columnWidget,
+                    iconId,
+                };
             });
         }
 
