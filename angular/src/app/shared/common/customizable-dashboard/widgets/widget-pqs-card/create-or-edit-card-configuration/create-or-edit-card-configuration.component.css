@@ -1,0 +1,8 @@
+.icon-preview__image {
+    max-width: 120px;
+    max-height: 120px;
+}
+
+.icon-settings {
+    column-gap: 32px;
+}
