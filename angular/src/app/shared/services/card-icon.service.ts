@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
-import { CreateOrEditDefaultValueDto, FileInfosServiceProxy } from '@shared/service-proxies/service-proxies';
+import {
+    CreateOrEditDefaultValueDto,
+    CreateOrEditFileInfoDto,
+    FileInfosServiceProxy,
+} from '@shared/service-proxies/service-proxies';
 import { map, Observable, of, switchMap } from 'rxjs';
 import { DefaultValuesService } from './default-values-service.service';
 import { CardIcon } from '../interfaces/card-icon';
@@ -43,11 +47,17 @@ export class CardIconService {
 
     uploadIcon(file: File): Observable<CardIcon> {
         return this.readFileContent(file).pipe(
-            switchMap((content) =>
-                this.fileInfosService
-                    .createOrEdit({ id: undefined, name: file.name, content })
-                    .pipe(switchMap(() => this.fetchLatestIcon())),
-            ),
+            switchMap((content) => {
+                const fileInfoDto = new CreateOrEditFileInfoDto({
+                    id: undefined,
+                    name: file.name,
+                    content,
+                });
+
+                return this.fileInfosService
+                    .createOrEdit(fileInfoDto)
+                    .pipe(switchMap(() => this.fetchLatestIcon()));
+            }),
         );
     }
 
