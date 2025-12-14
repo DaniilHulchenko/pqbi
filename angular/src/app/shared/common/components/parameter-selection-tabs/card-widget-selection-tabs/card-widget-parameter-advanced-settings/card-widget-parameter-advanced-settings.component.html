@@ -80,7 +80,14 @@
                 [(ngModel)]="setAsDefaultIcon"
                 label="Set as default icon"
               ></p-checkbox>
-              <button dx-button type="default" text="Reset to default icon" [disabled]="!hasSelectedIcon" (onClick)="resetIcon()"></button>
+              <dx-button
+                stylingMode="outlined"
+                icon="refresh"
+                text="Reset icon"
+                type="default"
+                [disabled]="!hasSelectedIcon"
+                (onClick)="resetIcon()"
+              ></dx-button>
             </div>
           </div>
 
@@ -90,8 +97,9 @@
               [items]="availableIcons"
               displayExpr="name"
               valueExpr="id"
-              [value]="icon.id"
+              [(value)]="icon.id"
               placeholder="Select icon"
+              [showClearButton]="true"
               (onValueChanged)="onIconSelected($event.value)"
               itemTemplate="iconItem"
             >
