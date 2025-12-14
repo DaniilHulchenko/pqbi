@@ -316,6 +316,29 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     }
 
     resetIcon() {
+        if (this.defaultIconId != null) {
+            const defaultIcon = this.availableIcons.find((icon) => icon.id === this.defaultIconId);
+
+            if (defaultIcon) {
+                this.applySelectedIcon(defaultIcon);
+                return;
+            }
+
+            this.cardIconService.getIconById(this.defaultIconId).subscribe((icon) => {
+                if (icon) {
+                    this.applySelectedIcon(icon);
+                    return;
+                }
+
+                this.clearIconSelection();
+            });
+            return;
+        }
+
+        this.clearIconSelection();
+    }
+
+    private clearIconSelection() {
         this.icon = this.normalizeIconSettings({
             appearance: this.icon.appearance,
             colorMode: this.icon.colorMode,
