@@ -111,6 +111,10 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
 
     decimalPointOptions = [0, 1, 2, 3];
 
+    get hasSelectedIcon(): boolean {
+        return !!(this.icon?.id || this.icon?.file);
+    }
+
     fontFamilies = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
 
 
@@ -312,7 +316,11 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     }
 
     resetIcon() {
-        this.icon = this.normalizeIconSettings({ appearance: this.icon.appearance, colorMode: this.icon.colorMode });
+        this.icon = this.normalizeIconSettings({
+            appearance: this.icon.appearance,
+            colorMode: this.icon.colorMode,
+            customColor: this.icon.customColor,
+        });
         this.selectedIconPreview = null;
         this.setAsDefaultIcon = false;
     }
