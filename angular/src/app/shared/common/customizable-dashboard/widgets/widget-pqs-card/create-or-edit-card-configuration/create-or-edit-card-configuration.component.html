@@ -10,6 +10,45 @@
                 <dateRangeSelector name="dateRange" #dateRangeSelector [(ngModel)]="dateRangeSelectionState" (ngModelChange)="onDateRangeChangedNew()" required></dateRangeSelector>
             </div>
 
+            <div class="d-flex align-items-start gap-4 mb-4 flex-wrap icon-settings">
+                <div class="d-flex flex-column gap-2">
+                    <label class="fw-semibold">Icon file</label>
+                    <dx-file-uploader
+                        [multiple]="false"
+                        [allowedFileExtensions]="['.svg']"
+                        (onValueChanged)="onIconFileSelected($event)"
+                        [disabled]="isIconUploading"
+                        selectButtonText="Select file"
+                    >
+                    </dx-file-uploader>
+                    <button type="button" class="btn btn-link p-0" (click)="resetIcon()">
+                        Reset to default icon
+                    </button>
+                </div>
+
+                <div class="d-flex flex-column gap-2 align-items-start">
+                    <label class="fw-semibold">Preview</label>
+                    <div class="icon-preview border rounded p-2" *ngIf="iconPreview; else emptyPreview">
+                        <img [src]="iconPreview" alt="icon preview" class="icon-preview__image" />
+                    </div>
+                    <ng-template #emptyPreview>
+                        <div class="text-muted small">No icon selected</div>
+                    </ng-template>
+                </div>
+
+                <div class="form-check mt-4">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="setDefaultIcon"
+                        name="setDefaultIcon"
+                        [(ngModel)]="setAsDefaultIcon"
+                        [disabled]="!canSetAsDefault"
+                    />
+                    <label class="form-check-label" for="setDefaultIcon">Set as default</label>
+                </div>
+            </div>
+
             <div class="d-flex flex-column mb-3" style="width: 100%;">
                 <dx-tab-panel #tabPanel [dataSource]="tabs" [selectedIndex]="selectedTabIndex" [loop]="false"
                     [animationEnabled]="true" [deferRendering]="false" [swipeEnabled]="true" [disabled]="isParameterSelectionDisabled"

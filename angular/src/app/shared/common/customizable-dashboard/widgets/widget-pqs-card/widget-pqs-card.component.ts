@@ -16,6 +16,7 @@ import {
     TableWidgetRequest,
     TableWidgetResponse,
     TenantDashboardServiceProxy,
+    FileInfosServiceProxy,
 } from '@shared/service-proxies/service-proxies';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
 import { ColorSchema, ExcludeFlagged } from '@app/shared/enums/advanced-settings-options';
@@ -59,6 +60,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     widgetNameFontSize?: string;
     iconColor: string = '#5b9bd5';
     isIconVisible: boolean = true;
+    cardIconPreview: string | null = null;
     navigationPageId: string | null = null;
     canNavigateToPage = false;
 
@@ -77,6 +79,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         private dashboardPagesService: DashboardPagesService,
 
         private _dateTimeService: DateTimeService,
+        private fileInfosServiceProxy: FileInfosServiceProxy,
     ) {
         super(injector, elementReference, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSCard');
@@ -132,14 +135,35 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                 .subscribe((result) => {
                     this.cardWidgetConfiguration = result.cardWidgetConfiguration;
                     if (this.cardWidgetConfiguration) {
+                        const iconId = (this.cardWidgetConfiguration as any).iconId ?? null;
                         let parameters = JSON.parse(this.cardWidgetConfiguration.parameters);
                         this.parameter = parameters.at(0);
+                        this.setIconPreview(iconId);
                         this.setNavigationTarget();
                         this.fetch();
                     }
                 });
             this.subs.push(sub);
         }
+    }
+
+    private setIconPreview(iconId: number | null) {
+        this.cardIconPreview = null;
+
+        if (!iconId) {
+            return;
+        }
+
+        var sub = this.fileInfosServiceProxy.getFileInfoForView(iconId).subscribe(
+            (result) => {
+                this.cardIconPreview = result?.fileInfo?.content ?? null;
+            },
+            () => {
+                this.cardIconPreview = null;
+            },
+        );
+
+        this.subs.push(sub);
     }
 
     fetch() {

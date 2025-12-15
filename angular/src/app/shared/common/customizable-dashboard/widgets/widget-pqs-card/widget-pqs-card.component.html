@@ -44,8 +44,8 @@
                         </div>
                     </div>
                     <div *ngIf="isIconVisible" class="card-icon">
-                        <div *ngIf="parameter?.cardWidgetAdvancedSettings?.icon?.file; else defaultImage" class="card-icon-image">
-                            <img [src]="parameter?.cardWidgetAdvancedSettings?.icon?.file" />                        </div>
+                        <div *ngIf="cardIconPreview; else defaultImage" class="card-icon-image">
+                            <img [src]="cardIconPreview" />                        </div>
                         <ng-template #defaultImage>
                             <div class="card-icon-fallback">
                                 <i class="fa fa-bolt" [ngStyle]="{'color': iconColor}"></i>
@@ -88,8 +88,8 @@
                         {{ unit }}
                     </div>
                     <div *ngIf="isIconVisible">
-                        <div *ngIf="parameter?.cardWidgetAdvancedSettings?.icon?.file; else defaultImage">
-                            <img [src]="parameter?.cardWidgetAdvancedSettings?.icon?.file" style="width: 5%;" />
+                        <div *ngIf="cardIconPreview; else defaultImage">
+                            <img [src]="cardIconPreview" style="width: 5%;" />
                         </div>
                         <ng-template #defaultImage>
                             <i class="fa fa-bolt" [ngStyle]="{'color': iconColor}"
@@ -119,8 +119,8 @@
             </div>
             <div *ngSwitchCase="4" class="card text-center p-2" style="min-width:120px;">
                 <div *ngIf="isIconVisible">
-                    <div *ngIf="parameter?.cardWidgetAdvancedSettings?.icon?.file; else defaultImage">
-                        <img [src]="parameter?.cardWidgetAdvancedSettings?.icon?.file" style="width: 5%;" />
+                    <div *ngIf="cardIconPreview; else defaultImage">
+                        <img [src]="cardIconPreview" style="width: 5%;" />
                     </div>
                     <ng-template #defaultImage>
                         <i class="fa fa-bolt" [ngStyle]="{'color': iconColor}"

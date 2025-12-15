@@ -1,6 +1,14 @@
 import { Component, EventEmitter, Injector, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { WidgetConfigurationModalBaseComponent } from '../../widget-configuration-modal-base';
-import { CardWidgetConfigurationsServiceProxy, CardWidgetStyleType, CreateOrEditCardWidgetConfigurationDto, CreateOrEditWidgetConfigurationDto, CustomParametersServiceProxy } from '@shared/service-proxies/service-proxies';
+import {
+    CardWidgetConfigurationsServiceProxy,
+    CardWidgetStyleType,
+    CreateOrEditCardWidgetConfigurationDto,
+    CreateOrEditFileInfoDto,
+    CreateOrEditWidgetConfigurationDto,
+    CustomParametersServiceProxy,
+    FileInfosServiceProxy,
+} from '@shared/service-proxies/service-proxies';
 import { NgForm } from '@angular/forms';
 import { DateRangeState } from '@app/shared/models/date-range-state';
 import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
@@ -57,6 +65,7 @@ export class CreateOrEditCardConfigurationComponent
 
     saving = false;
     isEditMode = false;
+    isIconUploading = false;
 
     selectedCardStyle: CardWidgetStyleType;
 
@@ -68,6 +77,11 @@ export class CreateOrEditCardConfigurationComponent
     previousTabIndex: number | null = null;
     selectedTabIndex: number | null = 0;
     selectedTab: EditableTabComponentBaseComponent | null = null;
+    iconPreview: string | null = null;
+    iconId: number | null = null;
+    defaultIconId: number | null = null;
+    setAsDefaultIcon = false;
+    private hasIconChanged = false;
     tabs = [
         {
             ID: 1,
@@ -110,6 +124,7 @@ export class CreateOrEditCardConfigurationComponent
         private cardWidgetServiceProxy: CardWidgetConfigurationsServiceProxy,
         private cardWidgetConfigurationService: CardWidgetConfigurationService,
         private _customParameterService: CustomParameterService,
+        private fileInfosServiceProxy: FileInfosServiceProxy,
     ) {
         super(injector);
     }
@@ -363,10 +378,15 @@ export class CreateOrEditCardConfigurationComponent
                 .getForEdit(+configuration.configuration)
                 .subscribe((result) => {
                     this.cardWidgetConfiguration = result.cardWidgetConfiguration;
+                    this.iconId = (this.cardWidgetConfiguration as any).iconId ?? null;
+                    this.defaultIconId = (result as any)?.defaultIconId ?? (this.cardWidgetConfiguration as any).defaultIconId ?? null;
+                    this.setAsDefaultIcon = false;
+                    this.hasIconChanged = false;
                     this.dateRangeSelectionState = DateRangeAndRefreshModelNew.createItem(result.cardWidgetConfiguration.dateRange);
                     this.refreshRateSelectionState = result.cardWidgetConfiguration.refreshRate;
                     this.selectedCardStyle = result.cardWidgetConfiguration.styleType;
                     this.parameters = JSON.parse(result.cardWidgetConfiguration.parameters);
+                    this.loadIconPreview();
                     setTimeout(() => {
                         this.handleParameter(this.parameters[0], 'edit');
                         this.isEditMode = true;
@@ -379,6 +399,11 @@ export class CreateOrEditCardConfigurationComponent
             this.parameters = [];
             this.refreshRateSelectionState = 0;
             this.selectedCardStyle = null;
+            this.iconId = null;
+            this.iconPreview = null;
+            this.defaultIconId = null;
+            this.setAsDefaultIcon = false;
+            this.hasIconChanged = false;
         }
     }
 
@@ -398,23 +423,40 @@ export class CreateOrEditCardConfigurationComponent
         this.cardWidgetConfiguration.refreshRate = this.refreshRateSelectionState;
         this.cardWidgetConfiguration.styleType = this.selectedCardStyle;
 
+        const payload: any = {
+            ...this.cardWidgetConfiguration,
+            iconId: this.iconId,
+            setAsDefaultIcon: this.canSetAsDefault ? this.setAsDefaultIcon : false,
+        };
+
+        if (
+            !this.cardWidgetConfiguration.id &&
+            !this.hasIconChanged &&
+            payload.iconId == null &&
+            this.defaultIconId != null
+        ) {
+            payload.iconId = this.defaultIconId;
+            this.iconId = this.defaultIconId;
+        }
+
         if (this.cardWidgetConfiguration.id) {
             var sub = this.cardWidgetServiceProxy
-                .createOrEdit(this.cardWidgetConfiguration)
+                .createOrEdit(payload)
                 .pipe(
                     finalize(() => {
                         this.saving = false;
                     }),
                 )
                 .subscribe((result) => {
+                    this.cardWidgetConfiguration = Object.assign(this.cardWidgetConfiguration, payload);
                     this.cardWidgetConfigurationService.update(this.cardWidgetConfiguration);
                     this.hide(true);
-                    this.onSave.emit(this.cardWidgetConfiguration);
+                    this.onSave.emit(this.cardWidgetConfiguration as any);
                 });
             this.subs.push(sub);
         } else {
             var sub = this.cardWidgetServiceProxy
-                .createAndGetId(this.cardWidgetConfiguration)
+                .createAndGetId(payload)
                 .pipe(
                     finalize(() => {
                         this.saving = false;
@@ -422,12 +464,81 @@ export class CreateOrEditCardConfigurationComponent
                 )
                 .subscribe((result) => {
                     this.cardWidgetConfiguration.id = result;
+                    this.cardWidgetConfiguration = Object.assign(this.cardWidgetConfiguration, payload);
                     this.cardWidgetConfigurationService.update(this.cardWidgetConfiguration);
                     this.hide(true);
-                    this.onSave.emit(this.cardWidgetConfiguration);
+                    this.onSave.emit(this.cardWidgetConfiguration as any);
                 });
             this.subs.push(sub);
         }
+    }
+
+    onIconFileSelected(event: any) {
+        const file = event?.value?.[0];
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base64 = reader.result as string;
+            this.uploadIcon(base64, file.name);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    resetIcon() {
+        this.iconId = null;
+        this.iconPreview = null;
+        this.setAsDefaultIcon = false;
+        this.hasIconChanged = true;
+    }
+
+    get canSetAsDefault(): boolean {
+        return this.iconId != null;
+    }
+
+    private uploadIcon(base64Content: string, name: string) {
+        this.isIconUploading = true;
+        const fileInfo = new CreateOrEditFileInfoDto();
+        fileInfo.name = name;
+        fileInfo.content = base64Content;
+
+        const request$ = this.fileInfosServiceProxy.createOrEdit(fileInfo as any) as any;
+
+        var sub = (request$ as any)
+            .pipe(
+                finalize(() => {
+                    this.isIconUploading = false;
+                }),
+            )
+            .subscribe((id: number) => {
+                if (id != null) {
+                    this.iconId = id;
+                    this.iconPreview = base64Content;
+                    this.setAsDefaultIcon = false;
+                    this.hasIconChanged = true;
+                }
+            });
+
+        this.subs.push(sub);
+    }
+
+    private loadIconPreview() {
+        if (!this.iconId) {
+            this.iconPreview = null;
+            return;
+        }
+
+        var sub = this.fileInfosServiceProxy.getFileInfoForView(this.iconId).subscribe(
+            (result) => {
+                this.iconPreview = result?.fileInfo?.content ?? null;
+            },
+            () => {
+                this.iconPreview = null;
+            },
+        );
+        this.subs.push(sub);
     }
 
     onTabSelectionChanging(e: any) {
