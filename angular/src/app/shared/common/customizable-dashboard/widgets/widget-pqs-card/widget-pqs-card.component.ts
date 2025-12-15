@@ -22,7 +22,7 @@ import { ColorSchema, ExcludeFlagged } from '@app/shared/enums/advanced-settings
 import { ColumnType } from '@app/shared/enums/column-type';
 import { ArrayUtils } from '@app/shared/services/array-utils.service';
 import safeStringify from 'fast-safe-stringify';
-import { Subject, Subscription, takeUntil, timer } from 'rxjs';
+import { of, Subject, Subscription, switchMap, takeUntil, timer } from 'rxjs';
 import { DateTime } from 'luxon';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
@@ -31,6 +31,7 @@ import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-r
 import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
+import { CardIconService } from '@app/shared/services/card-icon.service';
 
 
 @Component({
@@ -77,6 +78,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         private dashboardPagesService: DashboardPagesService,
 
         private _dateTimeService: DateTimeService,
+        private cardIconService: CardIconService,
     ) {
         super(injector, elementReference, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSCard');
@@ -134,12 +136,35 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                     if (this.cardWidgetConfiguration) {
                         let parameters = JSON.parse(this.cardWidgetConfiguration.parameters);
                         this.parameter = parameters.at(0);
+                        this.loadIconForParameter(this.parameter);
                         this.setNavigationTarget();
                         this.fetch();
                     }
                 });
             this.subs.push(sub);
         }
+    }
+
+    private loadIconForParameter(parameter: WidgetParametersColumn | null) {
+        const iconSettings = parameter?.cardWidgetAdvancedSettings?.icon;
+        if (!iconSettings) {
+            return;
+        }
+
+        const icon$ = iconSettings.id
+            ? this.cardIconService.getIconById(iconSettings.id)
+            : this.cardIconService.getDefaultIconId().pipe(
+                  switchMap((id) => (id ? this.cardIconService.getIconById(id) : of(null))),
+              );
+
+        const sub = icon$.subscribe((icon) => {
+            if (parameter?.cardWidgetAdvancedSettings?.icon) {
+                parameter.cardWidgetAdvancedSettings.icon.file = icon?.content ?? null;
+                parameter.cardWidgetAdvancedSettings.icon.name = icon?.name ?? null;
+            }
+        });
+
+        this.subs.push(sub);
     }
 
     fetch() {

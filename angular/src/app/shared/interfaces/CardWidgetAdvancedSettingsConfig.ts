@@ -1,5 +1,5 @@
-import { EventClass, NormalizeEnum } from "@shared/service-proxies/service-proxies";
-import { ColorSchema, ExcludeFlagged, Limit } from "../enums/advanced-settings-options";
+import { EventClass, NormalizeEnum } from '@shared/service-proxies/service-proxies';
+import { ColorSchema, ExcludeFlagged, Limit } from '../enums/advanced-settings-options';
 
 export interface CardWidgetAdvancedSettingsConfig {
     parameterName?: string;
@@ -34,7 +34,15 @@ export interface CardWidgetAdvancedSettingsConfig {
 
     linkPage: string | null;
 
-    icon: { file: string; appearance: 'always' | 'limits'; colorMode: 'scheme' | 'custom'; customColor: string };
+    icon: {
+        id?: number | null;
+        file?: string | null;
+        name?: string | null;
+        appearance: 'always' | 'limits';
+        colorMode: 'scheme' | 'custom';
+        customColor: string;
+        setAsDefault?: boolean;
+    };
 
     titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string };
     valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string };

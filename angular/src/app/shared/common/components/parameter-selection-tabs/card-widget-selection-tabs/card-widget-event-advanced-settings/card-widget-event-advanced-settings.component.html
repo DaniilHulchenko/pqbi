@@ -95,10 +95,40 @@
 
         <!-- Icon Section -->
         <h5>Icon</h5>
-        <div class="icon-section">
-          <label>file</label>
-          <dx-file-uploader selectButtonText="select file" [multiple]="false" [allowedFileExtensions]="['.svg']" (onValueChanged)="onFileChanged($event)">
-          </dx-file-uploader>
+        <div class="icon-section d-flex flex-column gap-2">
+          <div class="d-flex flex-column">
+            <label>Upload new icon</label>
+            <dx-file-uploader selectButtonText="select file" [multiple]="false" [allowedFileExtensions]="['.svg']" (onValueChanged)="onFileChanged($event)">
+            </dx-file-uploader>
+          </div>
+
+          <div class="d-flex flex-column">
+            <label>Choose existing icon</label>
+            <dx-select-box
+              [items]="availableIcons"
+              displayExpr="name"
+              valueExpr="id"
+              [value]="icon.id"
+              placeholder="Select icon"
+              (onValueChanged)="onIconSelected($event.value)"
+              itemTemplate="iconItem"
+            >
+              <div *dxTemplate="let item of 'iconItem'" class="d-flex align-items-center gap-2">
+                <img *ngIf="item?.content" [src]="item.content" style="width: 24px; height: 24px;" />
+                <span>{{item?.name}}</span>
+              </div>
+            </dx-select-box>
+          </div>
+
+          <div class="d-flex align-items-center gap-3" *ngIf="selectedIconPreview || icon.name">
+            <img *ngIf="selectedIconPreview" [src]="selectedIconPreview" style="width: 32px; height: 32px;" />
+            <span>{{icon.name}}</span>
+          </div>
+
+          <div class="d-flex align-items-center gap-3">
+            <button dx-button type="default" text="Reset to default icon" (onClick)="resetIcon()"></button>
+            <p-checkbox [binary]="true" [disabled]="!icon.id" [(ngModel)]="setAsDefaultIcon" label="Set as default icon"></p-checkbox>
+          </div>
 
           <div>
             <label>appearance</label>
