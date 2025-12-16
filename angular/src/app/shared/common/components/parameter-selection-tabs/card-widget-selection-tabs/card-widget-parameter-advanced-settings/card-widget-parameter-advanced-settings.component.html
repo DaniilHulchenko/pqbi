@@ -60,10 +60,56 @@
 
         <!-- Icon Section -->
         <h5>Icon</h5>
-        <div class="icon-section">
-          <label>file</label>
-          <dx-file-uploader selectButtonText="select file" [multiple]="false" [allowedFileExtensions]="['.svg']" (onValueChanged)="onFileChanged($event)">
-          </dx-file-uploader>
+        <div class="icon-section d-flex flex-column gap-2">
+          <div class="d-flex flex-column">
+            <label>Upload new icon</label>
+            <dx-file-uploader selectButtonText="select file" [multiple]="false" [allowedFileExtensions]="['.svg']" (onValueChanged)="onFileChanged($event)">
+            </dx-file-uploader>
+          </div>
+
+          <div class="d-flex flex-column gap-2" *ngIf="hasSelectedIcon">
+            <div class="d-flex align-items-center gap-3">
+              <img *ngIf="selectedIconPreview || icon.file" [src]="selectedIconPreview || icon.file" style="width: 32px; height: 32px;" />
+              <span>{{ icon.name || 'Selected icon' }}</span>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+              <p-checkbox
+                [binary]="true"
+                [disabled]="!hasSelectedIcon || !icon.id"
+                [(ngModel)]="setAsDefaultIcon"
+                label="Set as default icon"
+              ></p-checkbox>
+              <dx-button
+                stylingMode="outlined"
+                icon="refresh"
+                text="Reset icon"
+                type="default"
+                [disabled]="!hasSelectedIcon"
+                (onClick)="resetIcon()"
+              ></dx-button>
+            </div>
+          </div>
+
+          <div class="d-flex flex-column">
+            <label>Choose existing icon</label>
+            <dx-select-box
+              [items]="availableIcons"
+              displayExpr="name"
+              valueExpr="id"
+              [(value)]="icon.id"
+              placeholder="Select icon"
+              [showClearButton]="true"
+              (onValueChanged)="onIconSelected($event.value)"
+              itemTemplate="iconItem"
+            >
+              <div *dxTemplate="let item of 'iconItem'" class="d-flex align-items-center gap-2">
+                <img *ngIf="item?.content" [src]="item.content" style="width: 24px; height: 24px;" />
+                <span>{{item?.name}}</span>
+              </div>
+            </dx-select-box>
+          </div>
+
 
           <div>
             <label>appearance</label>

@@ -20,13 +20,14 @@ import { CardWidgetAdditionalParameterSelectionTabComponent } from '@app/shared/
 import { CardWidgetChannelParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-channel-parameter-selection-tab/card-widget-channel-parameter-selection-tab.component';
 import { CardWidgetLogicalParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-logical-parameter-selection-tab/card-widget-logical-parameter-selection-tab.component';
 import { AddCardWidgetEventParameterEventCallBack, CardWidgetEventParameterSelectionTabComponent, EditCardWidgetEventParameterEventCallBack } from '@app/shared/common/components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-event-parameter-selection-tab/card-widget-event-parameter-selection-tab.component';
-import { finalize, Subscription } from 'rxjs';
+import { finalize, Subscription , of, switchMap, tap} from 'rxjs';
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
 import { CardWidgetConfigurationService } from '@app/shared/services/widget-configurations/card-widget-configuration.service';
 import { EditableTabComponentBaseComponent } from '@app/shared/common/components/parameter-selection-tabs/editable-tab-component-base';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateRangeSelectorComponent } from '@app/shared/common/components/date-range-selector/date-range-selector.component';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
+import { CardIconService } from '@app/shared/services/card-icon.service';
 
 @Component({
     selector: 'createOrEditCardConfiguration',
@@ -110,6 +111,7 @@ export class CreateOrEditCardConfigurationComponent
         private cardWidgetServiceProxy: CardWidgetConfigurationsServiceProxy,
         private cardWidgetConfigurationService: CardWidgetConfigurationService,
         private _customParameterService: CustomParameterService,
+        private cardIconService: CardIconService,
     ) {
         super(injector);
     }
@@ -393,41 +395,34 @@ export class CreateOrEditCardConfigurationComponent
 
     save() {
         this.saving = true;
+        const defaultIconId = this.extractDefaultIconId(this.parameters);
+        const sanitizedParameters = this.sanitizeParameters(this.parameters);
+        this.parameters = sanitizedParameters;
+
         this.cardWidgetConfiguration.dateRange = safeStringify(this.dateRangeSelectionState);
         this.cardWidgetConfiguration.parameters = safeStringify(this.parameters);
         this.cardWidgetConfiguration.refreshRate = this.refreshRateSelectionState;
         this.cardWidgetConfiguration.styleType = this.selectedCardStyle;
 
-        if (this.cardWidgetConfiguration.id) {
-            var sub = this.cardWidgetServiceProxy
-                .createOrEdit(this.cardWidgetConfiguration)
-                .pipe(
-                    finalize(() => {
-                        this.saving = false;
-                    }),
-                )
-                .subscribe((result) => {
-                    this.cardWidgetConfigurationService.update(this.cardWidgetConfiguration);
-                    this.hide(true);
-                    this.onSave.emit(this.cardWidgetConfiguration);
-                });
-            this.subs.push(sub);
-        } else {
-            var sub = this.cardWidgetServiceProxy
-                .createAndGetId(this.cardWidgetConfiguration)
-                .pipe(
-                    finalize(() => {
-                        this.saving = false;
-                    }),
-                )
-                .subscribe((result) => {
-                    this.cardWidgetConfiguration.id = result;
-                    this.cardWidgetConfigurationService.update(this.cardWidgetConfiguration);
-                    this.hide(true);
-                    this.onSave.emit(this.cardWidgetConfiguration);
-                });
-            this.subs.push(sub);
-        }
+        const saveRequest = this.cardWidgetConfiguration.id
+            ? this.cardWidgetServiceProxy.createOrEdit(this.cardWidgetConfiguration)
+            : this.cardWidgetServiceProxy
+                  .createAndGetId(this.cardWidgetConfiguration)
+                  .pipe(tap((result) => (this.cardWidgetConfiguration.id = result)));
+
+        const sub = (defaultIconId ? this.cardIconService.setDefaultIcon(defaultIconId) : of(null))
+            .pipe(
+                switchMap(() => saveRequest),
+                finalize(() => {
+                    this.saving = false;
+                }),
+            )
+            .subscribe(() => {
+                this.cardWidgetConfigurationService.update(this.cardWidgetConfiguration);
+                this.hide(true);
+                this.onSave.emit(this.cardWidgetConfiguration);
+            });
+        this.subs.push(sub);
     }
 
     onTabSelectionChanging(e: any) {
@@ -490,6 +485,40 @@ export class CreateOrEditCardConfigurationComponent
         this.additionalParameterSelectionTab.finishEdit();
         this.exceptionParameterSelectionTab.finishEdit();
         this.eventParameterSelectionTab.finishEdit();
+    }
+
+    private sanitizeParameters(parameters: WidgetParametersColumn[]): WidgetParametersColumn[] {
+        return parameters.map((parameter) => {
+            const icon = parameter.cardWidgetAdvancedSettings?.icon;
+            if (!icon) {
+                return parameter;
+            }
+
+            const sanitizedIcon = {
+                ...icon,
+                file: null,
+                setAsDefault: undefined,
+            };
+
+            return {
+                ...parameter,
+                cardWidgetAdvancedSettings: {
+                    ...parameter.cardWidgetAdvancedSettings,
+                    icon: sanitizedIcon,
+                } as CardWidgetAdvancedSettingsConfig,
+            };
+        });
+    }
+
+    private extractDefaultIconId(parameters: WidgetParametersColumn[]): number | null {
+        for (const parameter of parameters) {
+            const icon = parameter.cardWidgetAdvancedSettings?.icon;
+            if (icon?.setAsDefault && icon.id) {
+                return icon.id;
+            }
+        }
+
+        return null;
     }
 
     ngOnDestroy(): void {

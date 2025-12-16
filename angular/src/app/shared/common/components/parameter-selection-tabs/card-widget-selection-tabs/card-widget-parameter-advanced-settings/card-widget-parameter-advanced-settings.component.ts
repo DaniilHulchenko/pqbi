@@ -28,6 +28,8 @@ import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWid
 import { EventService } from '@app/shared/services/event-service.service';
 import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
 import { Subscription } from 'rxjs';
+import { CardIcon } from '@app/shared/interfaces/card-icon';
+import { CardIconService } from '@app/shared/services/card-icon.service';
 
 @Component({
     selector: 'cardWidgetParameterAdvancedSettings',
@@ -97,15 +99,35 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         colorMode: 'custom',
         customColor: '#000000',
     };
-    icon: { file: string; appearance: 'always' | 'limits'; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    icon: {
+        id?: number | null;
+        file: string;
+        name?: string | null;
+        appearance: 'always' | 'limits';
+        colorMode: 'scheme' | 'custom';
+        customColor: string;
+        setAsDefault?: boolean;
+    } = {
+        id: null,
         file: null,
+        name: null,
         appearance: 'always',
         colorMode: 'custom',
         customColor: '#000000',
+        setAsDefault: false,
     };
     link = { page: null };
 
+    availableIcons: CardIcon[] = [];
+    selectedIconPreview: string | null = null;
+    setAsDefaultIcon = false;
+    defaultIconId: number | null = null;
+
     decimalPointOptions = [0, 1, 2, 3];
+
+    get hasSelectedIcon(): boolean {
+        return !!(this.icon?.id || this.icon?.file);
+    }
 
     fontFamilies = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
 
@@ -145,16 +167,18 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         { value: 'MIN', text: 'Minimum' },
     ];
 
-    constructor(private _eventService: EventService, private dashboardPagesService: DashboardPagesService) {}
+constructor(
+        private _eventService: EventService,
+        private dashboardPagesService: DashboardPagesService,
+        private cardIconService: CardIconService,
+    ) {}
 
     onFileChanged(e: any) {
         const file = e.value[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                this.icon.file = reader.result as string;
-            };
-            reader.readAsDataURL(file);
+            this.cardIconService.uploadIcon(file).subscribe((icon) => {
+                this.applySelectedIcon(icon);
+            });
         }
     }
 
@@ -164,8 +188,14 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
             this.flaggingEvents = evts;
             this.flaggingEvents = uniqBy(this.flaggingEvents, (x) => x.eventClass);
         });
-            this.subscription = this.dashboardPagesService.getPages().subscribe((pages) => {
+        this.subscription = this.dashboardPagesService.getPages().subscribe((pages) => {
             this.pqbiPages = pages.map((page) => ({ id: page.id, name: page.name }));
+        });
+        this.cardIconService.getAvailableIcons().subscribe((icons) => (this.availableIcons = icons));
+        this.cardIconService.getDefaultIconId().subscribe((id) => {
+            this.defaultIconId = id;
+            this.setAsDefaultIcon = this.icon?.id === id;
+            this.ensurePreview();
         });
     }
 
@@ -193,6 +223,8 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
             this.decimalPoints = c.decimalPoints;
             this.link.page = c.linkPage;
             this.icon = this.normalizeIconSettings(c.icon);
+            this.setAsDefaultIcon = this.icon?.id != null && this.icon.id === this.defaultIconId;
+            this.ensurePreview();
             this.titleFont = this.normalizeFontSettings(c.titleFont, 16);
             this.valueFont = this.normalizeFontSettings(c.valueFont, 26);
         }
@@ -249,7 +281,7 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
             showNoDataColor: this.useNoDataColor,
             decimalPoints: this.decimalPoints,
             linkPage: this.link.page,
-            icon: this.icon,
+            icon: this.prepareIconForSave(),
             titleFont: this.titleFont,
             valueFont: this.valueFont,
         };
@@ -300,8 +332,67 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         this.decimalPoints = 2;
         this.link.page = null;
         this.icon = this.normalizeIconSettings(null);
+        this.setAsDefaultIcon = false;
+        this.selectedIconPreview = null;
         this.titleFont = this.normalizeFontSettings(null, 16);
         this.valueFont = this.normalizeFontSettings(null, 26);
+    }
+
+    onIconSelected(iconId: number) {
+        if (!iconId) {
+            this.resetIcon();
+            return;
+        }
+
+        const icon = this.availableIcons.find((i) => i.id === iconId);
+        if (icon) {
+            this.applySelectedIcon(icon);
+            return;
+        }
+
+        this.cardIconService.getIconById(iconId).subscribe((fetchedIcon) => {
+            if (fetchedIcon) {
+                this.applySelectedIcon(fetchedIcon);
+            }
+        });
+    }
+
+    resetIcon() {
+        this.icon = this.normalizeIconSettings({
+            appearance: this.icon.appearance,
+            colorMode: this.icon.colorMode,
+            customColor: this.icon.customColor,
+        });
+        this.setAsDefaultIcon = false;
+        this.selectedIconPreview = null;
+    }
+
+    private applySelectedIcon(icon: CardIcon) {
+        this.icon = {
+            ...this.icon,
+            id: icon.id,
+            name: icon.name,
+            file: icon.content,
+        };
+        this.selectedIconPreview = icon.content;
+        this.setAsDefaultIcon = false;
+    }
+
+    private ensurePreview() {
+        if (this.icon?.file) {
+            this.selectedIconPreview = this.icon.file;
+            return;
+        }
+
+        if (this.icon?.id) {
+            this.cardIconService.getIconById(this.icon.id).subscribe((icon) => {
+                if (icon) {
+                    this.selectedIconPreview = icon.content;
+                    this.icon.file = icon.content;
+                    this.icon.name = icon.name;
+                }
+            });
+        }
     }
 
     private normalizeFontSettings(
@@ -317,13 +408,45 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     }
 
     private normalizeIconSettings(
-        icon: { file?: string; appearance?: 'always' | 'limits'; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
-    ): { file: string; appearance: 'always' | 'limits'; colorMode: 'custom'; customColor: string } {
+icon:
+            | {
+                  id?: number | null;
+                  file?: string | null;
+                  name?: string | null;
+                  appearance?: 'always' | 'limits';
+                  colorMode?: 'scheme' | 'custom';
+                  customColor?: string;
+                  setAsDefault?: boolean;
+              }
+            | null,
+    ): {
+        id?: number | null;
+        file: string;
+        name?: string | null;
+        appearance: 'always' | 'limits';
+        colorMode: 'custom';
+        customColor: string;
+        setAsDefault?: boolean;
+    } {        
         return {
+            id: icon?.id ?? null,
             file: icon?.file ?? null,
+            name: icon?.name ?? null,
             appearance: icon?.appearance ?? 'always',
             colorMode: 'custom',
             customColor: icon?.customColor ?? '#000000',
+            setAsDefault: icon?.setAsDefault,
         };
+    }
+     private prepareIconForSave() {
+        return {
+            id: this.icon.id,
+            name: this.icon.name,
+            file: null,
+            appearance: this.icon.appearance,
+            colorMode: this.icon.colorMode,
+            customColor: this.icon.customColor,
+            setAsDefault: this.setAsDefaultIcon,
+        } as CardWidgetAdvancedSettingsConfig['icon'];
     }
 }

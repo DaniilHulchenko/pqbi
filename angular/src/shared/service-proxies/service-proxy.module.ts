@@ -70,6 +70,7 @@ import { PQBIInterceptor } from './pqbi-interceptor';
         { provide: AbpHttpConfigurationService, useClass: ZeroTemplateHttpConfigurationService },
         { provide: HTTP_INTERCEPTORS, useClass: PQBIInterceptor, multi: true },
         //{ provide: HTTP_INTERCEPTORS, useClass: AbpHttpInterceptor, multi: true },
+        ApiServiceProxies.FileInfosServiceProxy,
     ],
 })
 export class ServiceProxyModule {}

@@ -119,7 +119,15 @@ export class CardWidgetChannelParameterSelectionTabComponent
         showNoDataColor: false,
         decimalPoints: 2,
         linkPage: null,
-        icon: { file: null, appearance: 'always', colorMode: 'scheme', customColor: '#000000' },
+        icon: {
+            id: null,
+            file: null,
+            name: null,
+            appearance: 'always',
+            colorMode: 'scheme',
+            customColor: '#000000',
+            setAsDefault: false,
+        },
         titleFont: { family: '', size: 12, colorMode: 'scheme', customColor: '#000000' },
         valueFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
     };

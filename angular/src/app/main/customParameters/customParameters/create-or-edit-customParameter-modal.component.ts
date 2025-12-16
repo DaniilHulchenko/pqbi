@@ -65,7 +65,7 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
             { name: 'PERCENTILE' },
             //{ name: 'ABSOLUTE' },
             { name: 'COUNT' },
-            { name: 'ARITHMETICS' },
+            // { name: 'ARITHMETICS' },
             { name: 'SUM' },
             { name: 'MULT' },
             { name: 'RMS' },
@@ -147,6 +147,10 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
     //#region Getters / Setters
 
     get combinedAggregationFunctionValues(): string | null {
+        if (!this.selectedAggregationFunction) {
+            return null;
+        }
+
         return `${this.selectedAggregationFunction || ''}(${this.selectedAggregationFunctionArgument || ''})`;
         // if (['PERCENTILE', 'ARITHMETICS'].includes(this.selectedAggregationFunction)) {
         //     return `${this.selectedAggregationFunction || ''}(${this.selectedAggregationFunctionArgument || ''})`;
@@ -156,9 +160,10 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
     }
 
     get aggregationFunctions() {
-        return this.customParameter.type === 'MPSC'
-            ? this.aggregationFunctionOptions
-            : this.aggregationFunctionOptions.filter((func) => func.name !== 'ARITHMETICS');
+        // return this.customParameter.type === 'MPSC'
+        //     ? this.aggregationFunctionOptions
+        //     : this.aggregationFunctionOptions.filter((func) => func.name !== 'ARITHMETICS');
+        return this.aggregationFunctionOptions;
     }
 
     get isParameterSelectionEnabled(): boolean {
@@ -188,14 +193,33 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
     set combinedAggregationFunctionValues(value: string | null) {
         if (value) {
             const values = this.splitString(value);
+            if (!this.isAggregationFunctionAllowed(values[0])) {
+                this.resetAggregationSelection();
+                return;
+            }
             if (values.length === 2) {
                 this.selectedAggregationFunction = values[0];
                 this.selectedAggregationFunctionArgument = values[1];
                 this.selectedAggregationArgument_InNumber = +this.selectedAggregationFunctionArgument;
             } else {
                 this.selectedAggregationFunction = values[0] || null;
+                 this.selectedAggregationFunctionArgument = '';
+                this.selectedAggregationArgument_InNumber = null;
             }
+            } else {
+            this.resetAggregationSelection();
         }
+    }
+
+    private isAggregationFunctionAllowed(aggregationFunction: string | null | undefined): boolean {
+        return !!aggregationFunction && this.aggregationFunctionOptions.some((option) => option.name === aggregationFunction);
+    }
+
+    private resetAggregationSelection(): void {
+        this.selectedAggregationFunction = null;
+        this.selectedAggregationFunctionArgument = '';
+        this.selectedAggregationArgument_InNumber = null;
+        this.customParameter.aggregationFunction = null;
     }
 
     getIconClass(tabID: number): string {
@@ -354,7 +378,13 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
     }
 
     updateAggregationFunctionModel() {
-        if (!['ARITHMETICS', 'SUM', 'MULT', 'RMS'].includes(this.selectedAggregationFunction)) {
+        // if (!['ARITHMETICS', 'SUM', 'MULT', 'RMS'].includes(this.selectedAggregationFunction)) {
+        if (!this.isAggregationFunctionAllowed(this.selectedAggregationFunction)) {
+            this.resetAggregationSelection();
+            return;
+        }
+
+        if (!['SUM', 'MULT', 'RMS'].includes(this.selectedAggregationFunction)) {
             this.selectedAggregationFunctionArgument = '';
         }
         this.customParameter.aggregationFunction = this.combinedAggregationFunctionValues;
@@ -505,11 +535,11 @@ export class CreateOrEditCustomParameterModalComponent extends AppComponentBase 
                 isValid = false;
             }
         }
-        if(['ARITHMETICS'].includes(this.selectedAggregationFunction)){
-            if(!this.selectedAggregationFunctionArgument){
-                isValid = false;
-            }
-        }
+        // if(['ARITHMETICS'].includes(this.selectedAggregationFunction)){
+        //     if(!this.selectedAggregationFunctionArgument){
+        //         isValid = false;
+        //     }
+        // }
         if(this.parameters?.length < 1){
             isValid = false;
         }

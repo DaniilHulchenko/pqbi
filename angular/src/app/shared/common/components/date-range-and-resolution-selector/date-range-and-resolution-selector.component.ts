@@ -78,11 +78,11 @@ export class DateRangeAndResolutionSelectorComponent implements ControlValueAcce
     }
 
     get isValueValid(): boolean {
-        return !!this.resolutionValue;
+        return this.isAutoResolution || (!!this.resolutionValue && this.resolutionValue > 0);
     }
 
     get isRefreshRateCustomUnitValid(): boolean {
-        return !!this.resolutionUnit;
+        return this.resolutionUnit !== null && this.resolutionUnit !== undefined;
     }
 
     writeValue(value: DateRangeAndResolutionModel): void {
@@ -128,6 +128,10 @@ export class DateRangeAndResolutionSelectorComponent implements ControlValueAcce
     invokeOnChange() {
         var resoution;
 
+        if (this.isAutoResolution) {
+            this.resolutionValue = null;
+        }
+
         if (this.resolutionUnit === RefreshSelectionCustomUnits.Auto) {
             resoution = new ResolutionState({
                 resolutionUnit: ResolutionUnits.AUTO,
@@ -152,9 +156,15 @@ export class DateRangeAndResolutionSelectorComponent implements ControlValueAcce
     }
 
     isValid(): boolean {
+        const isResolutionValid =
+            this.isAutoResolution || (this.resolutionValue > 0 && this.resolutionUnit !== null && this.resolutionUnit !== undefined);
         return this.selectedMode === DateRangeType.Range
-            ? this.fromDate && this.toDate && this.fromDate < this.toDate && this.resolutionValue > 0 && !!this.resolutionUnit
-            : this.relativeValue > 0 && !!this.relativeUnit && this.resolutionValue > 0 && !!this.resolutionUnit;
+            ? this.fromDate && this.toDate && this.fromDate < this.toDate && isResolutionValid
+            : this.relativeValue > 0 && !!this.relativeUnit && isResolutionValid;
+    }
+
+    private get isAutoResolution(): boolean {
+        return this.resolutionUnit === RefreshSelectionCustomUnits.Auto;
     }
 
     private fillDateRangeOptions() {
