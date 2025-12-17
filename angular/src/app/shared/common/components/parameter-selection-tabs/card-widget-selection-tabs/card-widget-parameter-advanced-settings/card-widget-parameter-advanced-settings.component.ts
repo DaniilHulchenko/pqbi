@@ -31,6 +31,10 @@ import { Subscription } from 'rxjs';
 import { CardIcon } from '@app/shared/interfaces/card-icon';
 import { CardIconService } from '@app/shared/services/card-icon.service';
 
+type IconSettings = CardWidgetAdvancedSettingsConfig['icon'];
+type IconColorMode = IconSettings['colorMode'];
+type IconSettingsInput = (Partial<IconSettings> & { colorMode?: string | IconColorMode }) | null;
+
 @Component({
     selector: 'cardWidgetParameterAdvancedSettings',
     standalone: true,
@@ -103,24 +107,14 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         colorMode: 'custom',
         customColor: '#000000',
     };
-    icon: {
-        id?: number | null;
-        file: string | null;
-        name?: string | null;
-        size?: number | null;
-        sizeUnit?: string | null;
-        appearance: 'always' | 'limits';
-        colorMode: 'scheme' | 'custom';
-        customColor: string;
-        setAsDefault?: boolean;
-    } = {
+    icon: IconSettings = {
         id: null,
         file: null,
         name: null,
         size: this.defaultIconSize,
         sizeUnit: this.defaultIconSizeUnit,
         appearance: 'always',
-        colorMode: 'custom',
+        colorMode: this.normalizeColorMode(),
         customColor: '#000000',
         setAsDefault: false,
     };
@@ -423,21 +417,7 @@ constructor(
         };
     }
 
-    private normalizeIconSettings(
-        icon:
-            | {
-                  id?: number | null;
-                  file?: string | null;
-                  name?: string | null;
-                  size?: number | null;
-                  sizeUnit?: string | null;
-                  appearance?: 'always' | 'limits';
-                  colorMode?: 'scheme' | 'custom';
-                  customColor?: string;
-                  setAsDefault?: boolean;
-              }
-            | null,
-    ) {
+    private normalizeIconSettings(icon: IconSettingsInput): IconSettings {
         return {
             id: icon?.id ?? null,
             file: icon?.file ?? null,
@@ -445,12 +425,17 @@ constructor(
             size: icon?.size ?? this.defaultIconSize,
             sizeUnit: icon?.sizeUnit ?? this.defaultIconSizeUnit,
             appearance: icon?.appearance ?? 'always',
-            colorMode: 'custom',
+            colorMode: this.normalizeColorMode(icon?.colorMode),
             customColor: icon?.customColor ?? '#000000',
             setAsDefault: icon?.setAsDefault,
         };
     }
-    private prepareIconForSave() {
+
+    private normalizeColorMode(colorMode?: string | IconColorMode): IconColorMode {
+        return colorMode === 'custom' ? 'custom' : 'scheme';
+    }
+
+    private prepareIconForSave(): IconSettings {
         return {
             id: this.icon.id,
             name: this.icon.name,
@@ -461,6 +446,6 @@ constructor(
             colorMode: this.icon.colorMode,
             customColor: this.icon.customColor,
             setAsDefault: this.setAsDefaultIcon,
-        } as CardWidgetAdvancedSettingsConfig['icon'];
+        };
     }
 }
