@@ -63,10 +63,20 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     navigationPageId: string | null = null;
     canNavigateToPage = false;
 
+    readonly defaultIconSize = 32;
+    readonly defaultIconUnit = 'px';
+
     calculatedColorSchema: string | null;
 
     private stopStream$ = new Subject();
     private subs: Subscription[] = [];
+
+    get iconSize(): string {
+        const iconSettings = this.parameter?.cardWidgetAdvancedSettings?.icon;
+        const sizeValue = iconSettings?.size && iconSettings.size > 0 ? iconSettings.size : this.defaultIconSize;
+        const sizeUnit = iconSettings?.sizeUnit ?? this.defaultIconUnit;
+        return `${sizeValue}${sizeUnit}`;
+    }
 
     constructor(
         injector: Injector,
