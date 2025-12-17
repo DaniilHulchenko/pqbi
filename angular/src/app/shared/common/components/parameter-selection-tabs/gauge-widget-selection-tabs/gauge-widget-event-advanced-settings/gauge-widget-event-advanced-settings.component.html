@@ -8,11 +8,11 @@
   width="80vw"
 >
   <dx-scroll-view>
-    <div style="margin: 20px; display: flex; gap: 40px; flex-wrap: wrap">
+    <div class="advanced-settings-layout">
       <!-- Left block -->
-      <h5>Name</h5>
-      <dx-text-box [(value)]="parameterName" placeholder="Parameter name"></dx-text-box>
-      <div style="flex: 1; min-width: 300px;">
+      <div class="settings-column">
+        <h5>Name</h5>
+        <dx-text-box [(value)]="parameterName" placeholder="Parameter name"></dx-text-box>
         <h5>Normalize Values:</h5>
         <div *ngFor="let opt of normalizationOptions" class="mb-2">
           <p-checkbox
@@ -32,17 +32,17 @@
           class="mt-2"
         ></dx-number-box>
 
-        <h5 class="mt-4">Set Color Schemes:</h5>
+        <h5>Set Color Schemes:</h5>
         <h6>Select Out of Limit Mode:</h6>
 
         <div class="d-flex flex-column gap-1 mb-2">
           <p-radioButton name="colorMode" [value]="colorSchemaTypes.None" [(ngModel)]="colorScheme"
             label="No color highlight"></p-radioButton>
-        
+
           <p-radioButton name="colorMode" [value]="colorSchemaTypes.OutOfLimit" [(ngModel)]="colorScheme"
             label="Out of limits color"></p-radioButton>
         </div>
-        
+
         <div *ngIf="colorScheme === colorSchemaTypes.OutOfLimit" class="mt-2">
           <dx-color-box [(value)]="outOfLimitColor" placeholder="Out-of-limit Color"></dx-color-box>
         </div>
@@ -95,14 +95,14 @@
 
         <!-- Markers Section -->
         <h5>Markers</h5>
-        <div class="row mb-3">
-          <div class="col-2">
+        <div class="row g-3 align-items-center marker-row">
+          <div class="col-sm-6 col-lg-4">
             <label>Marker1:</label>
             <dx-select-box [items]="markerOptions" [(value)]="marker1" valueExpr="value" displayExpr="text">
             </dx-select-box>
           </div>
 
-          <div class="col-2">
+          <div class="col-sm-6 col-lg-4">
             <label>Marker2:</label>
             <dx-select-box [items]="markerOptions" [(value)]="marker2" valueExpr="value" displayExpr="text">
             </dx-select-box>
@@ -125,7 +125,7 @@
       </div>
 
       <!-- right block -->
-      <div style="flex: 1; min-width: 300px;">
+      <div class="settings-column">
 
         <gaugeWidgetSegmentationSettings
           #segmentation

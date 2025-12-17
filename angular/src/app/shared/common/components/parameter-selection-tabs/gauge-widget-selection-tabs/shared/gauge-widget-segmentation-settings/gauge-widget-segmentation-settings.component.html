@@ -1,13 +1,29 @@
 <h3>Segmentation:</h3>
 <div class="segmentation">
   <div class="form">
-    <dx-text-box [(value)]="name" placeholder="Name"></dx-text-box>
-    <dx-number-box [(value)]="from" placeholder="Start Value"></dx-number-box>
-    <dx-number-box [(value)]="to" placeholder="End Value"></dx-number-box>
-    <dx-number-box [(value)]="weight" placeholder="Weight %" [step]="0.1" [min]="0.1" [showSpinButtons]="true"
-      hint="How much of the gauge this segment occupies visually." [focusStateEnabled]="true"></dx-number-box>
+    <div class="form-row">
+      <label>Name:</label>
+      <dx-text-box [(value)]="name"></dx-text-box>
+    </div>
+    <div class="form-row">
+      <label>Start Value:</label>
+      <dx-number-box [(value)]="from"></dx-number-box>
+    </div>
+    <div class="form-row">
+      <label>End Value:</label>
+      <dx-number-box [(value)]="to"></dx-number-box>
+    </div>
+    <div class="form-row">
+      <label>Weight %:</label>
+      <div class="form-control-stack">
+        <dx-number-box [(value)]="weight" [step]="0.1" [min]="0.1" [showSpinButtons]="true"
+          [focusStateEnabled]="true"></dx-number-box>
+        <div class="form-hint">How much of the gauge this segment occupies visually.</div>
+      </div>
+    </div>
 
-    <div class="mt-2">
+    <div class="form-row">
+      <label>Color:</label>
       <dx-color-box [(value)]="color"></dx-color-box>
     </div>
 

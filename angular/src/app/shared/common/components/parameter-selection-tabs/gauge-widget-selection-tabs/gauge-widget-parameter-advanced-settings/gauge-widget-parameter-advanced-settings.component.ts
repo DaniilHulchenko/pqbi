@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -55,7 +55,7 @@ import { Subscription } from 'rxjs';
     templateUrl: './gauge-widget-parameter-advanced-settings.component.html',
     styleUrl: './gauge-widget-parameter-advanced-settings.component.css',
 })
-export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy {
+export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
     @Output() advancedSettingsChanged = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
     @Input() config: GaugeWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
@@ -157,6 +157,15 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         });
     }
 
+    ngAfterViewInit(): void {
+        Promise.resolve().then(() => {
+            if (this.segmentationComponent) {
+                this.isSegmentsValid = this.segmentationComponent.canSave;
+                this.totalWeight = this.segmentationComponent.totalWeight;
+            }
+        });
+    }
+
     ngOnChanges(changes: SimpleChanges) {
         if (changes.config && this.config) {
             const c = this.config;
@@ -171,9 +180,9 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
             this.link.page = c.linkPage;
             this.titleFont = this.normalizeFontSettings(c.titleFont, 20);
             this.valueFont = this.normalizeFontSettings(c.valueFont, 20);
-            this.isSegmentsValid = false;
-            this.totalWeight = 0;
             this.segments = c.segments ? c.segments.map((segment) => ({ ...segment })) : [];
+            this.totalWeight = this.calculateTotalWeight(this.segments);
+            this.isSegmentsValid = this.calculateSegmentsValidity(this.segments);
             this.unitType = c.unit?.unitType || 'auto';
             this.selectedUnit = c.unit?.selectedUnit || '';
             this.marker1 = c.marker1 || null;
@@ -211,6 +220,8 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
 
     onSegmentsChange(segments: Segment[]) {
         this.segments = segments.map((segment) => ({ ...segment }));
+        this.totalWeight = this.calculateTotalWeight(this.segments);
+        this.isSegmentsValid = this.segmentationComponent?.canSave ?? this.calculateSegmentsValidity(this.segments);
     }
 
 
@@ -274,7 +285,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     }
 
     get canSave(): boolean {
-        return this.isSegmentsValid;
+        return this.segmentationComponent?.canSave ?? this.isSegmentsValid;
     }
 
     get minScale(): number | null {
@@ -320,6 +331,23 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         this.marker2 = null;
         this.colorScheme = ColorSchema.None;
         this.outOfLimitColor = '';
+    }
+
+    private calculateSegmentsValidity(segments: Segment[]): boolean {
+        if (!segments?.length) {
+            return false;
+        }
+
+        const sorted = [...segments].sort((a, b) => (a.from === b.from ? a.to - b.to : a.from - b.from));
+        const hasInvalidRange = sorted.some((segment) => segment.from == null || segment.to == null || segment.from >= segment.to);
+        const hasOverlap = sorted.some((segment, index) => index > 0 && segment.from < sorted[index - 1].to);
+        const totalWeight = this.calculateTotalWeight(sorted);
+
+        return !hasInvalidRange && Math.abs(totalWeight - 100) < 0.01 && !hasOverlap;
+    }
+
+    private calculateTotalWeight(segments: Segment[]): number {
+        return segments.reduce((sum, segment) => sum + (segment.weight ?? 0), 0);
     }
     private normalizeFontSettings(
         font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,

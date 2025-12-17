@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -46,7 +46,7 @@ import { Subscription } from 'rxjs';
     templateUrl: './gauge-widget-event-advanced-settings.component.html',
     styleUrl: './gauge-widget-event-advanced-settings.component.css',
 })
-    export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy {
+export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
     @Input() config: GaugeWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<GaugeWidgetAdvancedSettingsConfig>();
 
@@ -139,6 +139,15 @@ import { Subscription } from 'rxjs';
         });
     }
 
+    ngAfterViewInit(): void {
+        Promise.resolve().then(() => {
+            if (this.segmentationComponent) {
+                this.isSegmentsValid = this.segmentationComponent.canSave;
+                this.totalWeight = this.segmentationComponent.totalWeight;
+            }
+        });
+    }
+
     ngOnChanges(changes: SimpleChanges) {
         if (changes.config && this.config) {
             const c = this.config;
@@ -152,9 +161,9 @@ import { Subscription } from 'rxjs';
             this.link.page = c.linkPage;
             this.titleFont = this.normalizeFontSettings(c.titleFont, 20);
             this.valueFont = this.normalizeFontSettings(c.valueFont, 20);
-            this.isSegmentsValid = false;
-            this.totalWeight = 0;
             this.segments = c.segments ? c.segments.map((segment) => ({ ...segment })) : [];
+            this.totalWeight = this.calculateTotalWeight(this.segments);
+            this.isSegmentsValid = this.calculateSegmentsValidity(this.segments);
             this.unitType = c.unit?.unitType || 'auto';
             this.selectedUnit = c.unit?.selectedUnit || '';
             this.marker1 = c.marker1 || null;
@@ -192,6 +201,8 @@ import { Subscription } from 'rxjs';
 
     onSegmentsChange(segments: Segment[]) {
         this.segments = segments.map((segment) => ({ ...segment }));
+        this.totalWeight = this.calculateTotalWeight(this.segments);
+        this.isSegmentsValid = this.segmentationComponent?.canSave ?? this.calculateSegmentsValidity(this.segments);
     }
 
     onSegmentsValidityChange(isValid: boolean) {
@@ -236,7 +247,7 @@ import { Subscription } from 'rxjs';
     }
 
     get canSave(): boolean {
-        return this.isSegmentsValid;
+        return this.segmentationComponent?.canSave ?? this.isSegmentsValid;
     }
 
     private reset() {
@@ -270,5 +281,22 @@ import { Subscription } from 'rxjs';
             colorMode: 'custom',
             customColor: font?.customColor ?? '#000000',
         };
+    }
+
+    private calculateSegmentsValidity(segments: Segment[]): boolean {
+        if (!segments?.length) {
+            return false;
+        }
+
+        const sorted = [...segments].sort((a, b) => (a.from === b.from ? a.to - b.to : a.from - b.from));
+        const hasInvalidRange = sorted.some((segment) => segment.from == null || segment.to == null || segment.from >= segment.to);
+        const hasOverlap = sorted.some((segment, index) => index > 0 && segment.from < sorted[index - 1].to);
+        const totalWeight = this.calculateTotalWeight(sorted);
+
+        return !hasInvalidRange && Math.abs(totalWeight - 100) < 0.01 && !hasOverlap;
+    }
+
+    private calculateTotalWeight(segments: Segment[]): number {
+        return segments.reduce((sum, segment) => sum + (segment.weight ?? 0), 0);
     }
 }

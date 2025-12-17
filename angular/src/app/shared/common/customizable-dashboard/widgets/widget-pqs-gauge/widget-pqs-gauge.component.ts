@@ -858,6 +858,15 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         abp.event.trigger('app.dashboard.navigateToPage', this.navigationPageId);
     }
 
+    onWidgetClick(event: MouseEvent): void {
+        if (this.editState || !this.canNavigateToPage) {
+            return;
+        }
+
+        event.stopPropagation();
+        this.onNavigateToPage();
+    }
+
     private setNavigationTarget(): void {
         this.navigationPageId = this.parameter?.gaugeWidgetAdvancedSettings?.linkPage ?? null;
         this.updateNavigationAvailability();

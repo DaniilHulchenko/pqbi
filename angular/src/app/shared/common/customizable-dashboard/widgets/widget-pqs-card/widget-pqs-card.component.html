@@ -1,16 +1,14 @@
-<div class="kt-portlet kt-portlet--height-fluid">
+<div
+    class="kt-portlet kt-portlet--height-fluid"
+    (click)="onWidgetClick($event)"
+    [class.widget-link-enabled]="canNavigateToPage && !editState"
+    [attr.role]="canNavigateToPage && !editState ? 'button' : null"
+    [attr.tabindex]="canNavigateToPage && !editState ? '0' : null"
+>
     <div class="kt-portlet__head">
         <div class="kt-portlet__head-label">
             <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
-                {{ widgetConfigurationInDB?.name }}
-                <button
-                    class="btn btn-outline-primary btn-sm"
-                    *ngIf="canNavigateToPage"
-                    (click)="onNavigateToPage()"
-                    title="Navigate to page"
-                >
-                    <i class="fa fa-arrow-right"></i>
-                </button>
+                {{ widgetDisplayName }}
             </h3>
         </div>
     </div>

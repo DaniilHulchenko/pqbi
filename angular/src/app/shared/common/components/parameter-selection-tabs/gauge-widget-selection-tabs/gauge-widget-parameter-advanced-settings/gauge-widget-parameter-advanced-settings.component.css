@@ -45,3 +45,37 @@
 .scale-range ::ng-deep .dx-texteditor-input {
   cursor: default;
 }
+
+.advanced-settings-layout {
+  margin: 20px;
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.settings-column {
+  flex: 1;
+  min-width: 320px;
+}
+
+.settings-column h5 {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.settings-column h5:first-of-type {
+  margin-top: 0;
+}
+
+.settings-column h6 {
+  margin-top: 14px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.marker-row label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}

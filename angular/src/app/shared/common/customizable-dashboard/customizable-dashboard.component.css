@@ -159,6 +159,21 @@ input:checked + .slider:before {
   z-index: 2;
 }
 
+.dashboard-actions .font-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.dashboard-actions .font-size-control select {
+  min-width: 140px;
+}
+
+.dashboard-actions .font-size-control.invisible {
+  visibility: hidden;
+}
+
 @media (max-width: 991.98px) {
   .dashboard-actions {
     position: static;
@@ -209,6 +224,7 @@ input:checked + .slider:before {
   min-height: 0;
   height: 100% ;
   background: none;
+  width: 100%;
 }
 
 .dashboard-grid.no-tab{
@@ -223,6 +239,10 @@ input:checked + .slider:before {
 :host ::ng-deep .dashboard-grid .gridster-column {
     border-left: 1px dotted #c1c1c1 !important;
     border-right: 1px dotted #c1c1c1 !important;
+}
+
+:host ::ng-deep gridster {
+  width: 100% !important;
 }
 
 .div-dashboard-customization {
