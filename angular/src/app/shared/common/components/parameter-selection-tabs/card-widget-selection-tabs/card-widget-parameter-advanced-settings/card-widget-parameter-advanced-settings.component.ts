@@ -122,6 +122,7 @@ export class CardWidgetParameterAdvancedSettingsComponent
     setAsDefaultIcon = false;
     defaultIconId: number | null = null;
     uploadFailedMessage = '';
+    isUploadFailed = false;
 
     decimalPointOptions = [0, 1, 2, 3];
 
@@ -177,14 +178,26 @@ constructor(
     }
 
     onFileChanged(e: any) {
-        const file = e.value[0];
+        const file = e.value?.[0];
+        this.isUploadFailed = false;
+
         if (!file) {
             return;
         }
 
+        const uploader = e.component;
+
         this.cardIconService.uploadIcon(file).subscribe({
-            next: (icon) => this.applySelectedIcon(icon),
-            error: () => this.notify.error(this.uploadFailedMessage),
+            next: (icon) => {
+                this.applySelectedIcon(icon);
+                this.isUploadFailed = false;
+                uploader?.reset();
+            },
+            error: () => {
+                this.isUploadFailed = true;
+                this.notify.error(this.uploadFailedMessage);
+                uploader?.reset();
+            },
         });
     }
 
@@ -343,6 +356,7 @@ constructor(
         this.selectedIconPreview = null;
         this.titleFont = this.normalizeFontSettings(null, 16);
         this.valueFont = this.normalizeFontSettings(null, 26);
+        this.isUploadFailed = false;
     }
 
     onIconSelected(iconId: number) {
