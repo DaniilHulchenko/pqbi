@@ -38,6 +38,8 @@ export interface CardWidgetAdvancedSettingsConfig {
         id?: number | null;
         file?: string | null;
         name?: string | null;
+        size?: number | null;
+        sizeUnit?: string | null;
         appearance: 'always' | 'limits';
         colorMode: 'scheme' | 'custom';
         customColor: string;

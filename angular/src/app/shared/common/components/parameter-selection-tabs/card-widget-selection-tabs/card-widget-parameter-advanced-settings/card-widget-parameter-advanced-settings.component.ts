@@ -58,6 +58,10 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     @Input() config: CardWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<CardWidgetAdvancedSettingsConfig>();
 
+    readonly defaultIconSize = 32;
+    readonly defaultIconSizeUnit = 'px';
+    readonly iconSizeUnits = ['px', 'em', 'rem', '%', 'vw', 'vh', 'vmin', 'vmax'];
+
     modalVisible = false;
     parameterName = '';
     normalizationOptions: any[];
@@ -101,8 +105,10 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     };
     icon: {
         id?: number | null;
-        file: string;
+        file: string | null;
         name?: string | null;
+        size?: number | null;
+        sizeUnit?: string | null;
         appearance: 'always' | 'limits';
         colorMode: 'scheme' | 'custom';
         customColor: string;
@@ -111,6 +117,8 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
         id: null,
         file: null,
         name: null,
+        size: this.defaultIconSize,
+        sizeUnit: this.defaultIconSizeUnit,
         appearance: 'always',
         colorMode: 'custom',
         customColor: '#000000',
@@ -130,6 +138,12 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     }
 
     fontFamilies = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
+
+    get iconSizeValue(): string {
+        const size = this.icon?.size ?? this.defaultIconSize;
+        const unit = this.icon?.sizeUnit ?? this.defaultIconSizeUnit;
+        return `${size}${unit}`;
+    }
 
 
     appearanceOptions = [
@@ -362,6 +376,8 @@ constructor(
             appearance: this.icon.appearance,
             colorMode: this.icon.colorMode,
             customColor: this.icon.customColor,
+            size: this.icon.size,
+            sizeUnit: this.icon.sizeUnit,
         });
         this.setAsDefaultIcon = false;
         this.selectedIconPreview = null;
@@ -408,41 +424,39 @@ constructor(
     }
 
     private normalizeIconSettings(
-icon:
+        icon:
             | {
                   id?: number | null;
                   file?: string | null;
                   name?: string | null;
+                  size?: number | null;
+                  sizeUnit?: string | null;
                   appearance?: 'always' | 'limits';
                   colorMode?: 'scheme' | 'custom';
                   customColor?: string;
                   setAsDefault?: boolean;
               }
             | null,
-    ): {
-        id?: number | null;
-        file: string;
-        name?: string | null;
-        appearance: 'always' | 'limits';
-        colorMode: 'custom';
-        customColor: string;
-        setAsDefault?: boolean;
-    } {        
+    ) {
         return {
             id: icon?.id ?? null,
             file: icon?.file ?? null,
             name: icon?.name ?? null,
+            size: icon?.size ?? this.defaultIconSize,
+            sizeUnit: icon?.sizeUnit ?? this.defaultIconSizeUnit,
             appearance: icon?.appearance ?? 'always',
             colorMode: 'custom',
             customColor: icon?.customColor ?? '#000000',
             setAsDefault: icon?.setAsDefault,
         };
     }
-     private prepareIconForSave() {
+    private prepareIconForSave() {
         return {
             id: this.icon.id,
             name: this.icon.name,
             file: null,
+            size: this.icon.size,
+            sizeUnit: this.icon.sizeUnit,
             appearance: this.icon.appearance,
             colorMode: this.icon.colorMode,
             customColor: this.icon.customColor,

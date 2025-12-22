@@ -127,6 +127,8 @@ export class CardWidgetLogicalParameterSelectionTabComponent
             id: null,
             file: null,
             name: null,
+            size: 32,
+            sizeUnit: 'px',
             appearance: 'always',
             colorMode: 'scheme',
             customColor: '#000000',

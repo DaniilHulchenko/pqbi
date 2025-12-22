@@ -67,11 +67,15 @@
             </dx-file-uploader>
           </div>
 
-          <div class="d-flex flex-column gap-2" *ngIf="hasSelectedIcon">
-            <div class="d-flex align-items-center gap-3">
-              <img *ngIf="selectedIconPreview || icon.file" [src]="selectedIconPreview || icon.file" style="width: 32px; height: 32px;" />
-              <span>{{ icon.name || 'Selected icon' }}</span>
-            </div>
+            <div class="d-flex flex-column gap-2" *ngIf="hasSelectedIcon">
+              <div class="d-flex align-items-center gap-3">
+                <img
+                  *ngIf="selectedIconPreview || icon.file"
+                  [src]="selectedIconPreview || icon.file"
+                  [ngStyle]="{ width: iconSizeValue, height: iconSizeValue }"
+                />
+                <span>{{ icon.name || 'Selected icon' }}</span>
+              </div>
 
             <div class="d-flex align-items-center gap-3">
               <p-checkbox
@@ -104,12 +108,31 @@
               itemTemplate="iconItem"
             >
               <div *dxTemplate="let item of 'iconItem'" class="d-flex align-items-center gap-2">
-                <img *ngIf="item?.content" [src]="item.content" style="width: 24px; height: 24px;" />
+                <img *ngIf="item?.content" [src]="item.content" [ngStyle]="{ width: iconSizeValue, height: iconSizeValue }" />
                 <span>{{item?.name}}</span>
               </div>
             </dx-select-box>
           </div>
 
+          <div class="d-flex gap-3 align-items-end">
+            <div class="d-flex flex-column flex-grow-1">
+              <label>Size</label>
+              <dx-number-box
+                [(value)]="icon.size"
+                [min]="1"
+                [showSpinButtons]="true"
+                placeholder="Icon size"
+              ></dx-number-box>
+            </div>
+            <div class="d-flex flex-column">
+              <label>Unit</label>
+              <dx-select-box
+                [items]="iconSizeUnits"
+                [(value)]="icon.sizeUnit"
+                placeholder="Unit"
+              ></dx-select-box>
+            </div>
+          </div>
 
           <div>
             <label>appearance</label>
