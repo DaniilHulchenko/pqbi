@@ -1,12 +1,21 @@
- body {
-     display: flex;
-     justify-content: center;
-     align-items: center;
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
      height: 100vh;
-     margin: 0;
-     font-family: Arial, sans-serif;
-     background: #fff;
- }
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fff;
+}
+
+.widget-link-enabled {
+    cursor: pointer;
+}
+
+.widget-link-enabled:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
 
  .gauge-container {
      text-align: center;

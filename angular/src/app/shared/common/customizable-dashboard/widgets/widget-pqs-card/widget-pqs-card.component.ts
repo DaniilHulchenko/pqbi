@@ -58,6 +58,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     titleFontFamily = '';
     titleFontColor = '#000';
     widgetNameFontSize?: string;
+    widgetDisplayName = '';
     iconColor: string = '#5b9bd5';
     isIconVisible: boolean = true;
     navigationPageId: string | null = null;
@@ -86,6 +87,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
     ngOnInit(): void {
         super.ngOnInit();
+        this.widgetDisplayName = this.widgetConfigurationInDB?.name ?? this._defaultWidgetName;
         this.subs.push(
             this.dashboardPagesService.getPages().subscribe(() => this.updateNavigationAvailability()),
         );
@@ -133,6 +135,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                 .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.cardWidgetConfiguration = result.cardWidgetConfiguration;
+                    this.widgetDisplayName = this.widgetConfigurationInDB?.name ?? this.widgetDisplayName;
                     if (this.cardWidgetConfiguration) {
                         let parameters = JSON.parse(this.cardWidgetConfiguration.parameters);
                         this.parameter = parameters.at(0);
@@ -473,6 +476,20 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         }
 
         abp.event.trigger('app.dashboard.navigateToPage', this.navigationPageId);
+    }
+
+    override saveName(newName: string) {
+        this.widgetDisplayName = newName;
+        super.saveName(newName);
+    }
+
+    onWidgetClick(event: MouseEvent): void {
+        if (this.editState || !this.canNavigateToPage) {
+            return;
+        }
+
+        event.stopPropagation();
+        this.onNavigateToPage();
     }
 
     private setNavigationTarget(): void {

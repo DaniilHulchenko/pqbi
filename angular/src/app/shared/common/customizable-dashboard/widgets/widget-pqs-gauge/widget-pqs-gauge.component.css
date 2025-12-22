@@ -1,8 +1,17 @@
 .widget-full-height {
-	height: 100%;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+}
+
+.widget-link-enabled {
+        cursor: pointer;
+}
+
+.widget-link-enabled:focus {
+        outline: 2px solid #0d6efd;
+        outline-offset: 2px;
 }
 .gauge-body-flex {
 	display: flex;

@@ -98,6 +98,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     myinjector: Injector;
 
     widgetNameFontSizes = [12, 14, 16, 18, 20, 22, 24];
+    readonly defaultWidgetTitleSize = 20;
+    widgetTitleSizeLabel = 'WidgetTitleSize';
 
     constructor(
         private _injector: Injector,
@@ -110,6 +112,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         private dashboardConfigurationService: DashboardConfigurationService,
     ) {
         super(_injector);
+        this.widgetTitleSizeLabel = this.getWidgetTitleSizeLabel();
     }
 
         requestWidgetEdit(widget: any): void {
@@ -417,6 +420,16 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                 }
             });
         }
+    }
+
+    private getWidgetTitleSizeLabel(): string {
+        const label = this.l('WidgetTitleSize');
+
+        if (!label || label.startsWith('[')) {
+            return 'WidgetTitleSize';
+        }
+
+        return label;
     }
 
     openAddWidgetModal(): void {
