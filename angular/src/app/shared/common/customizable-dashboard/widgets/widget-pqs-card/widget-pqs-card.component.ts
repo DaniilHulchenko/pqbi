@@ -66,6 +66,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     canNavigateToPage = false;
 
     calculatedColorSchema: string | null;
+    private defaultIconColor = '#5b9bd5';
 
     private stopStream$ = new Subject();
     private subs: Subscription[] = [];
@@ -140,6 +141,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                     if (this.cardWidgetConfiguration) {
                         let parameters = JSON.parse(this.cardWidgetConfiguration.parameters);
                         this.parameter = parameters.at(0);
+                        this.calculatedColorSchema = null;
+                        this.resetFontSettings();
+                        this.applyFontSettings(this.parameter.cardWidgetAdvancedSettings, null);
                         this.loadIconForParameter(this.parameter);
                         this.setNavigationTarget();
                         this.fetch();
@@ -365,8 +369,6 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         this.calculatedColorSchema = getColorSchema(responseItem.calculated, this.parameter.cardWidgetAdvancedSettings);
 
         if (this.calculatedColorSchema != null) {
-            this.titleFontColor = this.calculatedColorSchema;
-            this.valueFontColor = this.calculatedColorSchema;
             this.iconColor = this.calculatedColorSchema;
         }
 
@@ -378,28 +380,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             this.isIconVisible = false;
         }
 
-        const titleFontSizeSetting = this.parameter.cardWidgetAdvancedSettings?.titleFont?.size;
-        this.localWidgetNameFontSize = titleFontSizeSetting ?? undefined;
-
-        this.titleFontSize = titleFontSizeSetting
-            ? `${titleFontSizeSetting}px`
-            : this.titleFontSize;
-        this.titleFontColor =
-            this.parameter.cardWidgetAdvancedSettings?.titleFont?.colorMode === 'custom'
-                ? this.parameter.cardWidgetAdvancedSettings?.titleFont?.customColor
-                : this.titleFontColor;
-        this.titleFontFamily =
-            this.parameter.cardWidgetAdvancedSettings?.titleFont?.family || this.titleFontFamily;
-        this.widgetNameFontSize = this.resolveWidgetNameFontSize(titleFontSizeSetting, this.widgetNameFontSize);
-
-        this.valueFontSize = this.parameter.cardWidgetAdvancedSettings?.valueFont?.size
-            ? `${this.parameter.cardWidgetAdvancedSettings?.valueFont?.size}px`
-            : this.valueFontSize;
-        this.valueFontColor =
-            this.parameter.cardWidgetAdvancedSettings?.valueFont?.colorMode === 'custom'
-                ? this.parameter.cardWidgetAdvancedSettings?.valueFont?.customColor
-                : this.valueFontColor;
-        this.valueFontFamily = this.parameter.cardWidgetAdvancedSettings?.valueFont?.family;
+        this.applyFontSettings(this.parameter.cardWidgetAdvancedSettings, this.calculatedColorSchema);
         this.iconColor =
             this.parameter.cardWidgetAdvancedSettings?.icon?.colorMode === 'custom'
                 ? this.parameter.cardWidgetAdvancedSettings?.icon?.customColor
@@ -418,6 +399,52 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         }
 
         return defaultSize;
+    }
+
+    private resetFontSettings(): void {
+        this.titleFontSize = '1.2em';
+        this.titleFontFamily = '';
+        this.titleFontColor = '#000';
+        this.valueFontSize = '2.2em';
+        this.valueFontFamily = '';
+        this.valueFontColor = '#000';
+        this.localWidgetNameFontSize = undefined;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize();
+        this.iconColor = this.defaultIconColor;
+    }
+
+    private applyFontSettings(
+        settings: CardWidgetAdvancedSettingsConfig | undefined,
+        colorSchema: string | null,
+    ): void {
+        if (!settings) {
+            return;
+        }
+
+        const titleFontSizeSetting = settings.titleFont?.size;
+        this.localWidgetNameFontSize = titleFontSizeSetting ?? this.localWidgetNameFontSize;
+        if (titleFontSizeSetting) {
+            this.titleFontSize = `${titleFontSizeSetting}px`;
+        }
+
+        const resolvedSchema = colorSchema ?? this.calculatedColorSchema;
+
+        this.titleFontColor =
+            settings.titleFont?.colorMode === 'custom'
+                ? settings.titleFont?.customColor
+                : resolvedSchema ?? this.titleFontColor;
+        this.titleFontFamily = settings.titleFont?.family || this.titleFontFamily;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize(titleFontSizeSetting, this.widgetNameFontSize);
+
+        if (settings.valueFont?.size) {
+            this.valueFontSize = `${settings.valueFont.size}px`;
+        }
+
+        this.valueFontColor =
+            settings.valueFont?.colorMode === 'custom'
+                ? settings.valueFont?.customColor
+                : resolvedSchema ?? this.valueFontColor;
+        this.valueFontFamily = settings.valueFont?.family ?? this.valueFontFamily;
     }
 
     private prepareDataRange(): [DateTime, DateTime] {
