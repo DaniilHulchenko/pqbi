@@ -95,6 +95,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     titleFontColor = '#000';
     widgetNameFontSize?: string;
     private localWidgetNameFontSize?: number;
+    private readonly defaultTitleFontSize = 20;
 
     calculatedColorSchema: string | null;
    
@@ -455,21 +456,21 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     }
 
     protected override resolveWidgetNameFontSize(localSize?: number, defaultSize?: string): string | undefined {
-        const effectiveLocalSize = localSize ?? this.localWidgetNameFontSize;
-
-        if (effectiveLocalSize) {
+        const effectiveLocalSize = this.normalizeFontSize(localSize ?? this.localWidgetNameFontSize);
+        if (effectiveLocalSize !== undefined) {
             return `${effectiveLocalSize}px`;
         }
 
-        if (this.globalWidgetNameFontSize) {
-            return `${this.globalWidgetNameFontSize}px`;
+        const normalizedGlobalSize = this.normalizeFontSize(this.globalWidgetNameFontSize);
+        if (normalizedGlobalSize !== undefined) {
+            return `${normalizedGlobalSize}px`;
         }
 
         return defaultSize;
     }
 
     private resetFontSettings(): void {
-        this.titleFontSize = 20;
+        this.titleFontSize = this.defaultTitleFontSize;
         this.titleFontFamily = '';
         this.titleFontColor = '#000';
         this.valueFontSize = 20;
@@ -484,15 +485,14 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         colorSchema: string | null,
     ): void {
         if (!settings) {
+            this.titleFontSize = this.resolveTitleFontSize();
+            this.widgetNameFontSize = this.resolveWidgetNameFontSize(undefined, this.widgetNameFontSize);
             return;
         }
 
-        const titleFontSizeSetting = settings.titleFont?.size;
+        const titleFontSizeSetting = this.normalizeFontSize(settings.titleFont?.size);
         this.localWidgetNameFontSize = titleFontSizeSetting ?? this.localWidgetNameFontSize;
-
-        if (titleFontSizeSetting) {
-            this.titleFontSize = titleFontSizeSetting;
-        }
+        this.titleFontSize = this.resolveTitleFontSize(titleFontSizeSetting);
 
         const resolvedSchema = colorSchema ?? this.calculatedColorSchema;
 
@@ -512,6 +512,30 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                 ? settings.valueFont?.customColor
                 : resolvedSchema ?? this.valueFontColor;
         this.valueFontFamily = settings.valueFont?.family ?? this.valueFontFamily;
+    }
+
+    private normalizeFontSize(fontSize?: number | null): number | undefined {
+        if (fontSize === null || fontSize === undefined) {
+            return undefined;
+        }
+
+        const numericValue = Number(fontSize);
+
+        return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : undefined;
+    }
+
+    private resolveTitleFontSize(localSize?: number): number {
+        const normalizedLocalSize = this.normalizeFontSize(localSize);
+        if (normalizedLocalSize !== undefined) {
+            return normalizedLocalSize;
+        }
+
+        const normalizedGlobalSize = this.normalizeFontSize(this.globalWidgetNameFontSize);
+        if (normalizedGlobalSize !== undefined) {
+            return normalizedGlobalSize;
+        }
+
+        return this.defaultTitleFontSize;
     }
 
     private prepareStyle() {
