@@ -94,6 +94,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
     titleFontFamily = '';
     titleFontColor = '#000';
     widgetNameFontSize?: string;
+    private localWidgetNameFontSize?: number;
 
     calculatedColorSchema: string | null;
    
@@ -453,7 +454,10 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
             this.valueFontColor = this.calculatedColorSchema;
         }
 
-        this.titleFontSize = this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.size
+        const titleFontSizeSetting = this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.size;
+        this.localWidgetNameFontSize = titleFontSizeSetting ?? undefined;
+
+        this.titleFontSize = titleFontSizeSetting
             ? this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.size
             : this.titleFontSize;
         this.titleFontColor =
@@ -461,9 +465,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                 ? this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.customColor
                 : this.titleFontColor;
         this.titleFontFamily = this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.family;
-        this.widgetNameFontSize = this.resolveWidgetNameFontSize(
-            this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.size,
-        );
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize(titleFontSizeSetting, this.widgetNameFontSize);
 
         this.valueFontSize = this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.size
             ? this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.size
@@ -473,6 +475,20 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                 ? this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.customColor
                 : this.titleFontColor;
         this.valueFontFamily = this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.family;
+    }
+
+    protected override resolveWidgetNameFontSize(localSize?: number, defaultSize?: string): string | undefined {
+        const effectiveLocalSize = localSize ?? this.localWidgetNameFontSize;
+
+        if (effectiveLocalSize) {
+            return `${effectiveLocalSize}px`;
+        }
+
+        if (this.globalWidgetNameFontSize) {
+            return `${this.globalWidgetNameFontSize}px`;
+        }
+
+        return defaultSize;
     }
 
     private prepareStyle() {
