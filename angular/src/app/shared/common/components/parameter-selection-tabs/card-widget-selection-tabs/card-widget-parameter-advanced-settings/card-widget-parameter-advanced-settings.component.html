@@ -71,6 +71,7 @@
               [allowedFileExtensions]="['.svg']"
               (onValueChanged)="onFileChanged($event)">
             </dx-file-uploader>
+            <div class="text-danger mt-1" *ngIf="isUploadFailed">{{ uploadFailedMessage }}</div>
           </div>
 
           <div class="d-flex flex-column gap-2" *ngIf="hasSelectedIcon">

@@ -423,7 +423,9 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
 
     private processResponse(response: TableWidgetResponse) {
         const responseItem = response.items[0];
-        this.title = responseItem.parameterName;
+        const customParameterName = this.parameter?.gaugeWidgetAdvancedSettings?.parameterName?.trim();
+        const parameterName = this.parameter?.name;
+        this.title = customParameterName || parameterName || responseItem.parameterName;
         // if (
         //     this.parameter?.cardWidgetAdvancedSettings?.normalizeValue === NormalizeEnum.VALUE &&
         //     this.parameter?.cardWidgetAdvancedSettings?.normalizeNominalValue
