@@ -343,5 +343,7 @@
     <text name="YouCanNotDeleteOwnAccount">Você não pode deletar sua própria conta de usuário!</text>
     <text name="On">Ligado</text>
     <text name="Off">Desligado</text>`
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

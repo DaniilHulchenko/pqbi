@@ -1,9 +1,9 @@
 <dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="modalVisible" [dragEnabled]="false"
   title="Base/Custom Parameter Advanced Settings" height="80vh" width="80vw">
   <dx-scroll-view>
-    <div style="margin: 20px; display: flex; gap: 40px; flex-wrap: wrap">
+    <div class="advanced-settings-container">
       <!-- left block -->
-      <div style="flex: 1; min-width: 300px;">
+      <div class="advanced-settings-column">
         <h5>Name</h5>
         <dx-text-box [(value)]="parameterName" placeholder="Parameter name"></dx-text-box>
         <h5>Normalize Values:</h5>
@@ -63,7 +63,13 @@
         <div class="icon-section d-flex flex-column gap-2">
           <div class="d-flex flex-column">
             <label>Upload new icon</label>
-            <dx-file-uploader selectButtonText="select file" [multiple]="false" [allowedFileExtensions]="['.svg']" (onValueChanged)="onFileChanged($event)">
+            <dx-file-uploader
+              [selectButtonText]="'SelectFile' | localize"
+              [uploadFailedMessage]="uploadFailedMessage"
+              [uploadMode]="'useForm'"
+              [multiple]="false"
+              [allowedFileExtensions]="['.svg']"
+              (onValueChanged)="onFileChanged($event)">
             </dx-file-uploader>
           </div>
 
@@ -139,7 +145,7 @@
       </div>
 
       <!-- right block -->
-      <div style="flex: 1; min-width: 300px;">
+      <div class="advanced-settings-column">
         <h5>Set Lower and Upper Limits:</h5>
         <div *ngFor="let opt of limitOptions" class="mb-2">
           <p-checkbox [binary]="true" [label]="opt.text" [ngModel]="setLimits === opt.value"

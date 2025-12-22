@@ -1,12 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Injector, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-settings-options';
 import { uniqBy } from 'lodash-es';
-import {
-    NormalizeEnum,
-    EventClassDescription,
-    EventClass,
-    PQSRestApiServiceProxy,
-} from '@shared/service-proxies/service-proxies';
+import { NormalizeEnum, EventClassDescription, EventClass } from '@shared/service-proxies/service-proxies';
 import { AdvancedSettingsConfig } from '../../advanced-settings/advanced-settings.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,6 +20,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
+import { AppComponentBase } from '@shared/common/app-component-base';
 import { EventService } from '@app/shared/services/event-service.service';
 import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
 import { Subscription } from 'rxjs';
@@ -53,7 +49,10 @@ import { CardIconService } from '@app/shared/services/card-icon.service';
     templateUrl: './card-widget-parameter-advanced-settings.component.html',
     styleUrl: './card-widget-parameter-advanced-settings.component.css',
 })
-export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy {
+export class CardWidgetParameterAdvancedSettingsComponent
+    extends AppComponentBase
+    implements OnInit, OnChanges, OnDestroy
+{
     @Output() advancedSettingsChanged = new EventEmitter<AdvancedSettingsConfig>();
     @Input() config: CardWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<CardWidgetAdvancedSettingsConfig>();
@@ -122,6 +121,7 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     selectedIconPreview: string | null = null;
     setAsDefaultIcon = false;
     defaultIconId: number | null = null;
+    uploadFailedMessage = '';
 
     decimalPointOptions = [0, 1, 2, 3];
 
@@ -168,21 +168,28 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     ];
 
 constructor(
+        injector: Injector,
         private _eventService: EventService,
         private dashboardPagesService: DashboardPagesService,
         private cardIconService: CardIconService,
-    ) {}
+    ) {
+        super(injector);
+    }
 
     onFileChanged(e: any) {
         const file = e.value[0];
-        if (file) {
-            this.cardIconService.uploadIcon(file).subscribe((icon) => {
-                this.applySelectedIcon(icon);
-            });
+        if (!file) {
+            return;
         }
+
+        this.cardIconService.uploadIcon(file).subscribe({
+            next: (icon) => this.applySelectedIcon(icon),
+            error: () => this.notify.error(this.uploadFailedMessage),
+        });
     }
 
     ngOnInit() {
+        this.uploadFailedMessage = this.l('CardIconUploadFailed');
         this.normalizationOptions = this.getNormalizationOptions();
         this._eventService.pqsEvents().subscribe((evts) => {
             this.flaggingEvents = evts;

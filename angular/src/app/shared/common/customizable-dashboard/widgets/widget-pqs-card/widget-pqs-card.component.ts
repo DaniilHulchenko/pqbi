@@ -59,6 +59,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     titleFontColor = '#000';
     widgetNameFontSize?: string;
     widgetDisplayName = '';
+    private localWidgetNameFontSize?: number;
     iconColor: string = '#5b9bd5';
     isIconVisible: boolean = true;
     navigationPageId: string | null = null;
@@ -353,7 +354,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
     private processResponse(response: TableWidgetResponse) {
         const responseItem = response.items[0];
-        this.title = responseItem.parameterName;
+        const customParameterName = this.parameter?.cardWidgetAdvancedSettings?.parameterName?.trim();
+        const parameterName = this.parameter?.name;
+        this.title = customParameterName || parameterName || responseItem.parameterName;
         // if(this.parameter?.cardWidgetAdvancedSettings?.normalizeValue === NormalizeEnum.VALUE && this.parameter?.cardWidgetAdvancedSettings?.normalizeNominalValue){
         //     responseItem.calculated = normalize(responseItem.calculated, this.parameter.cardWidgetAdvancedSettings.normalizeNominalValue);
         // }
@@ -375,17 +378,19 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             this.isIconVisible = false;
         }
 
-        this.titleFontSize = this.parameter.cardWidgetAdvancedSettings?.titleFont?.size
-            ? `${this.parameter.cardWidgetAdvancedSettings?.titleFont?.size}px`
+        const titleFontSizeSetting = this.parameter.cardWidgetAdvancedSettings?.titleFont?.size;
+        this.localWidgetNameFontSize = titleFontSizeSetting ?? undefined;
+
+        this.titleFontSize = titleFontSizeSetting
+            ? `${titleFontSizeSetting}px`
             : this.titleFontSize;
         this.titleFontColor =
             this.parameter.cardWidgetAdvancedSettings?.titleFont?.colorMode === 'custom'
                 ? this.parameter.cardWidgetAdvancedSettings?.titleFont?.customColor
                 : this.titleFontColor;
-        this.titleFontFamily = this.parameter.cardWidgetAdvancedSettings?.titleFont?.family;
-        this.widgetNameFontSize = this.resolveWidgetNameFontSize(
-            this.parameter.cardWidgetAdvancedSettings?.titleFont?.size,
-        );
+        this.titleFontFamily =
+            this.parameter.cardWidgetAdvancedSettings?.titleFont?.family || this.titleFontFamily;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize(titleFontSizeSetting, this.widgetNameFontSize);
 
         this.valueFontSize = this.parameter.cardWidgetAdvancedSettings?.valueFont?.size
             ? `${this.parameter.cardWidgetAdvancedSettings?.valueFont?.size}px`
@@ -399,6 +404,20 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             this.parameter.cardWidgetAdvancedSettings?.icon?.colorMode === 'custom'
                 ? this.parameter.cardWidgetAdvancedSettings?.icon?.customColor
                 : this.iconColor;
+    }
+
+    protected override resolveWidgetNameFontSize(localSize?: number, defaultSize?: string): string | undefined {
+        const effectiveLocalSize = localSize ?? this.localWidgetNameFontSize;
+
+        if (effectiveLocalSize) {
+            return `${effectiveLocalSize}px`;
+        }
+
+        if (this.globalWidgetNameFontSize) {
+            return `${this.globalWidgetNameFontSize}px`;
+        }
+
+        return defaultSize;
     }
 
     private prepareDataRange(): [DateTime, DateTime] {

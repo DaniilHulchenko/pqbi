@@ -1244,5 +1244,7 @@
     <text name="UpgradeTo">{0} sürümüne yükseltin</text>
     <text name="YourAccountIsUpgraded">Hesabınız başarılı bir şekilde yükseltildi</text>
     <text name="SubscriptionPaymentGatewayType_0">Seçilmedi</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

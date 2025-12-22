@@ -661,5 +661,7 @@
 		<text name="YourPasswordHasChangedSuccessfully">รหัสผ่านของคุณมีการเปลี่ยนแปลงเรียบร้อยแล้ว</text>
 		<text name="YourSessionIsAboutToExpire">เซสชันของคุณกําลังจะหมดอายุ</text>
 		<text name="YourSessionIsLocked">เซสชันของคุณถูกล็อก</text>
+		<text name="WidgetTitleSize">Widget Title Size</text>
+		<text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
 	</texts>
 </localizationDictionary>

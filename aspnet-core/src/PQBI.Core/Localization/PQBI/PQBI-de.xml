@@ -1251,5 +1251,7 @@
     <text name="Authorization">Genehmigung</text>
     <text name="EmailAddressesDidNotMatch">Alte E-Mail-Adresse stimmt nicht überein!</text>
     <text name="NewEmailAddress">Neue E-Mail-Adresse</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

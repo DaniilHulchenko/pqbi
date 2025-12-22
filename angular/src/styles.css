@@ -160,6 +160,35 @@ ngx-spinner .loading-text {
     font-size: 1.3em;
 }
 
+.advanced-settings-container {
+    margin: 20px;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.advanced-settings-container .advanced-settings-column {
+    flex: 1;
+    min-width: 300px;
+}
+
+.advanced-settings-container h5 {
+    margin-top: 24px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.advanced-settings-container h5:first-child,
+.advanced-settings-container .advanced-settings-column > h5:first-child {
+    margin-top: 0;
+}
+
+.advanced-settings-container h6 {
+    margin-top: 14px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
 bs-days-calendar-view + bs-days-calendar-view {
     margin-left: 10px;
 }
@@ -366,4 +395,3 @@ ul {
 .dx-tabs-wrapper, .dx-tab {
     background-color: transparent;
 }
-

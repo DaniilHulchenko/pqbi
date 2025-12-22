@@ -1410,5 +1410,7 @@
     <text name="IS1HOUR">1 час</text>
     <text name="OpenTreeSettings">Открыть настройки дерева</text>
     <text name="HideTreeSettings">Закрыть настройки дерева</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

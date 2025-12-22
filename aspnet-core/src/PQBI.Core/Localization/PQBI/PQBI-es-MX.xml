@@ -504,5 +504,7 @@
     <text name="MaximumUserCount_Error_Message">¡Se alcanzó la cantidad máxima de usuarios!</text>
     <text name="MaximumUserCount_Error_Detail">Esta instancia tiene permitido un máximo de {0} usuarios.</text>
     <text name="UnlockedTenandAdmin">Usuario admin desbloqueado para {0}</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>
