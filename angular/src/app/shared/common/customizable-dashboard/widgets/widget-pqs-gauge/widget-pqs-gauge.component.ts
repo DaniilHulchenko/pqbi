@@ -192,6 +192,9 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
                     if (this.gaugeWidgetConfiguration) {
                         this.parameter = JSON.parse(this.gaugeWidgetConfiguration.parameter);
                         this.style = JSON.parse(this.gaugeWidgetConfiguration.style) as GaugeStyle;
+                        this.calculatedColorSchema = null;
+                        this.resetFontSettings();
+                        this.applyFontSettings(this.parameter.gaugeWidgetAdvancedSettings, null);
                         this.setNavigationTarget();
                         this.prepareStyle();
                         this.fetch();
@@ -448,33 +451,7 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         );
 
         this.setSegments();
-
-        if (this.calculatedColorSchema != null) {
-            this.titleFontColor = this.calculatedColorSchema;
-            this.valueFontColor = this.calculatedColorSchema;
-        }
-
-        const titleFontSizeSetting = this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.size;
-        this.localWidgetNameFontSize = titleFontSizeSetting ?? undefined;
-
-        this.titleFontSize = titleFontSizeSetting
-            ? this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.size
-            : this.titleFontSize;
-        this.titleFontColor =
-            this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.colorMode === 'custom'
-                ? this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.customColor
-                : this.titleFontColor;
-        this.titleFontFamily = this.parameter.gaugeWidgetAdvancedSettings?.titleFont?.family;
-        this.widgetNameFontSize = this.resolveWidgetNameFontSize(titleFontSizeSetting, this.widgetNameFontSize);
-
-        this.valueFontSize = this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.size
-            ? this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.size
-            : this.valueFontSize;
-        this.valueFontColor =
-            this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.colorMode === 'custom'
-                ? this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.customColor
-                : this.titleFontColor;
-        this.valueFontFamily = this.parameter.gaugeWidgetAdvancedSettings?.valueFont?.family;
+        this.applyFontSettings(this.parameter.gaugeWidgetAdvancedSettings, this.calculatedColorSchema);
     }
 
     protected override resolveWidgetNameFontSize(localSize?: number, defaultSize?: string): string | undefined {
@@ -489,6 +466,52 @@ export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implem
         }
 
         return defaultSize;
+    }
+
+    private resetFontSettings(): void {
+        this.titleFontSize = 20;
+        this.titleFontFamily = '';
+        this.titleFontColor = '#000';
+        this.valueFontSize = 20;
+        this.valueFontFamily = '';
+        this.valueFontColor = '#000';
+        this.localWidgetNameFontSize = undefined;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize();
+    }
+
+    private applyFontSettings(
+        settings: GaugeWidgetAdvancedSettingsConfig | undefined,
+        colorSchema: string | null,
+    ): void {
+        if (!settings) {
+            return;
+        }
+
+        const titleFontSizeSetting = settings.titleFont?.size;
+        this.localWidgetNameFontSize = titleFontSizeSetting ?? this.localWidgetNameFontSize;
+
+        if (titleFontSizeSetting) {
+            this.titleFontSize = titleFontSizeSetting;
+        }
+
+        const resolvedSchema = colorSchema ?? this.calculatedColorSchema;
+
+        this.titleFontColor =
+            settings.titleFont?.colorMode === 'custom'
+                ? settings.titleFont?.customColor
+                : resolvedSchema ?? this.titleFontColor;
+        this.titleFontFamily = settings.titleFont?.family ?? this.titleFontFamily;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize(titleFontSizeSetting, this.widgetNameFontSize);
+
+        if (settings.valueFont?.size) {
+            this.valueFontSize = settings.valueFont.size;
+        }
+
+        this.valueFontColor =
+            settings.valueFont?.colorMode === 'custom'
+                ? settings.valueFont?.customColor
+                : resolvedSchema ?? this.valueFontColor;
+        this.valueFontFamily = settings.valueFont?.family ?? this.valueFontFamily;
     }
 
     private prepareStyle() {
