@@ -834,5 +834,7 @@
     <text name="NewRegistration_Edition_Description">{0} Editie</text>
     <text name="Item">Item</text>
     <text name="RecurringSubscriptionUpgradeNote">Het verschil in prijs tussen uw huidige editie en degene waarnaar u upgrade wordt doorbelast naar uw account.</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

@@ -236,15 +236,17 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     }
 
     save() {
-        if (!this.canSave) {
+        const hasSegments = this.segments?.length > 0;
+
+        if (hasSegments && !this.canSave) {
             this.segmentationComponent?.validateBeforeSave();
             return;
         }
 
-        const lowerLimit = this.getSegmentsMin();
-        const upperLimit = this.getSegmentsMax();
+        const lowerLimit = hasSegments ? this.getSegmentsMin() : null;
+        const upperLimit = hasSegments ? this.getSegmentsMax() : null;
 
-        if (lowerLimit == null || upperLimit == null) {
+        if (hasSegments && (lowerLimit == null || upperLimit == null)) {
             this.segmentationComponent?.validateBeforeSave();
             return;
         }
@@ -263,7 +265,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
             linkPage: this.link.page,
             titleFont: this.titleFont,
             valueFont: this.valueFont,
-            segments: this.segments,
+            segments: hasSegments ? this.segments : [],
             unit: {unitType: this.unitType, selectedUnit: this.selectedUnit},
             marker1: this.marker1,
             marker2: this.marker2,
@@ -285,6 +287,10 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     }
 
     get canSave(): boolean {
+        if (!this.segments?.length) {
+            return true;
+        }
+
         return this.segmentationComponent?.canSave ?? this.isSegmentsValid;
     }
 
@@ -335,7 +341,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
 
     private calculateSegmentsValidity(segments: Segment[]): boolean {
         if (!segments?.length) {
-            return false;
+            return true;
         }
 
         const sorted = [...segments].sort((a, b) => (a.from === b.from ? a.to - b.to : a.from - b.from));

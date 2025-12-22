@@ -1119,5 +1119,7 @@
     <text name="DoYouWantToRemoveTheFile">هل تريد حذف الملف؟</text>
     <text name="CurrentFile">الملف الحالي</text>
     <text name="Dashboard_NoPageDefined_Warning">لا توجد صفحة محددة للوحة القيادة. يرجى التبديل إلى وضع التحرير وإضافة صفحة!</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

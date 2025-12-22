@@ -925,5 +925,7 @@
     <text name="strong">Strong</text>
     <text name="veryStrong">Very Strong</text>
     <text name="QuickNav">Quick Nav</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

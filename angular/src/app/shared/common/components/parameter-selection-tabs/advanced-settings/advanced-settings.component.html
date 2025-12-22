@@ -8,9 +8,9 @@
   width="80vw"
 >
   <dx-scroll-view>
-    <div style="margin: 20px; display: flex; gap: 40px; flex-wrap: wrap">
+    <div class="advanced-settings-container">
       <!-- Левый блок -->
-      <div style="flex: 1; min-width: 300px;">
+      <div class="advanced-settings-column">
         <h5>Normalize Values:</h5>
         <div *ngFor="let opt of normalizationOptions" class="mb-2">
           <p-checkbox
@@ -76,7 +76,7 @@
       </div>
 
       <!-- Правый блок -->
-      <div style="flex: 1; min-width: 300px;">
+      <div class="advanced-settings-column">
         <h5>Set Lower and Upper Limits:</h5>
         <div *ngFor="let opt of limitOptions" class="mb-2">
           <p-checkbox

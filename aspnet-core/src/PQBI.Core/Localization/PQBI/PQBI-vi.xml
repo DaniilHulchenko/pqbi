@@ -782,5 +782,7 @@
     <text name="Green">Màu lục</text>
     <text name="Pink">Màu hồng</text>
     <text name="Yellow">Màu vàng</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

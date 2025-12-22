@@ -613,5 +613,7 @@
     <text name="DemoPayPalAccount">Cuenta Demo Paypal</text>
     <text name="IsEnabled">Está habilitado?</text>
     <text name="IsGoogleAuthenticatorEnabled">El autenticador de Google está habilitado?</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

@@ -426,7 +426,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         const label = this.l('WidgetTitleSize');
 
         if (!label || label.startsWith('[')) {
-            return 'WidgetTitleSize';
+            return 'Widget Title Size';
         }
 
         return label;

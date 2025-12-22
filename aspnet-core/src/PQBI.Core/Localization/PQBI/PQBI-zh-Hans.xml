@@ -869,5 +869,7 @@
     <text name="GoToLoginPage">转到登录页面</text>
     <text name="ShowLockScreenWhenTimedOut">超时时显示锁定屏幕</text>
     <text name="YourSessionIsLocked">您的会话被锁定</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>

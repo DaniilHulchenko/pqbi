@@ -314,5 +314,7 @@
     <text name="ThereAreNoNotifications">Non ci sono notifiche.</text>
     <text name="Unread">Non lette</text>
     <text name="YouCanNotDeleteOwnAccount">Non puoi cancellare il tuo account!</text>
+    <text name="WidgetTitleSize">Widget Title Size</text>
+    <text name="CardIconUploadFailed">Icon upload failed. Please try again.</text>
   </texts>
 </localizationDictionary>
