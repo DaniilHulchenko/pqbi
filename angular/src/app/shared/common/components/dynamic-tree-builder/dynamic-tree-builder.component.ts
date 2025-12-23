@@ -47,7 +47,6 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
     private tagsTree: TagDtoV2[];
 
     private emptyTag: TagDtoV2;
-    private emptyTagTree: any;
 
     constructor(
         private treeBuilderService: TreeBuilderService,
@@ -63,45 +62,25 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
                 if (this.emptyTag) {
                     this.emptyTag = JSON.parse(JSON.stringify(this.emptyTag));
                     this.emptyTag.tagName = 'Others';
-                    this.emptyTagTree = {
-                        key: this.emptyTag.tagName,
-                        label: this.emptyTag.tagName,
-                        expanded: true,
-                        selectable: false,
-                        children: this.emptyTag.labels[0].components.map((component) => {
-                            return {
-                                key: component.componentId,
-                                label: component.componentName,
-                                leaf: true,
-                                parameterInfos: component.parameterInfos,
-                                channels: component.channels,
-                                customBaseInfo: component.customBaseList,
-                                selectable: true,
-                                data: {
-                                    tags: component.tags.map((tag) => tag.tagDescription),
-                                    // parameterNames: component.parameterNames.map(parameter => parameter.split('#')[0]),
-                                    feeders: component.feeders,
-                                },
-                            };
-                        }),
-                    };
                 }
 
                 if (this.pickListState.source?.length === 0 && this.pickListState.target?.length === 0) {
                     this.defaultValuesService.getValue(this._defaultStateSettingName).subscribe((result) => {
                         if (result) {
-                            this.defaultState = JSON.parse(result);
+                            this.defaultState = this.cleanPickListState(JSON.parse(result));
                             this.prefillPickList();
                             this.checkIfDefault(); // Check if the state is equal to the default state
                         }
                     });
                 }
 
-                let tags = this.emptyTag ? [...this.tagsTree, this.emptyTag] : this.tagsTree;
-
-                this.components = this.treeBuilderService.extractLeafNodes(
-                    this.treeBuilderService.getTreeByType(tags, 'components'),
-                );
+                const tags = this.tagsTree;
+                this.components = [
+                    ...this.treeBuilderService.extractLeafNodes(
+                        this.treeBuilderService.getTreeByType(tags, 'components'),
+                    ),
+                    ...this.buildEmptyTagComponents(),
+                ];
 
                 this.prefillPickList();
             });
@@ -149,7 +128,7 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
 
     writeValue(obj: any): void {
         if (obj && this.pickListState !== obj) {
-            this.pickListState = obj;
+            this.pickListState = this.cleanPickListState(obj);
             if (this.pickListState.source.length === 0 && this.pickListState.target.length === 0) {
                 this.prefillPickList();
             } else if (this.pickListState.target.length > 0) {
@@ -177,14 +156,13 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
             target: [...target],
         };
 
-        this.tree = this.addComponentsRecursively(
+        const treeWithComponents = this.addComponentsRecursively(
             this.generateTreeNodes(this.pickListState.target),
             this.components,
         );
+        const othersNode = this.buildEmptyTagTree();
 
-        if (this.tree?.length > 0 && this.emptyTagTree) {
-            this.tree.push(this.emptyTagTree);
-        }
+        this.tree = othersNode ? [...treeWithComponents, othersNode] : treeWithComponents;
 
         // this.tree.patchValue(
         //     this.addComponentsRecursively(
@@ -260,6 +238,40 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
         return filteredData;
     }
 
+    private buildEmptyTagTree(): TreeNode<any> | null {
+        if (!this.emptyTag) {
+            return null;
+        }
+
+        return {
+            key: this.emptyTag.tagName,
+            label: this.emptyTag.tagName,
+            expanded: true,
+            selectable: true,
+            children: this.buildEmptyTagComponents(),
+        };
+    }
+
+    private buildEmptyTagComponents(): TreeNode<any>[] {
+        if (!this.emptyTag?.labels?.length || !this.emptyTag.labels[0].components?.length) {
+            return [];
+        }
+
+        return this.emptyTag.labels[0].components.map((component) => ({
+            key: component.componentId,
+            label: component.componentName,
+            leaf: true,
+            parameterInfos: component.parameterInfos,
+            channels: component.channels,
+            customBaseInfo: component.customBaseList,
+            selectable: true,
+            data: {
+                tags: component.tags?.map((tag) => tag.tagDescription) ?? [],
+                feeders: component.feeders,
+            },
+        }));
+    }
+
     private checkIfDefault() {
         // Method to automatically set the checkbox
         this.checkedSetAsDefault = this.isStateEqual(this.pickListState, this.defaultState);
@@ -271,5 +283,19 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
             JSON.stringify(state1?.source) === JSON.stringify(state2?.source) &&
             JSON.stringify(state1?.target) === JSON.stringify(state2?.target)
         );
+    }
+
+    private cleanPickListState(state: PickListState): PickListState {
+        if (!state) {
+            return state;
+        }
+
+        const excludeOthers = (items: TreeNode<any>[]) =>
+            items?.filter((item) => item.key && item.key !== 'Others') ?? [];
+
+        return {
+            source: excludeOthers(state.source),
+            target: excludeOthers(state.target),
+        };
     }
 }

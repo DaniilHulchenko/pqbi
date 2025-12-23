@@ -144,7 +144,9 @@ export class LimitedComponentsSelectorComponent implements ControlValueAccessor 
         this.selectedItems = event;
 
         let tags = this.getDistinctComponents(
-            event.filter((component) => !(component.type === TreeComponentType.Feeder || component.leaf)),
+            event
+                .filter((component) => !(component.type === TreeComponentType.Feeder || component.leaf))
+                .filter((component) => component.key !== 'Others'),
         );
 
         let componentsAndFeeders = this.getDistinctComponents(
