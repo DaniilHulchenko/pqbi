@@ -95,6 +95,7 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
             this.state.feeders?.forEach((feeder) => {
                 this.selectedItems.push(this.createFeederNode(feeder.componentId, feeder));
             });
+            this.syncOthersSelection();
         if (this.componentsOptions) {
                 this.isLoading = false;
             }
@@ -135,12 +136,6 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
     onSelectionChange(event: any[]) {
         this.selectedItems = event;
 
-        let tags = this.getDistinctComponents(
-            event
-                .filter((component) => !(component.type === TreeComponentType.Feeder || component.leaf))
-                .filter((component) => component.key !== 'Others'),
-        );
-
         let componentsAndFeeders = this.getDistinctComponents(
             event.filter((component) => component.type === TreeComponentType.Feeder || component.leaf),
         );
@@ -172,6 +167,12 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
             );
             this.addFeedersToComponents(addedComponents);
         }
+
+        this.syncOthersSelection();
+
+        let tags = this.getDistinctComponents(
+            this.selectedItems.filter((component) => !(component.type === TreeComponentType.Feeder || component.leaf)),
+        );
 
         tags.forEach(t => this.removeRedundantInfoInTag(t));
 
@@ -205,6 +206,7 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
         // Add feeders to all components in advance
         const leafComponents = this.treeBuilderService.extractLeafNodes(this.componentsOptions);
         this.addFeedersToComponents(leafComponents);
+        this.syncOthersSelection();
         this.isExpandButtonDisabled = !this.tree.some(item => !item.leaf);
         this.validateSelection();
         this.closeTreeSettingsState();
@@ -289,6 +291,33 @@ export class ComponentsSelectorComponent implements ControlValueAccessor {
             seen.add(value);
             return true;
         });
+    }
+
+    private syncOthersSelection() {
+        if (!this.selectedItems || !this.componentsOptions) {
+            return;
+        }
+
+        const othersNode = this.componentsOptions.find((node) => node.key === 'Others');
+        if (!othersNode || !othersNode.children?.length) {
+            return;
+        }
+
+        const selectedKeys = new Set(this.selectedItems.map((item) => item.key));
+        const selectedChildrenCount = othersNode.children.filter((child) => selectedKeys.has(child.key)).length;
+
+        othersNode.partialSelected = false;
+        this.selectedItems = this.selectedItems.filter((item) => item.key !== othersNode.key);
+
+        if (selectedChildrenCount === 0) {
+            return;
+        }
+
+        if (selectedChildrenCount === othersNode.children.length) {
+            this.selectedItems.push(othersNode);
+        } else {
+            othersNode.partialSelected = true;
+        }
     }
 }
 
