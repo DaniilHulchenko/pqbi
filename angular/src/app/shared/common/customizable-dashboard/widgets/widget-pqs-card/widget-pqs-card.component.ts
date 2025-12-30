@@ -59,19 +59,51 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     titleFontColor = '#000';
     widgetNameFontSize?: string;
     widgetDisplayName = '';
+    private localWidgetNameFontSize?: number;
+    private readonly defaultTitleFontSize = '1.2em';
     iconColor: string = '#5b9bd5';
     isIconVisible: boolean = true;
     navigationPageId: string | null = null;
     canNavigateToPage = false;
+
+
+    readonly defaultIconSize = 32;
+    readonly defaultIconUnit = 'px'
+    readonly minIconSize = 16;
+    readonly maxIconSize = 300;
+
+
+    private defaultIconColor: string = '#5b9bd5';
 
     calculatedColorSchema: string | null;
 
     private stopStream$ = new Subject();
     private subs: Subscription[] = [];
 
+    get iconSizePx(): number {
+        const iconSettings = this.parameter?.cardWidgetAdvancedSettings?.icon;
+        const sizeValue = iconSettings?.size && iconSettings.size > 0 ? iconSettings.size : this.defaultIconSize;
+        const sizeUnit = iconSettings?.sizeUnit ?? this.defaultIconUnit;
+
+        const baseSize = this.getIconBaseSize();
+        const maxAllowedSize = Math.max(this.minIconSize, Math.min(baseSize, this.maxIconSize));
+
+        let calculatedSize = sizeUnit === '%'
+            ? (baseSize * sizeValue) / 100
+            : sizeValue;
+
+        if (!Number.isFinite(calculatedSize) || calculatedSize <= 0) {
+            calculatedSize = this.defaultIconSize;
+        }
+
+        calculatedSize = Math.max(this.minIconSize, Math.min(calculatedSize, maxAllowedSize));
+
+        return calculatedSize;
+    }
+
     constructor(
         injector: Injector,
-        elementReference: ElementRef,
+        elementRef: ElementRef,
         private cardWidgetConfigurationService: CardWidgetConfigurationService,
         private dateRangeService: DateRangeService,
         private _tenantDashboardService: TenantDashboardServiceProxy,
@@ -81,8 +113,22 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         private _dateTimeService: DateTimeService,
         private cardIconService: CardIconService,
     ) {
-        super(injector, elementReference, dateRangeService);
+        super(injector, elementRef, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSCard');
+    }
+
+    private getIconBaseSize(): number {
+        const bodyElement = this.elementRef.nativeElement.querySelector('.kt-portlet__body') as HTMLElement | null;
+        if (bodyElement?.clientHeight) {
+            return bodyElement.clientHeight;
+        }
+
+        const hostElement = this.elementRef.nativeElement as HTMLElement | null;
+        if (hostElement?.clientHeight) {
+            return hostElement.clientHeight;
+        }
+
+        return this.maxIconSize;
     }
 
     ngOnInit(): void {
@@ -139,6 +185,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
                     if (this.cardWidgetConfiguration) {
                         let parameters = JSON.parse(this.cardWidgetConfiguration.parameters);
                         this.parameter = parameters.at(0);
+                        this.calculatedColorSchema = null;
+                        this.resetFontSettings();
+                        this.applyFontSettings(this.parameter.cardWidgetAdvancedSettings, null);
                         this.loadIconForParameter(this.parameter);
                         this.setNavigationTarget();
                         this.fetch();
@@ -353,7 +402,9 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
     private processResponse(response: TableWidgetResponse) {
         const responseItem = response.items[0];
-        this.title = responseItem.parameterName;
+        const customParameterName = this.parameter?.cardWidgetAdvancedSettings?.parameterName?.trim();
+        const parameterName = this.parameter?.name;
+        this.title = customParameterName || parameterName || responseItem.parameterName;
         // if(this.parameter?.cardWidgetAdvancedSettings?.normalizeValue === NormalizeEnum.VALUE && this.parameter?.cardWidgetAdvancedSettings?.normalizeNominalValue){
         //     responseItem.calculated = normalize(responseItem.calculated, this.parameter.cardWidgetAdvancedSettings.normalizeNominalValue);
         // }
@@ -362,8 +413,6 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         this.calculatedColorSchema = getColorSchema(responseItem.calculated, this.parameter.cardWidgetAdvancedSettings);
 
         if (this.calculatedColorSchema != null) {
-            this.titleFontColor = this.calculatedColorSchema;
-            this.valueFontColor = this.calculatedColorSchema;
             this.iconColor = this.calculatedColorSchema;
         }
 
@@ -375,30 +424,95 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
             this.isIconVisible = false;
         }
 
-        this.titleFontSize = this.parameter.cardWidgetAdvancedSettings?.titleFont?.size
-            ? `${this.parameter.cardWidgetAdvancedSettings?.titleFont?.size}px`
-            : this.titleFontSize;
-        this.titleFontColor =
-            this.parameter.cardWidgetAdvancedSettings?.titleFont?.colorMode === 'custom'
-                ? this.parameter.cardWidgetAdvancedSettings?.titleFont?.customColor
-                : this.titleFontColor;
-        this.titleFontFamily = this.parameter.cardWidgetAdvancedSettings?.titleFont?.family;
-        this.widgetNameFontSize = this.resolveWidgetNameFontSize(
-            this.parameter.cardWidgetAdvancedSettings?.titleFont?.size,
-        );
-
-        this.valueFontSize = this.parameter.cardWidgetAdvancedSettings?.valueFont?.size
-            ? `${this.parameter.cardWidgetAdvancedSettings?.valueFont?.size}px`
-            : this.valueFontSize;
-        this.valueFontColor =
-            this.parameter.cardWidgetAdvancedSettings?.valueFont?.colorMode === 'custom'
-                ? this.parameter.cardWidgetAdvancedSettings?.valueFont?.customColor
-                : this.valueFontColor;
-        this.valueFontFamily = this.parameter.cardWidgetAdvancedSettings?.valueFont?.family;
+        this.applyFontSettings(this.parameter.cardWidgetAdvancedSettings, this.calculatedColorSchema);
         this.iconColor =
             this.parameter.cardWidgetAdvancedSettings?.icon?.colorMode === 'custom'
                 ? this.parameter.cardWidgetAdvancedSettings?.icon?.customColor
                 : this.iconColor;
+    }
+
+    protected override resolveWidgetNameFontSize(localSize?: number, defaultSize?: string): string | undefined {
+        const effectiveLocalSize = this.normalizeFontSize(localSize ?? this.localWidgetNameFontSize);
+        if (effectiveLocalSize !== undefined) {
+            return `${effectiveLocalSize}px`;
+        }
+
+        const normalizedGlobalSize = this.normalizeFontSize(this.globalWidgetNameFontSize);
+        if (normalizedGlobalSize !== undefined) {
+            return `${normalizedGlobalSize}px`;
+        }
+
+        return defaultSize;
+    }
+
+    private resetFontSettings(): void {
+        this.titleFontSize = this.defaultTitleFontSize;
+        this.titleFontFamily = '';
+        this.titleFontColor = '#000';
+        this.valueFontSize = '2.2em';
+        this.valueFontFamily = '';
+        this.valueFontColor = '#000';
+        this.localWidgetNameFontSize = undefined;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize();
+        this.iconColor = this.defaultIconColor;
+    }
+
+    private applyFontSettings(
+        settings: CardWidgetAdvancedSettingsConfig | undefined,
+        colorSchema: string | null,
+    ): void {
+        if (!settings) {
+            this.titleFontSize = this.resolveTitleFontSize();
+            this.widgetNameFontSize = this.resolveWidgetNameFontSize(undefined, this.widgetNameFontSize);
+            return;
+        }
+
+        const titleFontSizeSetting = this.normalizeFontSize(settings.titleFont?.size);
+        this.localWidgetNameFontSize = titleFontSizeSetting ?? this.localWidgetNameFontSize;
+        this.titleFontSize = this.resolveTitleFontSize(titleFontSizeSetting);
+
+        const resolvedSchema = colorSchema ?? this.calculatedColorSchema;
+
+        this.titleFontColor =
+            settings.titleFont?.colorMode === 'custom'
+                ? settings.titleFont?.customColor
+                : resolvedSchema ?? this.titleFontColor;
+        this.titleFontFamily = settings.titleFont?.family || this.titleFontFamily;
+        this.widgetNameFontSize = this.resolveWidgetNameFontSize(titleFontSizeSetting, this.widgetNameFontSize);
+
+        if (settings.valueFont?.size) {
+            this.valueFontSize = `${settings.valueFont.size}px`;
+        }
+
+        this.valueFontColor =
+            settings.valueFont?.colorMode === 'custom'
+                ? settings.valueFont?.customColor
+                : resolvedSchema ?? this.valueFontColor;
+        this.valueFontFamily = settings.valueFont?.family ?? this.valueFontFamily;
+    }
+
+     private normalizeFontSize(fontSize?: number | null): number | undefined {
+        if (fontSize === null || fontSize === undefined) {
+            return undefined;
+        }
+
+        const numericValue = Number(fontSize);
+
+        return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : undefined;
+    }
+
+    private resolveTitleFontSize(localSize?: number): string {
+        const normalizedLocalSize = this.normalizeFontSize(localSize);
+        if (normalizedLocalSize !== undefined) {
+            return `${normalizedLocalSize}px`;
+        }
+
+        const normalizedGlobalSize = this.normalizeFontSize(this.globalWidgetNameFontSize);
+        if (normalizedGlobalSize !== undefined) {
+            return `${normalizedGlobalSize}px`;
+        }
+
+        return this.defaultTitleFontSize;
     }
 
     private prepareDataRange(): [DateTime, DateTime] {

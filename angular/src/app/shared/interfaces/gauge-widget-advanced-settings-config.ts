@@ -27,8 +27,8 @@ export interface GaugeWidgetAdvancedSettingsConfig {
 
     linkPage: string | null;
 
-    titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string };
-    valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string };
+    titleFont?: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string };
+    valueFont?: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string };
 
     // markers
     marker1?: string;

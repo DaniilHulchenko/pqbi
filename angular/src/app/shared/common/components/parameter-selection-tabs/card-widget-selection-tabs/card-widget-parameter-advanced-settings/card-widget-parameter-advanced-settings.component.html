@@ -1,9 +1,9 @@
 <dx-popup [hideOnOutsideClick]="false" [showCloseButton]="true" [(visible)]="modalVisible" [dragEnabled]="false"
   title="Base/Custom Parameter Advanced Settings" height="80vh" width="80vw">
   <dx-scroll-view>
-    <div style="margin: 20px; display: flex; gap: 40px; flex-wrap: wrap">
+    <div class="advanced-settings-container">
       <!-- left block -->
-      <div style="flex: 1; min-width: 300px;">
+      <div class="advanced-settings-column">
         <h5>Name</h5>
         <dx-text-box [(value)]="parameterName" placeholder="Parameter name"></dx-text-box>
         <h5>Normalize Values:</h5>
@@ -63,15 +63,25 @@
         <div class="icon-section d-flex flex-column gap-2">
           <div class="d-flex flex-column">
             <label>Upload new icon</label>
-            <dx-file-uploader selectButtonText="select file" [multiple]="false" [allowedFileExtensions]="['.svg']" (onValueChanged)="onFileChanged($event)">
+            <dx-file-uploader
+              [selectButtonText]="'SelectFile'"
+              [uploadFailedMessage]="uploadFailedMessage"
+              [uploadMode]="'useForm'"
+              [multiple]="false"
+              [allowedFileExtensions]="['.svg']"
+              (onValueChanged)="onFileChanged($event)">
             </dx-file-uploader>
           </div>
 
-          <div class="d-flex flex-column gap-2" *ngIf="hasSelectedIcon">
-            <div class="d-flex align-items-center gap-3">
-              <img *ngIf="selectedIconPreview || icon.file" [src]="selectedIconPreview || icon.file" style="width: 32px; height: 32px;" />
-              <span>{{ icon.name || 'Selected icon' }}</span>
-            </div>
+            <div class="d-flex flex-column gap-2" *ngIf="hasSelectedIcon">
+              <div class="d-flex align-items-center gap-3">
+                <img
+                  *ngIf="selectedIconPreview || icon.file"
+                  [src]="selectedIconPreview || icon.file"
+                  [ngStyle]="{ width: iconSizeValue, height: iconSizeValue }"
+                />
+                <span>{{ icon.name || 'Selected icon' }}</span>
+              </div>
 
             <div class="d-flex align-items-center gap-3">
               <p-checkbox
@@ -104,12 +114,31 @@
               itemTemplate="iconItem"
             >
               <div *dxTemplate="let item of 'iconItem'" class="d-flex align-items-center gap-2">
-                <img *ngIf="item?.content" [src]="item.content" style="width: 24px; height: 24px;" />
+                <img *ngIf="item?.content" [src]="item.content" [ngStyle]="{ width: iconSizeValue, height: iconSizeValue }" />
                 <span>{{item?.name}}</span>
               </div>
             </dx-select-box>
           </div>
 
+          <div class="d-flex gap-3 align-items-end">
+            <div class="d-flex flex-column flex-grow-1">
+              <label>Size</label>
+              <dx-number-box
+                [(value)]="icon.size"
+                [min]="1"
+                [showSpinButtons]="true"
+                placeholder="Icon size"
+              ></dx-number-box>
+            </div>
+            <div class="d-flex flex-column">
+              <label>Unit</label>
+              <dx-select-box
+                [items]="iconSizeUnits"
+                [(value)]="icon.sizeUnit"
+                placeholder="Unit"
+              ></dx-select-box>
+            </div>
+          </div>
 
           <div>
             <label>appearance</label>
@@ -139,7 +168,7 @@
       </div>
 
       <!-- right block -->
-      <div style="flex: 1; min-width: 300px;">
+      <div class="advanced-settings-column">
         <h5>Set Lower and Upper Limits:</h5>
         <div *ngFor="let opt of limitOptions" class="mb-2">
           <p-checkbox [binary]="true" [label]="opt.text" [ngModel]="setLimits === opt.value"

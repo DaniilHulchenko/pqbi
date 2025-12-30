@@ -1,12 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Injector, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-settings-options';
 import { uniqBy } from 'lodash-es';
-import {
-    NormalizeEnum,
-    EventClassDescription,
-    EventClass,
-    PQSRestApiServiceProxy,
-} from '@shared/service-proxies/service-proxies';
+import { NormalizeEnum, EventClassDescription, EventClass } from '@shared/service-proxies/service-proxies';
 import { AdvancedSettingsConfig } from '../../advanced-settings/advanced-settings.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,11 +20,16 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
+import { AppComponentBase } from '@shared/common/app-component-base';
 import { EventService } from '@app/shared/services/event-service.service';
 import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
 import { Subscription } from 'rxjs';
 import { CardIcon } from '@app/shared/interfaces/card-icon';
 import { CardIconService } from '@app/shared/services/card-icon.service';
+
+type IconSettings = CardWidgetAdvancedSettingsConfig['icon'];
+type IconColorMode = IconSettings['colorMode'];
+type IconSettingsInput = (Partial<IconSettings> & { colorMode?: string | IconColorMode }) | null;
 
 @Component({
     selector: 'cardWidgetParameterAdvancedSettings',
@@ -53,10 +53,17 @@ import { CardIconService } from '@app/shared/services/card-icon.service';
     templateUrl: './card-widget-parameter-advanced-settings.component.html',
     styleUrl: './card-widget-parameter-advanced-settings.component.css',
 })
-export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnChanges, OnDestroy {
+export class CardWidgetParameterAdvancedSettingsComponent
+    extends AppComponentBase
+    implements OnInit, OnChanges, OnDestroy
+{
     @Output() advancedSettingsChanged = new EventEmitter<AdvancedSettingsConfig>();
     @Input() config: CardWidgetAdvancedSettingsConfig | null = null;
     @Output() configChange = new EventEmitter<CardWidgetAdvancedSettingsConfig>();
+
+    readonly defaultIconSize = 32;
+    readonly defaultIconSizeUnit = 'px';
+    readonly iconSizeUnits = ['px', 'em', 'rem', '%', 'vw', 'vh', 'vmin', 'vmax'];
 
     modalVisible = false;
     parameterName = '';
@@ -87,32 +94,26 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     showOkColor?: boolean;
     showNoDataColor?: boolean;
     decimalPoints = 2;
-    titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    titleFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
-        size: 16,
+        size: null,
         colorMode: 'custom',
         customColor: '#000000',
     };
-    valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    valueFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
-        size: 26,
+        size: null,
         colorMode: 'custom',
         customColor: '#000000',
     };
-    icon: {
-        id?: number | null;
-        file: string;
-        name?: string | null;
-        appearance: 'always' | 'limits';
-        colorMode: 'scheme' | 'custom';
-        customColor: string;
-        setAsDefault?: boolean;
-    } = {
+        icon: IconSettings = {
         id: null,
         file: null,
         name: null,
+        size: this.defaultIconSize,
+        sizeUnit: this.defaultIconSizeUnit,
         appearance: 'always',
-        colorMode: 'custom',
+        colorMode: this.normalizeColorMode(),
         customColor: '#000000',
         setAsDefault: false,
     };
@@ -122,6 +123,8 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     selectedIconPreview: string | null = null;
     setAsDefaultIcon = false;
     defaultIconId: number | null = null;
+    uploadFailedMessage = '';
+    isUploadFailed = false;
 
     decimalPointOptions = [0, 1, 2, 3];
 
@@ -130,6 +133,12 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     }
 
     fontFamilies = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
+
+    get iconSizeValue(): string {
+        const size = this.icon?.size ?? this.defaultIconSize;
+        const unit = this.icon?.sizeUnit ?? this.defaultIconSizeUnit;
+        return `${size}${unit}`;
+    }
 
 
     appearanceOptions = [
@@ -168,21 +177,40 @@ export class CardWidgetParameterAdvancedSettingsComponent implements OnInit, OnC
     ];
 
 constructor(
+        injector: Injector,
         private _eventService: EventService,
         private dashboardPagesService: DashboardPagesService,
         private cardIconService: CardIconService,
-    ) {}
+    ) {
+        super(injector);
+    }
 
     onFileChanged(e: any) {
-        const file = e.value[0];
-        if (file) {
-            this.cardIconService.uploadIcon(file).subscribe((icon) => {
-                this.applySelectedIcon(icon);
-            });
+        const file = e.value?.[0];
+        this.isUploadFailed = false;
+
+        if (!file) {
+            return;
         }
+
+        const uploader = e.component;
+
+        this.cardIconService.uploadIcon(file).subscribe({
+            next: (icon) => {
+                this.applySelectedIcon(icon);
+                this.isUploadFailed = false;
+                uploader?.reset();
+            },
+            error: () => {
+                this.isUploadFailed = true;
+                this.notify.error(this.uploadFailedMessage);
+                uploader?.reset();
+            },
+        });
     }
 
     ngOnInit() {
+        this.uploadFailedMessage = this.l('CardIconUploadFailed');
         this.normalizationOptions = this.getNormalizationOptions();
         this._eventService.pqsEvents().subscribe((evts) => {
             this.flaggingEvents = evts;
@@ -225,8 +253,8 @@ constructor(
             this.icon = this.normalizeIconSettings(c.icon);
             this.setAsDefaultIcon = this.icon?.id != null && this.icon.id === this.defaultIconId;
             this.ensurePreview();
-            this.titleFont = this.normalizeFontSettings(c.titleFont, 16);
-            this.valueFont = this.normalizeFontSettings(c.valueFont, 26);
+            this.titleFont = this.normalizeFontSettings(c.titleFont);
+            this.valueFont = this.normalizeFontSettings(c.valueFont);
         }
     }
     ngOnDestroy(): void {
@@ -334,8 +362,9 @@ constructor(
         this.icon = this.normalizeIconSettings(null);
         this.setAsDefaultIcon = false;
         this.selectedIconPreview = null;
-        this.titleFont = this.normalizeFontSettings(null, 16);
-        this.valueFont = this.normalizeFontSettings(null, 26);
+        this.titleFont = this.normalizeFontSettings(null);
+        this.valueFont = this.normalizeFontSettings(null);
+        this.isUploadFailed = false;
     }
 
     onIconSelected(iconId: number) {
@@ -362,6 +391,8 @@ constructor(
             appearance: this.icon.appearance,
             colorMode: this.icon.colorMode,
             customColor: this.icon.customColor,
+            size: this.icon.size,
+            sizeUnit: this.icon.sizeUnit,
         });
         this.setAsDefaultIcon = false;
         this.selectedIconPreview = null;
@@ -396,57 +427,44 @@ constructor(
     }
 
     private normalizeFontSettings(
-        font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
-        defaultSize: number,
-    ): { family: string; size: number; colorMode: 'custom'; customColor: string } {
+        font: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+    ): { family: string; size?: number | null; colorMode: 'custom'; customColor: string } {
         return {
             family: font?.family ?? '',
-            size: font?.size ?? defaultSize,
+            size: font?.size ?? null,
             colorMode: 'custom',
             customColor: font?.customColor ?? '#000000',
         };
     }
 
-    private normalizeIconSettings(
-icon:
-            | {
-                  id?: number | null;
-                  file?: string | null;
-                  name?: string | null;
-                  appearance?: 'always' | 'limits';
-                  colorMode?: 'scheme' | 'custom';
-                  customColor?: string;
-                  setAsDefault?: boolean;
-              }
-            | null,
-    ): {
-        id?: number | null;
-        file: string;
-        name?: string | null;
-        appearance: 'always' | 'limits';
-        colorMode: 'custom';
-        customColor: string;
-        setAsDefault?: boolean;
-    } {        
+    private normalizeIconSettings(icon: IconSettingsInput): IconSettings {
         return {
             id: icon?.id ?? null,
             file: icon?.file ?? null,
             name: icon?.name ?? null,
+            size: icon?.size ?? this.defaultIconSize,
+            sizeUnit: icon?.sizeUnit ?? this.defaultIconSizeUnit,
             appearance: icon?.appearance ?? 'always',
-            colorMode: 'custom',
+            colorMode: this.normalizeColorMode(icon?.colorMode),
             customColor: icon?.customColor ?? '#000000',
             setAsDefault: icon?.setAsDefault,
         };
     }
-     private prepareIconForSave() {
+    private normalizeColorMode(colorMode?: string | IconColorMode): IconColorMode {
+        return colorMode === 'custom' ? 'custom' : 'scheme';
+    }
+
+    private prepareIconForSave(): IconSettings {
         return {
             id: this.icon.id,
             name: this.icon.name,
             file: null,
+            size: this.icon.size,
+            sizeUnit: this.icon.sizeUnit,
             appearance: this.icon.appearance,
             colorMode: this.icon.colorMode,
             customColor: this.icon.customColor,
             setAsDefault: this.setAsDefaultIcon,
-        } as CardWidgetAdvancedSettingsConfig['icon'];
+        };
     }
 }

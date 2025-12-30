@@ -66,15 +66,15 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
     upperLimit = 0;
 
     decimalPoints = 2;
-    titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    titleFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
-        size: 20,
+        size: null,
         colorMode: 'custom',
         customColor: '#000000',
     };
-    valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    valueFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
-        size: 20,
+        size: null,
         colorMode: 'custom',
         customColor: '#000000',
     };
@@ -159,8 +159,8 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
             this.upperLimit = +c.upperLimit;
             this.decimalPoints = c.decimalPoints;
             this.link.page = c.linkPage;
-            this.titleFont = this.normalizeFontSettings(c.titleFont, 20);
-            this.valueFont = this.normalizeFontSettings(c.valueFont, 20);
+            this.titleFont = this.normalizeFontSettings(c.titleFont);
+            this.valueFont = this.normalizeFontSettings(c.valueFont);
             this.segments = c.segments ? c.segments.map((segment) => ({ ...segment })) : [];
             this.totalWeight = this.calculateTotalWeight(this.segments);
             this.isSegmentsValid = this.calculateSegmentsValidity(this.segments);
@@ -259,8 +259,8 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
         this.parameterName = '';
         this.decimalPoints = 2;
         this.link.page = null;
-        this.titleFont = this.normalizeFontSettings(null, 20);
-        this.valueFont = this.normalizeFontSettings(null, 20);
+        this.titleFont = this.normalizeFontSettings(null);
+        this.valueFont = this.normalizeFontSettings(null);
         this.segments = [];
         this.isSegmentsValid = false;
         this.totalWeight = 0;
@@ -272,12 +272,11 @@ export class GaugeWidgetEventAdvancedSettingsComponent implements OnInit, OnChan
         this.outOfLimitColor = '';
     }
      private normalizeFontSettings(
-        font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
-        defaultSize: number,
-    ): { family: string; size: number; colorMode: 'custom'; customColor: string } {
+        font: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+    ): { family: string; size?: number | null; colorMode: 'custom'; customColor: string } {
         return {
             family: font?.family ?? '',
-            size: font?.size ?? defaultSize,
+            size: font?.size ?? null,
             colorMode: 'custom',
             customColor: font?.customColor ?? '#000000',
         };

@@ -73,15 +73,15 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     selectedFlagEvents: EventClass[] = [];
 
     decimalPoints = 2;
-    titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    titleFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
-        size: 16,
+        size: null,
         colorMode: 'custom',
         customColor: '#000000',
     };
-    valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    valueFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
-        size: 26,
+        size: null,
         colorMode: 'custom',
         customColor: '#000000',
     };
@@ -188,8 +188,8 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
             this.icon = this.normalizeIconSettings(c.icon);
             this.setAsDefaultIcon = this.icon?.id != null && this.icon.id === this.defaultIconId;
             this.ensurePreview();
-            this.titleFont = this.normalizeFontSettings(c.titleFont, 16);
-            this.valueFont = this.normalizeFontSettings(c.valueFont, 26);
+            this.titleFont = this.normalizeFontSettings(c.titleFont);
+            this.valueFont = this.normalizeFontSettings(c.valueFont);
         }
     }
 
@@ -279,8 +279,8 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
         this.icon = this.normalizeIconSettings(null);
         this.selectedIconPreview = null;
         this.setAsDefaultIcon = false;
-        this.titleFont = this.normalizeFontSettings(null, 16);
-        this.valueFont = this.normalizeFontSettings(null, 26);
+        this.titleFont = this.normalizeFontSettings(null);
+        this.valueFont = this.normalizeFontSettings(null);
     }
 
     onIconSelected(iconId: number) {
@@ -341,12 +341,11 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     }
 
     private normalizeFontSettings(
-        font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
-        defaultSize: number,
-    ): { family: string; size: number; colorMode: 'custom'; customColor: string } {
+        font: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+    ): { family: string; size?: number | null; colorMode: 'custom'; customColor: string } {
         return {
             family: font?.family ?? '',
-            size: font?.size ?? defaultSize,
+            size: font?.size ?? null,
             colorMode: 'custom',
             customColor: font?.customColor ?? '#000000',
         };

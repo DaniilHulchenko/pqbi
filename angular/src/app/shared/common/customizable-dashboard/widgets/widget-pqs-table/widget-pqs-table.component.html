@@ -28,32 +28,34 @@
                 </dx-radio-group>
             </div>
         </div>
-                <div id="innerScroll" #treeContainer class="table-container flex-grow-1 notDraggable">
-                    <div *ngIf="isLoading" class="loading-overlay">
-                        <dx-load-indicator></dx-load-indicator>
-                        <p>{{'LoadingData' | localize }}</p>
-                    </div>
-                    <dx-tree-list
-                        *ngIf="dataSource && columns"
-                        [dataSource]="dataSource"
-                        [columns]="columns"
-                        [filterRow]="{ visible: true }"
-                        keyExpr="id"
-                        parentIdExpr="parentId"
-                        [autoExpandAll]="true"
-                        [showRowLines]="true"
-                        [showColumnLines]="true"
-                        [columnAutoWidth]="true"
-                        [allowColumnResizing]="editState"
-                        [columnResizingMode]="'nextColumn'"
-                        [columnMinWidth]="50"
-                        [wordWrapEnabled]="true"
-                        [showBorders]="true"
-                        [rowAlternationEnabled]="tableWidgetConfiguration.designOptions?.bandedRows"
-                        (onContentReady)="onContentReady()">
-                  </dx-tree-list>
-                </div>
+        <div id="innerScroll" #treeContainer class="table-container flex-grow-1 notDraggable">
+            <div *ngIf="isLoading" class="loading-overlay">
+                <dx-load-indicator></dx-load-indicator>
+                <p>{{'LoadingData' | localize }}</p>
             </div>
+            <dx-tree-list
+                class="pqs-table"
+                *ngIf="dataSource && columns"
+                [dataSource]="dataSource"
+                [columns]="columns"
+                [filterRow]="{ visible: true }"
+                [height]="'100%'"
+                keyExpr="id"
+                parentIdExpr="parentId"
+                [autoExpandAll]="true"
+                [showRowLines]="true"
+                [showColumnLines]="true"
+                [columnAutoWidth]="true"
+                [allowColumnResizing]="editState"
+                [columnResizingMode]="'nextColumn'"
+                [columnMinWidth]="50"
+                [wordWrapEnabled]="true"
+                [showBorders]="true"
+                [rowAlternationEnabled]="tableWidgetConfiguration.designOptions?.bandedRows"
+                (onContentReady)="onContentReady()">
+            </dx-tree-list>
+        </div>
+    </div>
 </div>
 
 <ng-container *ngIf="isEditModalInitialized">

@@ -67,7 +67,6 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
                         key: this.emptyTag.tagName,
                         label: this.emptyTag.tagName,
                         expanded: true,
-                        selectable: false,
                         children: this.emptyTag.labels[0].components.map((component) => {
                             return {
                                 key: component.componentId,

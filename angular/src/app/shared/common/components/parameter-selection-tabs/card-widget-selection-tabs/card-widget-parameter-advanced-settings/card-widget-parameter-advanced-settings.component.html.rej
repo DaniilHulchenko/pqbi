@@ -1,0 +1,53 @@
+diff a/angular/src/app/shared/common/components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-parameter-advanced-settings/card-widget-parameter-advanced-settings.component.html b/angular/src/app/shared/common/components/parameter-selection-tabs/card-widget-selection-tabs/card-widget-parameter-advanced-settings/card-widget-parameter-advanced-settings.component.html	(rejected hunks)
+@@ -49,50 +49,51 @@
+             </dx-select-box>
+ 
+             <dx-number-box [(value)]="valueFont.size" placeholder="font size" [min]="8" [max]="50">
+             </dx-number-box>
+ 
+             <div class="font-color">
+               <label>font color</label>
+               <dx-color-box [(value)]="valueFont.customColor" [editAlphaChannel]="true"></dx-color-box>
+             </div>
+           </div>
+         </div>
+ 
+         <!-- Icon Section -->
+         <h5>Icon</h5>
+         <div class="icon-section d-flex flex-column gap-2">
+           <div class="d-flex flex-column">
+             <label>Upload new icon</label>
+             <dx-file-uploader
+               [selectButtonText]="'SelectFile' | localize"
+               [uploadFailedMessage]="uploadFailedMessage"
+               [uploadMode]="'useForm'"
+               [multiple]="false"
+               [allowedFileExtensions]="['.svg']"
+               (onValueChanged)="onFileChanged($event)">
+             </dx-file-uploader>
++            <div class="text-danger mt-1" *ngIf="isUploadFailed">{{ uploadFailedMessage }}</div>
+           </div>
+ 
+           <div class="d-flex flex-column gap-2" *ngIf="hasSelectedIcon">
+             <div class="d-flex align-items-center gap-3">
+               <img *ngIf="selectedIconPreview || icon.file" [src]="selectedIconPreview || icon.file" style="width: 32px; height: 32px;" />
+               <span>{{ icon.name || 'Selected icon' }}</span>
+             </div>
+ 
+             <div class="d-flex align-items-center gap-3">
+               <p-checkbox
+                 [binary]="true"
+                 [disabled]="!hasSelectedIcon || !icon.id"
+                 [(ngModel)]="setAsDefaultIcon"
+                 label="Set as default icon"
+               ></p-checkbox>
+               <dx-button
+                 stylingMode="outlined"
+                 icon="refresh"
+                 text="Reset icon"
+                 type="default"
+                 [disabled]="!hasSelectedIcon"
+                 (onClick)="resetIcon()"
+               ></dx-button>
+             </div>
+           </div>

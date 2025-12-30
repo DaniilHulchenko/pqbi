@@ -123,13 +123,15 @@ export class CardWidgetChannelParameterSelectionTabComponent
             id: null,
             file: null,
             name: null,
+            size: 32,
+            sizeUnit: 'px',
             appearance: 'always',
             colorMode: 'scheme',
             customColor: '#000000',
             setAsDefault: false,
         },
-        titleFont: { family: '', size: 12, colorMode: 'scheme', customColor: '#000000' },
-        valueFont: { family: '', size: 16, colorMode: 'scheme', customColor: '#000000' },
+        titleFont: { family: '', size: null, colorMode: 'scheme', customColor: '#000000' },
+        valueFont: { family: '', size: null, colorMode: 'scheme', customColor: '#000000' },
     };
 
     private trees = {};

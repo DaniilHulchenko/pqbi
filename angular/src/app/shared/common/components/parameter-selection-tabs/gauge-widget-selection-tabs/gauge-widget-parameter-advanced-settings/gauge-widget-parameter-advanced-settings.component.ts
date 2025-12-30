@@ -75,15 +75,15 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     colorScheme = ColorSchema.None;
     outOfLimitColor = '';
     decimalPoints = 2;
-    titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    titleFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
-        size: 20,
+        size: null,
         colorMode: 'custom',
         customColor: '#000000',
     };
-    valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string } = {
+    valueFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
-        size: 20,
+        size: null,
         colorMode: 'custom',
         customColor: '#000000',
     };
@@ -178,8 +178,8 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
             this.selectedFlagEvents = c.defaultFlagEvent ?? [];
             this.decimalPoints = c.decimalPoints;
             this.link.page = c.linkPage;
-            this.titleFont = this.normalizeFontSettings(c.titleFont, 20);
-            this.valueFont = this.normalizeFontSettings(c.valueFont, 20);
+            this.titleFont = this.normalizeFontSettings(c.titleFont);
+            this.valueFont = this.normalizeFontSettings(c.valueFont);
             this.segments = c.segments ? c.segments.map((segment) => ({ ...segment })) : [];
             this.totalWeight = this.calculateTotalWeight(this.segments);
             this.isSegmentsValid = this.calculateSegmentsValidity(this.segments);
@@ -236,15 +236,17 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     }
 
     save() {
-        if (!this.canSave) {
+        const hasSegments = this.segments?.length > 0;
+
+        if (hasSegments && !this.canSave) {
             this.segmentationComponent?.validateBeforeSave();
             return;
         }
 
-        const lowerLimit = this.getSegmentsMin();
-        const upperLimit = this.getSegmentsMax();
+        const lowerLimit = hasSegments ? this.getSegmentsMin() : null;
+        const upperLimit = hasSegments ? this.getSegmentsMax() : null;
 
-        if (lowerLimit == null || upperLimit == null) {
+        if (hasSegments && (lowerLimit == null || upperLimit == null)) {
             this.segmentationComponent?.validateBeforeSave();
             return;
         }
@@ -263,7 +265,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
             linkPage: this.link.page,
             titleFont: this.titleFont,
             valueFont: this.valueFont,
-            segments: this.segments,
+            segments: hasSegments ? this.segments : [],
             unit: {unitType: this.unitType, selectedUnit: this.selectedUnit},
             marker1: this.marker1,
             marker2: this.marker2,
@@ -285,6 +287,10 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     }
 
     get canSave(): boolean {
+        if (!this.segments?.length) {
+            return true;
+        }
+
         return this.segmentationComponent?.canSave ?? this.isSegmentsValid;
     }
 
@@ -320,8 +326,8 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         this.parameterName = '';
         this.decimalPoints = 2;
         this.link.page = null;
-        this.titleFont = this.normalizeFontSettings(null, 20);
-        this.valueFont = this.normalizeFontSettings(null, 20);
+        this.titleFont = this.normalizeFontSettings(null);
+        this.valueFont = this.normalizeFontSettings(null);
         this.segments = [];
         this.isSegmentsValid = false;
         this.totalWeight = 0;
@@ -335,7 +341,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
 
     private calculateSegmentsValidity(segments: Segment[]): boolean {
         if (!segments?.length) {
-            return false;
+            return true;
         }
 
         const sorted = [...segments].sort((a, b) => (a.from === b.from ? a.to - b.to : a.from - b.from));
@@ -350,12 +356,11 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         return segments.reduce((sum, segment) => sum + (segment.weight ?? 0), 0);
     }
     private normalizeFontSettings(
-        font: { family?: string; size?: number; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
-        defaultSize: number,
-    ): { family: string; size: number; colorMode: 'custom'; customColor: string } {
+        font: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } | null,
+    ): { family: string; size?: number | null; colorMode: 'custom'; customColor: string } {
         return {
             family: font?.family ?? '',
-            size: font?.size ?? defaultSize,
+            size: font?.size ?? null,
             colorMode: 'custom',
             customColor: font?.customColor ?? '#000000',
         };

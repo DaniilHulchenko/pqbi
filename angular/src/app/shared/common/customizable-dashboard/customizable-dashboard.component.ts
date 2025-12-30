@@ -425,8 +425,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     private getWidgetTitleSizeLabel(): string {
         const label = this.l('WidgetTitleSize');
 
-        if (!label || label.startsWith('[')) {
-            return 'WidgetTitleSize';
+        if (!label || label.startsWith('[') || label === 'WidgetTitleSize') {
+            return 'Widget Title Size';
         }
 
         return label;

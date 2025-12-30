@@ -38,12 +38,14 @@ export interface CardWidgetAdvancedSettingsConfig {
         id?: number | null;
         file?: string | null;
         name?: string | null;
+        size?: number | null;
+        sizeUnit?: string | null;
         appearance: 'always' | 'limits';
         colorMode: 'scheme' | 'custom';
         customColor: string;
         setAsDefault?: boolean;
     };
 
-    titleFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string };
-    valueFont: { family: string; size: number; colorMode: 'scheme' | 'custom'; customColor: string };
+    titleFont?: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string };
+    valueFont?: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string };
 }
