@@ -36,6 +36,7 @@ import { FooterComponent } from './shared/layout/footer.component';
 import { LinkedAccountService } from './shared/layout/linked-account.service';
 import { SideBarMenuComponent } from './shared/layout/nav/side-bar-menu.component';
 import { TopBarMenuComponent } from './shared/layout/nav/top-bar-menu.component';
+import { DashboardToolbarControlsComponent } from './shared/layout/topbar/dashboard-toolbar-controls.component';
 import { QuickThemeSelectionComponent } from './shared/layout/topbar/quick-theme-selection.component';
 import { LanguageSwitchDropdownComponent } from './shared/layout/topbar/language-switch-dropdown.component';
 import { ChatToggleButtonComponent } from './shared/layout/topbar/chat-toggle-button.component';
@@ -102,6 +103,7 @@ import { FriendsLookupTableComponent } from './shared/layout/chat/friends-lookup
         ChatFriendListItemComponent,
         NotificationSettingsModalComponent,
         ChatMessageComponent,
+        DashboardToolbarControlsComponent,
         QuickThemeSelectionComponent,
         LanguageSwitchDropdownComponent,
         ChatToggleButtonComponent,

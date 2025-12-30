@@ -1,41 +1,12 @@
 <div [@routerTransition] class="dashboard-page">
-    <sub-header [title]="'Dashboard' | localize" [description]="'DashboardHeaderInfo' | localize" class="dashboard-subheader">
-        <div role="actions" class="d-flex align-items-center dashboard-actions">
-            <div
-                class="font-size-control fontSizeButton"
-                [class.invisible]="!editModeEnabled"
-                [attr.aria-hidden]="!editModeEnabled"
-            >
-                <label class="form-label mb-0 me-2">{{ widgetTitleSizeLabel }}</label>
-                <select
-                    class="form-select form-select-sm d-inline-block w-auto"
-                    [ngModel]="dashboardConfiguration?.widgetNameFontSize"
-                    (ngModelChange)="onWidgetNameFontSizeChange($event)"
-                    [disabled]="!editModeEnabled"
-                    [attr.tabIndex]="editModeEnabled ? null : -1"
-                >
-                    <option [ngValue]="undefined">{{ 'Default' | localize }} ({{ defaultWidgetTitleSize }}px)</option>
-                    <option *ngFor="let size of widgetNameFontSizes" [ngValue]="size">{{ size }} px</option>
-                </select>
-            </div>
-            <label
-                class="form-check form-check-custom form-check-solid form-switch mb-0 my-edit-button"
-                *ngIf="isGranted('Pages.Tenant.Dashboard.Edit')"
-            >
-                <input
-                    type="checkbox"
-                    class="form-check-input"
-                    (change)="changeEditMode()"
-                    [checked]="editModeEnabled"
-                />
-                <span class="form-check-label">
-                    {{ 'EditMode' | localize }}
-                </span>
-            </label>
-        </div>
-    </sub-header>
+    <sub-header [title]="'Dashboard' | localize" [description]="'DashboardHeaderInfo' | localize" class="dashboard-subheader"></sub-header>
 
-    <div [ngClass]="containerClass" class="dashboard-content" *ngIf="!loading">
+    <div
+        [ngClass]="containerClass"
+        class="dashboard-content"
+        [ngStyle]="{ 'background-color': dashboardBackgroundColor }"
+        *ngIf="!loading"
+    >
         <div class="row" *ngIf="!userDashboard?.pages?.length">
             <div class="col-md-12">
                 <div class="alert alert-warning" role="alert">
@@ -65,7 +36,7 @@
                                 [ngClass]="{ 'no-tab': !moreThanOnePage() }"
                             >
                                 <gridster-item
-                                    [ngStyle]="{'background-color' : bgColor, 'padding': '10px', 'border-radius': '10px'}"
+                                    [ngStyle]="{ 'padding': '10px', 'border-radius': '10px' }"
                                     *ngFor="let widget of page.widgets"
                                     [item]="widget.gridInformation"
                                     [attr.data-id]="widget.configurationId"

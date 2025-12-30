@@ -33,13 +33,17 @@ import { AddWidgetModalComponent } from './add-widget-modal/add-widget-modal.com
 import { DashboardCustomizationConst } from './DashboardCustomizationConsts';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import * as rtlDetect from 'rtl-detect';
-import { Subject, forkJoin } from 'rxjs';
+import { Subject, Subscription, forkJoin } from 'rxjs';
 import { GuidGeneratorService } from '@shared/utils/guid-generator.service';
 import { EditModeService } from '@app/shared/services/edit-mode-service.service';
-import { max, set } from 'lodash-es'
+import { max } from 'lodash-es'
 import { WidgetUpdateModel } from '@app/shared/models/widget-update-model';
 import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
-import { DashboardConfigurationService } from './dashboard-configuration.service';
+import {
+    DashboardConfigurationService,
+    DashboardConfigurationState,
+} from './dashboard-configuration.service';
+import { DashboardToolbarService } from '@app/shared/services/dashboard-toolbar.service';
 
 
 export const WIDGETONRESIZEEVENTHANDLERTOKEN = new InjectionToken<WidgetOnResizeEventHandler>(
@@ -69,6 +73,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     loading = true;
     busy = true;
     editModeEnabled = false;
+    readonly defaultDashboardBackgroundColor = this.bgColor;
 
     //gridster options. all gridster needs its options. In our scenario, they are all same.
     options: GridsterConfig[] = [];
@@ -76,7 +81,9 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     dashboardDefinition: DashboardOutput;
     userDashboard: any;
 
-    dashboardConfiguration: { widgetNameFontSize?: number } = {};
+    dashboardConfiguration: DashboardConfigurationState = {
+        backgroundColor: this.defaultDashboardBackgroundColor,
+    };
 
     selectedPage = {
         id: '',
@@ -97,6 +104,9 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
 
     myinjector: Injector;
 
+    private configurationSubscription?: Subscription;
+    private editModeSubscription?: Subscription;
+
     widgetNameFontSizes = [12, 14, 16, 18, 20, 22, 24];
     readonly defaultWidgetTitleSize = 20;
     widgetTitleSizeLabel = 'WidgetTitleSize';
@@ -110,6 +120,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         private editModeService: EditModeService,
         private dashboardPagesService: DashboardPagesService,
         private dashboardConfigurationService: DashboardConfigurationService,
+        private dashboardToolbarService: DashboardToolbarService,
     ) {
         super(_injector);
         this.widgetTitleSizeLabel = this.getWidgetTitleSizeLabel();
@@ -132,6 +143,10 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
     }
     ngOnInit() {
         this.loading = true;
+        this.dashboardToolbarService.setDashboardActive(true);
+        this.editModeEnabled = this.editModeService.getEditModeValue();
+        this.registerEditModeSubscription();
+        this.registerConfigurationSubscription();
         this.subscribeToEvent('app.dashboard.removeWidget', (widgetGuid, widgetId) => this.removeItem(widgetGuid, widgetId, true));
         this.subscribeToEvent('app.dashboard.saveWidget', (widgetUpdateModel: WidgetUpdateModel) => this.updateItem(widgetUpdateModel));
         this.subscribeToEvent('app.dashboard.navigateToPage', (pageId: string) => this.onNavigateToPage(pageId));
@@ -148,6 +163,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             ),
         ]).subscribe(([userDashboardResultFromServer, dashboardDefinitionResult]) => {
             this.dashboardDefinition = dashboardDefinitionResult;
+            this.initializeDashboardConfiguration((userDashboardResultFromServer as any)?.configuration);
             if (!this.dashboardDefinition.widgets || this.dashboardDefinition.widgets.length === 0) {
                 this.loading = false;
                 this.busy = false;
@@ -214,12 +230,27 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         });
     }
 
+    private initializeDashboardConfiguration(configuration: DashboardConfigurationState | undefined): void {
+        const storedBackgroundColor = this.dashboardConfigurationService.getStoredBackgroundColor();
+        const backgroundColor =
+            configuration?.backgroundColor || storedBackgroundColor || this.defaultDashboardBackgroundColor;
+
+        this.dashboardConfiguration = {
+            ...configuration,
+            backgroundColor,
+        };
+
+        this.dashboardConfigurationService.setConfiguration(this.dashboardConfiguration);
+
+        if (!storedBackgroundColor && backgroundColor) {
+            this.dashboardConfigurationService.updateBackgroundColor(backgroundColor);
+        }
+    }
+
     initializeUserDashboardDefinition(
         userDashboardResultFromServer: Dashboard,
         dashboardDefinitionResult: DashboardOutput,
     ) {
-        this.dashboardConfiguration = (userDashboardResultFromServer as any)?.configuration ?? {};
-        this.dashboardConfigurationService.setConfiguration(this.dashboardConfiguration);
         this.userDashboard = {
             dashboardName: this.dashboardName,
             filters: [],
@@ -400,10 +431,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         //change all gridster options
         //setTimeout for letting the DOM first update so that the edit button appears
         setTimeout(() => {
-            this.editModeEnabled = !this.editModeEnabled;
-            this.editModeService.setEditMode(this.editModeEnabled);
-            abp.event.trigger('app.dashboardEdit.onEditStateChange', this.editModeEnabled);
-            this.refreshAllGrids();
+            this.editModeService.setEditMode(!this.editModeEnabled);
         }, 150);
     }
 
@@ -704,18 +732,37 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         };
     }
 
+    private registerConfigurationSubscription(): void {
+        this.configurationSubscription = this.dashboardConfigurationService
+            .getConfiguration()
+            .subscribe((configuration) => {
+                this.dashboardConfiguration = {
+                    ...configuration,
+                    backgroundColor: configuration.backgroundColor || this.defaultDashboardBackgroundColor,
+                };
+            });
+    }
+
+    private registerEditModeSubscription(): void {
+        this.editModeSubscription = this.editModeService.getEditMode().subscribe((enabled) => {
+            const previousValue = this.editModeEnabled;
+            this.editModeEnabled = enabled;
+
+            if (previousValue === enabled) {
+                return;
+            }
+
+            abp.event.trigger('app.dashboardEdit.onEditStateChange', this.editModeEnabled);
+            this.refreshAllGrids();
+        });
+    }
+
     private updatePagesStore(): void {
         this.dashboardPagesService.setPages(this.userDashboard?.pages ?? []);
     }
 
      onWidgetNameFontSizeChange(size: number | undefined): void {
-        const widgetNameFontSize = size ? +size : undefined;
-        this.dashboardConfiguration = {
-            ...this.dashboardConfiguration,
-            widgetNameFontSize,
-        };
-
-        this.dashboardConfigurationService.updateWidgetNameFontSize(widgetNameFontSize);
+        this.dashboardConfigurationService.updateWidgetNameFontSize(size ? +size : undefined);
     }
 
     private getWidgetViewDefinition(id: string): WidgetViewDefinition {
@@ -741,6 +788,13 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         });
     }
 
+    ngOnDestroy(): void {
+        this.dashboardToolbarService.setDashboardActive(false);
+        this.configurationSubscription?.unsubscribe();
+        this.editModeSubscription?.unsubscribe();
+        super.ngOnDestroy();
+    }
+
     private getResponsiveRowHeight(): number {
         const baseRowHeight = 30;
         const minRowHeight = 18;
@@ -756,6 +810,10 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         const referenceHeight = 1080;
         const scaledRowHeight = Math.round((viewportHeight / referenceHeight) * baseRowHeight);
         return Math.max(minRowHeight, Math.min(maxRowHeight, scaledRowHeight));
+    }
+
+    get dashboardBackgroundColor(): string {
+        return this.dashboardConfiguration?.backgroundColor || this.defaultDashboardBackgroundColor;
     }
 
 
