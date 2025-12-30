@@ -1,0 +1,47 @@
+<div *ngIf="showControls" class="dashboard-toolbar-controls flex-shrink-0">
+    <div class="dashboard-toolbar-controls__group d-flex align-items-center">
+        <div class="dashboard-toolbar-controls__bg d-flex align-items-center me-3">
+            <label class="form-label fw-semibold text-gray-600 mb-0 me-2">BG:</label>
+            <input
+                type="color"
+                class="form-control form-control-color dashboard-toolbar-controls__color-picker"
+                [value]="backgroundColor"
+                (input)="onBackgroundColorChange($event.target.value)"
+                aria-label="Dashboard background color"
+            />
+        </div>
+        <div
+            class="dashboard-toolbar-controls__font d-flex align-items-center me-3"
+            [class.invisible]="!editModeEnabled"
+            [attr.aria-hidden]="!editModeEnabled"
+        >
+            <label class="form-label mb-0 me-2">{{ widgetTitleSizeLabel }}</label>
+            <select
+                class="form-select form-select-sm w-auto"
+                [ngModel]="selectedWidgetNameFontSize"
+                (ngModelChange)="onWidgetNameFontSizeChange($event)"
+                [disabled]="!editModeEnabled"
+                [attr.tabIndex]="editModeEnabled ? null : -1"
+            >
+                <option [ngValue]="undefined">
+                    {{ 'Default' | localize }} ({{ defaultWidgetTitleSize }}px)
+                </option>
+                <option *ngFor="let size of widgetNameFontSizes" [ngValue]="size">{{ size }} px</option>
+            </select>
+        </div>
+        <label
+            class="form-check form-check-custom form-check-solid form-switch mb-0 dashboard-toolbar-controls__toggle"
+            *ngIf="canEditDashboard()"
+        >
+            <input
+                type="checkbox"
+                class="form-check-input"
+                [checked]="editModeEnabled"
+                (change)="toggleEditMode()"
+            />
+            <span class="form-check-label">
+                {{ 'EditMode' | localize }}
+            </span>
+        </label>
+    </div>
+</div>
