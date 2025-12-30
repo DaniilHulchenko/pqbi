@@ -197,6 +197,19 @@ input:checked + .slider:before {
   width: 100%;
 }
 
+:host ::ng-deep .dashboard-grid gridster-item .kt-portlet {
+  background-color: var(--bs-card-bg, #ffffff);
+}
+
+:host ::ng-deep .dashboard-grid gridster-item .card {
+  background-color: var(--bs-card-bg, #ffffff);
+}
+
+:host ::ng-deep .dashboard-grid gridster-item .kt-portlet__head,
+:host ::ng-deep .dashboard-grid gridster-item .kt-portlet__body {
+  background-color: inherit;
+}
+
 .dashboard-grid.no-tab{
   height: 100%
 }
