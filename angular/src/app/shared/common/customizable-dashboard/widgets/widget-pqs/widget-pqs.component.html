@@ -7,30 +7,28 @@
         </div>
     </div>
 
-    <div class="row align-items-center widget-settings-row">
+    <div class="row align-items-center widget-settings-row" [ngStyle]="{'background-color': settingsBackgroundColor}">
         <div *ngIf="editState" class="col-auto d-flex align-items-center widget-setting">
             <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
-            <label for="stepLineToggle" class="ms-2">{{ 'StepLine' | localize }}</label>
+            <label for="stepLineToggle" class="widget-setting-label" [ngStyle]="{ color: lineTextColor }">{{ 'StepLine' | localize }}</label>
         </div>
     
         <div class="col-auto d-flex align-items-center widget-setting">
             <input type="checkbox" id="linePointsToggle" [(ngModel)]="isLinePoints" (change)="toggleLinePoints()" />
-            <label for="linePointsToggle" class="ms-2 widget-setting-label" [ngStyle]="{ color: lineTextColor }">{{ 'LinePoints' | localize }}</label>
+            <label for="linePointsToggle" class="widget-setting-label" [ngStyle]="{ color: lineTextColor }">{{ 'LinePoints' | localize }}</label>
         </div>
 
         <div class="col-auto d-flex align-items-center widget-setting">
-            <input type="checkbox" id="lineColorToggle" [(ngModel)]="isLineColorEnabled" (change)="onLineToggleChange($event.target.checked)" />
-            <label for="lineColorToggle" class="ms-2 widget-setting-label d-flex align-items-center" [ngStyle]="{ color: lineTextColor }">
+            <label class="widget-setting-label d-flex align-items-center" [ngStyle]="{ color: lineTextColor }">
                 {{ 'Line' | localize }}:
-                <input type="color" class="inline-color-picker ms-2" [ngModel]="lineColor || lineTextColor" (ngModelChange)="onLineColorChange($event)" />
+                <input type="color" class="inline-color-picker" [ngModel]="lineColor || lineTextColor" (ngModelChange)="onLineColorChange($event)" />
             </label>
         </div>
 
         <div class="col-auto d-flex align-items-center widget-setting">
-            <input type="checkbox" id="backgroundColorToggle" [(ngModel)]="isBackgroundColorEnabled" (change)="onBackgroundToggleChange($event.target.checked)" />
-            <label for="backgroundColorToggle" class="ms-2 widget-setting-label d-flex align-items-center" [ngStyle]="{ color: lineTextColor }">
+            <label class="widget-setting-label d-flex align-items-center" [ngStyle]="{ color: lineTextColor }">
                 {{ 'BG' | localize }}:
-                <input type="color" class="inline-color-picker ms-2" [ngModel]="backgroundColor || fallbackBackgroundColor" (ngModelChange)="onBackgroundColorChange($event)" />
+                <input type="color" class="inline-color-picker" [ngModel]="backgroundColor || chartBackgroundColor || fallbackBackgroundColor" (ngModelChange)="onBackgroundColorChange($event)" />
             </label>
         </div>
     </div>
