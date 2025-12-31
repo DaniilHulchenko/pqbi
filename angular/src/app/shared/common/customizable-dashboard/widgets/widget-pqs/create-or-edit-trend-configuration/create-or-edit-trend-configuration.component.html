@@ -10,6 +10,21 @@
                     [minResolution]="minAllowedResolution" [isVertical]="false" required /> -->
             </div>
 
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" id="modalLineColorToggle" [checked]="isLineColorEnabled" (change)="onLineColorToggle($event.target.checked)" />
+                    <label for="modalLineColorToggle" class="ms-2 me-2">{{ 'Line' | localize }}:</label>
+                    <input type="color" class="form-control form-control-color p-0" [disabled]="!isLineColorEnabled"
+                        [ngModel]="lineColor || defaultLineColor" (ngModelChange)="onLineColorChange($event)" />
+                </div>
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" id="modalBackgroundColorToggle" [checked]="isBackgroundColorEnabled" (change)="onBackgroundColorToggle($event.target.checked)" />
+                    <label for="modalBackgroundColorToggle" class="ms-2 me-2">{{ 'BG' | localize }}:</label>
+                    <input type="color" class="form-control form-control-color p-0" [disabled]="!isBackgroundColorEnabled"
+                        [ngModel]="backgroundColor || defaultBackgroundColor" (ngModelChange)="onBackgroundColorChange($event)" />
+                </div>
+            </div>
+
             <div class="d-flex flex-column mb-3" style="width: 100%;">
                 <dx-tab-panel #tabPanel [dataSource]="tabs" [selectedIndex]="selectedTabIndex" [loop]="false"
                     [animationEnabled]="true" [deferRendering]="false" [swipeEnabled]="true"

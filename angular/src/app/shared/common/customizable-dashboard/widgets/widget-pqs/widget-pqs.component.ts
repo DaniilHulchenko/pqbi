@@ -216,6 +216,7 @@ class LineChart extends DashboardChartBase {
                     this.setErrorMessage(null);
                     // this.init(result2.data);
                     this.init222(result);
+                    this.updateLineColorFromChart();
                 }
                 this.hideLoading();
                 sub.unsubscribe();
@@ -249,6 +250,14 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     trendWidgetConfiguration: CreateOrEditTrendWidgetConfigurationDto;
     chartWidth: number;
 
+    lineColor?: string;
+    backgroundColor?: string;
+    detectedLineColor?: string;
+    readonly defaultLinePickerColor = '#0000ff';
+    readonly defaultBackgroundColor = '#ffffff';
+    isLineColorEnabled = false;
+    isBackgroundColorEnabled = false;
+
     headerBackgroundColor?: string;
     chartHeight: number = 300; // default value
 
@@ -277,6 +286,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     ngOnInit() {
         super.ngOnInit();
         this.headerBackgroundColor = this.loadHeaderColorFromCookie();
+        this.loadColorsFromCookie();
     }
 
     ngAfterViewInit() {
@@ -316,6 +326,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.trendWidgetConfiguration = result.trendWidgetConfiguration;
+                    this.loadColorsFromCookie();
                     this.headerBackgroundColor = this.loadHeaderColorFromCookie();
                     let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
                     if (this.trendWidgetConfiguration) {
@@ -557,6 +568,129 @@ private getSelectedIntervalResolution(
         setTimeout(() => {
             this.isStepLine = !this.isStepLine;
         }, 0);
+    }
+
+    onLineColorChange(color: string) {
+        this.lineColor = color;
+        this.isLineColorEnabled = true;
+        this.saveColorsToCookie();
+        this.updateDetectedLineColor(color);
+    }
+
+    onBackgroundColorChange(color: string) {
+        this.backgroundColor = color;
+        this.isBackgroundColorEnabled = true;
+        this.saveColorsToCookie();
+    }
+
+    onLineColorToggle(enabled: boolean) {
+        this.isLineColorEnabled = enabled;
+        if (!enabled) {
+            this.lineColor = undefined;
+        } else if (!this.lineColor) {
+            this.lineColor = this.detectedLineColor ?? this.defaultLinePickerColor;
+        }
+        this.saveColorsToCookie();
+        this.updateDetectedLineColor(this.lineColor);
+    }
+
+    onBackgroundColorToggle(enabled: boolean) {
+        this.isBackgroundColorEnabled = enabled;
+        if (!enabled) {
+            this.backgroundColor = undefined;
+        } else if (!this.backgroundColor) {
+            this.backgroundColor = this.defaultBackgroundColor;
+        }
+        this.saveColorsToCookie();
+    }
+
+    get lineLabelColor(): string {
+        return this.lineColor ?? this.detectedLineColor ?? this.defaultLinePickerColor;
+    }
+
+    onChartRendered() {
+        this.updateLineColorFromChart();
+    }
+
+    private updateLineColorFromChart(): void {
+        if (this.lineColor) {
+            this.updateDetectedLineColor(this.lineColor);
+            return;
+        }
+
+        const series = this.chartComponent?.instance?.getAllSeries?.();
+        if (series && series.length) {
+            const seriesColor = series[0]?.getColor?.();
+            this.updateDetectedLineColor(seriesColor);
+        } else {
+            this.updateDetectedLineColor();
+        }
+    }
+
+    private updateDetectedLineColor(color?: string): void {
+        this.detectedLineColor = color ?? this.detectedLineColor ?? this.defaultLinePickerColor;
+    }
+
+    private loadColorsFromCookie(): void {
+        const key = this.getColorsCookieKey();
+        if (!key) {
+            this.isLineColorEnabled = false;
+            this.isBackgroundColorEnabled = false;
+            this.lineColor = undefined;
+            this.backgroundColor = undefined;
+            this.updateDetectedLineColor();
+            return;
+        }
+
+        const cookies = document.cookie?.split(';').map(c => c.trim()) ?? [];
+        const cookie = cookies.find(c => c.startsWith(`${key}=`));
+        if (!cookie) {
+            this.isLineColorEnabled = false;
+            this.isBackgroundColorEnabled = false;
+            this.lineColor = undefined;
+            this.backgroundColor = undefined;
+            this.updateDetectedLineColor();
+            return;
+        }
+
+        try {
+            const decoded = decodeURIComponent(cookie.substring(key.length + 1));
+            const parsed = JSON.parse(decoded);
+            this.isLineColorEnabled = !!parsed?.isLineEnabled;
+            this.lineColor = parsed?.lineColor ?? undefined;
+            this.isBackgroundColorEnabled = !!parsed?.isBackgroundEnabled;
+            this.backgroundColor = parsed?.backgroundColor ?? undefined;
+        } catch {
+            this.isLineColorEnabled = false;
+            this.isBackgroundColorEnabled = false;
+            this.lineColor = undefined;
+            this.backgroundColor = undefined;
+        }
+
+        this.updateDetectedLineColor(this.lineColor);
+    }
+
+    private saveColorsToCookie(): void {
+        const key = this.getColorsCookieKey();
+        if (!key) {
+            return;
+        }
+
+        const payload = {
+            isLineEnabled: this.isLineColorEnabled,
+            lineColor: this.isLineColorEnabled ? this.lineColor : undefined,
+            isBackgroundEnabled: this.isBackgroundColorEnabled,
+            backgroundColor: this.isBackgroundColorEnabled ? this.backgroundColor : undefined,
+        };
+
+        const maxAge = 60 * 60 * 24 * 365; // 1 year
+        document.cookie = `${key}=${encodeURIComponent(JSON.stringify(payload))};path=/;max-age=${maxAge}`;
+    }
+
+    private getColorsCookieKey(): string | null {
+        return this.widgetConfigurationInDB?.widgetGuid
+            ? `trend_colors_${this.widgetConfigurationInDB.widgetGuid}`
+            : null;
     }
 
     onHeaderClick(): void {
