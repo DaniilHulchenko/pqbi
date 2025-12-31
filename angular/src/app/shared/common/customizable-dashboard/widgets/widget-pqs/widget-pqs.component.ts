@@ -262,7 +262,8 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     lineColor?: string;
     backgroundColor?: string;
     isLineColorEnabled = false;
-    isBackgroundColorEnabled = false;
+    isBackgroundColorEnabled = true;
+    settingsBackgroundColor?: string | null;
     private parametersConfiguration: TrendParametersConfiguration = { parameters: [] };
     private detectedLineColor?: string;
     private readonly fallbackLineColor = '#0d6efd';
@@ -280,7 +281,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     get chartBackgroundColor(): string | null {
-        return this.isBackgroundColorEnabled && this.backgroundColor ? this.backgroundColor : null;
+        return this.backgroundColor || null;
     }
 
     protected _defaultWidgetName;
@@ -309,6 +310,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     ngOnInit() {
         super.ngOnInit();
         this.headerBackgroundColor = this.loadHeaderColorFromCookie();
+        this.syncSettingsBackgroundColor();
     }
 
     ngAfterViewInit() {
@@ -354,6 +356,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                     this.isLineColorEnabled = this.parametersConfiguration.isLineColorEnabled ?? !!this.lineColor;
                     this.isBackgroundColorEnabled = this.parametersConfiguration.isBackgroundColorEnabled ?? !!this.backgroundColor;
                     this.headerBackgroundColor = this.loadHeaderColorFromCookie();
+                    this.syncSettingsBackgroundColor();
                     let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
                     if (this.trendWidgetConfiguration) {
                         let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
@@ -599,14 +602,14 @@ private getSelectedIntervalResolution(
         this.lineColor = color;
         this.isLineColorEnabled = true;
         this.detectedLineColor = color;
-        this.refreshChartAppearance();
+        this.syncSettingsBackgroundColor();
         this.persistAppearanceConfiguration();
     }
 
     onBackgroundColorChange(color: string): void {
         this.backgroundColor = color;
         this.isBackgroundColorEnabled = true;
-        this.refreshChartAppearance();
+        this.syncSettingsBackgroundColor();
         this.persistAppearanceConfiguration();
     }
 
@@ -615,7 +618,7 @@ private getSelectedIntervalResolution(
         if (isEnabled && !this.lineColor) {
             this.lineColor = this.lineTextColor;
         }
-        this.refreshChartAppearance();
+        this.syncSettingsBackgroundColor();
         this.persistAppearanceConfiguration();
     }
 
@@ -624,7 +627,7 @@ private getSelectedIntervalResolution(
         if (isEnabled && !this.backgroundColor) {
             this.backgroundColor = this.fallbackBackgroundColor;
         }
-        this.refreshChartAppearance();
+        this.syncSettingsBackgroundColor();
         this.persistAppearanceConfiguration();
     }
 
@@ -639,6 +642,7 @@ private getSelectedIntervalResolution(
     onHeaderColorChange(color: string): void {
         this.headerBackgroundColor = color;
         this.saveHeaderColorToCookie(color);
+        this.syncSettingsBackgroundColor();
     }
 
     ngOnDestroy() {
@@ -659,12 +663,12 @@ private getSelectedIntervalResolution(
                 this.detectedLineColor = seriesColor;
             }
         }
+        this.syncSettingsBackgroundColor();
     }
 
-    private refreshChartAppearance(): void {
-        if (this.chartComponent?.instance) {
-            this.chartComponent.instance.refresh();
-        }
+    private syncSettingsBackgroundColor(): void {
+        const bg = this.chartBackgroundColor || null;
+        this.settingsBackgroundColor = bg;
     }
 
     private persistAppearanceConfiguration(): void {
