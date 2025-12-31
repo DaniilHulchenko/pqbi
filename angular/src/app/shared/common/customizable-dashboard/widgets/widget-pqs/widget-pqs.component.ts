@@ -16,7 +16,6 @@ import {
     PQSRestApiServiceProxy,
     TenantDashboardServiceProxy,
     TrendCalcRequest,
-    TrendWidgetConfigurationsServiceProxy,
     TrendCustomWidgetData,
     BaseData,
     CalculatedDataItem,
@@ -30,13 +29,11 @@ import { Subject, Subscription, catchError, takeUntil, throwError, timer } from 
 import { CreateOrEditTrendConfigurationComponent } from './create-or-edit-trend-configuration/create-or-edit-trend-configuration.component';
 import { Guid } from 'guid-ts';
 import { DateRangeService } from '@app/shared/services/date-range-service';
-import { DateRangeState } from '@app/shared/models/date-range-state';
 import { ResolutionService } from '@app/shared/services/resolution-service';
 import { DxChartComponent } from 'devextreme-angular';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
 import { DateTime } from 'luxon';
 import { ResolutionUnits } from '@app/shared/enums/resolution-selection-units';
-import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
 import { RenameWidgetModalComponent } from '../../rename-widget-modal/rename-widget-modal.component';
 import { ColumnType } from '@app/shared/enums/column-type';
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
@@ -116,7 +113,6 @@ class LineChart extends DashboardChartBase {
     // }
 
     init222(trend: TrendResponse) {
-
         const data = trend.data;
         this.chartData = [];
         this.chartConfiguration.lineLegend = [];
@@ -152,6 +148,7 @@ class LineChart extends DashboardChartBase {
         });
 
         this.chartData = arr;
+        this.isInitialLoad = false;
     }
 
     parameterName222(parameter: CalculatedDataItem): string {
@@ -272,6 +269,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         this.lineChart = new LineChart(this._tenantdashboardService, this._pqsRestApiServiceProxy, (error) => {
             this.errorMessage = error;
         });
+        this.lineChart.isInitialLoad = true;
     }
 
     ngOnInit() {

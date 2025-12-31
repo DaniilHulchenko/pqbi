@@ -21,7 +21,7 @@
 
     <div class="chart-wrapper position-relative flex-grow-1">
 
-        <div *ngIf="lineChart.loading" class="loading-overlay">
+        <div *ngIf="lineChart.loading && lineChart.isInitialLoad" class="loading-overlay">
             <dx-load-indicator></dx-load-indicator>
             <p>{{ 'LoadingWidget' | localize }}</p>
         </div>

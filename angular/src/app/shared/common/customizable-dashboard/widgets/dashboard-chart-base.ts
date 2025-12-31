@@ -1,5 +1,6 @@
 export abstract class DashboardChartBase {
     loading = false;
+    isInitialLoad = false;
 
     showLoading() {
         setTimeout(() => {
