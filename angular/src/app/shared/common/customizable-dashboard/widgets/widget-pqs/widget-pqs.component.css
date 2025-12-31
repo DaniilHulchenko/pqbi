@@ -35,6 +35,8 @@
     flex-direction: column;
     padding: 0;
     overflow: hidden;
+    border-radius: var(--bs-card-border-radius, 10px);
+    background-color: var(--bs-card-bg, #ffffff);
 }
 .chart-wrapper {
     display: flex;
@@ -67,6 +69,10 @@ dx-chart {
     border-bottom-right-radius: 0;
     margin: 0;
     padding: 10px 16px;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
 }
 .color-picker-input {
     position: absolute;
