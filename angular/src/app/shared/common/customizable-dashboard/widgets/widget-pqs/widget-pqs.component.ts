@@ -21,6 +21,7 @@ import {
     CalculatedDataItem,
     TrendResponse,
     IntervalSynchronized,
+    TrendWidgetConfigurationsServiceProxy,
 } from '@shared/service-proxies/service-proxies';
 import { DashboardChartBase } from '../dashboard-chart-base';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
@@ -42,11 +43,20 @@ import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-r
 import { DateRangeType } from '@app/shared/enums/date-range-type';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
 import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selection-units';
+import safeStringify from 'fast-safe-stringify';
 
 
 type LineLegendType = {
     name: string,
     id: string
+};
+
+type TrendParametersConfiguration = {
+    parameters: WidgetParametersColumn[];
+    lineColor?: string;
+    backgroundColor?: string;
+    isLineColorEnabled?: boolean;
+    isBackgroundColorEnabled?: boolean;
 };
 
 class LineChartConfiguration {
@@ -249,8 +259,29 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     trendWidgetConfiguration: CreateOrEditTrendWidgetConfigurationDto;
     chartWidth: number;
 
+    lineColor?: string;
+    backgroundColor?: string;
+    isLineColorEnabled = false;
+    isBackgroundColorEnabled = false;
+    private parametersConfiguration: TrendParametersConfiguration = { parameters: [] };
+    private detectedLineColor?: string;
+    private readonly fallbackLineColor = '#0d6efd';
+    readonly fallbackBackgroundColor = '#ffffff';
+
     headerBackgroundColor?: string;
     chartHeight: number = 300; // default value
+
+    get chartLineColor(): string | undefined {
+        return this.isLineColorEnabled ? this.lineColor : undefined;
+    }
+
+    get lineTextColor(): string {
+        return (this.isLineColorEnabled && this.lineColor) || this.detectedLineColor || this.fallbackLineColor;
+    }
+
+    get chartBackgroundColor(): string | null {
+        return this.isBackgroundColorEnabled && this.backgroundColor ? this.backgroundColor : null;
+    }
 
     protected _defaultWidgetName;
     private subs: Subscription[] = [];
@@ -260,6 +291,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         private _tenantdashboardService: TenantDashboardServiceProxy,
         private _trendWidgetConfigurationService: TrendWidgetConfigurationService,
         private _pqsRestApiServiceProxy: PQSRestApiServiceProxy,
+        private _trendWidgetConfigurationServiceProxy: TrendWidgetConfigurationsServiceProxy,
         public elementRef: ElementRef,
         dateRangeService: DateRangeService,
         private _resolutionService: ResolutionService,
@@ -316,6 +348,11 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.trendWidgetConfiguration = result.trendWidgetConfiguration;
+                    this.parametersConfiguration = this.parseParametersConfiguration(this.trendWidgetConfiguration.parameters);
+                    this.lineColor = this.parametersConfiguration.lineColor;
+                    this.backgroundColor = this.parametersConfiguration.backgroundColor;
+                    this.isLineColorEnabled = this.parametersConfiguration.isLineColorEnabled ?? !!this.lineColor;
+                    this.isBackgroundColorEnabled = this.parametersConfiguration.isBackgroundColorEnabled ?? !!this.backgroundColor;
                     this.headerBackgroundColor = this.loadHeaderColorFromCookie();
                     let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
                     if (this.trendWidgetConfiguration) {
@@ -398,7 +435,8 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 resolutionInSeconds = this._resolutionService.resolutionValueInSeconds(state);
             }
 
-            let parameters: WidgetParametersColumn[] = JSON.parse(this.trendWidgetConfiguration.parameters);
+            const parametersConfiguration = this.parametersConfiguration ?? this.parseParametersConfiguration(this.trendWidgetConfiguration.parameters);
+            let parameters: WidgetParametersColumn[] = parametersConfiguration.parameters ?? [];
             let request: TrendCalcRequest = new TrendCalcRequest({
                 isAutoResolution,
                 resolutionInSeconds,
@@ -487,12 +525,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         }
     }
 
-    ngOnDestroy() {
-        this.stopStream$.next(null);
-        this.stopStream$.complete();
-        this.subs.forEach(sub => sub.unsubscribe());
-    }
-
 private getSelectedIntervalResolution(
     unit: CustomResolutionUnits | undefined,
     isAutoResolution: boolean,
@@ -559,6 +591,43 @@ private getSelectedIntervalResolution(
         }, 0);
     }
 
+    onChartDrawn(): void {
+        this.updateDetectedLineColor();
+    }
+
+    onLineColorChange(color: string): void {
+        this.lineColor = color;
+        this.isLineColorEnabled = true;
+        this.detectedLineColor = color;
+        this.refreshChartAppearance();
+        this.persistAppearanceConfiguration();
+    }
+
+    onBackgroundColorChange(color: string): void {
+        this.backgroundColor = color;
+        this.isBackgroundColorEnabled = true;
+        this.refreshChartAppearance();
+        this.persistAppearanceConfiguration();
+    }
+
+    onLineToggleChange(isEnabled: boolean): void {
+        this.isLineColorEnabled = isEnabled;
+        if (isEnabled && !this.lineColor) {
+            this.lineColor = this.lineTextColor;
+        }
+        this.refreshChartAppearance();
+        this.persistAppearanceConfiguration();
+    }
+
+    onBackgroundToggleChange(isEnabled: boolean): void {
+        this.isBackgroundColorEnabled = isEnabled;
+        if (isEnabled && !this.backgroundColor) {
+            this.backgroundColor = this.fallbackBackgroundColor;
+        }
+        this.refreshChartAppearance();
+        this.persistAppearanceConfiguration();
+    }
+
     onHeaderClick(): void {
         if (!this.editState || !this.headerColorPicker) {
             return;
@@ -570,6 +639,93 @@ private getSelectedIntervalResolution(
     onHeaderColorChange(color: string): void {
         this.headerBackgroundColor = color;
         this.saveHeaderColorToCookie(color);
+    }
+
+    ngOnDestroy() {
+        this.stopStream$.next(null);
+        this.stopStream$.complete();
+        this.subs.forEach(sub => sub.unsubscribe());
+    }
+
+    private updateDetectedLineColor(): void {
+        if (!this.chartComponent?.instance) {
+            return;
+        }
+
+        const series = this.chartComponent.instance.getAllSeries?.();
+        if (series?.length) {
+            const seriesColor = series[0].getColor?.();
+            if (seriesColor) {
+                this.detectedLineColor = seriesColor;
+            }
+        }
+    }
+
+    private refreshChartAppearance(): void {
+        if (this.chartComponent?.instance) {
+            this.chartComponent.instance.refresh();
+        }
+    }
+
+    private persistAppearanceConfiguration(): void {
+        if (!this.trendWidgetConfiguration?.id) {
+            return;
+        }
+
+        const parametersConfiguration = this.buildParametersConfiguration();
+
+        const updatedConfiguration = new CreateOrEditTrendWidgetConfigurationDto({
+            ...this.trendWidgetConfiguration,
+            parameters: safeStringify(parametersConfiguration),
+        });
+
+        this.trendWidgetConfiguration = updatedConfiguration;
+        this.parametersConfiguration = parametersConfiguration;
+        this._trendWidgetConfigurationService.update(updatedConfiguration);
+
+        const sub = this._trendWidgetConfigurationServiceProxy.createOrEdit(updatedConfiguration).subscribe();
+
+        this.subs.push(sub);
+    }
+
+    private parseParametersConfiguration(parameters: string | undefined): TrendParametersConfiguration {
+        const fallback: TrendParametersConfiguration = { parameters: [] };
+
+        if (!parameters) {
+            return fallback;
+        }
+
+        try {
+            const parsed = JSON.parse(parameters);
+
+            if (Array.isArray(parsed)) {
+                return { parameters: parsed };
+            }
+
+            if (parsed && typeof parsed === 'object') {
+                return {
+                    parameters: Array.isArray(parsed.parameters) ? parsed.parameters : [],
+                    lineColor: parsed.lineColor,
+                    backgroundColor: parsed.backgroundColor,
+                    isLineColorEnabled: parsed.isLineColorEnabled,
+                    isBackgroundColorEnabled: parsed.isBackgroundColorEnabled,
+                };
+            }
+        } catch (error) {
+            console.warn('Unable to parse trend parameters configuration', error);
+        }
+
+        return fallback;
+    }
+
+    private buildParametersConfiguration(): TrendParametersConfiguration {
+        return {
+            parameters: this.parametersConfiguration.parameters ?? [],
+            lineColor: this.lineColor,
+            backgroundColor: this.backgroundColor,
+            isLineColorEnabled: this.isLineColorEnabled,
+            isBackgroundColorEnabled: this.isBackgroundColorEnabled,
+        };
     }
 
     private getHeaderColorCookieKey(): string | null {

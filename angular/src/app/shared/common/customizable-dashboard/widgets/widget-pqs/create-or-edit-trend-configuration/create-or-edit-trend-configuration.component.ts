@@ -54,6 +54,14 @@ import { TrendWidgetConfigurationService } from '@app/shared/services/widget-con
 import { DateRangeAndResolutionModel } from '@app/shared/models/date-range-and-resolution-model';
 import { DateRangeAndResolutionSelectorComponent } from '@app/shared/common/components/date-range-and-resolution-selector/date-range-and-resolution-selector.component';
 
+type TrendParametersConfiguration = {
+    parameters: WidgetParametersColumn[];
+    lineColor?: string;
+    backgroundColor?: string;
+    isLineColorEnabled?: boolean;
+    isBackgroundColorEnabled?: boolean;
+};
+
 @Component({
     selector: 'createOrEditTrendConfiguration',
     templateUrl: './create-or-edit-trend-configuration.component.html',
@@ -89,6 +97,11 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     minAllowedResolution: ResolutionState;
     minCustomArgument = 1;
     maxCustomArgument = 99999;
+
+    lineColor?: string;
+    backgroundColor?: string;
+    isLineColorEnabled = false;
+    isBackgroundColorEnabled = false;
 
     tabs = [
         {
@@ -273,7 +286,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
 
         this.configuration.dateRange = safeStringify(this.dateRangeAndResolutionSelectionState);
         this.configuration.resolution = this.dateRangeAndResolutionSelectionState.resolution.toString();
-        this.configuration.parameters = safeStringify(this.parameters);
+        this.configuration.parameters = safeStringify(this.buildParametersConfiguration());
 
         if (this.configuration.id) {
             var sub = this._trendWidgetConfigurationServiceProxy
@@ -322,7 +335,12 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                         this._resolutionService.parseStateFromString(this.configuration.resolution, true)
                     );
 
-                    this.parameters = JSON.parse(this.configuration.parameters);
+                    const parsedConfiguration = this.parseParametersConfiguration(this.configuration.parameters);
+                    this.parameters = parsedConfiguration.parameters;
+                    this.lineColor = parsedConfiguration.lineColor;
+                    this.backgroundColor = parsedConfiguration.backgroundColor;
+                    this.isLineColorEnabled = parsedConfiguration.isLineColorEnabled ?? !!parsedConfiguration.lineColor;
+                    this.isBackgroundColorEnabled = parsedConfiguration.isBackgroundColorEnabled ?? !!parsedConfiguration.backgroundColor;
 
                     for (let parameter of this.parameters.filter(
                         (parameter) =>
@@ -346,6 +364,10 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             this.dateRangeAndResolutionSelectionState = null;
             this.minAllowedResolution = this._resolutionService.parseStateFromString(ResolutionUnits.IS1MIN, true);
             this.parameterResolutions = [];
+            this.lineColor = undefined;
+            this.backgroundColor = undefined;
+            this.isLineColorEnabled = false;
+            this.isBackgroundColorEnabled = false;
         }
     }
 
@@ -437,6 +459,45 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
 
     private scrollDown(){
         this.scrollView.instance.scrollTo(10000);
+    }
+
+    private parseParametersConfiguration(parameters: string | undefined): TrendParametersConfiguration {
+        const fallback: TrendParametersConfiguration = { parameters: [] };
+
+        if (!parameters) {
+            return fallback;
+        }
+
+        try {
+            const parsed = JSON.parse(parameters);
+            if (Array.isArray(parsed)) {
+                return { parameters: parsed };
+            }
+
+            if (parsed && typeof parsed === 'object') {
+                return {
+                    parameters: Array.isArray(parsed.parameters) ? parsed.parameters : [],
+                    lineColor: parsed.lineColor,
+                    backgroundColor: parsed.backgroundColor,
+                    isLineColorEnabled: parsed.isLineColorEnabled,
+                    isBackgroundColorEnabled: parsed.isBackgroundColorEnabled,
+                };
+            }
+        } catch (error) {
+            console.warn('Unable to parse trend parameters configuration', error);
+        }
+
+        return fallback;
+    }
+
+    private buildParametersConfiguration(): TrendParametersConfiguration {
+        return {
+            parameters: this.parameters,
+            lineColor: this.lineColor,
+            backgroundColor: this.backgroundColor,
+            isLineColorEnabled: this.isLineColorEnabled,
+            isBackgroundColorEnabled: this.isBackgroundColorEnabled,
+        };
     }
 
     ngOnDestroy(): void {
