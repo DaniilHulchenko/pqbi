@@ -76,7 +76,7 @@ input:checked + .slider:before {
       border-radius: 50%;
   }
 
-  .deleteWidgetButton {
+.deleteWidgetButton {
     width: 28px;
     padding: 0 5px !important;
     margin: 0;
@@ -133,6 +133,7 @@ input:checked + .slider:before {
   display: flex;
   gap: 0px;
   backdrop-filter: blur(8px);
+  border-top-right-radius: 10px;
   z-index: 1002;
 }
 
@@ -277,6 +278,10 @@ html[data-bs-theme='dark'] :host ::ng-deep .dashboard-grid gridster-item::after 
 
 :host ::ng-deep gridster .kt-portlet__body{
  overflow: auto;
+}
+
+:host ::ng-deep .gridster-item-resizable-handler {
+  opacity: 0;
 }
 
 .div-dashboard-customization button{
