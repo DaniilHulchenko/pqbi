@@ -10,16 +10,30 @@
     <div class="row align-items-center">
         <div *ngIf="editState" class="col-auto d-flex align-items-center">
             <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
-            <label for="stepLineToggle" class="ms-2">{{ 'StepLine' | localize }}</label>
+            <label for="stepLineToggle" class="ms-2" [ngStyle]="{'color': lineLabelColor}">{{ 'StepLine' | localize }}</label>
         </div>
     
         <div class="col-auto d-flex align-items-center">
             <input type="checkbox" id="linePointsToggle" [(ngModel)]="isLinePoints" (change)="toggleLinePoints()" />
-            <label for="linePointsToggle" class="ms-2">{{ 'LinePoints' | localize }}</label>
+            <label for="linePointsToggle" class="ms-2" [ngStyle]="{'color': lineLabelColor}">{{ 'LinePoints' | localize }}</label>
+        </div>
+
+        <div class="col-auto d-flex align-items-center">
+            <input type="checkbox" id="lineColorToggle" [checked]="isLineColorEnabled" (change)="onLineColorToggle($event.target.checked)" />
+            <label for="lineColorToggle" class="ms-2 me-2" [ngStyle]="{'color': lineLabelColor}">{{ 'Line' | localize }}:</label>
+            <input type="color" class="form-control form-control-color p-0" [disabled]="!isLineColorEnabled"
+                [ngModel]="lineColor || detectedLineColor || defaultLinePickerColor" (ngModelChange)="onLineColorChange($event)" />
+        </div>
+
+        <div class="col-auto d-flex align-items-center">
+            <input type="checkbox" id="bgColorToggle" [checked]="isBackgroundColorEnabled" (change)="onBackgroundColorToggle($event.target.checked)" />
+            <label for="bgColorToggle" class="ms-2 me-2" [ngStyle]="{'color': lineLabelColor}">{{ 'BG' | localize }}:</label>
+            <input type="color" class="form-control form-control-color p-0" [disabled]="!isBackgroundColorEnabled"
+                [ngModel]="backgroundColor || defaultBackgroundColor" (ngModelChange)="onBackgroundColorChange($event)" />
         </div>
     </div>
 
-    <div class="chart-wrapper position-relative flex-grow-1">
+    <div class="chart-wrapper position-relative flex-grow-1" [ngStyle]="{'background-color': isBackgroundColorEnabled ? backgroundColor : null}">
 
         <div *ngIf="lineChart.loading && lineChart.isInitialLoad" class="loading-overlay">
             <dx-load-indicator></dx-load-indicator>
@@ -38,19 +52,21 @@
 
         <ng-template #chartContent>
             <div #chartContainer class="chart-container flex-grow-1">
-                <dx-chart #chartComponent class="w-100 h-100" id="chart" [dataSource]="lineChart.chartData">
+                <dx-chart #chartComponent class="w-100 h-100" id="chart" [dataSource]="lineChart.chartData" (onDone)="onChartRendered()">
                     <dxi-pane name="top"></dxi-pane>
 
-                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key">
+                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key" [color]="isLineColorEnabled ? lineColor : undefined">
                         <dxo-stepline *ngIf="isStepLine">
-                            <dxo-point [visible]="isLinePoints"></dxo-point>
+                            <dxo-point [visible]="isLinePoints" [color]="isLineColorEnabled ? lineColor : undefined"></dxo-point>
                         </dxo-stepline>
                     </dxo-common-series-settings>
 
                     <dxi-series pane="top" *ngFor="let source of lineChart.chartConfiguration.lineLegend"
-                        [name]="source.name" [valueField]="source.id">
-                        <dxo-point [visible]="isLinePoints"></dxo-point>
+                        [name]="source.name" [valueField]="source.id" [color]="isLineColorEnabled ? lineColor : undefined">
+                        <dxo-point [visible]="isLinePoints" [color]="isLineColorEnabled ? lineColor : undefined"></dxo-point>
                     </dxi-series>
+
+                    <dxo-common-pane-settings [backgroundColor]="isBackgroundColorEnabled ? backgroundColor : undefined"></dxo-common-pane-settings>
 
                     <dxo-legend verticalAlignment="bottom" horizontalAlignment="center"
                         itemTextPosition="bottom"></dxo-legend>

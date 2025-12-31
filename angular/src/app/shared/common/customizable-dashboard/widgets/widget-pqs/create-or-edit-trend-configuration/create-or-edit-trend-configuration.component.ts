@@ -89,6 +89,13 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     minAllowedResolution: ResolutionState;
     minCustomArgument = 1;
     maxCustomArgument = 99999;
+    isLineColorEnabled = false;
+    isBackgroundColorEnabled = false;
+    lineColor?: string;
+    backgroundColor?: string;
+    currentWidgetGuid?: string;
+    readonly defaultLineColor = '#0000ff';
+    readonly defaultBackgroundColor = '#ffffff';
 
     tabs = [
         {
@@ -268,6 +275,92 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
         }
     }
 
+    onLineColorToggle(enabled: boolean) {
+        this.isLineColorEnabled = enabled;
+        if (enabled && !this.lineColor) {
+            this.lineColor = this.defaultLineColor;
+        }
+        this.saveColorsToCookie();
+    }
+
+    onBackgroundColorToggle(enabled: boolean) {
+        this.isBackgroundColorEnabled = enabled;
+        if (enabled && !this.backgroundColor) {
+            this.backgroundColor = this.defaultBackgroundColor;
+        }
+        this.saveColorsToCookie();
+    }
+
+    onLineColorChange(color: string) {
+        this.lineColor = color;
+        this.isLineColorEnabled = true;
+        this.saveColorsToCookie();
+    }
+
+    onBackgroundColorChange(color: string) {
+        this.backgroundColor = color;
+        this.isBackgroundColorEnabled = true;
+        this.saveColorsToCookie();
+    }
+
+    private loadColorsFromCookie(): void {
+        const key = this.getColorsCookieKey();
+        if (!key) {
+            this.isLineColorEnabled = false;
+            this.isBackgroundColorEnabled = false;
+            this.lineColor = undefined;
+            this.backgroundColor = undefined;
+            return;
+        }
+
+        const cookies = document.cookie?.split(';').map(c => c.trim()) ?? [];
+        const cookie = cookies.find(c => c.startsWith(`${key}=`));
+        if (!cookie) {
+            this.isLineColorEnabled = false;
+            this.isBackgroundColorEnabled = false;
+            this.lineColor = undefined;
+            this.backgroundColor = undefined;
+            return;
+        }
+
+        try {
+            const decoded = decodeURIComponent(cookie.substring(key.length + 1));
+            const parsed = JSON.parse(decoded);
+            this.isLineColorEnabled = !!parsed?.isLineEnabled;
+            this.lineColor = parsed?.lineColor ?? undefined;
+            this.isBackgroundColorEnabled = !!parsed?.isBackgroundEnabled;
+            this.backgroundColor = parsed?.backgroundColor ?? undefined;
+        } catch {
+            this.isLineColorEnabled = false;
+            this.isBackgroundColorEnabled = false;
+            this.lineColor = undefined;
+            this.backgroundColor = undefined;
+        }
+    }
+
+    private saveColorsToCookie(): void {
+        const key = this.getColorsCookieKey();
+        if (!key) {
+            return;
+        }
+
+        const payload = {
+            isLineEnabled: this.isLineColorEnabled,
+            lineColor: this.isLineColorEnabled ? this.lineColor : undefined,
+            isBackgroundEnabled: this.isBackgroundColorEnabled,
+            backgroundColor: this.isBackgroundColorEnabled ? this.backgroundColor : undefined,
+        };
+
+        const maxAge = 60 * 60 * 24 * 365; // 1 year
+        document.cookie = `${key}=${encodeURIComponent(JSON.stringify(payload))};path=/;max-age=${maxAge}`;
+    }
+
+    private getColorsCookieKey(): string | null {
+        return this.currentWidgetGuid
+            ? `trend_colors_${this.currentWidgetGuid}`
+            : null;
+    }
+
     save(): void {
         this.saving = true;
 
@@ -310,12 +403,15 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     show(configuration: CreateOrEditWidgetConfigurationDto): void {
         this.pqsForm.form.reset();
         this.popupVisible = true;
+        this.currentWidgetGuid = configuration?.widgetGuid;
+        this.loadColorsFromCookie();
 
         if (configuration && configuration.configuration) {
             var sub = this._trendWidgetConfigurationService
                 .getForEdit(+configuration.configuration)
                 .subscribe((configuration: GetTrendWidgetConfigurationForEditOutput) => {
                     this.configuration = configuration.trendWidgetConfiguration;
+                    this.loadColorsFromCookie();
 
                     this.dateRangeAndResolutionSelectionState = DateRangeAndResolutionModel.createItem(
                         this.configuration.dateRange,
