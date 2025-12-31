@@ -233,6 +233,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     @ViewChild(DxChartComponent, { static: false }) chartComponent!: DxChartComponent;
     @ViewChild('createOrEditModal') createOrEditModal: CreateOrEditTrendConfigurationComponent;
     @ViewChild('renameWidgetModal') renameModal: RenameWidgetModalComponent;
+    @ViewChild('headerColorPicker') headerColorPicker: ElementRef<HTMLInputElement>;
     @Output() widgetRefresh: EventEmitter<any> = new EventEmitter();
 
     errorMessage: string | null = null;
@@ -248,6 +249,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     trendWidgetConfiguration: CreateOrEditTrendWidgetConfigurationDto;
     chartWidth: number;
 
+    headerBackgroundColor?: string;
     chartHeight: number = 300; // default value
 
     protected _defaultWidgetName;
@@ -274,6 +276,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     ngOnInit() {
         super.ngOnInit();
+        this.headerBackgroundColor = this.loadHeaderColorFromCookie();
     }
 
     ngAfterViewInit() {
@@ -313,6 +316,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.trendWidgetConfiguration = result.trendWidgetConfiguration;
+                    this.headerBackgroundColor = this.loadHeaderColorFromCookie();
                     let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
                     if (this.trendWidgetConfiguration) {
                         let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
@@ -553,5 +557,50 @@ private getSelectedIntervalResolution(
         setTimeout(() => {
             this.isStepLine = !this.isStepLine;
         }, 0);
+    }
+
+    onHeaderClick(): void {
+        if (!this.editState || !this.headerColorPicker) {
+            return;
+        }
+
+        this.headerColorPicker.nativeElement.click();
+    }
+
+    onHeaderColorChange(color: string): void {
+        this.headerBackgroundColor = color;
+        this.saveHeaderColorToCookie(color);
+    }
+
+    private getHeaderColorCookieKey(): string | null {
+        return this.widgetConfigurationInDB?.widgetGuid
+            ? `trend_header_color_${this.widgetConfigurationInDB.widgetGuid}`
+            : null;
+    }
+
+    private loadHeaderColorFromCookie(): string | undefined {
+        const key = this.getHeaderColorCookieKey();
+        if (!key) {
+            return undefined;
+        }
+
+        const cookies = document.cookie?.split(';').map(c => c.trim()) ?? [];
+        for (const cookie of cookies) {
+            if (cookie.startsWith(`${key}=`)) {
+                const value = cookie.substring(key.length + 1);
+                return decodeURIComponent(value);
+            }
+        }
+        return undefined;
+    }
+
+    private saveHeaderColorToCookie(color: string): void {
+        const key = this.getHeaderColorCookieKey();
+        if (!key) {
+            return;
+        }
+
+        const maxAge = 60 * 60 * 24 * 365; // 1 year
+        document.cookie = `${key}=${encodeURIComponent(color)};path=/;max-age=${maxAge}`;
     }
 }
