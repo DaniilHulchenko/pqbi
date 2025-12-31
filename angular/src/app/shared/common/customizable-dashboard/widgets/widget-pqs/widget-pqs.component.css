@@ -81,3 +81,42 @@ dx-chart {
     height: 0;
     pointer-events: none;
 }
+.widget-settings-row {
+    gap: 12px;
+    padding: 8px 16px 0;
+}
+
+.widget-setting {
+    gap: 6px;
+}
+
+.widget-setting-label {
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.inline-color-picker {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    background: transparent;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.inline-color-picker::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+    padding: 0;
+}
+
+.inline-color-picker::-moz-color-swatch {
+    border: none;
+    border-radius: 3px;
+}

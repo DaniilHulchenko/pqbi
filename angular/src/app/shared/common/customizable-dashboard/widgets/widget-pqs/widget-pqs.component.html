@@ -7,15 +7,31 @@
         </div>
     </div>
 
-    <div class="row align-items-center">
-        <div *ngIf="editState" class="col-auto d-flex align-items-center">
+    <div class="row align-items-center widget-settings-row">
+        <div *ngIf="editState" class="col-auto d-flex align-items-center widget-setting">
             <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
             <label for="stepLineToggle" class="ms-2">{{ 'StepLine' | localize }}</label>
         </div>
     
-        <div class="col-auto d-flex align-items-center">
+        <div class="col-auto d-flex align-items-center widget-setting">
             <input type="checkbox" id="linePointsToggle" [(ngModel)]="isLinePoints" (change)="toggleLinePoints()" />
-            <label for="linePointsToggle" class="ms-2">{{ 'LinePoints' | localize }}</label>
+            <label for="linePointsToggle" class="ms-2 widget-setting-label" [ngStyle]="{ color: lineTextColor }">{{ 'LinePoints' | localize }}</label>
+        </div>
+
+        <div class="col-auto d-flex align-items-center widget-setting">
+            <input type="checkbox" id="lineColorToggle" [(ngModel)]="isLineColorEnabled" (change)="onLineToggleChange($event.target.checked)" />
+            <label for="lineColorToggle" class="ms-2 widget-setting-label d-flex align-items-center" [ngStyle]="{ color: lineTextColor }">
+                {{ 'Line' | localize }}:
+                <input type="color" class="inline-color-picker ms-2" [ngModel]="lineColor || lineTextColor" (ngModelChange)="onLineColorChange($event)" />
+            </label>
+        </div>
+
+        <div class="col-auto d-flex align-items-center widget-setting">
+            <input type="checkbox" id="backgroundColorToggle" [(ngModel)]="isBackgroundColorEnabled" (change)="onBackgroundToggleChange($event.target.checked)" />
+            <label for="backgroundColorToggle" class="ms-2 widget-setting-label d-flex align-items-center" [ngStyle]="{ color: lineTextColor }">
+                {{ 'BG' | localize }}:
+                <input type="color" class="inline-color-picker ms-2" [ngModel]="backgroundColor || fallbackBackgroundColor" (ngModelChange)="onBackgroundColorChange($event)" />
+            </label>
         </div>
     </div>
 
@@ -37,11 +53,11 @@
         </div>
 
         <ng-template #chartContent>
-            <div #chartContainer class="chart-container flex-grow-1">
-                <dx-chart #chartComponent class="w-100 h-100" id="chart" [dataSource]="lineChart.chartData">
+            <div #chartContainer class="chart-container flex-grow-1" [ngStyle]="{ 'background-color': chartBackgroundColor || null }">
+                <dx-chart #chartComponent class="w-100 h-100" id="chart" [dataSource]="lineChart.chartData" (onDrawn)="onChartDrawn()">
                     <dxi-pane name="top"></dxi-pane>
 
-                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key">
+                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key" [color]="chartLineColor || undefined">
                         <dxo-stepline *ngIf="isStepLine">
                             <dxo-point [visible]="isLinePoints"></dxo-point>
                         </dxo-stepline>
