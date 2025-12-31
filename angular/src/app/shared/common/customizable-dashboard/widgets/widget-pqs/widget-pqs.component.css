@@ -55,3 +55,38 @@ dx-chart {
     width: 100% !important;
     display: block;
 }
+
+.color-swatch-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.color-swatch-label {
+    margin-bottom: 0;
+}
+
+.color-swatch {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.color-swatch::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-swatch::-webkit-color-swatch {
+    border: none;
+    border-radius: 2px;
+}
+
+.color-swatch:hover {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}

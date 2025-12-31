@@ -21,6 +21,7 @@ import {
     CalculatedDataItem,
     TrendResponse,
     IntervalSynchronized,
+    TrendWidgetConfigurationsServiceProxy,
 } from '@shared/service-proxies/service-proxies';
 import { DashboardChartBase } from '../dashboard-chart-base';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
@@ -42,11 +43,19 @@ import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-r
 import { DateRangeType } from '@app/shared/enums/date-range-type';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
 import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selection-units';
+import safeStringify from 'fast-safe-stringify';
 
 
 type LineLegendType = {
     name: string,
     id: string
+};
+
+type TrendWidgetParametersConfiguration = {
+    parameters: WidgetParametersColumn[];
+    lineColor?: string;
+    backgroundColor?: string;
+    [key: string]: any;
 };
 
 class LineChartConfiguration {
@@ -241,6 +250,13 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     isStepLine = false;
     isLinePoints = true;
+    trendParameters: WidgetParametersColumn[] = [];
+    lineColor: string | null = null;
+    backgroundColor: string | null = null;
+    seriesColorFromChart: string | null = null;
+    parametersConfigurationExtras: Record<string, any> = {};
+    readonly defaultLineColor = '#2f64d4';
+    readonly defaultBackgroundColor = '#d0ce00';
     stopStream$ = new Subject();
     isActive = false;
 
@@ -257,6 +273,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         injector: Injector,
         private _tenantdashboardService: TenantDashboardServiceProxy,
         private _trendWidgetConfigurationService: TrendWidgetConfigurationService,
+        private _trendWidgetConfigurationServiceProxy: TrendWidgetConfigurationsServiceProxy,
         private _pqsRestApiServiceProxy: PQSRestApiServiceProxy,
         public elementRef: ElementRef,
         dateRangeService: DateRangeService,
@@ -313,7 +330,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.trendWidgetConfiguration = result.trendWidgetConfiguration;
-                    let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
+                    this.applyParametersConfiguration(this.trendWidgetConfiguration.parameters);
                     if (this.trendWidgetConfiguration) {
                         let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
                         let resulutionValueInMs = 0;
@@ -379,6 +396,10 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     formatRequest(): TrendCalcRequest | null {
         try {
+            if (!this.trendWidgetConfiguration) {
+                return null;
+            }
+
             let dateRange = this._dateRangeService.getDateRangeFromNewState(
                 DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange),
             );
@@ -394,7 +415,9 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 resolutionInSeconds = this._resolutionService.resolutionValueInSeconds(state);
             }
 
-            let parameters: WidgetParametersColumn[] = JSON.parse(this.trendWidgetConfiguration.parameters);
+            const parameterState = this.parseParametersConfiguration(this.trendWidgetConfiguration.parameters);
+            this.trendParameters = parameterState.parameters;
+            let parameters: WidgetParametersColumn[] = this.trendParameters;
             let request: TrendCalcRequest = new TrendCalcRequest({
                 isAutoResolution,
                 resolutionInSeconds,
@@ -483,54 +506,143 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         }
     }
 
+    get legendTextColor(): string {
+        return this.lineColor || this.seriesColorFromChart || this.defaultLineColor;
+    }
+
+    onLineColorChange(color: string) {
+        this.lineColor = color;
+        this.seriesColorFromChart = color;
+        this.persistCurrentConfiguration();
+    }
+
+    onBackgroundColorChange(color: string) {
+        this.backgroundColor = color;
+        this.persistCurrentConfiguration();
+    }
+
+    onChartInitialized() {
+        if (this.lineColor) {
+            this.seriesColorFromChart = this.lineColor;
+        }
+    }
+
+    onChartDrawn() {
+        if (this.lineColor) {
+            this.seriesColorFromChart = this.lineColor;
+            return;
+        }
+
+        const series = this.chartComponent?.instance?.getAllSeries?.();
+        if (series?.length) {
+            this.seriesColorFromChart = series[0].getColor();
+        }
+    }
+
+    private applyParametersConfiguration(parameters: string | undefined) {
+        const configuration = this.parseParametersConfiguration(parameters);
+        this.trendParameters = configuration.parameters;
+        this.lineColor = configuration.lineColor ?? null;
+        this.backgroundColor = configuration.backgroundColor ?? null;
+        this.seriesColorFromChart = this.lineColor ?? this.seriesColorFromChart;
+    }
+
+    private parseParametersConfiguration(parameters: string | undefined): TrendWidgetParametersConfiguration {
+        if (!parameters) {
+            this.parametersConfigurationExtras = {};
+            return { parameters: [] };
+        }
+
+        try {
+            const parsed = JSON.parse(parameters);
+            if (Array.isArray(parsed)) {
+                this.parametersConfigurationExtras = {};
+                return { parameters: parsed };
+            }
+
+            const { parameters: parsedParameters, lineColor, backgroundColor, ...extras } = parsed;
+            this.parametersConfigurationExtras = extras;
+            return {
+                parameters: parsedParameters ?? [],
+                lineColor: lineColor,
+                backgroundColor: backgroundColor,
+            };
+        } catch (error) {
+            console.warn('Failed to parse trend widget parameters', error);
+            this.parametersConfigurationExtras = {};
+            return { parameters: [] };
+        }
+    }
+
+    private buildParametersConfiguration(): TrendWidgetParametersConfiguration {
+        return {
+            parameters: this.trendParameters ?? [],
+            lineColor: this.lineColor ?? undefined,
+            backgroundColor: this.backgroundColor ?? undefined,
+            ...this.parametersConfigurationExtras,
+        };
+    }
+
+    private persistCurrentConfiguration() {
+        if (!this.trendWidgetConfiguration || !this.trendWidgetConfiguration.parameters) {
+            return;
+        }
+
+        this.trendWidgetConfiguration.parameters = safeStringify(this.buildParametersConfiguration());
+        const sub = this._trendWidgetConfigurationServiceProxy
+            .createOrEdit(this.trendWidgetConfiguration)
+            .subscribe(() => this._trendWidgetConfigurationService.update(this.trendWidgetConfiguration));
+        this.subs.push(sub);
+    }
+
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();
         this.subs.forEach(sub => sub.unsubscribe());
     }
 
-private getSelectedIntervalResolution(
-    unit: CustomResolutionUnits | undefined,
-    isAutoResolution: boolean,
-    value?: number,
+    private getSelectedIntervalResolution(
+        unit: CustomResolutionUnits | undefined,
+        isAutoResolution: boolean,
+        value?: number,
+    ): IntervalSynchronized {
+        if (isAutoResolution) {
+            return IntervalSynchronized.ISX;
+        }
 
-): IntervalSynchronized {
-    if (isAutoResolution) {
-        return IntervalSynchronized.ISX;
-    }
-
-    if (!unit) {
-        return IntervalSynchronized.IS1SEC;
-    }
-
-     const normalizedValue = Number(value);
-
-    switch (unit) {
-        case CustomResolutionUnits.MS:
-            return IntervalSynchronized.IS200MS;
-        case CustomResolutionUnits.SEC:
+        if (!unit) {
             return IntervalSynchronized.IS1SEC;
-        case CustomResolutionUnits.MIN:
-            return IntervalSynchronized.IS1MIN;
-        case CustomResolutionUnits.HOUR:
-            return IntervalSynchronized.IS1HOUR;
-        case CustomResolutionUnits.DAY:
-            return IntervalSynchronized.IS1DAY;
-        case CustomResolutionUnits.WEEK:
-            return IntervalSynchronized.IS1WEEK;
-        case CustomResolutionUnits.MONTH:
-            return IntervalSynchronized.IS1MONTH;
-        case CustomResolutionUnits.YEAR:
-            return IntervalSynchronized.IS1YEAR;
-        default:
-            return IntervalSynchronized.IS1SEC;
+        }
+
+        switch (unit) {
+            case CustomResolutionUnits.MS:
+                return IntervalSynchronized.IS200MS;
+            case CustomResolutionUnits.SEC:
+                return IntervalSynchronized.IS1SEC;
+            case CustomResolutionUnits.MIN:
+                return IntervalSynchronized.IS1MIN;
+            case CustomResolutionUnits.HOUR:
+                return IntervalSynchronized.IS1HOUR;
+            case CustomResolutionUnits.DAY:
+                return IntervalSynchronized.IS1DAY;
+            case CustomResolutionUnits.WEEK:
+                return IntervalSynchronized.IS1WEEK;
+            case CustomResolutionUnits.MONTH:
+                return IntervalSynchronized.IS1MONTH;
+            case CustomResolutionUnits.YEAR:
+                return IntervalSynchronized.IS1YEAR;
+            default:
+                return IntervalSynchronized.IS1SEC;
+        }
     }
-}
 
 
     save(newConfig: CreateOrEditTrendWidgetConfigurationDto) {
         this.stopStream$.next(null);
         this.stopStream$.complete();
+        this.stopStream$ = new Subject();
+        this.trendWidgetConfiguration = newConfig;
+        this.applyParametersConfiguration(newConfig.parameters);
         
         if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
             this.saveConfiguration(newConfig.id.toString());

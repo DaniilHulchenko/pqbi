@@ -54,6 +54,13 @@ import { TrendWidgetConfigurationService } from '@app/shared/services/widget-con
 import { DateRangeAndResolutionModel } from '@app/shared/models/date-range-and-resolution-model';
 import { DateRangeAndResolutionSelectorComponent } from '@app/shared/common/components/date-range-and-resolution-selector/date-range-and-resolution-selector.component';
 
+type TrendWidgetParametersConfiguration = {
+    parameters: WidgetParametersColumn[];
+    lineColor?: string;
+    backgroundColor?: string;
+    [key: string]: any;
+};
+
 @Component({
     selector: 'createOrEditTrendConfiguration',
     templateUrl: './create-or-edit-trend-configuration.component.html',
@@ -89,6 +96,9 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     minAllowedResolution: ResolutionState;
     minCustomArgument = 1;
     maxCustomArgument = 99999;
+    lineColor: string | null = null;
+    backgroundColor: string | null = null;
+    parametersConfigurationExtras: Record<string, any> = {};
 
     tabs = [
         {
@@ -273,7 +283,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
 
         this.configuration.dateRange = safeStringify(this.dateRangeAndResolutionSelectionState);
         this.configuration.resolution = this.dateRangeAndResolutionSelectionState.resolution.toString();
-        this.configuration.parameters = safeStringify(this.parameters);
+        this.configuration.parameters = safeStringify(this.buildParametersConfiguration());
 
         if (this.configuration.id) {
             var sub = this._trendWidgetConfigurationServiceProxy
@@ -317,12 +327,15 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                 .subscribe((configuration: GetTrendWidgetConfigurationForEditOutput) => {
                     this.configuration = configuration.trendWidgetConfiguration;
 
+                    const configurationState = this.parseParametersConfiguration(this.configuration.parameters);
+                    this.parameters = configurationState.parameters;
+                    this.lineColor = configurationState.lineColor ?? null;
+                    this.backgroundColor = configurationState.backgroundColor ?? null;
+
                     this.dateRangeAndResolutionSelectionState = DateRangeAndResolutionModel.createItem(
                         this.configuration.dateRange,
                         this._resolutionService.parseStateFromString(this.configuration.resolution, true)
                     );
-
-                    this.parameters = JSON.parse(this.configuration.parameters);
 
                     for (let parameter of this.parameters.filter(
                         (parameter) =>
@@ -346,6 +359,9 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             this.dateRangeAndResolutionSelectionState = null;
             this.minAllowedResolution = this._resolutionService.parseStateFromString(ResolutionUnits.IS1MIN, true);
             this.parameterResolutions = [];
+            this.lineColor = null;
+            this.backgroundColor = null;
+            this.parametersConfigurationExtras = {};
         }
     }
 
@@ -378,6 +394,50 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
         if (previousTab && selectedTab && previousTab !== selectedTab) {
             selectedTab.populateComponentsFromTab(previousTab);
         }
+    }
+
+    onLineColorChange(color: string) {
+        this.lineColor = color;
+    }
+
+    onBackgroundColorChange(color: string) {
+        this.backgroundColor = color;
+    }
+
+    private parseParametersConfiguration(parameters: string | undefined): TrendWidgetParametersConfiguration {
+        if (!parameters) {
+            this.parametersConfigurationExtras = {};
+            return { parameters: [] };
+        }
+
+        try {
+            const parsed = JSON.parse(parameters);
+            if (Array.isArray(parsed)) {
+                this.parametersConfigurationExtras = {};
+                return { parameters: parsed };
+            }
+
+            const { parameters: parsedParameters, lineColor, backgroundColor, ...extras } = parsed;
+            this.parametersConfigurationExtras = extras;
+            return {
+                parameters: parsedParameters ?? [],
+                lineColor: lineColor,
+                backgroundColor: backgroundColor,
+            };
+        } catch (error) {
+            console.warn('Failed to parse trend widget parameters', error);
+            this.parametersConfigurationExtras = {};
+            return { parameters: [] };
+        }
+    }
+
+    private buildParametersConfiguration(): TrendWidgetParametersConfiguration {
+        return {
+            parameters: this.parameters,
+            lineColor: this.lineColor ?? undefined,
+            backgroundColor: this.backgroundColor ?? undefined,
+            ...this.parametersConfigurationExtras,
+        };
     }
 
     updateParameter(event: DxDataGridTypes.EditingStartEvent) {
