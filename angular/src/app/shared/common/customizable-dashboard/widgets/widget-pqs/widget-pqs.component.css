@@ -55,3 +55,44 @@ dx-chart {
     width: 100% !important;
     display: block;
 }
+.trend-controls {
+    padding: 8px 12px;
+    gap: 14px;
+    font-weight: 500;
+}
+
+.trend-control {
+    gap: 8px;
+}
+
+.trend-control-label {
+    margin-right: 6px;
+}
+
+.color-swatch {
+    width: 24px;
+    height: 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+    background-color: transparent;
+    padding: 0;
+    cursor: pointer;
+}
+
+.color-input-hidden {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    border: 0;
+    padding: 0;
+}
+
+.trend-title-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+}

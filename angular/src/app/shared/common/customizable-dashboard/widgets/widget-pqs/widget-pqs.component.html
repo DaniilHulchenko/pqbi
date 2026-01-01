@@ -1,25 +1,54 @@
-<div class="kt-portlet kt-portlet--height-fluid widget-full-height">
-    <div class="kt-portlet__head">
+<div class="kt-portlet kt-portlet--height-fluid widget-full-height" [ngStyle]="{ 'background-color': headerBackgroundColor }">
+    <div class="kt-portlet__head" [ngStyle]="{ 'background-color': headerBackgroundColor }">
         <div class="kt-portlet__head-label">
             <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
-                {{ widgetConfigurationInDB?.name }}
+                <button type="button" class="trend-title-button" (click)="openColorPicker(headerColorPicker)">
+                    {{ widgetConfigurationInDB?.name }}
+                </button>
+                <input
+                    #headerColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="headerBackgroundColor"
+                    (change)="onHeaderColorChange($event)" />
             </h3>
         </div>
     </div>
 
-    <div class="row align-items-center">
-        <div *ngIf="editState" class="col-auto d-flex align-items-center">
-            <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
-            <label for="stepLineToggle" class="ms-2">{{ 'StepLine' | localize }}</label>
-        </div>
-    
-        <div class="col-auto d-flex align-items-center">
-            <input type="checkbox" id="linePointsToggle" [(ngModel)]="isLinePoints" (change)="toggleLinePoints()" />
-            <label for="linePointsToggle" class="ms-2">{{ 'LinePoints' | localize }}</label>
-        </div>
-    </div>
+    <div class="chart-wrapper position-relative flex-grow-1" [ngStyle]="{ 'background-color': headerBackgroundColor }">
+        <div class="trend-controls d-flex align-items-center flex-wrap" [ngStyle]="{ color: chartLineColor }">
+            <label class="trend-control d-flex align-items-center mb-0">
+                <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
+                <span class="ms-2">{{ 'StepLine' | localize }}</span>
+            </label>
 
-    <div class="chart-wrapper position-relative flex-grow-1">
+            <label class="trend-control d-flex align-items-center mb-0">
+                <input type="checkbox" id="linePointsToggle" [(ngModel)]="isLinePoints" (change)="toggleLinePoints()" />
+                <span class="ms-2">{{ 'LinePoints' | localize }}</span>
+            </label>
+
+            <div class="trend-control d-flex align-items-center mb-0">
+                <span class="trend-control-label">{{ 'Line' | localize }}:</span>
+                <button type="button" class="color-swatch" [style.backgroundColor]="chartLineColor" (click)="openColorPicker(lineColorPicker)"></button>
+                <input
+                    #lineColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="chartLineColor"
+                    (change)="onLineColorChange($event)" />
+            </div>
+
+            <div class="trend-control d-flex align-items-center mb-0">
+                <span class="trend-control-label">{{ 'BG' | localize }}:</span>
+                <button type="button" class="color-swatch" [style.backgroundColor]="chartBackgroundColor" (click)="openColorPicker(bgColorPicker)"></button>
+                <input
+                    #bgColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="chartBackgroundColor"
+                    (change)="onBackgroundColorChange($event)" />
+            </div>
+        </div>
 
         <div *ngIf="lineChart.loading && lineChart.isInitialLoad" class="loading-overlay">
             <dx-load-indicator></dx-load-indicator>
@@ -28,7 +57,8 @@
 
 
         <div *ngIf="errorMessage; else chartContent"
-            class="chart-container d-flex align-items-center justify-content-center">
+            class="chart-container d-flex align-items-center justify-content-center"
+            [ngStyle]="{ 'background-color': chartBackgroundColor }">
             <div class="text-center">
                 <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 2rem"></i>
                 <h4 class="mt-2">{{ 'Warning!' | localize }}</h4>
@@ -37,21 +67,24 @@
         </div>
 
         <ng-template #chartContent>
-            <div #chartContainer class="chart-container flex-grow-1">
+            <div #chartContainer class="chart-container flex-grow-1" [ngStyle]="{ 'background-color': chartBackgroundColor }">
                 <dx-chart #chartComponent class="w-100 h-100" id="chart"
+                    [palette]="[chartLineColor]"
                     [dataSource]="lineChart.chartData"
                     [customizePoint]="customizePoint">
+                    <dxo-common-pane-settings [backgroundColor]="chartBackgroundColor"></dxo-common-pane-settings>
                     <dxi-pane name="top"></dxi-pane>
 
-                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key">
+                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key" [color]="chartLineColor">
+                        <dxo-point [visible]="isLinePoints" [color]="chartLineColor"></dxo-point>
                         <dxo-stepline *ngIf="isStepLine">
-                            <dxo-point [visible]="isLinePoints"></dxo-point>
+                            <dxo-point [visible]="isLinePoints" [color]="chartLineColor"></dxo-point>
                         </dxo-stepline>
                     </dxo-common-series-settings>
 
                     <dxi-series pane="top" *ngFor="let source of lineChart.chartConfiguration.lineLegend"
-                        [name]="source.name" [valueField]="source.id">
-                        <dxo-point [visible]="isLinePoints"></dxo-point>
+                        [name]="source.name" [valueField]="source.id" [color]="chartLineColor">
+                        <dxo-point [visible]="isLinePoints" [color]="chartLineColor"></dxo-point>
                     </dxi-series>
 
                     <dxi-value-axis>

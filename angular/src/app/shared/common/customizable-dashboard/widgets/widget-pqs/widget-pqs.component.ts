@@ -247,6 +247,9 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     thresholdSettings: ThresholdSettingsModel = new ThresholdSettingsModel();
 
     chartHeight: number = 300; // default value
+    headerBackgroundColor = '#ffffff';
+    chartLineColor = '#3699ff';
+    chartBackgroundColor = '#ffffff';
 
     protected _defaultWidgetName;
     private subs: Subscription[] = [];
@@ -270,6 +273,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     ngOnInit() {
+        this.loadColorPreferences();
         super.ngOnInit();
     }
 
@@ -494,44 +498,41 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         this.subs.forEach(sub => sub.unsubscribe());
     }
 
-private getSelectedIntervalResolution(
-    unit: CustomResolutionUnits | undefined,
-    isAutoResolution: boolean,
-    value?: number,
+    private getSelectedIntervalResolution(
+        unit: CustomResolutionUnits | undefined,
+        isAutoResolution: boolean,
+        value?: number,
 
-): IntervalSynchronized {
-    if (isAutoResolution) {
-        return IntervalSynchronized.ISX;
-    }
+    ): IntervalSynchronized {
+        if (isAutoResolution) {
+            return IntervalSynchronized.ISX;
+        }
 
-    if (!unit) {
-        return IntervalSynchronized.IS1SEC;
-    }
-
-     const normalizedValue = Number(value);
-
-    switch (unit) {
-        case CustomResolutionUnits.MS:
-            return IntervalSynchronized.IS200MS;
-        case CustomResolutionUnits.SEC:
+        if (!unit) {
             return IntervalSynchronized.IS1SEC;
-        case CustomResolutionUnits.MIN:
-            return IntervalSynchronized.IS1MIN;
-        case CustomResolutionUnits.HOUR:
-            return IntervalSynchronized.IS1HOUR;
-        case CustomResolutionUnits.DAY:
-            return IntervalSynchronized.IS1DAY;
-        case CustomResolutionUnits.WEEK:
-            return IntervalSynchronized.IS1WEEK;
-        case CustomResolutionUnits.MONTH:
-            return IntervalSynchronized.IS1MONTH;
-        case CustomResolutionUnits.YEAR:
-            return IntervalSynchronized.IS1YEAR;
-        default:
-            return IntervalSynchronized.IS1SEC;
-    }
-}
+        }
 
+        switch (unit) {
+            case CustomResolutionUnits.MS:
+                return IntervalSynchronized.IS200MS;
+            case CustomResolutionUnits.SEC:
+                return IntervalSynchronized.IS1SEC;
+            case CustomResolutionUnits.MIN:
+                return IntervalSynchronized.IS1MIN;
+            case CustomResolutionUnits.HOUR:
+                return IntervalSynchronized.IS1HOUR;
+            case CustomResolutionUnits.DAY:
+                return IntervalSynchronized.IS1DAY;
+            case CustomResolutionUnits.WEEK:
+                return IntervalSynchronized.IS1WEEK;
+            case CustomResolutionUnits.MONTH:
+                return IntervalSynchronized.IS1MONTH;
+            case CustomResolutionUnits.YEAR:
+                return IntervalSynchronized.IS1YEAR;
+            default:
+                return IntervalSynchronized.IS1SEC;
+        }
+    }
 
     save(newConfig: CreateOrEditTrendWidgetConfigurationDto) {
         this.stopStream$.next(null);
@@ -545,18 +546,71 @@ private getSelectedIntervalResolution(
     }
 
     toggleStepLine() {
-        this.isStepLine = !this.isStepLine;
-
-        setTimeout(() => {
-            this.isStepLine = !this.isStepLine;
-        }, 0);
+        this.refreshChartAppearance();
     }
 
     toggleLinePoints() {
-        this.isStepLine = !this.isStepLine;
+        this.refreshChartAppearance();
+    }
 
-        setTimeout(() => {
-            this.isStepLine = !this.isStepLine;
-        }, 0);
+    openColorPicker(picker: HTMLInputElement) {
+        picker?.click();
+    }
+
+    onHeaderColorChange(event: Event) {
+        const color = (event.target as HTMLInputElement).value;
+        this.headerBackgroundColor = color;
+        this.persistColorPreference('headerBackgroundColor', color);
+    }
+
+    onLineColorChange(event: Event) {
+        const color = (event.target as HTMLInputElement).value;
+        this.chartLineColor = color;
+        this.persistColorPreference('chartLineColor', color);
+        this.refreshChartAppearance();
+    }
+
+    onBackgroundColorChange(event: Event) {
+        const color = (event.target as HTMLInputElement).value;
+        this.chartBackgroundColor = color;
+        this.persistColorPreference('chartBackgroundColor', color);
+        this.refreshChartAppearance();
+    }
+
+    private loadColorPreferences() {
+        const header = abp.utils.getCookieValue(this.getColorCookieKey('headerBackgroundColor'));
+        const line = abp.utils.getCookieValue(this.getColorCookieKey('chartLineColor'));
+        const background = abp.utils.getCookieValue(this.getColorCookieKey('chartBackgroundColor'));
+
+        if (header) {
+            this.headerBackgroundColor = header;
+        }
+        if (line) {
+            this.chartLineColor = line;
+        }
+        if (background) {
+            this.chartBackgroundColor = background;
+        }
+    }
+
+    private getColorCookieKey(suffix: string): string {
+        const guid = this.elementRef.nativeElement.parentElement?.dataset?.guid ?? 'trend';
+        return `trend_${guid}_${suffix}`;
+    }
+
+    private persistColorPreference(suffix: string, value: string) {
+        abp.utils.setCookieValue(this.getColorCookieKey(suffix), value, this.getCookieExpiration());
+    }
+
+    private getCookieExpiration(): Date {
+        const expireDate = new Date();
+        expireDate.setFullYear(expireDate.getFullYear() + 1);
+        return expireDate;
+    }
+
+    private refreshChartAppearance() {
+        if (this.chartComponent?.instance) {
+            this.chartComponent.instance.refresh();
+        }
     }
 }
