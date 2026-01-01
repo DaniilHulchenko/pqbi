@@ -561,6 +561,9 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     onHeaderColorChange(event: Event) {
+        if (!this.editState) {
+            return;
+        }
         const color = (event.target as HTMLInputElement).value;
         this.applyHeaderColor(color);
     }

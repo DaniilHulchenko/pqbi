@@ -114,8 +114,8 @@ dx-chart {
 }
 
 .trend-title-button {
-    background: rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: transparent;
+    border: none;
     padding: 6px 12px;
     color: inherit;
     cursor: pointer;
@@ -132,5 +132,4 @@ dx-chart {
 
 .trend-title-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
