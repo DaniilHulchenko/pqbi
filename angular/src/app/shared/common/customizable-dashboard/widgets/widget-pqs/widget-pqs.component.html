@@ -1,8 +1,11 @@
-<div class="kt-portlet kt-portlet--height-fluid widget-full-height" [ngStyle]="{ 'background-color': headerBackgroundColor }">
-    <div class="kt-portlet__head" [ngStyle]="{ 'background-color': headerBackgroundColor }">
+<div class="kt-portlet kt-portlet--height-fluid widget-full-height trend-widget-card" [ngStyle]="{ 'background-color': widgetBackgroundColor }">
+    <div class="kt-portlet__head trend-widget-header" [ngStyle]="{ 'background-color': headerBackgroundColor, color: headerTitleColor }">
         <div class="kt-portlet__head-label">
-            <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
-                <button type="button" class="trend-title-button" (click)="openColorPicker(headerColorPicker)">
+            <h3 class="kt-portlet__head-title trend-widget-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
+                <button type="button"
+                        class="trend-title-button"
+                        [ngStyle]="{ 'background-color': headerTitleBadgeColor, color: headerTitleColor }"
+                        (click)="openColorPicker(headerColorPicker)">
                     {{ widgetConfigurationInDB?.name }}
                 </button>
                 <input
@@ -10,13 +13,14 @@
                     class="color-input-hidden"
                     type="color"
                     [value]="headerBackgroundColor"
-                    (change)="onHeaderColorChange($event)" />
+                    (input)="onHeaderColorChange($event)" />
             </h3>
         </div>
+        <div class="kt-portlet__head-toolbar"></div>
     </div>
 
-    <div class="chart-wrapper position-relative flex-grow-1" [ngStyle]="{ 'background-color': headerBackgroundColor }">
-        <div class="trend-controls d-flex align-items-center flex-wrap" [ngStyle]="{ color: chartLineColor }">
+    <div class="chart-wrapper trend-widget-body position-relative flex-grow-1" [ngStyle]="{ 'background-color': widgetBackgroundColor }">
+        <div class="trend-controls d-flex align-items-center flex-wrap" [ngStyle]="{ color: chartLineColor, 'background-color': widgetBackgroundColor }">
             <label class="trend-control d-flex align-items-center mb-0">
                 <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
                 <span class="ms-2">{{ 'StepLine' | localize }}</span>
@@ -35,7 +39,7 @@
                     class="color-input-hidden"
                     type="color"
                     [value]="chartLineColor"
-                    (change)="onLineColorChange($event)" />
+                    (input)="onLineColorChange($event)" />
             </div>
 
             <div class="trend-control d-flex align-items-center mb-0">
@@ -46,7 +50,7 @@
                     class="color-input-hidden"
                     type="color"
                     [value]="chartBackgroundColor"
-                    (change)="onBackgroundColorChange($event)" />
+                    (input)="onBackgroundColorChange($event)" />
             </div>
         </div>
 

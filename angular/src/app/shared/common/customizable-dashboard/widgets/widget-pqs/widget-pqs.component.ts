@@ -248,8 +248,11 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     chartHeight: number = 300; // default value
     headerBackgroundColor = '#ffffff';
+    widgetBackgroundColor = '#ffffff';
     chartLineColor = '#3699ff';
     chartBackgroundColor = '#ffffff';
+    headerTitleColor = '#000000';
+    headerTitleBadgeColor = 'rgba(0, 0, 0, 0.08)';
 
     protected _defaultWidgetName;
     private subs: Subscription[] = [];
@@ -559,8 +562,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     onHeaderColorChange(event: Event) {
         const color = (event.target as HTMLInputElement).value;
-        this.headerBackgroundColor = color;
-        this.persistColorPreference('headerBackgroundColor', color);
+        this.applyHeaderColor(color);
     }
 
     onLineColorChange(event: Event) {
@@ -579,18 +581,29 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     private loadColorPreferences() {
         const header = abp.utils.getCookieValue(this.getColorCookieKey('headerBackgroundColor'));
+        const widget = abp.utils.getCookieValue(this.getColorCookieKey('widgetBackgroundColor'));
         const line = abp.utils.getCookieValue(this.getColorCookieKey('chartLineColor'));
         const background = abp.utils.getCookieValue(this.getColorCookieKey('chartBackgroundColor'));
 
         if (header) {
             this.headerBackgroundColor = header;
         }
+
+        if (widget) {
+            this.widgetBackgroundColor = widget;
+        } else {
+            this.widgetBackgroundColor = this.headerBackgroundColor;
+            this.persistColorPreference('widgetBackgroundColor', this.widgetBackgroundColor);
+        }
+
         if (line) {
             this.chartLineColor = line;
         }
         if (background) {
             this.chartBackgroundColor = background;
         }
+
+        this.updateHeaderTitleStyling();
     }
 
     private getColorCookieKey(suffix: string): string {
@@ -612,5 +625,52 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         if (this.chartComponent?.instance) {
             this.chartComponent.instance.refresh();
         }
+    }
+
+    private applyHeaderColor(color: string) {
+        this.headerBackgroundColor = color;
+        this.persistColorPreference('headerBackgroundColor', color);
+        this.updateHeaderTitleStyling();
+    }
+
+    private updateHeaderTitleStyling() {
+        this.headerTitleColor = this.getContrastingTextColor(this.headerBackgroundColor);
+        this.headerTitleBadgeColor = this.getBadgeColor(this.headerBackgroundColor);
+    }
+
+    private getContrastingTextColor(color: string): string {
+        const { r, g, b } = this.hexToRgb(color);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.6 ? '#1b1b1b' : '#ffffff';
+    }
+
+    private getBadgeColor(color: string): string {
+        const { r, g, b } = this.hexToRgb(color);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.6 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
+    }
+
+    private hexToRgb(hex: string): { r: number; g: number; b: number } {
+        if (!hex) {
+            return { r: 255, g: 255, b: 255 };
+        }
+
+        let normalized = hex.replace('#', '');
+
+        if (normalized.length === 3) {
+            normalized = normalized.split('').map((char) => char + char).join('');
+        }
+
+        const parsed = parseInt(normalized, 16);
+
+        if (isNaN(parsed)) {
+            return { r: 255, g: 255, b: 255 };
+        }
+
+        return {
+            r: (parsed >> 16) & 255,
+            g: (parsed >> 8) & 255,
+            b: parsed & 255,
+        };
     }
 }
