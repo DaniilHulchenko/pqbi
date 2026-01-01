@@ -18529,7 +18529,7 @@ export class TrendWidgetConfigurationsServiceProxy {
         if (id === null)
             throw new Error("The parameter 'id' cannot be null.");
         else if (id !== undefined)
-            url_ += "id=" + encodeURIComponent("" + id) + "&";
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -25216,6 +25216,7 @@ export class CreateOrEditTrendWidgetConfigurationDto implements ICreateOrEditTre
     dateRange!: string;
     resolution!: string;
     parameters!: string | undefined;
+    thresholdSettings!: string | undefined;
 
     constructor(data?: ICreateOrEditTrendWidgetConfigurationDto) {
         if (data) {
@@ -25232,6 +25233,7 @@ export class CreateOrEditTrendWidgetConfigurationDto implements ICreateOrEditTre
             this.dateRange = _data["dateRange"];
             this.resolution = _data["resolution"];
             this.parameters = _data["parameters"];
+            this.thresholdSettings = _data["thresholdSettings"];
         }
     }
 
@@ -25248,6 +25250,7 @@ export class CreateOrEditTrendWidgetConfigurationDto implements ICreateOrEditTre
         data["dateRange"] = this.dateRange;
         data["resolution"] = this.resolution;
         data["parameters"] = this.parameters;
+        data["thresholdSettings"] = this.thresholdSettings;
         return data;
     }
 }
@@ -25257,6 +25260,7 @@ export interface ICreateOrEditTrendWidgetConfigurationDto {
     dateRange: string;
     resolution: string;
     parameters: string | undefined;
+    thresholdSettings: string | undefined;
 }
 
 export class CreateOrEditWidgetConfigurationDto implements ICreateOrEditWidgetConfigurationDto {
@@ -43973,6 +43977,7 @@ export class TrendWidgetConfigurationDto implements ITrendWidgetConfigurationDto
     dateRange!: string | undefined;
     resolution!: string | undefined;
     parameters!: string | undefined;
+    thresholdSettings!: string | undefined;
 
     constructor(data?: ITrendWidgetConfigurationDto) {
         if (data) {
@@ -43989,6 +43994,7 @@ export class TrendWidgetConfigurationDto implements ITrendWidgetConfigurationDto
             this.dateRange = _data["dateRange"];
             this.resolution = _data["resolution"];
             this.parameters = _data["parameters"];
+            this.thresholdSettings = _data["thresholdSettings"];
         }
     }
 
@@ -44005,6 +44011,7 @@ export class TrendWidgetConfigurationDto implements ITrendWidgetConfigurationDto
         data["dateRange"] = this.dateRange;
         data["resolution"] = this.resolution;
         data["parameters"] = this.parameters;
+        data["thresholdSettings"] = this.thresholdSettings;
         return data;
     }
 }
@@ -44014,6 +44021,7 @@ export interface ITrendWidgetConfigurationDto {
     dateRange: string | undefined;
     resolution: string | undefined;
     parameters: string | undefined;
+    thresholdSettings: string | undefined;
 }
 
 export class TwitterExternalLoginProviderSettings implements ITwitterExternalLoginProviderSettings {

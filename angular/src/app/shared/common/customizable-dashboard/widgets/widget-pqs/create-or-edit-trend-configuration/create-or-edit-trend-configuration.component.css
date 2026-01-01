@@ -73,3 +73,20 @@ dl {
 .width-dropdown {
     width: 200px;
 }
+
+.threshold-settings {
+  font-family: Arial, sans-serif;
+  padding: 10px;
+}
+
+.threshold-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.deviation-label {
+  margin-left: 10px;
+  margin-right: 5px;
+}

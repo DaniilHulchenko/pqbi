@@ -42,6 +42,7 @@ import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-r
 import { DateRangeType } from '@app/shared/enums/date-range-type';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
 import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selection-units';
+import { ThresholdSettingsModel } from '@app/shared/models/threshold-settings-model';
 
 
 type LineLegendType = {
@@ -74,7 +75,6 @@ class LineChart extends DashboardChartBase {
     //#endregion
     constructor(
         private _dashboardService: TenantDashboardServiceProxy,
-        private _pqsRestApiServiceProxy: PQSRestApiServiceProxy,
         private setErrorMessage: (error: string | null) => void,
     ) {
         super();
@@ -132,7 +132,7 @@ class LineChart extends DashboardChartBase {
                 if (map.has(trend.timeStamps[i])) {
                     let obj = map.get(trend.timeStamps[i]);
                     obj[dataId] = dataItem.data[i];
-                }else {
+                } else {
                     let obj = new Object();
                     obj[dataId] = dataItem.data[i];
                     map.set(trend.timeStamps[i], obj);
@@ -152,15 +152,12 @@ class LineChart extends DashboardChartBase {
     }
 
     parameterName222(parameter: CalculatedDataItem): string {
-
-        const feedersJoined = parameter.feeders.map(f => {
-            const parts = [
-
-                f.name ? ` ${f.name}` : f.componentId,
-                f.id !== undefined ? `${f.id}` : '',
-            ];
-            return parts.join('').trim();
-        }).join(',\n');
+        const feedersJoined = parameter.feeders
+            .map((f) => {
+                const parts = [f.name ? ` ${f.name}` : f.componentId, f.id !== undefined ? `${f.id}` : ''];
+                return parts.join('').trim();
+            })
+            .join(',\n');
 
         let result = parameter.parameterName;
         if (parameter.parameterName) {
@@ -169,7 +166,6 @@ class LineChart extends DashboardChartBase {
 
         return feedersJoined;
     }
-
 
     // parameterName(parameter: GraphParametersComponentDtoV3): string {
     //     let result = parameter.customParameterName || parameter.parameterNames.join(',\n');
@@ -197,14 +193,15 @@ class LineChart extends DashboardChartBase {
     reload(input: TrendCalcRequest) {
         this.showLoading();
 
-        var sub = this._dashboardService.pQSTrendData(input)
+        var sub = this._dashboardService
+            .pQSTrendData(input)
             .pipe(
                 catchError((error) => {
                     this.hideLoading();
                     return throwError(() => error);
                 }),
             )
-            .subscribe(result => {
+            .subscribe((result) => {
                 if (!result.isSuccess) {
                     // this.errorMessage = result2.reason || 'No Data Available';
                     this.setErrorMessage(this.errorMessage);
@@ -233,7 +230,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     @ViewChild(DxChartComponent, { static: false }) chartComponent!: DxChartComponent;
     @ViewChild('createOrEditModal') createOrEditModal: CreateOrEditTrendConfigurationComponent;
     @ViewChild('renameWidgetModal') renameModal: RenameWidgetModalComponent;
-    @ViewChild('headerColorPicker') headerColorPicker: ElementRef<HTMLInputElement>;
     @Output() widgetRefresh: EventEmitter<any> = new EventEmitter();
 
     errorMessage: string | null = null;
@@ -248,8 +244,8 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     allComponents: any[];
     trendWidgetConfiguration: CreateOrEditTrendWidgetConfigurationDto;
     chartWidth: number;
+    thresholdSettings: ThresholdSettingsModel = new ThresholdSettingsModel();
 
-    headerBackgroundColor?: string;
     chartHeight: number = 300; // default value
 
     protected _defaultWidgetName;
@@ -259,7 +255,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         injector: Injector,
         private _tenantdashboardService: TenantDashboardServiceProxy,
         private _trendWidgetConfigurationService: TrendWidgetConfigurationService,
-        private _pqsRestApiServiceProxy: PQSRestApiServiceProxy,
         public elementRef: ElementRef,
         dateRangeService: DateRangeService,
         private _resolutionService: ResolutionService,
@@ -268,7 +263,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     ) {
         super(injector, elementRef, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSTrend');
-        this.lineChart = new LineChart(this._tenantdashboardService, this._pqsRestApiServiceProxy, (error) => {
+        this.lineChart = new LineChart(this._tenantdashboardService, (error) => {
             this.errorMessage = error;
         });
         this.lineChart.isInitialLoad = true;
@@ -276,7 +271,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     ngOnInit() {
         super.ngOnInit();
-        this.headerBackgroundColor = this.loadHeaderColorFromCookie();
     }
 
     ngAfterViewInit() {
@@ -287,6 +281,13 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
             this.chartWidth = this.chartComponent.instance.element().clientWidth;
         });
     }
+
+    customizePoint = (pointInfo: any) => {
+        if (this.thresholdSettings.deviationColor && (pointInfo.value > this.thresholdSettings.upperValue
+            || pointInfo.value < this.thresholdSettings.lowerValue)) {
+            return { color: this.thresholdSettings.deviationColor, size: 7 };
+        }
+    };
 
     edit() {
         this.isEditModalInitialized = true;
@@ -316,7 +317,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.trendWidgetConfiguration = result.trendWidgetConfiguration;
-                    this.headerBackgroundColor = this.loadHeaderColorFromCookie();
                     let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
                     if (this.trendWidgetConfiguration) {
                         let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
@@ -333,6 +333,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                             );
                         }
                         var dateModel = DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange);
+                        this.thresholdSettings = this.trendWidgetConfiguration.thresholdSettings ? JSON.parse(this.trendWidgetConfiguration.thresholdSettings) : new ThresholdSettingsModel();
 
                         if (dateModel.rangeUnit === DateRangeType.Relative && resulutionValueInMs) {
                             timer(0, resulutionValueInMs)
@@ -557,50 +558,5 @@ private getSelectedIntervalResolution(
         setTimeout(() => {
             this.isStepLine = !this.isStepLine;
         }, 0);
-    }
-
-    onHeaderClick(): void {
-        if (!this.editState || !this.headerColorPicker) {
-            return;
-        }
-
-        this.headerColorPicker.nativeElement.click();
-    }
-
-    onHeaderColorChange(color: string): void {
-        this.headerBackgroundColor = color;
-        this.saveHeaderColorToCookie(color);
-    }
-
-    private getHeaderColorCookieKey(): string | null {
-        return this.widgetConfigurationInDB?.widgetGuid
-            ? `trend_header_color_${this.widgetConfigurationInDB.widgetGuid}`
-            : null;
-    }
-
-    private loadHeaderColorFromCookie(): string | undefined {
-        const key = this.getHeaderColorCookieKey();
-        if (!key) {
-            return undefined;
-        }
-
-        const cookies = document.cookie?.split(';').map(c => c.trim()) ?? [];
-        for (const cookie of cookies) {
-            if (cookie.startsWith(`${key}=`)) {
-                const value = cookie.substring(key.length + 1);
-                return decodeURIComponent(value);
-            }
-        }
-        return undefined;
-    }
-
-    private saveHeaderColorToCookie(color: string): void {
-        const key = this.getHeaderColorCookieKey();
-        if (!key) {
-            return;
-        }
-
-        const maxAge = 60 * 60 * 24 * 365; // 1 year
-        document.cookie = `${key}=${encodeURIComponent(color)};path=/;max-age=${maxAge}`;
     }
 }

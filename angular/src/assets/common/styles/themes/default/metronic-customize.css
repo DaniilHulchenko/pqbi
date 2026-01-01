@@ -2,7 +2,8 @@ quick-theme-selection,
 language-switch-dropdown,
 header-notifications,
 chat-toggle-button,
-user-menu {
+user-menu,
+dashboard-toolbar-controls {
     display: flex;
 }
 

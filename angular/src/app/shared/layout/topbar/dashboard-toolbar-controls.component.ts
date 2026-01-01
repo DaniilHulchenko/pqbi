@@ -2,6 +2,7 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    HostBinding,
     Injector,
     OnDestroy,
     OnInit,
@@ -22,12 +23,14 @@ import { Subscription } from 'rxjs';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardToolbarControlsComponent extends AppComponentBase implements OnInit, OnDestroy {
+    @HostBinding('style.display') public display = 'flex';
+
     showControls = false;
     editModeEnabled = false;
     selectedWidgetNameFontSize?: number;
     backgroundColor = this.bgColor;
 
-    readonly widgetNameFontSizes = [12, 14, 16, 18, 20, 22, 24];
+    readonly widgetNameFontSizes = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30];
     readonly defaultWidgetTitleSize = 20;
     readonly widgetTitleSizeLabel: string;
 

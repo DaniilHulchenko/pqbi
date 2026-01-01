@@ -1,5 +1,5 @@
 <div class="kt-portlet kt-portlet--height-fluid widget-full-height">
-    <div class="kt-portlet__head widget-header-colored" [ngStyle]="{'background-color': headerBackgroundColor || null}" [class.header-clickable]="editState" (click)="onHeaderClick()">
+    <div class="kt-portlet__head">
         <div class="kt-portlet__head-label">
             <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
                 {{ widgetConfigurationInDB?.name }}
@@ -38,7 +38,9 @@
 
         <ng-template #chartContent>
             <div #chartContainer class="chart-container flex-grow-1">
-                <dx-chart #chartComponent class="w-100 h-100" id="chart" [dataSource]="lineChart.chartData">
+                <dx-chart #chartComponent class="w-100 h-100" id="chart"
+                    [dataSource]="lineChart.chartData"
+                    [customizePoint]="customizePoint">
                     <dxi-pane name="top"></dxi-pane>
 
                     <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key">
@@ -51,6 +53,16 @@
                         [name]="source.name" [valueField]="source.id">
                         <dxo-point [visible]="isLinePoints"></dxo-point>
                     </dxi-series>
+
+                    <dxi-value-axis>
+                        <dxi-constant-line *ngIf="thresholdSettings.upperEnabled" [value]="thresholdSettings.upperValue" [color]="thresholdSettings.upperColor" dashStyle="dash" width="2">
+                            <dxo-label text="Upper Threshold"></dxo-label>
+                        </dxi-constant-line>
+
+                        <dxi-constant-line *ngIf="thresholdSettings.lowerEnabled" [value]="thresholdSettings.lowerValue" [color]="thresholdSettings.lowerColor" dashStyle="dash" width="2">
+                            <dxo-label text="Lower Threshold"></dxo-label>
+                        </dxi-constant-line>
+                    </dxi-value-axis>
 
                     <dxo-legend verticalAlignment="bottom" horizontalAlignment="center"
                         itemTextPosition="bottom"></dxo-legend>
@@ -70,6 +82,4 @@
     <ng-container *ngIf="editState">
         <rename-widget-modal #renameWidgetModal (onSave)="saveName($event)"></rename-widget-modal>
     </ng-container>
-
-    <input #headerColorPicker class="color-picker-input" type="color" [value]="headerBackgroundColor || '#ffffff'" (input)="onHeaderColorChange($event.target.value)" />
 </div>

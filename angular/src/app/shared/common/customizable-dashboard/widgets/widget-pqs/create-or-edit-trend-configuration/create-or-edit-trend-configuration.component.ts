@@ -53,6 +53,7 @@ import { CustomParameterService } from '@app/shared/services/custom-parameter-se
 import { TrendWidgetConfigurationService } from '@app/shared/services/widget-configurations/trend-widget-configuration.service';
 import { DateRangeAndResolutionModel } from '@app/shared/models/date-range-and-resolution-model';
 import { DateRangeAndResolutionSelectorComponent } from '@app/shared/common/components/date-range-and-resolution-selector/date-range-and-resolution-selector.component';
+import { ThresholdSettingsModel } from '@app/shared/models/threshold-settings-model';
 
 @Component({
     selector: 'createOrEditTrendConfiguration',
@@ -83,6 +84,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
     // dateRangeSelectionState: DateRangeState = new DateRangeState({ rangeOption: null, startDate: null, endDate: null });
     // resolutionState: ResolutionState;
     dateRangeAndResolutionSelectionState: DateRangeAndResolutionModel;
+    thresholdSettings: ThresholdSettingsModel = new ThresholdSettingsModel();
     parameters: WidgetParametersColumn[] = [];
 
     parameterResolutions: ResolutionState[] = [];
@@ -274,6 +276,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
         this.configuration.dateRange = safeStringify(this.dateRangeAndResolutionSelectionState);
         this.configuration.resolution = this.dateRangeAndResolutionSelectionState.resolution.toString();
         this.configuration.parameters = safeStringify(this.parameters);
+        this.configuration.thresholdSettings = safeStringify(this.thresholdSettings);
 
         if (this.configuration.id) {
             var sub = this._trendWidgetConfigurationServiceProxy
@@ -322,6 +325,8 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
                         this._resolutionService.parseStateFromString(this.configuration.resolution, true)
                     );
 
+                    this.thresholdSettings = this.configuration.thresholdSettings ? JSON.parse(this.configuration.thresholdSettings) : new ThresholdSettingsModel();
+
                     this.parameters = JSON.parse(this.configuration.parameters);
 
                     for (let parameter of this.parameters.filter(
@@ -346,6 +351,7 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
             this.dateRangeAndResolutionSelectionState = null;
             this.minAllowedResolution = this._resolutionService.parseStateFromString(ResolutionUnits.IS1MIN, true);
             this.parameterResolutions = [];
+            this.thresholdSettings = new ThresholdSettingsModel();
         }
     }
 
