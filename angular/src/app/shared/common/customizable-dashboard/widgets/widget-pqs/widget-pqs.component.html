@@ -1,5 +1,5 @@
 <div class="kt-portlet kt-portlet--height-fluid widget-full-height">
-    <div class="kt-portlet__head">
+    <div class="kt-portlet__head widget-header-colored" [ngStyle]="{'background-color': headerBackgroundColor || null}" [class.header-clickable]="editState" (click)="onHeaderClick()">
         <div class="kt-portlet__head-label">
             <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
                 {{ widgetConfigurationInDB?.name }}
@@ -82,4 +82,6 @@
     <ng-container *ngIf="editState">
         <rename-widget-modal #renameWidgetModal (onSave)="saveName($event)"></rename-widget-modal>
     </ng-container>
+
+    <input #headerColorPicker class="color-picker-input" type="color" [value]="headerBackgroundColor || '#ffffff'" (input)="onHeaderColorChange($event.target.value)" />
 </div>
