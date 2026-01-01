@@ -4,14 +4,16 @@
             <h3 class="kt-portlet__head-title trend-widget-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
                 <button type="button"
                         class="trend-title-button"
-                        [ngStyle]="{ 'background-color': headerTitleBadgeColor, color: headerTitleColor }"
-                        (click)="openColorPicker(headerColorPicker)">
+                        [disabled]="!editState"
+                        [ngStyle]="{ 'background-color': editState ? headerTitleBadgeColor : 'transparent', color: headerTitleColor }"
+                        (click)="editState && openColorPicker(headerColorPicker)">
                     {{ widgetConfigurationInDB?.name }}
                 </button>
                 <input
                     #headerColorPicker
                     class="color-input-hidden"
                     type="color"
+                    [disabled]="!editState"
                     [value]="headerBackgroundColor"
                     (input)="onHeaderColorChange($event)" />
             </h3>
@@ -20,8 +22,8 @@
     </div>
 
     <div class="chart-wrapper trend-widget-body position-relative flex-grow-1" [ngStyle]="{ 'background-color': widgetBackgroundColor }">
-        <div class="trend-controls d-flex align-items-center flex-wrap" [ngStyle]="{ color: chartLineColor, 'background-color': widgetBackgroundColor }">
-            <label class="trend-control d-flex align-items-center mb-0">
+        <div class="trend-controls d-flex align-items-center flex-wrap" [ngStyle]="{ color: chartLineColor, 'background-color': chartBackgroundColor }">
+            <label *ngIf="editState" class="trend-control d-flex align-items-center mb-0">
                 <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
                 <span class="ms-2">{{ 'StepLine' | localize }}</span>
             </label>
