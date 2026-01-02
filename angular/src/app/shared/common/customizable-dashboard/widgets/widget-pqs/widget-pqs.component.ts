@@ -560,10 +560,20 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         picker?.click();
     }
 
-    onHeaderColorChange(event: Event) {
-        if (!this.editState) {
+    onHeaderClick(event: MouseEvent, picker: HTMLInputElement) {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.color-input-hidden')) {
             return;
         }
+        this.openColorPicker(picker);
+    }
+
+    onTitleClick(event: MouseEvent, picker: HTMLInputElement) {
+        event.stopPropagation();
+        this.openColorPicker(picker);
+    }
+
+    onHeaderColorChange(event: Event) {
         const color = (event.target as HTMLInputElement).value;
         this.applyHeaderColor(color);
     }

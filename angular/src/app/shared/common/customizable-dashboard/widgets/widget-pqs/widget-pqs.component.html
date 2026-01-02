@@ -1,19 +1,17 @@
-<div class="kt-portlet kt-portlet--height-fluid widget-full-height trend-widget-card" [ngStyle]="{ 'background-color': widgetBackgroundColor }">
-    <div class="kt-portlet__head trend-widget-header" [ngStyle]="{ 'background-color': headerBackgroundColor, color: headerTitleColor }">
+<div class="kt-portlet kt-portlet--height-fluid widget-full-height trend-widget-card" [ngStyle]="{ 'background-color': widgetBackgroundColor }" [class.trend-widget-edit-mode]="editState">
+    <div class="kt-portlet__head trend-widget-header" [ngStyle]="{ 'background-color': headerBackgroundColor, color: headerTitleColor }" (click)="onHeaderClick($event, headerColorPicker)">
         <div class="kt-portlet__head-label">
             <h3 class="kt-portlet__head-title trend-widget-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
                 <button type="button"
                         class="trend-title-button"
-                        [disabled]="!editState"
                         [ngStyle]="{ 'background-color': editState ? headerTitleBadgeColor : 'transparent', color: headerTitleColor }"
-                        (click)="editState && openColorPicker(headerColorPicker)">
+                        (click)="onTitleClick($event, headerColorPicker)">
                     {{ widgetConfigurationInDB?.name }}
                 </button>
                 <input
                     #headerColorPicker
                     class="color-input-hidden"
                     type="color"
-                    [disabled]="!editState"
                     [value]="headerBackgroundColor"
                     (input)="onHeaderColorChange($event)" />
             </h3>

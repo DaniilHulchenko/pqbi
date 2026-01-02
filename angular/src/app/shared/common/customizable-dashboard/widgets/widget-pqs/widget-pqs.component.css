@@ -45,6 +45,14 @@
     justify-content: space-between;
     padding: 12px 16px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    position: relative;
+    transition: filter 140ms ease, box-shadow 140ms ease;
+}
+
+.trend-widget-header:hover {
+    cursor: pointer;
+    filter: brightness(1.05);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 .trend-widget-title {
     margin: 0;
@@ -125,11 +133,20 @@ dx-chart {
     transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
-.trend-title-button:focus-visible {
-    outline: 2px solid rgba(0, 0, 0, 0.25);
-    outline-offset: 2px;
-}
-
 .trend-title-button:hover {
     transform: translateY(-1px);
+}
+
+.trend-widget-header:hover .trend-title-button {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.trend-widget-title,
+.trend-title-button {
+    cursor: pointer;
+}
+
+.trend-widget-edit-mode .trend-title-button:focus-visible {
+    outline: none;
+    box-shadow: none;
 }
