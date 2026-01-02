@@ -1,5 +1,5 @@
 <div
-    class="kt-portlet kt-portlet--height-fluid"
+    class="kt-portlet kt-portlet--height-fluid widget-pqs-card"
     (click)="onWidgetClick($event)"
     [class.widget-link-enabled]="canNavigateToPage && !editState"
     [attr.role]="canNavigateToPage && !editState ? 'button' : null"
@@ -12,7 +12,7 @@
             </h3>
         </div>
     </div>
-    <div class="kt-portlet__body" id="outerScroll" style="width: 98%; height: 500px; overflow-y: auto;">
+    <div class="kt-portlet__body widget-pqs-card__body" id="outerScroll">
         <div [ngSwitch]="cardWidgetConfiguration?.styleType">
             <div *ngSwitchCase="1">
                 <div class="gauge-container">
