@@ -63,6 +63,7 @@ export class CardWidgetParameterAdvancedSettingsComponent
 
     readonly defaultIconSize = 32;
     readonly defaultIconSizeUnit = 'px';
+    readonly iconPreviewSizePx = 32;
     readonly iconSizeUnits = ['px', 'em', 'rem', '%', 'vw', 'vh', 'vmin', 'vmax'];
 
     modalVisible = false;

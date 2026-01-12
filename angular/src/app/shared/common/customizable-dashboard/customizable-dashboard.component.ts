@@ -10,6 +10,8 @@ import {
     HostListener,
 
 } from '@angular/core';
+import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import { DashboardViewConfigurationService } from './dashboard-view-configuration.service';
 import { appModuleAnimation } from '@shared/animations/routerTransition';
@@ -63,6 +65,7 @@ export class WidgetOnResizeEventHandler {
 })
 export class CustomizableDashboardComponent extends AppComponentBase implements OnInit, OnDestroy {
     @Input() dashboardName: string;
+    @Input() initialPageName: string;
     @ViewChild('addWidgetModal') addWidgetModal: AddWidgetModalComponent;
     @ViewChild('dashboardTabs') dashboardTabs: TabsetComponent;
     @ViewChild('filterModal', { static: true }) modal: ModalDirective;
@@ -121,6 +124,8 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         private dashboardPagesService: DashboardPagesService,
         private dashboardConfigurationService: DashboardConfigurationService,
         private dashboardToolbarService: DashboardToolbarService,
+        private location: Location,
+        private router: Router,
     ) {
         super(_injector);
         this.widgetTitleSizeLabel = this.getWidgetTitleSizeLabel();
@@ -186,11 +191,13 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                 this.loading = false;
                 this.busy = false;
 
+                const pageIdToSelect = this.getInitialPageIdToSelect();
+                const pageToSelect = this.userDashboard.pages.find(p => p.id === pageIdToSelect);
                 this.selectedPage = {
-                    id: this.userDashboard.pages[0].id,
-                    name: this.userDashboard.pages[0].name,
+                    id: pageToSelect.id,
+                    name: pageToSelect.name,
                 };
-                this.selectPageTab(this.userDashboard.pages[0].id);
+                this.selectPageTab(pageToSelect.id, true);
 
                 return;
             }
@@ -210,11 +217,13 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
                     this.loading = false;
                     this.busy = false;
 
+                    const pageIdToSelect = this.getInitialPageIdToSelect();
+                    const pageToSelect = this.userDashboard.pages.find(p => p.id === pageIdToSelect);
                     this.selectedPage = {
-                        id: this.userDashboard.pages[0].id,
-                        name: this.userDashboard.pages[0].name,
+                        id: pageToSelect.id,
+                        name: pageToSelect.name,
                     };
-                    this.selectPageTab(this.userDashboard.pages[0].id);
+                    this.selectPageTab(pageToSelect.id, true);
                 });
         });
 
@@ -507,6 +516,25 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         this.dropdownAddPage.hide();
     }
 
+    getInitialPageIdToSelect(): string {
+        if (!this.userDashboard?.pages || this.userDashboard.pages.length === 0) {
+            return null;
+        }
+
+        // If initialPageName is provided, try to find the page by name
+        if (this.initialPageName) {
+            const pageByName = this.userDashboard.pages.find(
+                page => page.name.toLowerCase() === this.initialPageName.toLowerCase()
+            );
+            if (pageByName) {
+                return pageByName.id;
+            }
+        }
+
+        // Default to first page
+        return this.userDashboard.pages[0].id;
+    }
+
     selectPageTab(pageId: string, activateTab: boolean = false): void {
         if (!pageId) {
             this.selectedPage = {
@@ -517,19 +545,25 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             return;
         }
 
+        const page = this.userDashboard.pages.find((page) => page.id === pageId);
         this.selectedPage = {
             id: pageId,
-            name: this.userDashboard.pages.find((page) => page.id === pageId).name,
+            name: page.name,
         };
+
+        // Update URL to reflect the current page
+        const pageName = encodeURIComponent(page.name);
+        this.location.replaceState(`/app/main/dashboard/${pageName}`);
+
         if (activateTab) {
             this.activateTab(pageId);
         }
 
         if (!this.loadedTabs[pageId]) {
             this.loadedTabs[pageId] = true;
-            
+
         }
-        
+
         if (this.editModeEnabled) {
             setTimeout(() => {
                 abp.event.trigger('app.dashboardEdit.onEditStateChange', this.editModeEnabled);
@@ -551,11 +585,14 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
             return;
         }
 
-        const tab = this.dashboardTabs?.tabs?.[tabIndex];
+        // Use setTimeout to ensure tabs are rendered before trying to activate
+        setTimeout(() => {
+            const tab = this.dashboardTabs?.tabs?.[tabIndex];
 
-        if (tab && !tab.active) {
-            tab.active = true;
-        }
+            if (tab && !tab.active) {
+                tab.active = true;
+            }
+        }, 0);
     }
 
     renamePage(pageName: string): void {

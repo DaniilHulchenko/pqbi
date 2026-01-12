@@ -258,6 +258,12 @@ public class PQSRestApiController : PQBIControllerBase
         var tenantId = AbpSession.GetTenantId();
         var userId = AbpSession.UserId;
         var session = await _userSessionCacheRepository.GetCacheSessionAsync(userId.Value);
+
+        if (string.IsNullOrEmpty(session))
+        {
+            throw new SessionEmptyException();
+        }
+
         var tenant = await _tenantCacheRepository.GetTenantByIdAsync(tenantId);
 
         return await _pQSComponentOperation.GetEventsTypeAsync(tenant.PQSServiceUrl, session);       

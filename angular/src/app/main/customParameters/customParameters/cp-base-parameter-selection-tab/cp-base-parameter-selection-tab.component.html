@@ -8,11 +8,11 @@
             </form-container>
         </ng-container>
         <form-container [wrapperClass]="disableComponentSelection ? 'col-2 pe-0 h-100' : 'col-1 pe-0 h-100'">
-            <label class="form-label p-2" for="group">{{'Group' | localize }} *</label>
+            <label class="form-label p-2" for="cp-base-group-selector">{{'Group' | localize }} *</label>
                 <i class="dx-icon-info info-icon-style" id="cpBaseParamGroupToolTip"></i>
                 <div style="height: 335px">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="group" inputId="group" name="parameter.group" [(ngModel)]="parameter.group"
+                        <p-listbox id="cp-base-group-selector" inputId="cp-base-group-selector-input" name="parameter.group" [(ngModel)]="parameter.group"
                             [options]="groupOptions" optionLabel="description" optionValue="groupName" [filter]="true"
                             (onChange)="onGroupChange($event)" [multiple]="false" [scrollHeight]="9999"
                             optionDisabled="disabled" required />
@@ -23,12 +23,12 @@
                 </div>
         </form-container>
         <form-container wrapperClass="col-1 pe-0 h-100">
-            <label class="form-label p-2" for="phase">
+            <label class="form-label p-2" for="cp-base-phase-selector">
                 {{ baseParameterType === baseParameterTypes.Logical ? 'Phase' : baseParameterType }} *
             </label>
             <div style="height: 335px">
                 <dx-scroll-view direction="vertical">
-                    <p-listbox id="phase" inputId="phase" name="phase" [(ngModel)]="selectedPhases"
+                    <p-listbox id="cp-base-phase-selector" inputId="cp-base-phase-selector-input" name="phase" [(ngModel)]="selectedPhases"
                         [options]="phaseOptions" optionLabel="description" optionValue="phaseName"
                         [multiple]="_multiple" (onChange)="onPhaseChange($event)" [filter]="true"
                         [scrollHeight]="9999" optionDisabled="disabled" required />
@@ -37,10 +37,10 @@
         </form-container>
 
         <form-container wrapperClass="col-1 pe-0 h-100" *ngIf="isHarmonicsGroupSelected()">
-            <label class="form-label p-2" for="harmonics">{{'Harmonics' | localize }} *</label>
+            <label class="form-label p-2" for="cp-base-harmonics-selector">{{'Harmonics' | localize }} *</label>
             <div style="height: 335px">
                 <dx-scroll-view direction="vertical">
-                    <p-listbox id="harmonics" inputId="harmonics" name="selectedHarmonics"
+                    <p-listbox id="cp-base-harmonics-selector" inputId="cp-base-harmonics-selector-input" name="selectedHarmonics"
                         [(ngModel)]="selectedHarmonics" optionValue="description" optionLabel="description"
                         [options]="harmonicOptions" [filter]="true" [scrollHeight]="9999" [multiple]="_multiple"
                         optionDisabled="disabled" required />
@@ -49,10 +49,10 @@
         </form-container>
 
         <form-container wrapperClass="col-1 pe-0 h-100">
-            <label class="form-label p-2" for="phase">{{'Base' | localize }} *</label>
+            <label class="form-label p-2" for="cp-base-selector">{{'Base' | localize }} *</label>
                 <div style="height: 335px">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="base" inputId="base" name="base" [(ngModel)]="selectedBases"
+                        <p-listbox id="cp-base-selector" inputId="cp-base-selector-input" name="base" [(ngModel)]="selectedBases"
                             (onChange)="onBaseChange($event)" [options]="baseOptions" optionLabel="description"
                             optionValue="phaseName" [filter]="true" [scrollHeight]="9999" [multiple]="_multiple"
                             optionDisabled="disabled" required />

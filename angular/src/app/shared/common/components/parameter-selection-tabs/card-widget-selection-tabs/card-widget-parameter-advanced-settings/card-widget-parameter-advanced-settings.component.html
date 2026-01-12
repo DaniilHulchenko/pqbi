@@ -112,10 +112,32 @@
               [showClearButton]="true"
               (onValueChanged)="onIconSelected($event.value)"
               itemTemplate="iconItem"
+              valueTemplate="iconValue"
             >
-              <div *dxTemplate="let item of 'iconItem'" class="d-flex align-items-center gap-2">
-                <img *ngIf="item?.content" [src]="item.content" [ngStyle]="{ width: iconSizeValue, height: iconSizeValue }" />
-                <span>{{item?.name}}</span>
+              <div *dxTemplate="let item of 'iconItem'" class="icon-select-item">
+                <img
+                  *ngIf="item?.content"
+                  [src]="item.content"
+                  class="icon-select-preview"
+                  [style.width.px]="iconPreviewSizePx"
+                  [style.height.px]="iconPreviewSizePx"
+                />
+                <span>{{ item?.name }}</span>
+              </div>
+              <div *dxTemplate="let selected of 'iconValue'" class="icon-select-value">
+                <ng-container *ngIf="selected; else placeholder">
+                  <img
+                    *ngIf="selected?.content"
+                    [src]="selected.content"
+                    class="icon-select-preview"
+                    [style.width.px]="iconPreviewSizePx"
+                    [style.height.px]="iconPreviewSizePx"
+                  />
+                  <span>{{ selected?.name }}</span>
+                </ng-container>
+                <ng-template #placeholder>
+                  <span class="text-muted">Select icon</span>
+                </ng-template>
               </div>
             </dx-select-box>
           </div>

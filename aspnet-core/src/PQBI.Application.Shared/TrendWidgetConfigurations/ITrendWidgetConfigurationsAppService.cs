@@ -7,21 +7,20 @@ using PQBI.Dto;
 
 using System.Collections.Generic;
 
-namespace PQBI.TrendWidgetConfigurations
+namespace PQBI.TrendWidgetConfigurations;
+
+public interface ITrendWidgetConfigurationsAppService : IApplicationService
 {
-    public interface ITrendWidgetConfigurationsAppService : IApplicationService
-    {
-        Task<PagedResultDto<GetTrendWidgetConfigurationForViewDto>> GetAll(GetAllTrendWidgetConfigurationsInput input);
+    Task<PagedResultDto<GetTrendWidgetConfigurationForViewDto>> GetAll(GetAllTrendWidgetConfigurationsInput input);
 
-        Task<GetTrendWidgetConfigurationForViewDto> GetTrendWidgetConfigurationForView(int id);
+    Task<GetTrendWidgetConfigurationForViewDto> GetTrendWidgetConfigurationForView(EntityDto<int> input);
 
-        Task<GetTrendWidgetConfigurationForEditOutput> GetTrendWidgetConfigurationForEdit(EntityDto input);
+    Task<GetTrendWidgetConfigurationForEditOutput> GetTrendWidgetConfigurationForEdit(EntityDto input);
 
-        Task CreateOrEdit(CreateOrEditTrendWidgetConfigurationDto input);
+    Task CreateOrEdit(CreateOrEditTrendWidgetConfigurationDto input);
 
-        Task<int> CreateAndGetId(CreateOrEditTrendWidgetConfigurationDto input);
+    Task<int> CreateAndGetId(CreateOrEditTrendWidgetConfigurationDto input);
 
-        Task Delete(EntityDto input);
+    Task Delete(EntityDto input);
 
-    }
 }

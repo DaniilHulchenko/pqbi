@@ -59,7 +59,6 @@ public abstract class PQSRestApiServiceBase : PQSServiceBase
 
         if (request.GetRecords().Count > 0)
         {
-
             if (request.GetRecord(0) is GetBaseDataRecord baseData)
             {
                 var requestXML = PQZxmlWriter.WriteMessage(request, true);

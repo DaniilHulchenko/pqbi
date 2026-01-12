@@ -241,7 +241,7 @@ public class CustomParameterNodeCalculator
     public List<CustomParameterNodeCalculator> Children = new List<CustomParameterNodeCalculator>();
 
     public IEnumerable<BaseParameterComponent> BaseParameterComponents => _baseParameterComponents;
-
+    public bool IsTrend{ get; set; }
 
     private void SetWidgetResolution(int customParameterResolution, int widgetResolutionAutoOrInSeconds, bool isAutoResolution)
     {

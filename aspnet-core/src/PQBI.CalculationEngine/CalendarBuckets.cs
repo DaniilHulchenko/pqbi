@@ -1,4 +1,5 @@
 ﻿using PQS.Data.Measurements.Enums;
+using PQBI.Configuration;
 
 namespace PQBI.CalculationEngine
 {
@@ -40,11 +41,11 @@ namespace PQBI.CalculationEngine
             }
         }
 
-        public static DateTime AlignFloor(DateTime dt, TimeBucket unit, DayOfWeek weekStart = DayOfWeek.Sunday) => unit switch
+        public static DateTime AlignFloor(DateTime dt, TimeBucket unit) => unit switch
         {
             TimeBucket.Hour => dt.Date.AddHours(dt.Hour),
             TimeBucket.Day => dt.Date,
-            TimeBucket.Week => FloorToWeek(dt, weekStart),
+            TimeBucket.Week => FloorToWeek(dt, WeekConfiguration.StartOfWeek),
             TimeBucket.Month => new DateTime(dt.Year, dt.Month, 1, 0, 0, 0, dt.Kind),
             TimeBucket.Quarter => new DateTime(dt.Year, ((dt.Month - 1) / 3) * 3 + 1, 1, 0, 0, 0, dt.Kind),
             TimeBucket.Year => new DateTime(dt.Year, 1, 1, 0, 0, 0, dt.Kind),
@@ -52,6 +53,12 @@ namespace PQBI.CalculationEngine
             TimeBucket.TenYears => new DateTime(dt.Year / 10 * 10, 1, 1, 0, 0, 0, dt.Kind),
             _ => dt
         };
+
+        public static DateTime AlignCeil(DateTime dt, TimeBucket unit)
+        {
+            var floor = CalendarBuckets.AlignFloor(dt, unit);
+            return floor == dt ? dt : CalendarBuckets.AddUnit(floor, unit);
+        }
 
         private static DateTime FloorToWeek(DateTime dt, DayOfWeek weekStart)
         {
@@ -85,10 +92,9 @@ namespace PQBI.CalculationEngine
             DateTime desiredEndUtc,
             TimeBucket bucket)          // bucket chosen by your ChooseBucket(...)
         {
-            //(var scadaSync, bool isChanged)  = MapToScadaSync(bucket);
             var start = CalendarBuckets.AlignFloor(desiredStartUtc, bucket);
-            var end = AlignCeil(desiredEndUtc, bucket);   // round *to* bar width first
-            end = AlignCeil(end, bucket);          // then make sure it’s full sync steps
+            var end = CalendarBuckets.AlignCeil(desiredEndUtc, bucket);   // round *to* bar width first
+            end = CalendarBuckets.AlignCeil(end, bucket);          // then make sure it's full sync steps
             return (start, end);
         }
 
@@ -100,11 +106,7 @@ namespace PQBI.CalculationEngine
             _ => (bucket, false)          // already supported
         };
 
-        private static DateTime AlignCeil(DateTime dt, TimeBucket unit)
-        {
-            var floor = CalendarBuckets.AlignFloor(dt, unit);
-            return floor == dt ? dt : CalendarBuckets.AddUnit(floor, unit);
-        }
+       
     }
 
     public static class TimeBucketMapping
@@ -112,7 +114,7 @@ namespace PQBI.CalculationEngine
         /// <summary>
         /// Map a chart bucket to the closest SCADA sync interval.
         /// Quarter   ➜ Month      (3 monthly samples per bar)
-        /// 5 / 10 yr ➜ Year       (5 or 10 yearly samples per bar)
+        /// 5 / 10 yr ➜ Year       (5 or 10 yearly samples per bar)
         /// </summary>
         public static IntervalSynchronized ToIntervalSync(this TimeBucket bucket) => bucket switch
         {
@@ -129,7 +131,7 @@ namespace PQBI.CalculationEngine
 
         /// <summary>
         /// Reverse mapping (best effort).
-        /// Month maps to Month (not Quarter); Year maps to Year (not 5 / 10 yr).
+        /// Month maps to Month (not Quarter); Year maps to Year (not 5 / 10 yr).
         /// </summary>
         public static TimeBucket ToTimeBucket(this IntervalSynchronized sync) => sync switch
         {
@@ -141,6 +143,4 @@ namespace PQBI.CalculationEngine
             _ => throw new ArgumentOutOfRangeException(nameof(sync))
         };
     }
-
-
 }

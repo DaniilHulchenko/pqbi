@@ -2594,6 +2594,9 @@ namespace PQBI.Migrations
                     b.Property<int?>("TenantId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ThresholdSettings")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");

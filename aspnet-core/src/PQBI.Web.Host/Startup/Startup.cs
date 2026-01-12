@@ -1,4 +1,3 @@
-using System.Reflection;
 using Abp.AspNetCore;
 using Abp.AspNetCore.Configuration;
 using Abp.AspNetCore.Mvc.Antiforgery;
@@ -6,58 +5,66 @@ using Abp.AspNetCore.Mvc.Extensions;
 using Abp.AspNetCore.SignalR.Hubs;
 using Abp.AspNetZeroCore.Web.Authentication.JwtBearer;
 using Abp.Castle.Logging.Log4Net;
-using Abp.Extensions;
-using Abp.Hangfire;
-using Abp.PlugIns;
-using Castle.Facilities.Logging;
-using Hangfire;
-using PQBI.Authorization;
-using PQBI.Configuration;
-using PQBI.EntityFrameworkCore;
-using PQBI.Identity;
-using PQBI.Web.Chat.SignalR;
-using PQBI.Web.Common;
-using PQBI.Web.Swagger;
-using Stripe;
-using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
-using GraphQL.Server.Ui.Playground;
-using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.OpenApi.Models;
-using PQBI.Configure;
-using PQBI.Schemas;
-using PQBI.Web.HealthCheck;
-using Owl.reCAPTCHA;
-using HealthChecksUISettings = HealthChecks.UI.Configuration.Settings;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
-using PQBI.Web.MultiTenancy;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using PQBI.BackgroundTasks;
-using PQBI.Network.RestApi;
-using PQBI.Network.Grpc;
-using GrpcService1;
-using Serilog;
-using PQBI.Caching;
-using PQBI.Trace;
-using PQBI.Web.Infrastructures;
-using PQBI.Network.Base.Policies;
-using PQBI.Web.Middlewares;
-using PQBI.Web.Models;
-using PQBI.PQS;
-using Abp.HtmlSanitizer;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using PQBI.Web.OpenIddict;
-using Serilog.Formatting.Json;
-using PQBI.CalculationEngine;
-using PQBI.Network.RestApi.EngineCalculation;
-using PQBI.Network.RestApi.Validations;
 using Abp.Dependency;
 using Abp.Events.Bus.Exceptions;
 using Abp.Events.Bus.Handlers;
-using System.Diagnostics;
+using Abp.Extensions;
+using Abp.Hangfire;
+using Abp.HtmlSanitizer;
+using Abp.PlugIns;
+using Castle.Facilities.Logging;
+using Google.Protobuf.Collections;
+using GraphQL.Server.Ui.Playground;
+using GrpcService1;
+using Hangfire;
+using HealthChecks.UI.Client;
+using IdentityModel;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
+using Owl.reCAPTCHA;
+using PQBI.Authorization;
+using PQBI.BackgroundTasks;
+using PQBI.Caching;
+using PQBI.CalculationEngine;
+using PQBI.Configuration;
+using PQBI.Configure;
+using PQBI.EntityFrameworkCore;
+using PQBI.Identity;
 using PQBI.Infrastructure;
+using PQBI.Network.Base.Policies;
+using PQBI.Network.Grpc;
+using PQBI.Network.RestApi;
+using PQBI.Network.RestApi.EngineCalculation;
+using PQBI.Network.RestApi.Validations;
+using PQBI.PQS;
+using PQBI.Schemas;
+using PQBI.Trace;
+using PQBI.Web.Chat.SignalR;
+using PQBI.Web.Common;
+using PQBI.Web.HealthCheck;
+using PQBI.Web.Infrastructures;
+using PQBI.Web.Middlewares;
+using PQBI.Web.Models;
+using PQBI.Web.MultiTenancy;
+using PQBI.Web.OpenIddict;
+using PQBI.Web.Swagger;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Json;
+using Serilog.Settings.Configuration;
+using Stripe;
+using System.Diagnostics;
+using System.Net.Security;
+using System.Reflection;
+using System.Security;
+using System.Security.Cryptography.X509Certificates;
+using HealthChecksUISettings = HealthChecks.UI.Configuration.Settings;
+using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
 
 namespace PQBI.Web.Startup
 {
@@ -79,7 +86,95 @@ namespace PQBI.Web.Startup
         public Startup(IWebHostEnvironment env)
         {
             _hostingEnvironment = env;
+
+            bool isRunningInContainer = IsRunningInContainer();
+            //Log.Error($"isRunningInContainer: {isRunningInContainer}");
+
             _appConfiguration = env.GetAppConfiguration();
+
+            //if (isRunningInContainer)
+            //    _appConfiguration = env.GetAppConfiguration();
+            //else
+            //    _appConfiguration = BuildConfiguration(env);
+
+
+            var pd = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+    "PQBI", "backend", "Configurations"
+);
+
+            //Log.Information("CONFIG: env={Env} contentRoot={Root}", env.EnvironmentName, env.ContentRootPath);
+            //Log.Information("CONFIG: pdDir={Pd} exists={Exists}", pd, Directory.Exists(pd));
+            //Log.Information("CONFIG: pdProdExists={Exists}",
+            //    );
+
+            //Log.Information("CONFIG: Default CS = {CS}",
+            //    _appConfiguration.GetConnectionString("Default"));
+
+        }
+
+        private static bool IsRunningInContainer()
+        {
+            // 1) Your explicit switch (set by Docker / setup)
+            //    Values treated as true: "1", "true", "yes", "on"
+            var v = Environment.GetEnvironmentVariable("PQBI_RUN_IN_CONTAINER");
+            if (!string.IsNullOrWhiteSpace(v))
+                return IsTrue(v);
+
+            // 2) Fallback: .NET sets this in containers
+            var dotnet = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER");
+            if (!string.IsNullOrWhiteSpace(dotnet))
+                return IsTrue(dotnet);
+
+            return false;
+        }
+
+        private static bool IsTrue(string s)
+        {
+            s = s.Trim();
+            return s.Equals("1", StringComparison.OrdinalIgnoreCase)
+                || s.Equals("true", StringComparison.OrdinalIgnoreCase)
+                || s.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                || s.Equals("on", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static IConfigurationRoot BuildConfiguration(IWebHostEnvironment env)
+        {
+            // Pick your folder. Example:
+            // C:\ProgramData\Elspec\PQBI\config
+            var programDataRoot = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var programDataConfigDir = Path.Combine(programDataRoot, "PQBI", "backend", "Configurations");
+
+            var envName = env.EnvironmentName; // e.g. "Production", "Staging", "Development"
+
+            if (!Directory.Exists(programDataConfigDir))
+                Directory.CreateDirectory(programDataConfigDir);
+
+
+            //Log.Information("BuildConfiguration CONFIG: env={Env} contentRoot={Root}", env.EnvironmentName, env.ContentRootPath);
+            //Log.Information("BuildConfiguration CONFIG: pdDir={Pd} exists={Exists}", programDataConfigDir, Directory.Exists(programDataConfigDir));
+            //Log.Information("BuildConfiguration CONFIG: pdProdExists={Exists}",
+            //    System.IO.File.Exists(Path.Combine(programDataConfigDir, $"appsettings.{env.EnvironmentName}.json")));
+  
+            //Log.Error("BuildConfiguration");
+
+            var pdProvider = new PhysicalFileProvider(programDataConfigDir);
+
+            // Note: Later providers override earlier ones.
+            return new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+
+                // 1) Defaults shipped with the app (Program Files / site folder)
+                //.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                //.AddJsonFile($"appsettings.{envName}.json", optional: true, reloadOnChange: true)
+
+                // 2) Customer overrides (ProgramData) — only if they exist
+                .AddJsonFile(pdProvider, "appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile(pdProvider, $"appsettings.{envName}.json", optional: true, reloadOnChange: true)
+
+                // Keep these (so IIS env vars etc still work)
+                .AddEnvironmentVariables()
+                .Build();
         }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
@@ -107,6 +202,22 @@ namespace PQBI.Web.Startup
             services.AddSingleton<IPQZBinaryWriterWrapper>(x => new PQZBinaryWriterWrapper());
 
             //Configure CORS for angular2 UI
+
+            // Configure CORS: allow requests from ANY origin (including credentials)
+            // ?? Security note: this trusts any website to send authenticated requests.
+            // Use only if you understand the risk or you're on a trusted network.
+            //services.AddCors(options =>
+            //{
+            //    options.AddPolicy(DefaultCorsPolicyName, builder =>
+            //    {
+            //        builder
+            //            .SetIsOriginAllowed(_ => true) // accept ALL origins dynamically
+            //            .AllowAnyHeader()
+            //            .AllowAnyMethod()
+            //            .AllowCredentials();           // cookies/bearer in xhr/fetch allowed
+            //    });
+            //});
+
             services.AddCors(options =>
             {
                 options.AddPolicy(DefaultCorsPolicyName, builder =>
@@ -161,6 +272,7 @@ namespace PQBI.Web.Startup
             var taskOrchestratorSection = _appConfiguration.GetSection(TaskOrchestratorConfig.ApiName);
             var engineCalculationSection = _appConfiguration.GetSection(FunctionEngineConfig.ApiName);
 
+            WeekConfiguration.Configure(_appConfiguration);
 
             var configurationService = new PQSConfigurationService();
             services.AddSingleton<IPQSConfigurationService, PQSConfigurationService>(serviceProvider =>
@@ -249,8 +361,8 @@ namespace PQBI.Web.Startup
             });
 
             services.AddTransient<IPQSTreeBuilderService, PQSTreeBuilderService>();
-            services.AddTransient<IFeederChannelTredBuilder,FeederChannelTredBuilder>();
-            
+            services.AddTransient<IFeederChannelTredBuilder, FeederChannelTredBuilder>();
+
             //services.AddTransient<IPQSGrpcService, PQSGrpcService>();
             services.AddTransient<IPQSRestApiService, PQSRestApiBinaryService>();
             services.AddTransient<IPQSComponentOperationService, PQSComponentOperationService>();
@@ -273,6 +385,13 @@ namespace PQBI.Web.Startup
                     return clientPolicy.PolicyWrap;
                 })
                 .ConfigurePrimaryHttpMessageHandler(ConfigurePrimaryHttpMessageHandler);
+
+            string isRunningInsideDockerStr = variableWriter.PQBI_RUN_IN_CONTAINER ?? _appConfiguration["App:IsRunningInsideDocker"];
+            bool isRunningInsideDocker = false;
+            if (!string.IsNullOrEmpty(isRunningInsideDockerStr))
+            {
+                isRunningInsideDocker = IsTrue(isRunningInsideDockerStr);
+            }
 
 
             //services.AddGrpcClient<PQSCommunication.PQSCommunicationClient>(o =>
@@ -307,46 +426,129 @@ namespace PQBI.Web.Startup
             //Configure Abp and Dependency Injection
             return services.AddAbp<PQBIWebHostModule>(options =>
             {
-
-                //Configure Log4Net logging
-                //options.IocManager.IocContainer.AddFacility<LoggingFacility>(
-                //    f => f.UseAbpLog4Net().WithConfig(_hostingEnvironment.IsDevelopment()
-                //        ? "log4net.config"
-                //        : "log4net.Production.config")
-                //);
-
-
-                var logDirectory = variableWriter.LOG_FILE_PATH ?? @"Logs\";
-                var logFileTxt = $"{logDirectory}log.txt";
-                var logFileJson = $"{logDirectory}log.json";
                 var seqHost = variableWriter.SEQ_HOST_URL ?? seqConfig.Url;
-                var referer = variableWriter.BUILDER_REFERER ?? Environment.MachineName;
 
-                var config = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .Enrich.WithProperty("Referer", referer)
-                    .WriteTo.Console()
-                    .WriteTo.File(logFileTxt, rollingInterval: RollingInterval.Day, outputTemplate: "")
-                    .WriteTo.File(new JsonFormatter(), logFileJson, rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true)
-                    .WriteTo.Seq(seqHost) //Seq is an external process
-                    .WriteTo.CustomSink(watcherService)
-                    .CreateLogger();
+                var isWindows = OperatingSystem.IsWindows();
 
+                var cfg = new LoggerConfiguration()
+                            .MinimumLevel.Information()
+                            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                            .ReadFrom.Configuration(_appConfiguration, new ConfigurationReaderOptions
+                             {
+                                 SectionName = "Serilog"
+                             })
+                            //.ReadFrom.Configuration(_appConfiguration)   // if Serilog section exists, it overrides
+                            .Enrich.FromLogContext();
 
-                options.IocManager.IocContainer.AddFacility<LoggingFacility>(f => f.LogUsing(new AdapterSerilogFactory(config)));
+                //var cfg = new LoggerConfiguration()
+                //    .Enrich.FromLogContext()
+                //    .MinimumLevel.Information()
+                //    // keep noise down from framework
+                //    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                //    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
 
+                if (isRunningInsideDocker)
+                {
+                    // containers: stdout
+                    cfg = cfg.WriteTo.Console();
+                }
+                else
+                {
+                    // Outside docker:
+                    // - On Windows: log to ProgramData + EventLog
+                    // - On non-Windows: usually log to files under app dir or /var/log (your choice)
+                    string baseDir;
 
+                    if (isWindows)
+                    {
+                        // default ProgramData\PQBI\Logs unless overridden by logDir
 
-                options.PlugInSources.AddFolder(Path.Combine(_hostingEnvironment.WebRootPath, "Plugins"),
+                        baseDir = Path.Combine(
+                                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                                "PQBI", "backend", "Logs");
+
+                        //baseDir = string.IsNullOrWhiteSpace(logDir)
+                        //    ? Path.Combine(
+                        //        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                        //        "PQBI", "Logs")
+                        //    : logDir;
+                    }
+                    else
+                    {
+                        // Non-Windows fallback (pick what fits your deployment)
+                        // You can also just do Console here if you prefer.
+
+                        baseDir = Path.Combine(AppContext.BaseDirectory, "Logs");
+
+                        //baseDir = string.IsNullOrWhiteSpace(logDir)
+                        //    ? Path.Combine(AppContext.BaseDirectory, "Logs")
+                        //    : logDir;
+                    }
+
+                    if (Directory.Exists(baseDir) == false)
+                        Directory.CreateDirectory(baseDir);
+
+                    cfg = cfg
+                        .WriteTo.File(
+                            Path.Combine(baseDir, "log.txt"),
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 30,
+                            shared: true)
+                        .WriteTo.File(
+                            new JsonFormatter(),
+                            Path.Combine(baseDir, "log.json"),
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 30,
+                            shared: true);
+
+                    // Event Viewer: ONLY on Windows and only Error/Fatal
+                    // Requires:
+                    // 1) Serilog.Sinks.EventLog package
+                    // 2) Installer creates custom log "PQBI" and registers source "PQBI.Web.Host" under it
+                    // 3) manageEventSource=false so runtime won't try to create registry keys
+                    if (isWindows)
+                    {
+                        const string eventSource = "PQBI.Web.Host"; // Source column
+                                                                    // log name is not passed here; it is determined by the source registration.
+                                                                    // You must register this source under log "PQBI" during install.
+
+                        bool isEventSourceExist = TrySourceExists(eventSource);
+                        if (isEventSourceExist)
+                        {
+                            cfg = cfg.ReadFrom.Configuration(_appConfiguration, new ConfigurationReaderOptions
+                            {
+                                SectionName = "SerilogEventLog"
+                            });
+                        }
+
+                        //cfg = cfg.WriteTo.Logger(lc => lc
+                        //    .Filter.ByIncludingOnly(e => e.Level >= LogEventLevel.Error)
+                        //    .WriteTo.EventLog(
+                        //        source: eventSource,
+                        //        manageEventSource: false
+                        //    ));
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(seqHost))
+                    cfg = cfg.WriteTo.Seq(seqHost);
+
+                Log.Logger = cfg.CreateLogger();
+
+                options.IocManager.IocContainer.AddFacility<LoggingFacility>(
+                    f => f.LogUsing(new AdapterSerilogFactory(Log.Logger)));
+
+                options.PlugInSources.AddFolder(
+                    Path.Combine(_hostingEnvironment.WebRootPath, "Plugins"),
                     SearchOption.AllDirectories);
 
-
-                variableWriter.WriteAllVaribles();
+                //variableWriter.WriteAllVaribles();
             });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
-        
+
         {
             //Initializes ABP framework.
             app.UseAbp(options =>
@@ -422,6 +624,10 @@ namespace PQBI.Web.Startup
                     );
                 }
             }
+
+            Log.Error("Configure");
+           
+
 
             app.UseEndpoints(endpoints =>
             {
@@ -533,6 +739,16 @@ namespace PQBI.Web.Startup
                 services.AddHealthChecksUI()
                     .AddInMemoryStorage();
             }
+        }
+
+        public static bool TrySourceExists(string source)
+        {
+            try
+            {
+                return EventLog.SourceExists(source);
+            }
+            catch (SecurityException) { return false; }
+            catch (UnauthorizedAccessException) { return false; }
         }
     }
 }

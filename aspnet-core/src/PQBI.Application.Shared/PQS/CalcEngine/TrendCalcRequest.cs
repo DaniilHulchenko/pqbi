@@ -14,7 +14,7 @@ public class WidgetValidationBase
 {
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public int RefreshRateInSeconds { get; set; }
+    public int? RefreshRateInSeconds { get; set; }
     public bool IsRealTime { get; set; }
     public string UserTimeZone { get; set; }
 
@@ -112,6 +112,9 @@ public class WidgetValidationBase
             context.Results.Add(new ValidationResult($"{nameof(WidgetValidationBase.StartDate)} <  {nameof(WidgetValidationBase.EndDate)}"));
             return false;
         }
+
+        if (RefreshRateInSeconds == null)
+            RefreshRateInSeconds = 0;
         if (RefreshRateInSeconds <= 0)
             IsRealTime = false;
 
@@ -211,7 +214,7 @@ public class Harmonics
 public class TrendCalcRequest : WidgetValidationBase, ICustomValidate
 {
     public bool IsAutoResolution { get; set; }
-    public int ResolutionInSeconds { get; set; }
+    public int? ResolutionInSeconds { get; set; }
     //public string Resolution { get; set; }
     public string WidgetName { get; set; }
     public List<TrendParameter> Parameters { get; set; } = new List<TrendParameter>();

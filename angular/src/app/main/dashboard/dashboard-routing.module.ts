@@ -10,6 +10,11 @@ const routes: Routes = [
         pathMatch: 'full',
         canDeactivate: [PendingChangesGuard]
     },
+    {
+        path: ':pageName',
+        component: DashboardComponent,
+        canDeactivate: [PendingChangesGuard]
+    },
 ];
 
 @NgModule({

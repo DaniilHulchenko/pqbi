@@ -1600,6 +1600,11 @@
 		<text name="To">To</text>
 		<text name="Last">Last</text>
 		<text name="TimeIntervalAndRefreshRate">Time Interval and Refresh Rate</text>
+		
+		<text name="ThresholdSettings">Threshold Settings</text>
+		<text name="UpperThreshold">Upper Threshold</text>
+		<text name="LowerThreshold">Lower Threshold</text>
+		<text name="Deviation">Deviation</text>
 
 	</texts>
 </localizationDictionary>

@@ -14,39 +14,42 @@ namespace PQBI.Web.Infrastructures
         public EnvironmentVariableWriter()
         {
             _variables = new Dictionary<string, string> {
-                { nameof(LOG_FILE_PATH), VARIABLE_NOT_USED } ,
+                { nameof(PQBI_LOG_DIR), VARIABLE_NOT_USED } ,
                 { nameof(SEQ_HOST_URL), VARIABLE_NOT_USED } ,
-                { nameof(BUILDER_REFERER), VARIABLE_NOT_USED } ,
+                { nameof(PQBI_RUN_IN_CONTAINER), VARIABLE_NOT_USED } ,
             };
 
-            var assemblyPath = typeof(EnvironmentVariableWriter).Assembly.Location;
+            //var assemblyPath = typeof(EnvironmentVariableWriter).Assembly.Location;
 
-            // // Get the bin directory by removing the assembly file name
-            //string binDirectory = Path.GetDirectoryName(assemblyPath);
-            var path = Path.Combine("Logs","environments.txt");
+            //// // Get the bin directory by removing the assembly file name
+            ////string binDirectory = Path.GetDirectoryName(assemblyPath);
+            //var path = Path.Combine("Logs","environments.txt");
 
 
-            _filePath = new FileInfo(path);
+            //_filePath = new FileInfo(path);
 
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            //RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         }
 
 
-        public string LOG_FILE_PATH => GetVariableValueOrNull(nameof(LOG_FILE_PATH));
+        public string PQBI_LOG_DIR => GetVariableValueOrNull(nameof(PQBI_LOG_DIR));
 
         public string SEQ_HOST_URL => GetVariableValueOrNull(nameof(SEQ_HOST_URL));
-        public string BUILDER_REFERER => GetVariableValueOrNull(nameof(BUILDER_REFERER));
+        //public string BUILDER_REFERER => GetVariableValueOrNull(nameof(BUILDER_REFERER));
 
-        public void WriteAllVaribles()
-        {
-            using (StreamWriter writer = new StreamWriter(_filePath.FullName))
-            {
-                foreach (var variable in _variables)
-                {
-                    writer.WriteLine($"{variable.Key} = {variable.Value}");
-                }
-            }
-        }
+        public string PQBI_RUN_IN_CONTAINER => GetVariableValueOrNull(nameof(PQBI_RUN_IN_CONTAINER));
+
+
+        //public void WriteAllVaribles()
+        //{
+        //    using (StreamWriter writer = new StreamWriter(_filePath.FullName))
+        //    {
+        //        foreach (var variable in _variables)
+        //        {
+        //            writer.WriteLine($"{variable.Key} = {variable.Value}");
+        //        }
+        //    }
+        //}
 
 
         private string GetVariableValueOrNull(string variableName)

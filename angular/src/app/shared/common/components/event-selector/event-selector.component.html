@@ -1,9 +1,9 @@
 <div class="p-2">
-    <label class="form-label" for="group">{{'Group' | localize }} *</label>
+    <label class="form-label" for="event-selector-listbox">{{'Group' | localize }} *</label>
 </div>
 <div [style]="scrollHeight">
     <dx-scroll-view direction="vertical">
-        <p-listbox id="event" name="event" [(ngModel)]="selectedEvent" (ngModelChange)="onSelectionChange()" [options]="events"
+        <p-listbox id="event-selector-listbox" name="event" [(ngModel)]="selectedEvent" (ngModelChange)="onSelectionChange()" [options]="events"
             optionLabel="name" [filter]="true" [virtualScroll]="false" [scrollHeight]="9999" required />
     </dx-scroll-view>
 </div>

@@ -1,7 +1,6 @@
-﻿namespace PQBI.TrendWidgetConfigurations
-{
-    public class TrendWidgetConfigurationConsts
-    {
+﻿namespace PQBI.TrendWidgetConfigurations;
 
-    }
+public class TrendWidgetConfigurationConsts
+{
+
 }

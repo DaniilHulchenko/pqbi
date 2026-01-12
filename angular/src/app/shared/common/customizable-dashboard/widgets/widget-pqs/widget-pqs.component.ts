@@ -3,11 +3,14 @@ import {
     OnInit,
     Injector,
     ViewChild,
+    ViewChildren,
+    QueryList,
     ElementRef,
     OnDestroy,
     AfterViewInit,
     Output,
     EventEmitter,
+    ChangeDetectorRef,
 } from '@angular/core';
 import {
     CreateOrEditTrendWidgetConfigurationDto,
@@ -21,11 +24,12 @@ import {
     CalculatedDataItem,
     TrendResponse,
     IntervalSynchronized,
+    TrendWidgetConfigurationsServiceProxy,
 } from '@shared/service-proxies/service-proxies';
 import { DashboardChartBase } from '../dashboard-chart-base';
 import { WidgetComponentBaseComponent } from '../widget-component-base';
 import { TreeDragDropService } from 'primeng/api';
-import { Subject, Subscription, catchError, takeUntil, throwError, timer } from 'rxjs';
+import { Subject, Subscription, catchError, takeUntil, throwError, timer, tap } from 'rxjs';
 import { CreateOrEditTrendConfigurationComponent } from './create-or-edit-trend-configuration/create-or-edit-trend-configuration.component';
 import { Guid } from 'guid-ts';
 import { DateRangeService } from '@app/shared/services/date-range-service';
@@ -47,7 +51,11 @@ import { ThresholdSettingsModel } from '@app/shared/models/threshold-settings-mo
 
 type LineLegendType = {
     name: string,
-    id: string
+    id: string,
+    color?: string,
+    parameterId?: string,
+    isEditing?: boolean,
+    customName?: string
 };
 
 class LineChartConfiguration {
@@ -112,20 +120,29 @@ class LineChart extends DashboardChartBase {
     //     this.chartData = arr;
     // }
 
-    init222(trend: TrendResponse) {
+    init222(trend: TrendResponse, parameters?: WidgetParametersColumn[]) {
         const data = trend.data;
         this.chartData = [];
         this.chartConfiguration.lineLegend = [];
 
         let map: Map<number, object> = new Map(); // number is datetime representation in UNIX sec
 
-        for (const dataItem of data) {
+        for (let i = 0; i < data.length; i++) {
+            const dataItem = data[i];
             let legendLabel = dataItem.parameterName || this.parameterName222(dataItem);
             let dataId = Guid.newGuid().toString();
+            const parameter = parameters?.[i];
+            const styleData = parameter?.style ? JSON.parse(parameter.style) : {};
+            const color = styleData?.color;
+            const customName = styleData?.customName;
 
             this.chartConfiguration.lineLegend.push({
                 name: legendLabel,
                 id: dataId,
+                color: color,
+                parameterId: parameter?.id,
+                customName: customName,
+                isEditing: false
             });
 
             for (let i = 0; i < dataItem.data.length; i++) {
@@ -190,7 +207,7 @@ class LineChart extends DashboardChartBase {
         };
     }
 
-    reload(input: TrendCalcRequest) {
+    reload(input: TrendCalcRequest, parameters?: WidgetParametersColumn[]) {
         this.showLoading();
 
         var sub = this._dashboardService
@@ -212,7 +229,7 @@ class LineChart extends DashboardChartBase {
                     this.errorMessage = null;
                     this.setErrorMessage(null);
                     // this.init(result2.data);
-                    this.init222(result);
+                    this.init222(result, parameters);
                 }
                 this.hideLoading();
                 sub.unsubscribe();
@@ -230,6 +247,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     @ViewChild(DxChartComponent, { static: false }) chartComponent!: DxChartComponent;
     @ViewChild('createOrEditModal') createOrEditModal: CreateOrEditTrendConfigurationComponent;
     @ViewChild('renameWidgetModal') renameModal: RenameWidgetModalComponent;
+    @ViewChildren('colorPicker') colorPickers!: QueryList<ElementRef<HTMLInputElement>>;
     @Output() widgetRefresh: EventEmitter<any> = new EventEmitter();
 
     errorMessage: string | null = null;
@@ -243,10 +261,17 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     allComponents: any[];
     trendWidgetConfiguration: CreateOrEditTrendWidgetConfigurationDto;
+    currentParameters: WidgetParametersColumn[] = [];
     chartWidth: number;
     thresholdSettings: ThresholdSettingsModel = new ThresholdSettingsModel();
 
     chartHeight: number = 300; // default value
+    headerBackgroundColor = '#ffffff';
+    widgetBackgroundColor = '#ffffff';
+    chartLineColor = '#3699ff';
+    chartBackgroundColor = '#ffffff';
+    headerTitleColor = '#000000';
+    headerTitleBadgeColor = 'rgba(0, 0, 0, 0.08)';
 
     protected _defaultWidgetName;
     private subs: Subscription[] = [];
@@ -255,10 +280,12 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         injector: Injector,
         private _tenantdashboardService: TenantDashboardServiceProxy,
         private _trendWidgetConfigurationService: TrendWidgetConfigurationService,
+        private _trendWidgetConfigurationServiceProxy: TrendWidgetConfigurationsServiceProxy,
         public elementRef: ElementRef,
         dateRangeService: DateRangeService,
         private _resolutionService: ResolutionService,
         private _configurationVersionService: ConfigurationVersionService,
+        private cdr: ChangeDetectorRef,
         private _dateTimeService: DateTimeService,
     ) {
         super(injector, elementRef, dateRangeService);
@@ -270,6 +297,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     ngOnInit() {
+        this.loadColorPreferences();
         super.ngOnInit();
     }
 
@@ -317,6 +345,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 .getForEdit(+this.widgetConfigurationInDB.configuration)
                 .subscribe((result) => {
                     this.trendWidgetConfiguration = result.trendWidgetConfiguration;
+
                     let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
                     if (this.trendWidgetConfiguration) {
                         let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
@@ -335,6 +364,8 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                         var dateModel = DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange);
                         this.thresholdSettings = this.trendWidgetConfiguration.thresholdSettings ? JSON.parse(this.trendWidgetConfiguration.thresholdSettings) : new ThresholdSettingsModel();
 
+                        this.currentParameters = JSON.parse(this.trendWidgetConfiguration.parameters);
+
                         if (dateModel.rangeUnit === DateRangeType.Relative && resulutionValueInMs) {
                             timer(0, resulutionValueInMs)
                                 .pipe(takeUntil(this.stopStream$))
@@ -343,13 +374,13 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                                     input.isRealTime = true;
                                     input.refreshRateInSeconds = resulutionValueInMs / 1000;
                                     if (input) {
-                                        this.lineChart.reload(input);
+                                        this.lineChart.reload(input, this.currentParameters);
                                     }
                                 });
                         } else {
                             let input = this.formatRequest();
                             if (input) {
-                                this.lineChart.reload(input);
+                                this.lineChart.reload(input, this.currentParameters);
                             }
                         }
                     }
@@ -488,50 +519,171 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         }
     }
 
+    openLegendColorPicker(index: number): void {
+        const colorPickersArray = this.colorPickers.toArray();
+        if (colorPickersArray[index]) {
+            colorPickersArray[index].nativeElement.click();
+        }
+    }
+
+    onSeriesColorChange(legendItem: LineLegendType, color: string): void {
+        legendItem.color = color;
+
+        const parameters: WidgetParametersColumn[] = JSON.parse(this.trendWidgetConfiguration.parameters);
+
+        const parameter = parameters.find(p => p.id === legendItem.parameterId);
+
+        if (parameter) {
+            const style = parameter.style ? JSON.parse(parameter.style) : {};
+            style.color = color;
+            parameter.style = JSON.stringify(style);
+
+            this.trendWidgetConfiguration.parameters = JSON.stringify(parameters);
+
+            this.currentParameters = parameters;
+
+            this._trendWidgetConfigurationService.update(this.trendWidgetConfiguration);
+
+            const sub = this._trendWidgetConfigurationServiceProxy
+                .createOrEdit(this.trendWidgetConfiguration)
+                .pipe(
+                    tap(() => {
+                        // After successful save, ensure cache is updated with latest data
+                        this._trendWidgetConfigurationService.update(this.trendWidgetConfiguration);
+                    })
+                )
+                .subscribe({
+                    next: () => {
+                    },
+                    error: (error) => {
+                        console.error('onSeriesColorChange - Error saving color configuration:', error);
+                    }
+                });
+            this.subs.push(sub);
+        } else {
+            console.warn('onSeriesColorChange - Parameter not found for legendItem:', legendItem);
+        }
+
+        setTimeout(() => {
+            if (this.chartComponent?.instance) {
+                this.chartComponent.instance.render();
+            }
+        }, 0);
+    }
+
+    onLegendTextClick(legendItem: LineLegendType, event: MouseEvent): void {
+        event.stopPropagation();
+        event.preventDefault();
+
+        legendItem.isEditing = true;
+
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+            const inputElement = this.elementRef.nativeElement.querySelector('.legend-text-input') as HTMLInputElement;
+            if (inputElement) {
+                inputElement.focus();
+                inputElement.select();
+            } else {
+                console.error('Input element not found after change detection');
+            }
+        }, 0);
+    }
+
+    onLegendNameChange(legendItem: LineLegendType, newName: string): void {
+        legendItem.isEditing = false;
+
+        if (!newName || newName.trim() === '') {
+            return;
+        }
+
+        legendItem.customName = newName.trim();
+
+        const parameters: WidgetParametersColumn[] = JSON.parse(this.trendWidgetConfiguration.parameters);
+        const parameter = parameters.find(p => p.id === legendItem.parameterId);
+
+        if (parameter) {
+            const style = parameter.style ? JSON.parse(parameter.style) : {};
+            style.customName = legendItem.customName;
+            parameter.style = JSON.stringify(style);
+
+            this.trendWidgetConfiguration.parameters = JSON.stringify(parameters);
+            this.currentParameters = parameters;
+
+            // Update cache and persist to database
+            this._trendWidgetConfigurationService.update(this.trendWidgetConfiguration);
+
+            const sub = this._trendWidgetConfigurationServiceProxy
+                .createOrEdit(this.trendWidgetConfiguration)
+                .pipe(
+                    tap(() => {
+                        this._trendWidgetConfigurationService.update(this.trendWidgetConfiguration);
+                    })
+                )
+                .subscribe({
+                    error: (error) => {
+                        console.error('Error saving legend name:', error);
+                    }
+                });
+            this.subs.push(sub);
+        }
+    }
+
+    onLegendNameBlur(legendItem: LineLegendType, inputElement: HTMLInputElement): void {
+        this.onLegendNameChange(legendItem, inputElement.value);
+    }
+
+    onLegendNameKeydown(legendItem: LineLegendType, event: KeyboardEvent, inputElement: HTMLInputElement): void {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            this.onLegendNameChange(legendItem, inputElement.value);
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            legendItem.isEditing = false;
+        }
+    }
+
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();
         this.subs.forEach(sub => sub.unsubscribe());
     }
 
-private getSelectedIntervalResolution(
-    unit: CustomResolutionUnits | undefined,
-    isAutoResolution: boolean,
-    value?: number,
+    private getSelectedIntervalResolution(
+        unit: CustomResolutionUnits | undefined,
+        isAutoResolution: boolean,
+        value?: number,
 
-): IntervalSynchronized {
-    if (isAutoResolution) {
-        return IntervalSynchronized.ISX;
-    }
+    ): IntervalSynchronized {
+        if (isAutoResolution) {
+            return IntervalSynchronized.ISX;
+        }
 
-    if (!unit) {
-        return IntervalSynchronized.IS1SEC;
-    }
-
-     const normalizedValue = Number(value);
-
-    switch (unit) {
-        case CustomResolutionUnits.MS:
-            return IntervalSynchronized.IS200MS;
-        case CustomResolutionUnits.SEC:
+        if (!unit) {
             return IntervalSynchronized.IS1SEC;
-        case CustomResolutionUnits.MIN:
-            return IntervalSynchronized.IS1MIN;
-        case CustomResolutionUnits.HOUR:
-            return IntervalSynchronized.IS1HOUR;
-        case CustomResolutionUnits.DAY:
-            return IntervalSynchronized.IS1DAY;
-        case CustomResolutionUnits.WEEK:
-            return IntervalSynchronized.IS1WEEK;
-        case CustomResolutionUnits.MONTH:
-            return IntervalSynchronized.IS1MONTH;
-        case CustomResolutionUnits.YEAR:
-            return IntervalSynchronized.IS1YEAR;
-        default:
-            return IntervalSynchronized.IS1SEC;
-    }
-}
+        }
 
+        switch (unit) {
+            case CustomResolutionUnits.MS:
+                return IntervalSynchronized.IS200MS;
+            case CustomResolutionUnits.SEC:
+                return IntervalSynchronized.IS1SEC;
+            case CustomResolutionUnits.MIN:
+                return IntervalSynchronized.IS1MIN;
+            case CustomResolutionUnits.HOUR:
+                return IntervalSynchronized.IS1HOUR;
+            case CustomResolutionUnits.DAY:
+                return IntervalSynchronized.IS1DAY;
+            case CustomResolutionUnits.WEEK:
+                return IntervalSynchronized.IS1WEEK;
+            case CustomResolutionUnits.MONTH:
+                return IntervalSynchronized.IS1MONTH;
+            case CustomResolutionUnits.YEAR:
+                return IntervalSynchronized.IS1YEAR;
+            default:
+                return IntervalSynchronized.IS1SEC;
+        }
+    }
 
     save(newConfig: CreateOrEditTrendWidgetConfigurationDto) {
         this.stopStream$.next(null);
@@ -545,18 +697,134 @@ private getSelectedIntervalResolution(
     }
 
     toggleStepLine() {
-        this.isStepLine = !this.isStepLine;
-
-        setTimeout(() => {
-            this.isStepLine = !this.isStepLine;
-        }, 0);
+        this.refreshChartAppearance();
     }
 
     toggleLinePoints() {
-        this.isStepLine = !this.isStepLine;
+        this.refreshChartAppearance();
+    }
 
-        setTimeout(() => {
-            this.isStepLine = !this.isStepLine;
-        }, 0);
+    openColorPicker(picker: HTMLInputElement) {
+        picker?.click();
+    }
+
+
+    onTitleClick(event: MouseEvent, picker: HTMLInputElement) {
+        event.stopPropagation();
+        this.openColorPicker(picker);
+    }
+
+    onHeaderColorChange(event: Event) {
+        const color = (event.target as HTMLInputElement).value;
+        this.applyHeaderColor(color);
+    }
+
+    onLineColorChange(event: Event) {
+        const color = (event.target as HTMLInputElement).value;
+        this.chartLineColor = color;
+        this.persistColorPreference('chartLineColor', color);
+        this.refreshChartAppearance();
+    }
+
+    onBackgroundColorChange(event: Event) {
+        const color = (event.target as HTMLInputElement).value;
+        this.chartBackgroundColor = color;
+        this.persistColorPreference('chartBackgroundColor', color);
+        this.refreshChartAppearance();
+    }
+
+    private loadColorPreferences() {
+        const header = abp.utils.getCookieValue(this.getColorCookieKey('headerBackgroundColor'));
+        const widget = abp.utils.getCookieValue(this.getColorCookieKey('widgetBackgroundColor'));
+        const line = abp.utils.getCookieValue(this.getColorCookieKey('chartLineColor'));
+        const background = abp.utils.getCookieValue(this.getColorCookieKey('chartBackgroundColor'));
+
+        if (header) {
+            this.headerBackgroundColor = header;
+        }
+
+        if (widget) {
+            this.widgetBackgroundColor = widget;
+        } else {
+            this.widgetBackgroundColor = this.headerBackgroundColor;
+            this.persistColorPreference('widgetBackgroundColor', this.widgetBackgroundColor);
+        }
+
+        if (line) {
+            this.chartLineColor = line;
+        }
+        if (background) {
+            this.chartBackgroundColor = background;
+        }
+
+        this.updateHeaderTitleStyling();
+    }
+
+    private getColorCookieKey(suffix: string): string {
+        const guid = this.elementRef.nativeElement.parentElement?.dataset?.guid ?? 'trend';
+        return `trend_${guid}_${suffix}`;
+    }
+
+    private persistColorPreference(suffix: string, value: string) {
+        abp.utils.setCookieValue(this.getColorCookieKey(suffix), value, this.getCookieExpiration());
+    }
+
+    private getCookieExpiration(): Date {
+        const expireDate = new Date();
+        expireDate.setFullYear(expireDate.getFullYear() + 1);
+        return expireDate;
+    }
+
+    private refreshChartAppearance() {
+        if (this.chartComponent?.instance) {
+            this.chartComponent.instance.refresh();
+        }
+    }
+
+    private applyHeaderColor(color: string) {
+        this.headerBackgroundColor = color;
+        this.persistColorPreference('headerBackgroundColor', color);
+        this.updateHeaderTitleStyling();
+    }
+
+    private updateHeaderTitleStyling() {
+        this.headerTitleColor = this.getContrastingTextColor(this.headerBackgroundColor);
+        this.headerTitleBadgeColor = this.getBadgeColor(this.headerBackgroundColor);
+    }
+
+    private getContrastingTextColor(color: string): string {
+        const { r, g, b } = this.hexToRgb(color);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.6 ? '#1b1b1b' : '#ffffff';
+    }
+
+    private getBadgeColor(color: string): string {
+        const { r, g, b } = this.hexToRgb(color);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.6 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
+    }
+
+    private hexToRgb(hex: string): { r: number; g: number; b: number } {
+        if (!hex) {
+            return { r: 255, g: 255, b: 255 };
+        }
+
+        let normalized = hex.replace('#', '');
+
+        if (normalized.length === 3) {
+            normalized = normalized.split('').map((char) => char + char).join('');
+        }
+
+        const parsed = parseInt(normalized, 16);
+
+        if (isNaN(parsed)) {
+            return { r: 255, g: 255, b: 255 };
+        }
+
+        return {
+            r: (parsed >> 16) & 255,
+            g: (parsed >> 8) & 255,
+            b: parsed & 255,
+        };
     }
 }

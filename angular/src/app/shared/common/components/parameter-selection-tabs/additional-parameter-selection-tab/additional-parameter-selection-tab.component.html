@@ -16,10 +16,10 @@
 
         <form-container wrapperClass="col-4 pe-0 h-100">
             <div *ngIf="additionalError" class="text-danger px-2">{{ additionalError }}</div>
-            <label class="form-label p-2" for="additionalParameter">{{ 'AdditionalParameter' | localize }} *</label>
+            <label class="form-label p-2" for="additional-parameter-selector">{{ 'AdditionalParameter' | localize }} *</label>
             <div style="height: 335px;">
                 <dx-scroll-view direction="vertical">
-                    <p-listbox id="additional" inputId="additional" name="parameter.additionalParameter"
+                    <p-listbox id="additional-parameter-selector" inputId="additional-parameter-selector-input" name="parameter.additionalParameter"
                         [(ngModel)]="parameter.group" (ngModelChange)="onAdditionalChange($event)"
                         [options]="additionalOptions" optionLabel="description" optionValue="groupName" optionDisabled="disabled"
                         [filter]="true" [scrollHeight]="9999" required></p-listbox>
@@ -30,12 +30,12 @@
         <div class="col-4 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
             <div class="container">
                 <div *ngIf="baseError" class="text-danger px-2">{{ baseError }}</div>
-                <label class="form-label p-2" for="base">{{ 'Base' | localize }} *</label>
+                <label class="form-label p-2" for="additional-base-selector">{{ 'Base' | localize }} *</label>
                 <div style="height: 335px;">
                     <dx-scroll-view direction="vertical">
                         <p-listbox
-                            id="base"
-                            inputId="base"
+                            id="additional-base-selector"
+                            inputId="additional-base-selector-input"
                             name="base"
                             [(ngModel)]="selectedBases"
                             (ngModelChange)="onBaseChange()"
@@ -56,12 +56,12 @@
         <div class="col-4 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
             <div class="container">
                 <div *ngIf="quantityError" class="text-danger px-2">{{ quantityError }}</div>
-                <label class="form-label p-2" for="quantity">{{ 'Quantity' | localize }} *</label>
+                <label class="form-label p-2" for="additional-quantity-selector">{{ 'Quantity' | localize }} *</label>
                 <div style="height: 335px;">
                     <dx-scroll-view direction="vertical">
                         <p-listbox
-                            id="quantity"
-                            inputId="quantity"
+                            id="additional-quantity-selector"
+                            inputId="additional-quantity-selector-input"
                             name="quantity"
                             [(ngModel)]="selectedQuantities"
                             [options]="quantityOptions"

@@ -1,25 +1,47 @@
-<div class="kt-portlet kt-portlet--height-fluid widget-full-height">
-    <div class="kt-portlet__head">
+<div class="kt-portlet kt-portlet--height-fluid widget-full-height trend-widget-card" [ngStyle]="{ 'background-color': widgetBackgroundColor }" [class.trend-widget-edit-mode]="editState">
+    <div class="kt-portlet__head trend-widget-header"
+         [ngStyle]="{ 'background-color': headerBackgroundColor, color: headerTitleColor }"
+         (click)="onTitleClick($event, headerColorPicker)">
         <div class="kt-portlet__head-label">
-            <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
-                {{ widgetConfigurationInDB?.name }}
+            <h3 class="kt-portlet__head-title trend-widget-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
+                <span class="trend-title-text"
+                      [ngStyle]="{ 'background-color': editState ? headerTitleBadgeColor : 'transparent', color: headerTitleColor }">
+                    {{ widgetConfigurationInDB?.name }}
+                </span>
+                <input
+                    #headerColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="headerBackgroundColor"
+                    (input)="onHeaderColorChange($event)" />
             </h3>
         </div>
+        <div class="kt-portlet__head-toolbar"></div>
     </div>
 
-    <div class="row align-items-center">
-        <div *ngIf="editState" class="col-auto d-flex align-items-center">
-            <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
-            <label for="stepLineToggle" class="ms-2">{{ 'StepLine' | localize }}</label>
-        </div>
-    
-        <div class="col-auto d-flex align-items-center">
-            <input type="checkbox" id="linePointsToggle" [(ngModel)]="isLinePoints" (change)="toggleLinePoints()" />
-            <label for="linePointsToggle" class="ms-2">{{ 'LinePoints' | localize }}</label>
-        </div>
-    </div>
+    <div class="chart-wrapper trend-widget-body position-relative flex-grow-1" [ngStyle]="{ 'background-color': widgetBackgroundColor }">
+        <div class="trend-controls d-flex align-items-center flex-wrap" [ngStyle]="{ color: chartLineColor, 'background-color': chartBackgroundColor }">
+            <label *ngIf="editState" class="trend-control d-flex align-items-center mb-0">
+                <input type="checkbox" id="stepLineToggle" [(ngModel)]="isStepLine" (change)="toggleStepLine()" />
+                <span class="ms-2">{{ 'StepLine' | localize }}</span>
+            </label>
 
-    <div class="chart-wrapper position-relative flex-grow-1">
+            <label class="trend-control d-flex align-items-center mb-0">
+                <input type="checkbox" id="linePointsToggle" [(ngModel)]="isLinePoints" (change)="toggleLinePoints()" />
+                <span class="ms-2">{{ 'LinePoints' | localize }}</span>
+            </label>
+
+            <div class="trend-control d-flex align-items-center mb-0">
+                <span class="trend-control-label">{{ 'BG' | localize }}:</span>
+                <button type="button" class="color-swatch" [style.backgroundColor]="chartBackgroundColor" (click)="openColorPicker(bgColorPicker)"></button>
+                <input
+                    #bgColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="chartBackgroundColor"
+                    (input)="onBackgroundColorChange($event)" />
+            </div>
+        </div>
 
         <div *ngIf="lineChart.loading && lineChart.isInitialLoad" class="loading-overlay">
             <dx-load-indicator></dx-load-indicator>
@@ -28,7 +50,8 @@
 
 
         <div *ngIf="errorMessage; else chartContent"
-            class="chart-container d-flex align-items-center justify-content-center">
+            class="chart-container d-flex align-items-center justify-content-center"
+            [ngStyle]="{ 'background-color': chartBackgroundColor }">
             <div class="text-center">
                 <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 2rem"></i>
                 <h4 class="mt-2">{{ 'Warning!' | localize }}</h4>
@@ -37,21 +60,24 @@
         </div>
 
         <ng-template #chartContent>
-            <div #chartContainer class="chart-container flex-grow-1">
+            <div #chartContainer class="chart-container flex-grow-1" [ngStyle]="{ 'background-color': chartBackgroundColor }">
                 <dx-chart #chartComponent class="w-100 h-100" id="chart"
+                    [palette]="[chartLineColor]"
                     [dataSource]="lineChart.chartData"
                     [customizePoint]="customizePoint">
+                    <dxo-common-pane-settings [backgroundColor]="chartBackgroundColor"></dxo-common-pane-settings>
                     <dxi-pane name="top"></dxi-pane>
 
-                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key">
+                    <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key" [color]="chartLineColor">
+                        <dxo-point [visible]="isLinePoints" [color]="chartLineColor"></dxo-point>
                         <dxo-stepline *ngIf="isStepLine">
-                            <dxo-point [visible]="isLinePoints"></dxo-point>
+                            <dxo-point [visible]="isLinePoints" [color]="chartLineColor"></dxo-point>
                         </dxo-stepline>
                     </dxo-common-series-settings>
 
                     <dxi-series pane="top" *ngFor="let source of lineChart.chartConfiguration.lineLegend"
-                        [name]="source.name" [valueField]="source.id">
-                        <dxo-point [visible]="isLinePoints"></dxo-point>
+                        [name]="source.name" [valueField]="source.id" [color]="source.color || chartLineColor">
+                        <dxo-point [visible]="isLinePoints" [color]="source.color || chartLineColor"></dxo-point>
                     </dxi-series>
 
                     <dxi-value-axis>
@@ -64,13 +90,50 @@
                         </dxi-constant-line>
                     </dxi-value-axis>
 
-                    <dxo-legend verticalAlignment="bottom" horizontalAlignment="center"
-                        itemTextPosition="bottom"></dxo-legend>
+                    <dxo-legend [visible]="false"></dxo-legend>
 
                     <dxo-tooltip [enabled]="true" [customizeTooltip]="lineChart.customizeTooltip"></dxo-tooltip>
                 </dx-chart>
             </div>
         </ng-template>
+    </div>
+
+    <div *ngIf="lineChart.chartConfiguration.lineLegend.length > 0"
+         class="custom-legend-container"
+         [ngStyle]="{ 'background-color': headerBackgroundColor, color: headerTitleColor }">
+        <div class="custom-legend-items">
+            <div *ngFor="let legendItem of lineChart.chartConfiguration.lineLegend; let i = index" class="custom-legend-item">
+                <span
+                    class="legend-marker clickable-marker"
+                    [style.background-color]="legendItem.color || chartLineColor"
+                    (click)="openLegendColorPicker(i)"
+                    [title]="'ChangeColor' | localize">
+                </span>
+                <input
+                    #colorPicker
+                    type="color"
+                    class="hidden-color-picker"
+                    [value]="legendItem.color || chartLineColor"
+                    (change)="onSeriesColorChange(legendItem, $event.target.value)"
+                />
+                <span *ngIf="!legendItem.isEditing"
+                      class="legend-text clickable-text"
+                      [ngStyle]="{ color: headerTitleColor }"
+                      (click)="onLegendTextClick(legendItem, $event)"
+                      [title]="'ClickToEdit' | localize">
+                    {{ legendItem.customName || legendItem.name }}
+                </span>
+                <input *ngIf="legendItem.isEditing"
+                       #legendNameInput
+                       type="text"
+                       class="legend-text-input"
+                       [value]="legendItem.customName || legendItem.name"
+                       [ngStyle]="{ color: headerTitleColor }"
+                       (blur)="onLegendNameBlur(legendItem, legendNameInput)"
+                       (keydown)="onLegendNameKeydown(legendItem, $event, legendNameInput)"
+                       autofocus />
+            </div>
+        </div>
     </div>
 
 

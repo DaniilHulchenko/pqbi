@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { CanDeactivate } from '@angular/router';
 import { DashboardComponent } from '@app/main/dashboard/dashboard.component';
-import { NgxSpinner, NgxSpinnerService } from '@node_modules/ngx-spinner';
+import { NgxSpinnerService } from '@node_modules/ngx-spinner';
 
 @Injectable({ providedIn: 'root' })
 export class PendingChangesGuard implements CanDeactivate<DashboardComponent>{

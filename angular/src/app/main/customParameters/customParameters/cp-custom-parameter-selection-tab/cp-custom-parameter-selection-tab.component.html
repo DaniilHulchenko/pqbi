@@ -1,12 +1,12 @@
 <form class="h-100 d-flex flex-column" #pqsForm="ngForm" novalidate (ngSubmit)="add()" autocomplete="off">
     <div class="row flex-grow-1" style="align-items: center">
         <form-container wrapperClass="col-2 pe-0 h-100">
-            <label class="form-label p-2" for="group">{{ 'Group' | localize }} *</label>
+            <label class="form-label p-2" for="cp-custom-group-selector">{{ 'Group' | localize }} *</label>
                 <i class="dx-icon-info info-icon-style" [id]="'GroupToolTipId'"></i>
                 <div style="height: 335px">
                     <dx-scroll-view direction="vertical">
                         <p-listbox
-                            id="group"
+                            id="cp-custom-group-selector"
                             name="group"
                             [(ngModel)]="selectedCustomParameter"
                             (onChange)="onCustomParameterChange($event)"

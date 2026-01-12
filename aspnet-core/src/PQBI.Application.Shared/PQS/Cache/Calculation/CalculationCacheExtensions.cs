@@ -29,7 +29,6 @@ public static class CalculationCacheItemExtensions
         return cache.TryGetValue(item.CacheKey, out value);
     }
 
-
     public static ITypedCache<string, CalculationCacheItem> GetCalculationCache(this CalculationCacheItem calculationCacheItem, ICacheManager cacheManager)
     {
         var item = cacheManager.GetCache<string, CalculationCacheItem>(calculationCacheItem.CacheKey);

@@ -11,13 +11,13 @@
                 <div style="border: 1px solid #ccc; padding: 1rem; display: flex; gap: 1rem;">
                     <div>
                         Select X-unit
-                        <p-listbox name="xUnit" [(ngModel)]="selectedXUnit" [options]="xUnitOptions" optionLabel="label"
+                        <p-listbox id="bar-chart-xunit-selector" name="xUnit" [(ngModel)]="selectedXUnit" [options]="xUnitOptions" optionLabel="label"
                             optionValue="value" style="width: 150px; height: 200px;"
                             (onChange)="onXUnitChange($event.value)"></p-listbox>
                     </div>
                     <div>
                         Select series
-                        <p-listbox name="series" [(ngModel)]="selectedSeries" [options]="seriesOptions"
+                        <p-listbox id="bar-chart-series-selector" name="series" [(ngModel)]="selectedSeries" [options]="seriesOptions"
                             optionLabel="label" optionValue="value" style="width: 150px; height: 200px;"
                             (onChange)="onSeriesChange($event.value)"></p-listbox>
                     </div>
@@ -44,7 +44,7 @@
                     {{ 'ChartType' | localize }}
                 </label>
 
-                <p-listbox name="chartType" [ngModel]="barChartWidgetConfiguration.type"
+                <p-listbox id="bar-chart-type-selector" name="chartType" [ngModel]="barChartWidgetConfiguration.type"
                     (ngModelChange)="onChartTypeChange($event)" [options]="chartTypeOptions" optionLabel="label"
                     optionValue="value" [filter]="false" style="width:150px; height:auto;" required></p-listbox>
 

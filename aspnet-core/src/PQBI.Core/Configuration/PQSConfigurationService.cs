@@ -24,7 +24,7 @@ namespace PQBI.Configuration
         {
             try
             {
-                var tmp = JsonConvert.SerializeObject(config);
+                //var tmp = JsonConvert.SerializeObject(config);
                 _configurations[config.ConfigurationName] = JsonConvert.SerializeObject(config);
 
             }

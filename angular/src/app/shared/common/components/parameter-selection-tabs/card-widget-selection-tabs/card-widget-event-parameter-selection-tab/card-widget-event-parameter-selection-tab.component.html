@@ -12,10 +12,10 @@
 
         <form-container wrapperClass="col-1 pe-0 h-100">
             <div *ngIf="errors.phase" class="text-danger px-2">{{ errors.phase }}</div>
-                <label class="form-label p-2" for="phase">{{ 'Phase' | localize }}  *</label>
+                <label class="form-label p-2" for="card-event-phase-selector">{{ 'Phase' | localize }}  *</label>
                 <div style="height: 378px;">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="phase" inputId="phase" name="phase" [(ngModel)]="selectedPhases"
+                        <p-listbox id="card-event-phase-selector" inputId="card-event-phase-selector-input" name="phase" [(ngModel)]="selectedPhases"
                             [options]="phaseOptions | keyvalue" optionLabel="value" optionValue="key" [filter]="true"
                             [scrollHeight]="9999" [multiple]="polyphase" required>
                         </p-listbox>
@@ -25,10 +25,10 @@
 
         <form-container wrapperClass="col-1 pe-0 h-100">
             <div *ngIf="errors.parameter" class="text-danger px-2">{{ errors.parameter }}</div>
-                <label class="form-label p-2" for="parameter">{{ 'Parameter' | localize }} *</label>
+                <label class="form-label p-2" for="card-event-parameter-selector">{{ 'Parameter' | localize }} *</label>
                 <div style="height: 378px;">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="parameter" inputId="parameter" name="parameter" [(ngModel)]="selectedParameter"
+                        <p-listbox id="card-event-parameter-selector" inputId="card-event-parameter-selector-input" name="parameter" [(ngModel)]="selectedParameter"
                             [options]="parameterOptions | keyvalue" optionLabel="value" optionValue="key"
                             [filter]="true" [scrollHeight]="9999" required>
                         </p-listbox>

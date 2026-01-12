@@ -1,19 +1,20 @@
-﻿using PQS.Data.Configurations.Enums;
-using PQS.Data.RecordsContainer.Records;
-using PQS.Data.RecordsContainer;
-using PQS.Data.Measurements;
-using PQS.Data.Common.Values;
-using PQBI.Tenants.Dashboard.Dto;
-using PQBI.Infrastructure.Extensions;
-using PQS.Data.Common;
-using PQS.Data.Measurements.Utils;
-using PQS.Data.Measurements.StandardParameter;
-using PQBI.CalculationEngine.Matrix;
-using Microsoft.AspNetCore.Hosting;
-using PQZTimeFormat;
-using PQS.Data.Configurations;
+﻿using Microsoft.AspNetCore.Hosting;
 using PayPalCheckoutSdk.Orders;
+using PQBI.CalculationEngine.Matrix;
+using PQBI.Configuration;
+using PQBI.Infrastructure.Extensions;
+using PQBI.Tenants.Dashboard.Dto;
+using PQS.Data.Common;
+using PQS.Data.Common.Values;
+using PQS.Data.Configurations;
+using PQS.Data.Configurations.Enums;
 using PQS.Data.Events;
+using PQS.Data.Measurements;
+using PQS.Data.Measurements.StandardParameter;
+using PQS.Data.Measurements.Utils;
+using PQS.Data.RecordsContainer;
+using PQS.Data.RecordsContainer.Records;
+using PQZTimeFormat;
 using TimeZoneConverter;
 
 namespace PQBI.Requests;
@@ -36,7 +37,16 @@ public class PQSGetBaseDataRequest : PQSCommonRequest
         var configurationRecords = new List<GetBaseConfigurationRecord>();
         foreach (var input in Inputs.SafeList())
         {
-            var opRec = new GetBaseDataRecord(input.ComponentId, input.StartTime, input.EndTime, input.Parameters.ToList(), input.CalculationType, input.whishedPoints, timeZoneID: TimeZoneID, classFilter: input.filtersGroup);
+            var opRec = new GetBaseDataRecord(
+                input.ComponentId,
+                input.StartTime,
+                input.EndTime,
+                input.Parameters.ToList(),
+                input.CalculationType,
+                input.whishedPoints,
+                timeZoneID: TimeZoneID,
+                classFilter: input.filtersGroup,
+                isMondayStartOfWeek: WeekConfiguration.IsMondayStartOfWeek);
             AddRecord(opRec);
 
             var configurations = new List<ConfigurationParameterBase>();
@@ -67,11 +77,15 @@ public class PQSGetBaseDataRequest : PQSCommonRequest
 
 public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataRequest>
 {
-    public PQSGetBaseDataResponse(PQSGetBaseDataRequest request, PQSResponse response, string timezone) : base(request, response, timezone)
+    public PQSGetBaseDataResponse(PQSGetBaseDataRequest request, PQSResponse response, string timezone)
+        : base(request, response, timezone)
     {
-
     }
-    public virtual PQZStatus ExtractGetParametersOrError(out IEnumerable<PQBIAxisData> parameters)
+
+    // NEW: convertToUserTime controls if timestamps are returned as user-local or UTC
+    public virtual PQZStatus ExtractGetParametersOrError(
+        out IEnumerable<PQBIAxisData> parameters,
+        bool convertToUserTime)
     {
         parameters = null;
 
@@ -79,97 +93,99 @@ public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataReq
         ExtractGetBaseConfigurationRecord(out BaseConfigurationRecord[] getBaseConfigurationRecords, out var getBaseConfigurationRecordError);
 
         if (error != null)
-        {
             return error.Status;
-        }
 
         var getBaseConfigurationRecorsDictionary = new Dictionary<Guid, BaseConfigurationRecord>();
-        //var getBaseConfigurationRecorsDictionary = new Dictionary<Guid, InstantConfigurationRecord>();
-
-        foreach (var iten in getBaseConfigurationRecords)
+        foreach (var item in getBaseConfigurationRecords)
         {
-            if (iten.ObjectID is not null)
-            {
-                getBaseConfigurationRecorsDictionary[iten.ObjectID.Value] = iten;
-            }
+            if (item.ObjectID is not null)
+                getBaseConfigurationRecorsDictionary[item.ObjectID.Value] = item;
         }
 
-        var result = PQZStatus.OK;
+        // Resolve tz ONCE
+        TimeZoneInfo? tz = null;
+        if (convertToUserTime)
+            tz = TimeZoneInfo.FindSystemTimeZoneById(TZConvert.IanaToWindows(Timezone));
+
         var paramList = new List<PQBIAxisData>();
-        //var recordIndex = 0;
+
         foreach (var record in baseDataRecords)
         {
-            //var getBaseDataInfoInput = Request.Inputs[recordIndex++];
-            //var compId = getBaseDataInfoInput.ComponentId;
             var compId = record.ObjectID.Value;
-           
             var timeStamps = record.DataTimeStamps;
-            var paramName = string.Empty;
-            var allMeasurementsParameter = record.MeasurementContainer.GetAllMeasurementsParameter();
 
-            int? feederId = null;
-            DataUnitType dataUnitType = new EmptyDataUnitType();
+            var allMeasurementsParameter = record.MeasurementContainer.GetAllMeasurementsParameter();
 
             foreach (MeasurementParameterBase paramAndVal in allMeasurementsParameter)
             {
+                int? feederId = null;
+                DataUnitType dataUnitType = new EmptyDataUnitType();
+
+                // (your existing feeder/unit detection stays as-is)
                 if (paramAndVal is NetworkFeederMeasurementParameter networkFeederParam)
                 {
                     feederId = (int)networkFeederParam.FeederNumber;
                     var unitState = UnitsUtility.GetUnitsFromGroupAndPhase(networkFeederParam.Group, networkFeederParam.Phase);
                     var token = UnitsEnumHelper.GetLocalizedDescriptionKey(unitState);
                     dataUnitType = new DataUnitType((int)unitState, token);
-
-                    //string str =  unit me the description how?????
                 }
-                else
+                else if (paramAndVal is ChannelMeasurementParameter channelMeasurementParameter)
                 {
-                    if (paramAndVal is ChannelMeasurementParameter channelMeasurementParameter)
+                    if (getBaseConfigurationRecorsDictionary.TryGetValue(compId, out var baseConfigurationRecord))
                     {
-                        if (getBaseConfigurationRecorsDictionary.TryGetValue(compId, out var baseConfigurationRecord))
+                        ChannelConfiguration chConf = new ChannelConfiguration(
+                            StandardConfigurationEnum.STD_TYPE,
+                            PQSType.INT1,
+                            channelMeasurementParameter.ChannelNumber);
+
+                        var containerParam = baseConfigurationRecord.TimeToConfigurationContainerDictionary.First().Value;
+                        if (containerParam.TryGetConfigurationValue<byte>(chConf, out var type))
                         {
-                            ChannelConfiguration chConf = new ChannelConfiguration(StandardConfigurationEnum.STD_TYPE, PQSType.INT1, channelMeasurementParameter.ChannelNumber);
+                            ChannelTypeEnum channelTypeEnum = (ChannelTypeEnum)type;
+                            var unitState = UnitsUtility.GetUnitsFromGroupAndPhase(
+                                channelMeasurementParameter.Group,
+                                channelType: channelTypeEnum);
 
-                            var containerParam = baseConfigurationRecord.TimeToConfigurationContainerDictionary.First().Value;
-                            if (containerParam.TryGetConfigurationValue<byte>(chConf, out var type))
-                            {
-                                ChannelTypeEnum channelTypeEnum = (ChannelTypeEnum)type;
-
-                                //}
-                                //How to get DataUnitType here??????????????????
-                                var unitState = UnitsUtility.GetUnitsFromGroupAndPhase(channelMeasurementParameter.Group, channelType: channelTypeEnum);
-                                var token = UnitsEnumHelper.GetLocalizedDescriptionKey(unitState);
-                                dataUnitType = new DataUnitType((int)unitState, token);
-                            }
+                            var token = UnitsEnumHelper.GetLocalizedDescriptionKey(unitState);
+                            dataUnitType = new DataUnitType((int)unitState, token);
                         }
                     }
                 }
 
-                var tz = TimeZoneInfo.FindSystemTimeZoneById(TZConvert.IanaToWindows(Timezone));
                 var dataTimeStemps = new List<PQBIDataTimeStampDto>();
-                paramName = paramAndVal.ToString();
+                var paramName = paramAndVal.ToString();
                 var nominal = paramAndVal.Nominal;
+
                 var container = record.MeasurementContainer[paramAndVal];
 
                 if (container.Status == PQZStatus.OK)
                 {
                     List<BaseDataValue<float>> points = container.GetBaseDataValue<float>();
                     var index = 0;
+
                     foreach (var point in points)
                     {
-                        var dateTime = timeStamps[index++];
+                        var dt = timeStamps[index++];
+
                         double? val = null;
-
                         if (!float.IsNaN(point.Value))
-                        {
                             val = (double)point.Value;
-                        }
 
-                        var userLocalDateTime = TimeZoneInfo.ConvertTimeFromUtc(dateTime.DateTimeUTC, tz);
+                        // IMPORTANT: always treat dt.DateTimeUTC as UTC
+                        var tsUtc = DateTime.SpecifyKind(dt.DateTimeUTC, DateTimeKind.Utc);
 
-                        dataTimeStemps.Add(new PQBIDataTimeStampDto(userLocalDateTime, val, point.Status));
+                        var tsOut = convertToUserTime
+                            ? TimeZoneInfo.ConvertTimeFromUtc(tsUtc, tz!)
+                            : tsUtc;
+
+                        dataTimeStemps.Add(new PQBIDataTimeStampDto(tsOut, val, point.Status));
                     }
 
-                    paramList.Add(new PQBIAxisData(compId, feederId, paramName, nominal, dataTimeStemps.ToArray(), container.Status, dataUnitType));
+                    paramList.Add(new PQBIAxisData(
+                        compId, feederId, paramName, nominal,
+                        dataTimeStemps.ToArray(),
+                        container.Status,
+                        dataUnitType));
                 }
                 else
                 {
@@ -179,9 +195,14 @@ public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataReq
         }
 
         parameters = paramList;
-        return result;
+        return PQZStatus.OK;
     }
+
+    // keep old signature for existing callers (defaults to user-local behavior)
+    public virtual PQZStatus ExtractGetParametersOrError(out IEnumerable<PQBIAxisData> parameters)
+        => ExtractGetParametersOrError(out parameters, convertToUserTime: true);
 }
+
 
 public class EmptyPQSGetBaseDataResponse : PQSGetBaseDataResponse
 {

@@ -12,6 +12,7 @@ using PQBI.Tenants.Dashboard.Dto;
 using PQS.CommonReport;
 using PQS.Data.Common;
 using PQS.Data.Common.Units;
+using PQS.Data.Measurements.Enums;
 using PQS.Data.Networks;
 using System.Collections.Generic;
 using System.Data;
@@ -78,6 +79,23 @@ public class EngineCalculationService : IEngineCalculationService
             //IEnumerable<AxisValue> axisValCollection = null;
             if (baseParameter.Axis.PQZStatus == PQZStatus.OK)
             {
+
+                string? aggregationQuantity;
+                if (node.Markers != null && node.Markers.Any())
+                    aggregationQuantity = node.Markers.First().Operation.ToString().ToLower();
+                else
+                {
+                    string prmQuantity = baseParameter.Parameter.Quantity.ToString().ToLower();
+                    aggregationQuantity = prmQuantity;
+                    if (prmQuantity == "avg")
+                    {
+                        if (baseParameter.MeasurementParameter.AvgType == AvgCalculationType.RMS)
+                        {
+                            aggregationQuantity = "rms";
+                        }
+                    }
+                }
+
                 if (node.AdvancedSettingsForTable?.IsExcludeFlaggedData == true)
                 {
                     //ParameterMatrix parameterMatrix = new ParameterMatrix();
@@ -115,14 +133,8 @@ public class EngineCalculationService : IEngineCalculationService
                             //};                        
                         }
                         data = _engineCalculator.CalcGroupByAsync(groupByOperation);
-                    }
+                    }                  
 
-                    string aggregationQuantity;
-                    if (node.Markers != null && node.Markers.Any())                   
-                        aggregationQuantity = node.Markers.First().Operation.ToString();                    
-                    else                    
-                        aggregationQuantity = node.WidgetAggragationFunction;
-                    
                     baseParameterAxis = (List<AxisValue>)CalculateGroupsAndGetAxisValues(node, aggregationQuantity, normalizeEnum, nominalVal, resolutionInSeconds, data, true);
                 }
                 else
@@ -132,14 +144,10 @@ public class EngineCalculationService : IEngineCalculationService
                     {
                         int resolutionInSeconds = node.WidgetResolutionAutoOrInSeconds;
                         data = GroupByTime.AggregateToBars(points, node.BarTimeRangeList);
-                        baseParameterAxis = (List<AxisValue>)CalculateGroupsAndGetAxisValues(node, node.WidgetAggragationFunction, normalizeEnum, nominalVal, resolutionInSeconds, data, false);
+                        baseParameterAxis = (List<AxisValue>)CalculateGroupsAndGetAxisValues(node, aggregationQuantity, normalizeEnum, nominalVal, resolutionInSeconds, data, false);
                     }
                     else
-                    {
-                        string aggregationQuantity = baseParameter.Parameter.Quantity;                        
-                        if (node.Markers != null && node.Markers.Any())
-                            aggregationQuantity = node.Markers.First().Operation.ToString();
-
+                    {                 
                         if (normalizeEnum == NormalizeEnum.NO)
                         {
                             if (node.IsSinglePointRes && baseParameter.Axis.DataTimeStamps.Count() > 1)
@@ -202,7 +210,7 @@ public class EngineCalculationService : IEngineCalculationService
                 prmNameWithFeeder = prmName;
             }
 
-            if (node.IsGroupByTime)
+            if (!node.IsTrend && node.IsGroupByTime)
             {
                 if (baseParameterAxis.Any())
                 {
@@ -239,6 +247,7 @@ public class EngineCalculationService : IEngineCalculationService
 
         if (normalizeEnum == NormalizeEnum.NO)
             axisValCollection = CalculateQuantityFunction(aggregationQuantity, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, dataGroupList);
+        //axisValCollection = CalculateQuantityFunction(aggregationQuantity, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, dataGroupList);
         else
             axisValCollection = CalculateQuantityAndNormalizeFunction(aggregationQuantity, node.StartDate.ToDateTimeOffsetInSeconds(), resolutionInSeconds, dataGroupList, nominalVal);
         return axisValCollection;
@@ -439,7 +448,7 @@ public class EngineCalculationService : IEngineCalculationService
 
             foreach (var axisCollection in axis)
             {
-                if (node.IsGroupByTime)
+                if (!node.IsTrend && node.IsGroupByTime)
                 {
                     if (axisCollection.Any())
                     {
@@ -517,7 +526,7 @@ public class EngineCalculationService : IEngineCalculationService
         List<GraphParametersComponentDtoV3> graphs = new List<GraphParametersComponentDtoV3>();
         foreach (var axisCollection in axises)
         {
-            if (node.IsGroupByTime)
+            if (!node.IsTrend && node.IsGroupByTime)
             {
                 if (axisCollection.Count() > 0)
                 {
@@ -638,12 +647,17 @@ public class EngineCalculationService : IEngineCalculationService
     private IEnumerable<AxisValue> CalculateQuantityFunction(string quantityAggregationFunction, long startPeriodInSeconds, int resolutionInSeconds, IEnumerable<IEnumerable<BasicValue>> data)
     {
         var calculated = new List<AxisValue>();
+        var localEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
 
         foreach (var list in data)
         {
             var tmp = _engineCalculator.AggregationCalculationAsync(quantityAggregationFunction, list);
-            calculated.Add(new AxisValue { TimeStempInSeconds = (long)startPeriodInSeconds, Value = tmp.Value });
-            startPeriodInSeconds += resolutionInSeconds;
+
+            long timeStempInSeconds = (long)(tmp.StartTime - localEpoch).TotalSeconds;
+            calculated.Add(new AxisValue { TimeStempInSeconds = timeStempInSeconds, Value = tmp.Value });
+
+            //calculated.Add(new AxisValue { TimeStempInSeconds = (long)startPeriodInSeconds, Value = tmp.Value });
+            //startPeriodInSeconds += resolutionInSeconds;
         }
 
         return calculated;

@@ -33,7 +33,7 @@
                 <dx-scroll-view direction="vertical">
                     <p-tree [selection]="selectedItems" (onNodeUnselect)="onNodeUnselect($event)" (selectionChange)="onSelectionChange($event)"
                         [value]="formattedComponentsOptions" [propagateSelectionDown]="true"
-                        selectionMode="checkbox" filter="true" required>
+                        selectionMode="checkbox" filter="true" id="cpComponentsSelectorTree" required>
                         
                         <ng-template let-node pTemplate="default">
                             <img *ngIf="isLastParentInTree(node)" [src]="getIconForTree()" class="tree-icon" alt="Tree Icon" aria-label="Tree Icon">

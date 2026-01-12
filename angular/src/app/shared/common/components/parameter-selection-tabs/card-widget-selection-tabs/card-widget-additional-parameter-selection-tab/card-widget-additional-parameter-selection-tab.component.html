@@ -11,10 +11,10 @@
 
         <form-container wrapperClass="col-4 pe-0 h-100">
             <div *ngIf="additionalError" class="text-danger px-2">{{ additionalError }}</div>
-            <label class="form-label p-2" for="additionalParameter">{{ 'AdditionalParameter' | localize }} *</label>
+            <label class="form-label p-2" for="card-additional-parameter-selector">{{ 'AdditionalParameter' | localize }} *</label>
             <div style="height: 335px;">
                 <dx-scroll-view direction="vertical">
-                    <p-listbox id="additional" inputId="additional" name="parameter.additionalParameter"
+                    <p-listbox id="card-additional-parameter-selector" inputId="card-additional-parameter-selector-input" name="parameter.additionalParameter"
                         [(ngModel)]="parameter.group" (ngModelChange)="onAdditionalChange($event)"
                         [options]="additionalOptions" optionLabel="description" optionValue="groupName"
                         optionDisabled="disabled" [filter]="true" [scrollHeight]="9999" required></p-listbox>
@@ -25,10 +25,10 @@
         <div class="col-4 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
             <div class="container">
                 <div *ngIf="baseError" class="text-danger px-2">{{ baseError }}</div>
-                <label class="form-label p-2" for="base">{{ 'Base' | localize }} *</label>
+                <label class="form-label p-2" for="card-additional-base-selector">{{ 'Base' | localize }} *</label>
                 <div style="height: 335px;">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="base" inputId="base" name="base" [(ngModel)]="selectedBases"
+                        <p-listbox id="card-additional-base-selector" inputId="card-additional-base-selector-input" name="base" [(ngModel)]="selectedBases"
                             (ngModelChange)="onBaseChange()" [options]="baseOptions" optionLabel="description"
                             optionValue="phaseName" optionDisabled="disabled" [filter]="true" [scrollHeight]="9999"
                             required></p-listbox>
@@ -40,10 +40,10 @@
         <div class="col-4 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
             <div class="container">
                 <div *ngIf="quantityError" class="text-danger px-2">{{ quantityError }}</div>
-                <label class="form-label p-2" for="quantity">{{ 'Quantity' | localize }} *</label>
+                <label class="form-label p-2" for="card-additional-quantity-selector">{{ 'Quantity' | localize }} *</label>
                 <div style="height: 335px;">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="quantity" inputId="quantity" name="quantity" [(ngModel)]="selectedQuantities" (ngModelChange)="onQuantityChange()"
+                        <p-listbox id="card-additional-quantity-selector" inputId="card-additional-quantity-selector-input" name="quantity" [(ngModel)]="selectedQuantities" (ngModelChange)="onQuantityChange()"
                             [options]="quantityOptions" optionLabel="description" optionValue="phaseName"
                             [filter]="true" [scrollHeight]="9999" required></p-listbox>
                     </dx-scroll-view>

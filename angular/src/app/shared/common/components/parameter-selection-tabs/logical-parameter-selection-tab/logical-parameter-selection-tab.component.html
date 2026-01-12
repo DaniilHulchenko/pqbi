@@ -9,10 +9,10 @@
         </ng-container>
         <form-container wrapperClass="col-2 pe-0 h-100">
             <div *ngIf="groupError" class="text-danger px-2">{{ groupError }}</div>
-                <label class="form-label p-2" for="group">{{'Group' | localize }} *</label>
+                <label class="form-label p-2" for="logical-group-selector">{{'Group' | localize }} *</label>
                 <div style="height: 335px;">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="group" inputId="group" name="parameter.group" [(ngModel)]="parameter.group"
+                        <p-listbox id="logical-group-selector" inputId="logical-group-selector-input" name="parameter.group" [(ngModel)]="parameter.group"
                             [options]="groupOptions" optionLabel="description" optionValue="groupName"
                             optionDisabled="disabled" [filter]="true" (onChange)="onGroupChange($event)"
                             [scrollHeight]="9999" required />
@@ -21,10 +21,10 @@
         </form-container>
         <form-container wrapperClass="col-2 pe-0 h-100">
             <div *ngIf="phaseError" class="text-danger px-2">{{ phaseError }}</div>
-                <label class="form-label p-2" for="phase">{{'Phase' | localize }} *</label>
+                <label class="form-label p-2" for="logical-phase-selector">{{'Phase' | localize }} *</label>
                 <div style="height: 335px;">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="phase" inputId="phase" name="parameter.phase" [(ngModel)]="selectedPhases"
+                        <p-listbox id="logical-phase-selector" inputId="logical-phase-selector-input" name="parameter.phase" [(ngModel)]="selectedPhases"
                             [options]="phaseOptions" optionLabel="description" optionValue="phaseName"
                             optionDisabled="disabled" (onChange)="onPhaseChange()" [filter]="true"
                             [scrollHeight]="9999" [multiple]="!isEdit" required></p-listbox>
@@ -36,10 +36,10 @@
         <ng-container *ngIf="isHarmonicsGroupSelected()">
             <form-container wrapperClass="col-1 pe-0 h-100">
                 <div *ngIf="harmonicsError" class="text-danger px-2">{{ harmonicsError }}</div>
-                    <label class="form-label p-2" for="harmonics">{{'Harmonics' | localize }} *</label>
+                    <label class="form-label p-2" for="logical-harmonics-selector">{{'Harmonics' | localize }} *</label>
                     <div style="height: 335px;">
                         <dx-scroll-view direction="vertical">
-                            <p-listbox id="harmonics" inputId="harmonics" name="selectedHarmonics"
+                            <p-listbox id="logical-harmonics-selector" inputId="logical-harmonics-selector-input" name="selectedHarmonics"
                                 [(ngModel)]="selectedHarmonics" [options]="harmonicOptions" optionLabel="description"
                                 optionValue="description" optionDisabled="disabled" [filter]="true"
                                 optionDisabled="disabled" [scrollHeight]="9999" [multiple]="!isEdit" required></p-listbox>
@@ -50,10 +50,10 @@
 
         <form-container wrapperClass="col-1 pe-0 h-100">
             <div *ngIf="baseError" class="text-danger px-2">{{ baseError }}</div>
-                <label class="form-label p-2" for="phase">{{'Base' | localize }} *</label>
+                <label class="form-label p-2" for="logical-base-selector">{{'Base' | localize }} *</label>
                 <div style="height: 335px;">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="base" inputId="base" name="base" [(ngModel)]="selectedBases"
+                        <p-listbox id="logical-base-selector" inputId="logical-base-selector-input" name="base" [(ngModel)]="selectedBases"
                             (onChange)="onBaseChange()" [options]="baseOptions" optionLabel="description"
                             optionValue="phaseName" optionDisabled="disabled" [filter]="true" [scrollHeight]="9999"
                             [multiple]="!isEdit" required></p-listbox>
@@ -63,10 +63,10 @@
         <div class="col-1 pe-0 h-100 d-flex align-items-center" style="width: 250px;">
             <div class="container">
                 <div *ngIf="quantityError" class="text-danger px-2">{{ quantityError }}</div>
-                <label class="form-label p-2" for="quantity">{{'Quantity' | localize }} *</label>
+                <label class="form-label p-2" for="logical-quantity-selector">{{'Quantity' | localize }} *</label>
                 <div style="height: 335px;">
                     <dx-scroll-view direction="vertical">
-                        <p-listbox id="quantity" inputId="quantity" name="quantity" [(ngModel)]="selectedQuantities"
+                        <p-listbox id="logical-quantity-selector" inputId="logical-quantity-selector-input" name="quantity" [(ngModel)]="selectedQuantities"
                             [options]="quantityOptions" optionLabel="description" optionValue="phaseName"
                             optionDisabled="disabled" [filter]="true" [scrollHeight]="9999" [multiple]="!isEdit"
                             required></p-listbox>

@@ -33,6 +33,37 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.trend-widget-card {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+.trend-widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        position: relative;
+    transition: filter 140ms ease, box-shadow 140ms ease;
+}
+
+.trend-widget-header:hover {
+    cursor: pointer;
+    filter: brightness(1.05);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+
+.trend-widget-title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+.trend-widget-body {
+    display: flex;
+    flex-direction: column;
 }
 .chart-wrapper {
     display: flex;
@@ -54,4 +85,153 @@ dx-chart {
     height: 100% !important;
     width: 100% !important;
     display: block;
+}
+.trend-controls {
+    padding: 6px 12px;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.trend-control {
+    gap: 6px;
+}
+
+.trend-control-label {
+    margin-right: 6px;
+}
+
+.color-swatch {
+    width: 24px;
+    height: 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+    background-color: transparent;
+    padding: 0;
+    cursor: pointer;
+}
+
+.color-input-hidden {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    border: 0;
+    padding: 0;
+}
+
+.trend-title-text {
+    display: inline-block;
+    padding: 6px 10px 6px 8px;
+    color: inherit;
+    border-radius: 10px;
+    font-weight: 600;
+    line-height: 1.25;
+    transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.trend-widget-header:hover .trend-title-text {
+    transform: translateY(-1px);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.trend-widget-title {
+    cursor: pointer;
+}
+
+.custom-legend-container {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.custom-legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+}
+
+.custom-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.02);
+    transition: background-color 0.2s ease;
+}
+
+.custom-legend-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.hidden-color-picker {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.legend-marker {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.clickable-marker {
+    cursor: pointer;
+}
+
+.clickable-marker:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 1);
+}
+
+.clickable-marker:active {
+    transform: scale(1.05);
+}
+
+.legend-text {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.clickable-text {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.clickable-text:hover {
+    opacity: 0.7;
+}
+
+.legend-text-input {
+    font-size: 13px;
+    font-weight: 500;
+    max-width: 200px;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    padding: 2px 6px;
+    background-color: rgba(255, 255, 255, 0.9);
+    outline: none;
+}
+
+.legend-text-input:focus {
+    border-color: #0066cc;
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
 }

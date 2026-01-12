@@ -14,88 +14,90 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using PQBI.Storage;
-using PQBI.Exporting;
+using System.Globalization;
 
-namespace PQBI.TrendWidgetConfigurations
+namespace PQBI.TrendWidgetConfigurations;
+
+//  [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations)]
+public class TrendWidgetConfigurationsAppService : PQBIAppServiceBase, ITrendWidgetConfigurationsAppService
 {
-//    [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations)]  
-    public class TrendWidgetConfigurationsAppService : PQBIAppServiceBase, ITrendWidgetConfigurationsAppService
+    private readonly IRepository<TrendWidgetConfiguration> _trendWidgetConfigurationRepository;
+
+    public TrendWidgetConfigurationsAppService(IRepository<TrendWidgetConfiguration> trendWidgetConfigurationRepository)
     {
-        private readonly IRepository<TrendWidgetConfiguration> _trendWidgetConfigurationRepository;
+        _trendWidgetConfigurationRepository = trendWidgetConfigurationRepository;
 
-        public TrendWidgetConfigurationsAppService(IRepository<TrendWidgetConfiguration> trendWidgetConfigurationRepository)
+    }
+
+    public virtual async Task<PagedResultDto<GetTrendWidgetConfigurationForViewDto>> GetAll(GetAllTrendWidgetConfigurationsInput input)
+    {
+
+        var filteredTrendWidgetConfigurations = _trendWidgetConfigurationRepository.GetAll()
+                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.DateRange.Contains(input.Filter) || e.Resolution.Contains(input.Filter) || e.Parameters.Contains(input.Filter) || e.ThresholdSettings.Contains(input.Filter));
+
+        var pagedAndFilteredTrendWidgetConfigurations = filteredTrendWidgetConfigurations
+            .OrderBy(input.Sorting ?? "id asc")
+            .PageBy(input);
+
+        var trendWidgetConfigurations = from o in pagedAndFilteredTrendWidgetConfigurations
+                                        select new
+                                        {
+
+                                            o.DateRange,
+                                            o.Resolution,
+                                            o.Parameters,
+                                            o.ThresholdSettings,
+                                            Id = o.Id
+                                        };
+
+        var totalCount = await filteredTrendWidgetConfigurations.CountAsync();
+
+        var dbList = await trendWidgetConfigurations.ToListAsync();
+        var results = new List<GetTrendWidgetConfigurationForViewDto>();
+
+        foreach (var o in dbList)
         {
-            _trendWidgetConfigurationRepository = trendWidgetConfigurationRepository;
-
-        }
-
-        public virtual async Task<PagedResultDto<GetTrendWidgetConfigurationForViewDto>> GetAll(GetAllTrendWidgetConfigurationsInput input)
-        {
-
-            var filteredTrendWidgetConfigurations = _trendWidgetConfigurationRepository.GetAll()
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.DateRange.Contains(input.Filter) || e.Resolution.Contains(input.Filter) || e.Parameters.Contains(input.Filter));
-
-            var pagedAndFilteredTrendWidgetConfigurations = filteredTrendWidgetConfigurations
-                .OrderBy(input.Sorting ?? "id asc")
-                .PageBy(input);
-
-            var trendWidgetConfigurations = from o in pagedAndFilteredTrendWidgetConfigurations
-                                            select new
-                                            {
-
-                                                o.DateRange,
-                                                o.Resolution,
-                                                o.Parameters,
-                                                Id = o.Id
-                                            };
-
-            var totalCount = await filteredTrendWidgetConfigurations.CountAsync();
-
-            var dbList = await trendWidgetConfigurations.ToListAsync();
-            var results = new List<GetTrendWidgetConfigurationForViewDto>();
-
-            foreach (var o in dbList)
+            var res = new GetTrendWidgetConfigurationForViewDto()
             {
-                var res = new GetTrendWidgetConfigurationForViewDto()
+                TrendWidgetConfiguration = new TrendWidgetConfigurationDto
                 {
-                    TrendWidgetConfiguration = new TrendWidgetConfigurationDto
-                    {
 
-                        DateRange = o.DateRange,
-                        Resolution = o.Resolution,
-                        Parameters = o.Parameters,
-                        Id = o.Id,
-                    }
-                };
+                    DateRange = o.DateRange,
+                    Resolution = o.Resolution,
+                    Parameters = o.Parameters,
+                    ThresholdSettings = o.ThresholdSettings,
+                    Id = o.Id,
+                }
+            };
 
-                results.Add(res);
-            }
-
-            return new PagedResultDto<GetTrendWidgetConfigurationForViewDto>(
-                totalCount,
-                results
-            );
-
+            results.Add(res);
         }
 
-        public virtual async Task<GetTrendWidgetConfigurationForViewDto> GetTrendWidgetConfigurationForView(int id)
-        {
-            var trendWidgetConfiguration = await _trendWidgetConfigurationRepository.GetAsync(id);
+        return new PagedResultDto<GetTrendWidgetConfigurationForViewDto>(
+            totalCount,
+            results
+        );
 
-            var output = new GetTrendWidgetConfigurationForViewDto { TrendWidgetConfiguration = ObjectMapper.Map<TrendWidgetConfigurationDto>(trendWidgetConfiguration) };
+    }
 
-            return output;
-        }
+    public virtual async Task<GetTrendWidgetConfigurationForViewDto> GetTrendWidgetConfigurationForView(EntityDto<int> input)
+    {
+        var trendWidgetConfiguration = await _trendWidgetConfigurationRepository.GetAsync(input.Id);
 
-        [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Edit)]
-        public virtual async Task<GetTrendWidgetConfigurationForEditOutput> GetTrendWidgetConfigurationForEdit(EntityDto input)
-        {
-            var trendWidgetConfiguration = await _trendWidgetConfigurationRepository.FirstOrDefaultAsync(input.Id);
+        var output = new GetTrendWidgetConfigurationForViewDto { TrendWidgetConfiguration = ObjectMapper.Map<TrendWidgetConfigurationDto>(trendWidgetConfiguration) };
 
-            var output = new GetTrendWidgetConfigurationForEditOutput { TrendWidgetConfiguration = ObjectMapper.Map<CreateOrEditTrendWidgetConfigurationDto>(trendWidgetConfiguration) };
+        return output;
+    }
 
-            return output;
-        }
+    [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Edit)]
+    public virtual async Task<GetTrendWidgetConfigurationForEditOutput> GetTrendWidgetConfigurationForEdit(EntityDto input)
+    {
+        var trendWidgetConfiguration = await _trendWidgetConfigurationRepository.FirstOrDefaultAsync(input.Id);
+
+        var output = new GetTrendWidgetConfigurationForEditOutput { TrendWidgetConfiguration = ObjectMapper.Map<CreateOrEditTrendWidgetConfigurationDto>(trendWidgetConfiguration) };
+
+        return output;
+    }
 
         [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Create)]
         public async Task<int> CreateAndGetId(CreateOrEditTrendWidgetConfigurationDto input)
@@ -112,45 +114,44 @@ namespace PQBI.TrendWidgetConfigurations
             return id;
         }
 
-        public virtual async Task CreateOrEdit(CreateOrEditTrendWidgetConfigurationDto input)
+    public virtual async Task CreateOrEdit(CreateOrEditTrendWidgetConfigurationDto input)
+    {
+        if (input.Id == null)
         {
-            if (input.Id == null)
-            {
-                await Create(input);
-            }
-            else
-            {
-                await Update(input);
-            }
+            await Create(input);
+        }
+        else
+        {
+            await Update(input);
+        }
+    }
+
+    [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Create)]
+    protected virtual async Task Create(CreateOrEditTrendWidgetConfigurationDto input)
+    {
+        var trendWidgetConfiguration = ObjectMapper.Map<TrendWidgetConfiguration>(input);
+
+        if (AbpSession.TenantId != null)
+        {
+            trendWidgetConfiguration.TenantId = (int?)AbpSession.TenantId;
         }
 
-        [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Create)]
-        protected virtual async Task Create(CreateOrEditTrendWidgetConfigurationDto input)
-        {
-            var trendWidgetConfiguration = ObjectMapper.Map<TrendWidgetConfiguration>(input);
-
-            if (AbpSession.TenantId != null)
-            {
-                trendWidgetConfiguration.TenantId = (int?)AbpSession.TenantId;
-            }
-
-            await _trendWidgetConfigurationRepository.InsertAsync(trendWidgetConfiguration);
-
-        }
-
-        [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Edit)]
-        protected virtual async Task Update(CreateOrEditTrendWidgetConfigurationDto input)
-        {
-            var trendWidgetConfiguration = await _trendWidgetConfigurationRepository.FirstOrDefaultAsync((int)input.Id);
-            ObjectMapper.Map(input, trendWidgetConfiguration);
-
-        }
-
-        [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Delete)]
-        public virtual async Task Delete(EntityDto input)
-        {
-            await _trendWidgetConfigurationRepository.DeleteAsync(input.Id);
-        }
+        await _trendWidgetConfigurationRepository.InsertAsync(trendWidgetConfiguration);
 
     }
+
+    [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Edit)]
+    protected virtual async Task Update(CreateOrEditTrendWidgetConfigurationDto input)
+    {
+        var trendWidgetConfiguration = await _trendWidgetConfigurationRepository.FirstOrDefaultAsync((int)input.Id);
+        ObjectMapper.Map(input, trendWidgetConfiguration);
+
+    }
+
+    [AbpAuthorize(AppPermissions.Pages_TrendWidgetConfigurations_Delete)]
+    public virtual async Task Delete(EntityDto input)
+    {
+        await _trendWidgetConfigurationRepository.DeleteAsync(input.Id);
+    }
+
 }
