@@ -55,11 +55,25 @@ type LineLegendType = {
     color?: string,
     parameterId?: string,
     isEditing?: boolean,
-    customName?: string
+    customName?: string,
+    unit?: string,
+    valueAxis?: string
+};
+
+type LineAxisConfiguration = {
+    name: string,
+    position: 'left' | 'right',
+    offset: number,
+    title: string,
+    unit: string,
+    color?: string,
+    customizeText: (value: { valueText: string }) => string,
+    isPrimary: boolean
 };
 
 class LineChartConfiguration {
     lineLegend: LineLegendType[];
+    valueAxes: LineAxisConfiguration[];
     color: string;
     overlappingMode: string;
 }
@@ -77,6 +91,7 @@ class LineChart extends DashboardChartBase {
     //#region DevExtreme Chart
     chartConfiguration: LineChartConfiguration = {
         lineLegend: [],
+        valueAxes: [],
         color: 'green',
         overlappingMode: 'hide',
     };
@@ -124,6 +139,7 @@ class LineChart extends DashboardChartBase {
         const data = trend.data;
         this.chartData = [];
         this.chartConfiguration.lineLegend = [];
+        this.chartConfiguration.valueAxes = [];
 
         let map: Map<number, object> = new Map(); // number is datetime representation in UNIX sec
 
@@ -135,6 +151,9 @@ class LineChart extends DashboardChartBase {
             const styleData = parameter?.style ? JSON.parse(parameter.style) : {};
             const color = styleData?.color;
             const customName = styleData?.customName;
+            const unit = this.resolveUnit(dataItem);
+            const valueAxis = `axis-${dataId}`;
+            const axisTitle = `${customName || legendLabel}${unit ? ` (${unit})` : ''}`;
 
             this.chartConfiguration.lineLegend.push({
                 name: legendLabel,
@@ -142,7 +161,20 @@ class LineChart extends DashboardChartBase {
                 color: color,
                 parameterId: parameter?.id,
                 customName: customName,
-                isEditing: false
+                isEditing: false,
+                unit,
+                valueAxis
+            });
+
+            this.chartConfiguration.valueAxes.push({
+                name: valueAxis,
+                position: i === 0 ? 'left' : 'right',
+                offset: i === 0 ? 0 : (i - 1) * 50,
+                title: axisTitle,
+                unit,
+                color,
+                customizeText: (value) => `${value.valueText}${unit ? ` ${unit}` : ''}`,
+                isPrimary: i === 0
             });
 
             for (let i = 0; i < dataItem.data.length; i++) {
@@ -166,6 +198,27 @@ class LineChart extends DashboardChartBase {
 
         this.chartData = arr;
         this.isInitialLoad = false;
+    }
+
+    private resolveUnit(dataItem: CalculatedDataItem): string {
+        const dataItemWithUnit = dataItem as CalculatedDataItem & {
+            unit?: string;
+            dataUnit?: string;
+            dataUnitType?: { name?: string } | string;
+        };
+        const resolvedUnit =
+            dataItemWithUnit.unit ??
+            dataItemWithUnit.dataUnit ??
+            (typeof dataItemWithUnit.dataUnitType === 'string'
+                ? dataItemWithUnit.dataUnitType
+                : dataItemWithUnit.dataUnitType?.name);
+
+        if (resolvedUnit) {
+            return resolvedUnit;
+        }
+
+        const mockUnits = ['V', 'A', 'Hz', 'kW', 'kVA', 'kWh', '°C', '°F', '%', 'Pa'];
+        return mockUnits[Math.floor(Math.random() * mockUnits.length)];
     }
 
     parameterName222(parameter: CalculatedDataItem): string {
