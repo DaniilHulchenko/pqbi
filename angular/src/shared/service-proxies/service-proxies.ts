@@ -23331,6 +23331,7 @@ export class CalculatedDataItem implements ICalculatedDataItem {
     response!: string | undefined;
     data!: number[] | undefined;
     nominal!: number;
+    dataUnitType!: DataUnitType;
     status!: DataValueStatus[] | undefined;
     missingInformation!: MissingBaseParameterInfo[] | undefined;
 
@@ -23359,6 +23360,7 @@ export class CalculatedDataItem implements ICalculatedDataItem {
                     this.data!.push(item);
             }
             this.nominal = _data["nominal"];
+            this.dataUnitType = _data["dataUnitType"] ? DataUnitType.fromJS(_data["dataUnitType"]) : <any>undefined;
             if (Array.isArray(_data["status"])) {
                 this.status = [] as any;
                 for (let item of _data["status"])
@@ -23395,6 +23397,7 @@ export class CalculatedDataItem implements ICalculatedDataItem {
                 data["data"].push(item);
         }
         data["nominal"] = this.nominal;
+        data["dataUnitType"] = this.dataUnitType ? this.dataUnitType.toJSON() : <any>undefined;
         if (Array.isArray(this.status)) {
             data["status"] = [];
             for (let item of this.status)
@@ -23416,6 +23419,7 @@ export interface ICalculatedDataItem {
     response: string | undefined;
     data: number[] | undefined;
     nominal: number;
+    dataUnitType: DataUnitType;
     status: DataValueStatus[] | undefined;
     missingInformation: MissingBaseParameterInfo[] | undefined;
 }

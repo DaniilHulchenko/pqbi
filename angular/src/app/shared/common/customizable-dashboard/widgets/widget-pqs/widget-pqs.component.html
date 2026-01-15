@@ -76,16 +76,29 @@
                     </dxo-common-series-settings>
 
                     <dxi-series pane="top" *ngFor="let source of lineChart.chartConfiguration.lineLegend"
-                        [name]="source.name" [valueField]="source.id" [color]="source.color || chartLineColor">
+                        [name]="source.name" [valueField]="source.id" [color]="source.color || chartLineColor" [axis]="source.axisName">
                         <dxo-point [visible]="isLinePoints" [color]="source.color || chartLineColor"></dxo-point>
                     </dxi-series>
 
-                    <dxi-value-axis>
-                        <dxi-constant-line *ngIf="thresholdSettings.upperEnabled" [value]="thresholdSettings.upperValue" [color]="thresholdSettings.upperColor" dashStyle="dash" width="2">
+                    <dxi-value-axis *ngFor="let axis of lineChart.chartConfiguration.valueAxes"
+                        [name]="axis.name"
+                        [position]="axis.position"
+                        [color]="axis.color">
+                        <dxo-title [text]="axis.unitLabel" [font]="{ color: axis.color }"></dxo-title>
+                        <dxo-label [font]="{ color: axis.color }"></dxo-label>
+                        <dxi-constant-line *ngIf="axis.isPrimary && thresholdSettings.upperEnabled"
+                            [value]="thresholdSettings.upperValue"
+                            [color]="thresholdSettings.upperColor"
+                            dashStyle="dash"
+                            width="2">
                             <dxo-label text="Upper Threshold"></dxo-label>
                         </dxi-constant-line>
 
-                        <dxi-constant-line *ngIf="thresholdSettings.lowerEnabled" [value]="thresholdSettings.lowerValue" [color]="thresholdSettings.lowerColor" dashStyle="dash" width="2">
+                        <dxi-constant-line *ngIf="axis.isPrimary && thresholdSettings.lowerEnabled"
+                            [value]="thresholdSettings.lowerValue"
+                            [color]="thresholdSettings.lowerColor"
+                            dashStyle="dash"
+                            width="2">
                             <dxo-label text="Lower Threshold"></dxo-label>
                         </dxi-constant-line>
                     </dxi-value-axis>

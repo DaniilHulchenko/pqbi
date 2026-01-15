@@ -22,6 +22,7 @@ import {
     TrendCustomWidgetData,
     BaseData,
     CalculatedDataItem,
+    DataUnitType,
     TrendResponse,
     IntervalSynchronized,
     TrendWidgetConfigurationsServiceProxy,
@@ -55,13 +56,24 @@ type LineLegendType = {
     color?: string,
     parameterId?: string,
     isEditing?: boolean,
-    customName?: string
+    customName?: string,
+    axisName?: string,
+    dataUnitType?: DataUnitType
+};
+
+type ValueAxisConfig = {
+    name: string,
+    position: 'left' | 'right',
+    unitLabel: string,
+    color: string,
+    isPrimary: boolean
 };
 
 class LineChartConfiguration {
     lineLegend: LineLegendType[];
     color: string;
     overlappingMode: string;
+    valueAxes: ValueAxisConfig[];
 }
 
 // class LineChartConfiguration {
@@ -79,11 +91,13 @@ class LineChart extends DashboardChartBase {
         lineLegend: [],
         color: 'green',
         overlappingMode: 'hide',
+        valueAxes: [],
     };
     //#endregion
     constructor(
         private _dashboardService: TenantDashboardServiceProxy,
         private setErrorMessage: (error: string | null) => void,
+        private localize: (key: string) => string,
     ) {
         super();
     }
@@ -124,6 +138,7 @@ class LineChart extends DashboardChartBase {
         const data = trend.data;
         this.chartData = [];
         this.chartConfiguration.lineLegend = [];
+        this.chartConfiguration.valueAxes = [];
 
         let map: Map<number, object> = new Map(); // number is datetime representation in UNIX sec
 
@@ -135,6 +150,11 @@ class LineChart extends DashboardChartBase {
             const styleData = parameter?.style ? JSON.parse(parameter.style) : {};
             const color = styleData?.color;
             const customName = styleData?.customName;
+            const axisName = `axis-${i}`;
+            const dataUnitType = dataItem.dataUnitType ?? this.getMockDataUnitType(i);
+            dataItem.dataUnitType = dataUnitType;
+            const unitLabel = this.getUnitLabel(dataUnitType);
+            const axisColor = color || this.chartConfiguration.color;
 
             this.chartConfiguration.lineLegend.push({
                 name: legendLabel,
@@ -142,7 +162,17 @@ class LineChart extends DashboardChartBase {
                 color: color,
                 parameterId: parameter?.id,
                 customName: customName,
-                isEditing: false
+                isEditing: false,
+                axisName: axisName,
+                dataUnitType: dataUnitType,
+            });
+
+            this.chartConfiguration.valueAxes.push({
+                name: axisName,
+                position: 'left',
+                unitLabel: unitLabel,
+                color: axisColor,
+                isPrimary: i === 0,
             });
 
             for (let i = 0; i < dataItem.data.length; i++) {
@@ -205,6 +235,28 @@ class LineChart extends DashboardChartBase {
         return {
             text: `${object.seriesName}<br/>${res}`,
         };
+    }
+
+    private getUnitLabel(dataUnitType?: DataUnitType): string {
+        if (!dataUnitType?.id) {
+            return '';
+        }
+
+        return dataUnitType.id !== 41 && dataUnitType.id !== 255 && dataUnitType.tokenCode
+            ? this.localize(dataUnitType.tokenCode)
+            : '';
+    }
+
+    private getMockDataUnitType(index: number): DataUnitType {
+        // TODO: Remove when backend provides dataUnitType for Trend lines.
+        const mockDataUnitTypes: DataUnitType[] = [
+            new DataUnitType({ id: 1, tokenCode: 'kW' }),
+            new DataUnitType({ id: 2, tokenCode: '°C' }),
+            new DataUnitType({ id: 3, tokenCode: 'bar' }),
+            new DataUnitType({ id: 4, tokenCode: 'A' }),
+        ];
+
+        return mockDataUnitTypes[index % mockDataUnitTypes.length];
     }
 
     reload(input: TrendCalcRequest, parameters?: WidgetParametersColumn[]) {
@@ -292,7 +344,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         this._defaultWidgetName = this.l('WidgetPQSTrend');
         this.lineChart = new LineChart(this._tenantdashboardService, (error) => {
             this.errorMessage = error;
-        });
+        }, (key) => this.l(key));
         this.lineChart.isInitialLoad = true;
     }
 
@@ -528,6 +580,13 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
     onSeriesColorChange(legendItem: LineLegendType, color: string): void {
         legendItem.color = color;
+        const axisName = legendItem.axisName;
+        if (axisName) {
+            const axis = this.lineChart.chartConfiguration.valueAxes.find((item) => item.name === axisName);
+            if (axis) {
+                axis.color = color;
+            }
+        }
 
         const parameters: WidgetParametersColumn[] = JSON.parse(this.trendWidgetConfiguration.parameters);
 
@@ -722,6 +781,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     onLineColorChange(event: Event) {
         const color = (event.target as HTMLInputElement).value;
         this.chartLineColor = color;
+        this.lineChart.chartConfiguration.color = color;
         this.persistColorPreference('chartLineColor', color);
         this.refreshChartAppearance();
     }
@@ -753,6 +813,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         if (line) {
             this.chartLineColor = line;
         }
+        this.lineChart.chartConfiguration.color = this.chartLineColor;
         if (background) {
             this.chartBackgroundColor = background;
         }
