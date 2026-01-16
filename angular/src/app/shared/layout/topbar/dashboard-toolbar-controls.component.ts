@@ -48,6 +48,7 @@ export class DashboardToolbarControlsComponent extends AppComponentBase implemen
     }
 
     ngOnInit(): void {
+        super.ngOnInit();
         const storedBackgroundColor = this.dashboardConfigurationService.getStoredBackgroundColor();
         if (storedBackgroundColor) {
             this.backgroundColor = storedBackgroundColor;

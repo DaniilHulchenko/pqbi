@@ -211,7 +211,7 @@ public class CustomParameterNodeCalculator
 
 
     public CustomParameterNodeCalculator(CustomParameterType customParameterType, int customParameterResolutionInSeconds, bool isAutoResolution, string outerAggregationFunction, DateTime startDate, DateTime endDate,
-         int widgetResolutionInSecond, string widgetAggregation, IEnumerable<(DateTime barStart, DateTime barEnd)> barTimeRangeList = null, bool isHideMsrPointName = false, string customParameterName = null, InnerCustomParameter innerCustomParameter = null, AdvancedSettings? advancedSettingsForTable = null
+         int widgetResolutionInSecond, string widgetAggregation, IEnumerable<(DateTimeOffset barStart, DateTimeOffset barEnd)> barTimeRangeList = null, bool isHideMsrPointName = false, string customParameterName = null, InnerCustomParameter innerCustomParameter = null, AdvancedSettings? advancedSettingsForTable = null
         )
     {
         SetWidgetResolution(customParameterResolutionInSeconds, widgetResolutionInSecond, isAutoResolution);
@@ -289,7 +289,7 @@ public class CustomParameterNodeCalculator
 
     public bool IsGroupByTime { get; private set; }
     public bool IsHideMsrPointName { get; private set; }
-    public IEnumerable<(DateTime barStart, DateTime barEnd)> BarTimeRangeList { get; private set; }
+    public IEnumerable<(DateTimeOffset barStart, DateTimeOffset barEnd)> BarTimeRangeList { get; private set; }
     public bool IsWidgetResolutionAuto { get; private set; }
     public int AutoWishListNumber { get; private set; } = 0;
     public bool IsSinglePointRes { get; set; }

@@ -147,6 +147,7 @@ export class CustomizableDashboardComponent extends AppComponentBase implements 
         });
     }
     ngOnInit() {
+        super.ngOnInit();
         this.loading = true;
         this.dashboardToolbarService.setDashboardActive(true);
         this.editModeEnabled = this.editModeService.getEditModeValue();

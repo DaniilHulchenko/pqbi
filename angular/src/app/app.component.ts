@@ -55,6 +55,7 @@ export class AppComponent extends AppComponentBase implements OnInit {
     }
 
     ngOnInit(): void {
+        super.ngOnInit();
         this._userNotificationHelper.settingsModal = this.notificationSettingsModal;
         this.theme = abp.setting.get('App.UiManagement.Theme').toLocaleLowerCase();
         this.installationMode = UrlHelper.isInstallUrl(location.href);

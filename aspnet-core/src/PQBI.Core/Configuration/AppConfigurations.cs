@@ -34,21 +34,31 @@ namespace PQBI.Configuration
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
             .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
 
-            // Add ProgramData overrides ONLY outside containers
-            if (!IsRunningInContainer())
+            bool isDebug =
+#if DEBUG
+   true;
+#else
+    false;
+#endif
+
+            if (!isDebug)
             {
-                var pdDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                    "PQBI", "backend", "Configurations"
-                );
+                // Add ProgramData overrides ONLY outside containers
+                if (!IsRunningInContainer())
+                {
+                    var pdDir = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                        "PQBI", "backend", "Configurations"
+                    );
 
-                Directory.CreateDirectory(pdDir);
+                    Directory.CreateDirectory(pdDir);
 
-                var pdProvider = new PhysicalFileProvider(pdDir);
+                    var pdProvider = new PhysicalFileProvider(pdDir);
 
-                builder
-                    .AddJsonFile(pdProvider, "appsettings.json", optional: true, reloadOnChange: true)
-                    .AddJsonFile(pdProvider, $"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
+                    builder
+                        .AddJsonFile(pdProvider, "appsettings.json", optional: true, reloadOnChange: true)
+                        .AddJsonFile(pdProvider, $"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
+                }
             }
 
             //var builder = new ConfigurationBuilder()

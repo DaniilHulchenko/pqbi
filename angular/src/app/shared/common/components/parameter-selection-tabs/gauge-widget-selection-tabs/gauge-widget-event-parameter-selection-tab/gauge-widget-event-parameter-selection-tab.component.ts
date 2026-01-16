@@ -91,7 +91,7 @@ export class GaugeWidgetEventParameterSelectionTabComponent
         upperLimit: 0,
         limitFromNominal: false,
         limitFromNormalization: false,
-        decimalPoints: 2,
+        decimalPoints: null,
         linkPage: null,
         titleFont: { family: '', size: null, colorMode: 'scheme', customColor: '#000000' },
         valueFont: { family: '', size: null, colorMode: 'scheme', customColor: '#000000' },

@@ -1,0 +1,110 @@
+<div class="advanced-parameter-selector h-100 d-flex flex-column">
+    <!-- Tabs -->
+    <div class="d-flex gap-2 mb-3">
+        <button
+            type="button"
+            class="btn"
+            [class.btn-primary]="selectedTab === 'logical'"
+            [class.btn-secondary]="selectedTab !== 'logical'"
+            (click)="onTabChange('logical')">
+            <i class="fa fa-brain me-2"></i>
+            <span>{{ 'Logical' | localize }}</span>
+        </button>
+        <button
+            type="button"
+            class="btn"
+            [class.btn-primary]="selectedTab === 'channel'"
+            [class.btn-secondary]="selectedTab !== 'channel'"
+            (click)="onTabChange('channel')">
+            <i class="fa fa-signal me-2"></i>
+            <span>{{ 'Channel' | localize }}</span>
+        </button>
+    </div>
+
+    <!-- Form Fields -->
+    <div class="row flex-grow-1" style="align-items: center;">
+        <form-container wrapperClass="col-2 pe-0 h-100">
+            <label class="form-label p-2" for="advanced-group-selector">{{ 'Group' | localize }} *</label>
+            <div style="height: 335px;">
+                <dx-scroll-view direction="vertical">
+                    <p-listbox
+                        id="advanced-group-selector"
+                        inputId="advanced-group-selector-input"
+                        name="group"
+                        [(ngModel)]="selectedGroup"
+                        [options]="groupOptions"
+                        optionLabel="description"
+                        optionValue="groupName"
+                        [filter]="true"
+                        (onChange)="onGroupChange($event)"
+                        [scrollHeight]="9999"
+                        required>
+                    </p-listbox>
+                </dx-scroll-view>
+            </div>
+        </form-container>
+        <form-container wrapperClass="col-2 pe-0 h-100">
+            <label class="form-label p-2" for="advanced-phase-selector">
+                {{ (selectedTab === 'logical' ? 'Phase' : 'Channel') | localize }} *
+            </label>
+            <div style="height: 335px;">
+                <dx-scroll-view direction="vertical">
+                    <p-listbox
+                        id="advanced-phase-selector"
+                        inputId="advanced-phase-selector-input"
+                        name="phaseOrChannel"
+                        [(ngModel)]="selectedPhaseOrChannel"
+                        [options]="phaseOrChannelOptions"
+                        optionLabel="description"
+                        optionValue="phaseName"
+                        [filter]="true"
+                        (onChange)="onPhaseOrChannelChange()"
+                        [scrollHeight]="9999"
+                        [disabled]="!selectedGroup"
+                        required>
+                    </p-listbox>
+                </dx-scroll-view>
+            </div>
+        </form-container>
+        <form-container wrapperClass="col-2 pe-0 h-100">
+            <label class="form-label p-2" for="advanced-quantity-selector">{{ 'Quantity' | localize }} *</label>
+            <div style="height: 335px;">
+                <dx-scroll-view direction="vertical">
+                    <p-listbox
+                        id="advanced-quantity-selector"
+                        inputId="advanced-quantity-selector-input"
+                        name="quantity"
+                        [(ngModel)]="selectedQuantity"
+                        [options]="quantityOptions"
+                        optionLabel="description"
+                        optionValue="phaseName"
+                        [filter]="true"
+                        [scrollHeight]="9999"
+                        [disabled]="!selectedPhaseOrChannel"
+                        required>
+                    </p-listbox>
+                </dx-scroll-view>
+            </div>
+        </form-container>
+        <div class="col-auto h-100 d-flex align-items-center" style="min-width: 300px;">
+            <div class="d-flex flex-column align-items-center justify-content-center p-3" style="width: 100%; height: 335px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa;">
+                <dx-color-box
+                    [(value)]="selectedColor"
+                    [editAlphaChannel]="false"
+                    style="width: 100%;">
+                </dx-color-box>
+            </div>
+        </div>
+        <div class="col-auto h-100 d-flex align-items-center ms-3">
+            <button
+                type="button"
+                class="btn btn-primary"
+                (click)="addParameter()"
+                [disabled]="!selectedGroup || !selectedPhaseOrChannel || !selectedQuantity">
+                <i class="fa fa-plus me-1"></i>
+                {{ 'Add' | localize }}
+            </button>
+        </div>
+    </div>
+</div>
+

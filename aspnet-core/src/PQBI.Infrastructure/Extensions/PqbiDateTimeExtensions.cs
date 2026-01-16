@@ -16,6 +16,8 @@ public static class PqbiDateTimeExtensions
 
     public static long ToDateTimeOffsetInSeconds(this DateTime dateTime)
     {
+        if (dateTime.Kind == DateTimeKind.Unspecified)
+            dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
         var unixTimeSeconds = new DateTimeOffset(dateTime).ToUnixTimeSeconds();
         return unixTimeSeconds;
     }

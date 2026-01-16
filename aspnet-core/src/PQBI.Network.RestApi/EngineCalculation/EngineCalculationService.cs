@@ -1,5 +1,4 @@
 ﻿using Abp.UI;
-using Castle.MicroKernel.Registration;
 using Microsoft.Extensions.Logging;
 using PQBI.CalculationEngine;
 using PQBI.CalculationEngine.Functions;
@@ -13,12 +12,9 @@ using PQS.CommonReport;
 using PQS.Data.Common;
 using PQS.Data.Common.Units;
 using PQS.Data.Measurements.Enums;
-using PQS.Data.Networks;
-using System.Collections.Generic;
 using System.Data;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace PQBI.Network.RestApi.EngineCalculation;
+using PQBI.Infrastructure.Extensions;
 
 public interface IEngineCalculationService
 {
@@ -647,13 +643,14 @@ public class EngineCalculationService : IEngineCalculationService
     private IEnumerable<AxisValue> CalculateQuantityFunction(string quantityAggregationFunction, long startPeriodInSeconds, int resolutionInSeconds, IEnumerable<IEnumerable<BasicValue>> data)
     {
         var calculated = new List<AxisValue>();
-        var localEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
+        //var localEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
 
         foreach (var list in data)
         {
             var tmp = _engineCalculator.AggregationCalculationAsync(quantityAggregationFunction, list);
 
-            long timeStempInSeconds = (long)(tmp.StartTime - localEpoch).TotalSeconds;
+            long timeStempInSeconds = tmp.StartTime.ToDateTimeOffsetInSeconds();
+            //long timeStempInSeconds = (long)(tmp.StartTime - localEpoch).TotalSeconds;
             calculated.Add(new AxisValue { TimeStempInSeconds = timeStempInSeconds, Value = tmp.Value });
 
             //calculated.Add(new AxisValue { TimeStempInSeconds = (long)startPeriodInSeconds, Value = tmp.Value });
@@ -671,8 +668,10 @@ public class EngineCalculationService : IEngineCalculationService
         {
             var tmp = _engineCalculator.AggregationCalculationAsync(quantityAggregationFunction, list);
             //tmp = new BasicValue(, tmp.StartTime, tmp.DataValueStatus);
+            long timeStempInSeconds = tmp.StartTime.ToDateTimeOffsetInSeconds();
+
             double? val = ParameterMatrix.Normalize(nominalVal, tmp.Value);
-            calculated.Add(new AxisValue { TimeStempInSeconds = startPeriodInSeconds, Value = val });
+            calculated.Add(new AxisValue { TimeStempInSeconds = timeStempInSeconds, Value = val });
             startPeriodInSeconds += resolutionInSeconds;
         }
 

@@ -97,5 +97,7 @@ export class CreateOrEditGroupModalComponent extends AppComponentBase implements
         this.isPopupVisible = false;
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        super.ngOnInit();
+    }
 }

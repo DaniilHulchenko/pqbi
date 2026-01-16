@@ -163,6 +163,14 @@ import { NavigationEnd, Router, RouterModule } from '@angular/router';
                         loadChildren: () => import('./mass-notifications/mass-notifications.module').then((m) => m.MassNotificationsModule),
                         data: { permission: 'Pages.Administration.MassNotification' },
                     },
+                    {
+                        path: 'localization',
+                        loadChildren: () => import('./localization/localization.module').then((m) => m.LocalizationModule),
+                    },
+                    {
+                        path: 'dashboard-settings',
+                        loadChildren: () => import('./dashboard-settings/dashboard-settings.module').then((m) => m.DashboardSettingsModule),
+                    },
                     { path: '', redirectTo: 'hostDashboard', pathMatch: 'full' },
                     { path: '**', redirectTo: 'hostDashboard' },
                 ],

@@ -89,12 +89,14 @@ export class CpAdditionalParameterSelectionTabComponent extends EditableTabCompo
         [QuantityEnum.QMIN]: 'Minimum',
         [QuantityEnum.QMAX]: 'Maximum',
         [QuantityEnum.QAVG]: 'Average',
+        [QuantityEnum.QSUM]: 'Sum',
     };
 
     private readonly quantityKeys: Record<QuantityEnum, string> = {
         [QuantityEnum.QMIN]: 'MIN',
         [QuantityEnum.QMAX]: 'MAX',
         [QuantityEnum.QAVG]: 'AVG',
+        [QuantityEnum.QSUM]: 'SUM',
     };
 
     private readonly _defaultMinResolution = new ResolutionState({

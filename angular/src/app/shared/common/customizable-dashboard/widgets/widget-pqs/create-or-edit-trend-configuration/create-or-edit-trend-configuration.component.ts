@@ -134,10 +134,53 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
         super(injector);
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        super.ngOnInit();
+    }
 
     componentsToString(componentsState: ComponentsState): string {
         return componentsState?.components?.map((component) => component.label).join(', ') ?? '';
+    }
+
+    getParameterColor(parameter: WidgetParametersColumn): string {
+        // First check if color is stored in style
+        if (parameter.style) {
+            try {
+                const styleObj = JSON.parse(parameter.style);
+                if (styleObj.color) {
+                    return styleObj.color;
+                }
+            } catch {
+                // Continue to other methods if parsing fails
+            }
+        }
+
+        // If no color in style, try to get from advanced parameter colors
+        const advancedColor = this.findAdvancedColorForParameter(parameter);
+        if (advancedColor) {
+            return advancedColor;
+        }
+
+        // Fallback to phase colors if available
+        const phaseColor = this.getPhaseColorForParameter(parameter);
+        if (phaseColor) {
+            return phaseColor;
+        }
+
+        // Final fallback to default blue
+        return '#3498db';
+    }
+
+    private findAdvancedColorForParameter(parameter: WidgetParametersColumn): string | null {
+        // This would require access to advancedParameterColors from the parent widget
+        // For now, return null as we don't have access to that data in this component
+        return null;
+    }
+
+    private getPhaseColorForParameter(parameter: WidgetParametersColumn): string | null {
+        // This would require access to defaultColors from the parent widget
+        // For now, return null as we don't have access to that data in this component
+        return null;
     }
 
     isFormValid(): boolean {

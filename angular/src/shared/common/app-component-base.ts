@@ -7,7 +7,7 @@ import {
     NotifyService,
     SettingService,
 } from 'abp-ng2-module';
-import { Component, Injector, OnDestroy } from '@angular/core';
+import { Component, Injector, OnDestroy, OnInit } from '@angular/core';
 import { AppConsts } from '@shared/AppConsts';
 import { AppUrlService } from '@shared/common/nav/app-url.service';
 import { AppSessionService } from '@shared/common/session/app-session.service';
@@ -18,6 +18,10 @@ import '@shared/service-proxies/tenant-login-info-dto-extensions';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { NgxSpinnerTextService } from '@app/shared/ngx-spinner-text.service';
 import notify from 'devextreme/ui/notify';
+import { DefaultValuesService } from '@app/shared/services/default-values-service.service';
+import { UtcOffsetModel } from '@app/shared/models/utc-offset-model';
+import { DateTimeDisplayFormatModel } from '@app/shared/models/date-time-display-format-model';
+import { Observable, shareReplay, tap, catchError, of, map } from 'rxjs';
 
 interface AbpEventSubscription {
     eventName: string;
@@ -27,7 +31,7 @@ interface AbpEventSubscription {
 @Component({
     template: '',
 })
-export abstract class AppComponentBase implements OnDestroy {
+export abstract class AppComponentBase implements OnDestroy, OnInit {
     localizationSourceName = AppConsts.localization.defaultLocalizationSourceName;
     injector: Injector;
 
@@ -46,6 +50,18 @@ export abstract class AppComponentBase implements OnDestroy {
     eventSubscriptions: AbpEventSubscription[] = [];
 
     private ngxSpinnerTextService: NgxSpinnerTextService;
+    protected defaultValuesService: DefaultValuesService;
+
+    // Default values fields
+    defaultUtcOffset: UtcOffsetModel;
+    defaultDateTimeDisplayFormat: DateTimeDisplayFormatModel;
+    defaultFirstDayOfWeek: string;
+    defaultNumberOfDecimals: number;
+    defaultNumberOfDecimalsForPercentage: number;
+    advancedParameterColors: any[];
+    defaultColors: Record<string, string> = {};
+
+    private _defaultValuesLoading$: Observable<void> | null = null;
 
     constructor(injector: Injector) {
         this.injector = injector;
@@ -62,6 +78,45 @@ export abstract class AppComponentBase implements OnDestroy {
         this.primengTableHelper = new PrimengTableHelper();
         this.spinnerService = injector.get(NgxSpinnerService);
         this.ngxSpinnerTextService = injector.get(NgxSpinnerTextService);
+        this.defaultValuesService = injector.get(DefaultValuesService);
+
+        this.initializeDefaultValues();
+    }
+
+    private initializeDefaultValues(): void {
+        this.defaultUtcOffset = new UtcOffsetModel();
+        this.defaultDateTimeDisplayFormat = new DateTimeDisplayFormatModel();
+        this.defaultFirstDayOfWeek = 'Auto';
+        this.defaultNumberOfDecimals = 2;
+        this.defaultNumberOfDecimalsForPercentage = 2;
+        this.advancedParameterColors = [];
+        this.defaultColors = {};
+    }
+
+    protected ensureDefaultValuesLoaded(): Observable<void> {
+        if (this._defaultValuesLoading$) {
+            return this._defaultValuesLoading$;
+        }
+
+        this._defaultValuesLoading$ = this.defaultValuesService.getAllDefaultValues().pipe(
+            tap((values) => {
+                this.defaultUtcOffset = values.utcOffset;
+                this.defaultDateTimeDisplayFormat = values.dateTimeDisplayFormat;
+                this.defaultFirstDayOfWeek = values.firstDayOfWeek;
+                this.defaultNumberOfDecimals = values.numberOfDecimals;
+                this.defaultNumberOfDecimalsForPercentage = values.numberOfDecimalsForPercentage;
+                this.advancedParameterColors = values.advancedParameterColors;
+                this.defaultColors = values.defaultColors;
+            }),
+            map(() => void 0),
+            catchError((error) => {
+                console.error('Error loading default values:', error);
+                return of(void 0);
+            }),
+            shareReplay({ bufferSize: 1, refCount: false })
+        );
+
+        return this._defaultValuesLoading$;
     }
 
     get currentTheme(): UiCustomizationSettingsDto {
@@ -93,8 +148,106 @@ export abstract class AppComponentBase implements OnDestroy {
         return 'app-container container';
     }
 
+    ngOnInit(): void {
+        this.ensureDefaultValuesLoaded().subscribe();
+    }
+
     ngOnDestroy(): void {
         this.unSubscribeAllEvents();
+    }
+
+    /**
+     * Converts date format configuration to DevExtreme displayFormat string
+     * @returns DevExtreme date format string for displayFormat property
+     */
+    protected getDevExtremeDateFormat(): string {
+        const format = this.defaultDateTimeDisplayFormat;
+        
+        if (format.mode === 'manual' && format.manualDateFormat) {
+            // Convert lowercase to uppercase for month and year in DevExtreme format
+            // dd/mm/yyyy -> dd/MM/yyyy
+            // mm/dd/yyyy -> MM/dd/yyyy
+            // yyyy-mm-dd -> yyyy-MM-dd
+            let dxFormat = format.manualDateFormat
+                .replace(/yyyy/g, 'yyyy') // yyyy stays yyyy
+                .replace(/yy/g, 'yy') // yy stays yy
+                .replace(/mm/g, 'MM') // month should be uppercase
+                .replace(/dd/g, 'dd'); // day stays lowercase
+            
+            // Add time format based on manual setting
+            if (format.manualTimeFormat === '24 hours') {
+                dxFormat += ' HH:mm';
+            } else if (format.manualTimeFormat === '12 hours') {
+                dxFormat += ' hh:mm tt';
+            } else {
+                // Default to 24 hours if not specified
+                dxFormat += ' HH:mm';
+            }
+            
+            return dxFormat;
+        }
+        
+        // For 'auto' and 'custom' modes, use default format with 24-hour time
+        // The actual date formatting will follow the system/custom culture settings
+        return 'dd/MM/yyyy HH:mm';
+    }
+
+    /**
+     * Converts manual date format string (e.g., "dd/mm/yyyy") to Luxon format (e.g., "dd/MM/yyyy")
+     * @returns Luxon date format string for date only
+     */
+    protected getLuxonDateFormat(): string {
+        const format = this.defaultDateTimeDisplayFormat;
+        
+        if (format.mode === 'manual' && format.manualDateFormat) {
+            // Convert to Luxon format (similar to DevExtreme)
+            let luxonFormat = format.manualDateFormat
+                .replace(/yyyy/g, 'yyyy')
+                .replace(/yy/g, 'yy')
+                .replace(/mm/g, 'MM')
+                .replace(/dd/g, 'dd');
+            
+            return luxonFormat;
+        }
+        
+        // Default format for auto/custom mode
+        return 'dd/MM/yyyy';
+    }
+
+    /**
+     * Gets Luxon date-time format string (includes time)
+     * @returns Luxon date-time format string
+     */
+    protected getLuxonDateTimeFormat(): string {
+        const format = this.defaultDateTimeDisplayFormat;
+        let dateFormat = this.getLuxonDateFormat();
+        
+        if (format.mode === 'manual' && format.manualTimeFormat) {
+            if (format.manualTimeFormat === '24 hours') {
+                return dateFormat + ' HH:mm';
+            } else if (format.manualTimeFormat === '12 hours') {
+                return dateFormat + ' hh:mm a';
+            }
+        }
+        
+        // Default: include 24-hour time
+        return dateFormat + ' HH:mm';
+    }
+
+    /**
+     * Gets the first day of week as a number for calendar components
+     * @returns 0 for Sunday, 1 for Monday, or null for Auto
+     */
+    protected getFirstDayOfWeekNumber(): number | null {
+        if (this.defaultFirstDayOfWeek === 'Auto') {
+            return null; // Let the component use default
+        } else if (this.defaultFirstDayOfWeek === 'Sunday') {
+            return 0;
+        } else if (this.defaultFirstDayOfWeek === 'Monday') {
+            return 1;
+        }
+        
+        return null; // Default to Auto
     }
 
     flattenDeep(array) {

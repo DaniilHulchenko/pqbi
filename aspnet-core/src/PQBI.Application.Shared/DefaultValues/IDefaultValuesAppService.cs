@@ -17,9 +17,13 @@ namespace PQBI.DefaultValues
 
         Task<GetDefaultValueForEditOutput> GetDefaultValueByName(string input);
 
+        Task<List<GetDefaultValueForEditOutput>> GetDefaultValueByNames(string[] input);
+
         Task<GetDefaultValueForEditOutput> GetDefaultValueForEdit(EntityDto input);
 
         Task CreateOrEdit(CreateOrEditDefaultValueDto input);
+
+        Task CreateOrEditValues(CreateOrEditDefaultValueDto[] input);
 
         Task Delete(EntityDto input);
 

@@ -19,7 +19,7 @@ using TimeZoneConverter;
 
 namespace PQBI.Requests;
 
-public record GetBaseDataInfoInput(Guid ComponentId, long StartTime, long EndTime, IEnumerable<MeasurementParameterBase> Parameters, CalculationTypeEnum CalculationType = CalculationTypeEnum.FORCE_DB_DATA, int whishedPoints = 0, FiltersGroup filtersGroup = null);
+public record GetBaseDataInfoInput(Guid ComponentId, long StartTime, long EndTime, IEnumerable<MeasurementParameterBase> Parameters, CalculationTypeEnum CalculationType = CalculationTypeEnum.FORCE_DB_DATA, int whishedPoints = 0, FiltersGroup filtersGroup = null, bool? IsMondayStartOfWeek = false);
 
 public class PQSGetBaseDataRequest : PQSCommonRequest
 {    
@@ -46,7 +46,7 @@ public class PQSGetBaseDataRequest : PQSCommonRequest
                 input.whishedPoints,
                 timeZoneID: TimeZoneID,
                 classFilter: input.filtersGroup,
-                isMondayStartOfWeek: WeekConfiguration.IsMondayStartOfWeek);
+                isMondayStartOfWeek: input.IsMondayStartOfWeek ?? false);
             AddRecord(opRec);
 
             var configurations = new List<ConfigurationParameterBase>();
@@ -101,11 +101,10 @@ public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataReq
             if (item.ObjectID is not null)
                 getBaseConfigurationRecorsDictionary[item.ObjectID.Value] = item;
         }
-
-        // Resolve tz ONCE
-        TimeZoneInfo? tz = null;
-        if (convertToUserTime)
-            tz = TimeZoneInfo.FindSystemTimeZoneById(TZConvert.IanaToWindows(Timezone));
+       
+        //TimeZoneInfo? tz = null;
+        //if (convertToUserTime)
+        //    tz = TimeZoneInfo.FindSystemTimeZoneById(TZConvert.IanaToWindows(Timezone));
 
         var paramList = new List<PQBIAxisData>();
 
@@ -171,14 +170,14 @@ public class PQSGetBaseDataResponse : PQSOperationResponseBase<PQSGetBaseDataReq
                         if (!float.IsNaN(point.Value))
                             val = (double)point.Value;
 
-                        // IMPORTANT: always treat dt.DateTimeUTC as UTC
-                        var tsUtc = DateTime.SpecifyKind(dt.DateTimeUTC, DateTimeKind.Utc);
+                        //// IMPORTANT: always treat dt.DateTimeUTC as UTC
+                        //var tsUtc = DateTime.SpecifyKind(dt.DateTimeUTC, DateTimeKind.Utc);
 
-                        var tsOut = convertToUserTime
-                            ? TimeZoneInfo.ConvertTimeFromUtc(tsUtc, tz!)
-                            : tsUtc;
+                        //var tsOut = convertToUserTime
+                        //    ? TimeZoneInfo.ConvertTimeFromUtc(tsUtc, tz!)
+                        //    : tsUtc;
 
-                        dataTimeStemps.Add(new PQBIDataTimeStampDto(tsOut, val, point.Status));
+                        dataTimeStemps.Add(new PQBIDataTimeStampDto(dt.DateTimeUTC, val, point.Status));
                     }
 
                     paramList.Add(new PQBIAxisData(

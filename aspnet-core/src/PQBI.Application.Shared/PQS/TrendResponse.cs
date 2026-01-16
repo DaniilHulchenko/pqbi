@@ -1,4 +1,5 @@
-﻿using PQBI.PQS.CalcEngine;
+﻿using PQBI.CalculationEngine.Matrix;
+using PQBI.PQS.CalcEngine;
 using PQS.Data.Common.Values;
 using System.Collections.Generic;
 
@@ -28,6 +29,7 @@ public class CalculatedDataItem
     public List<double?> Data { get; set; } = new List<double?>();
 
     public double Nominal { get; set; }
+    public DataUnitType DataUnitType { get; set; }
 
     public List<DataValueStatus> Status { get; set; } = new List<DataValueStatus>();
 

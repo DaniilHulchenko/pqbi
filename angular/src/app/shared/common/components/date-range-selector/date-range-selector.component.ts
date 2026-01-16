@@ -1,4 +1,4 @@
-import { Component, forwardRef, OnInit } from '@angular/core';
+import { Component, forwardRef, OnInit, Injector, ChangeDetectorRef } from '@angular/core';
 import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -10,6 +10,7 @@ import { RefreshWidgetSelectionModel } from '../widget-refresh-selector/widget-r
 import { UtilsModule } from "../../../../../shared/utils/utils.module";
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateRangeType } from '@app/shared/enums/date-range-type';
+import { AppComponentBase } from '@shared/common/app-component-base';
 
 @Component({
     selector: 'dateRangeSelector',
@@ -33,7 +34,7 @@ import { DateRangeType } from '@app/shared/enums/date-range-type';
         },
     ],
 })
-export class DateRangeSelectorComponent implements ControlValueAccessor, OnInit {
+export class DateRangeSelectorComponent extends AppComponentBase implements ControlValueAccessor, OnInit {
     customUnitOptions: { value: RefreshSelectionCustomUnits; label: string }[];
     dateRangeOptions: DateRangeType[];
     DateRangeType = DateRangeType;
@@ -51,6 +52,9 @@ export class DateRangeSelectorComponent implements ControlValueAccessor, OnInit 
     fromDate;
     toDate;
 
+    displayFormat: string = 'dd/MM/yyyy HH:mm';
+    calendarOptions: { firstDayOfWeek?: number } = {};
+
     onChange: any = () => {};
     onTouched: any = () => {};
 
@@ -64,10 +68,13 @@ export class DateRangeSelectorComponent implements ControlValueAccessor, OnInit 
     );
 
     constructor(
+        injector: Injector,
         private localizePipe: LocalizePipe,
         private refreshWidgetUnitValuePipe: RefreshWidgetUnitValuePipe,
         private refreshWidgetCustomUnitValuePipe: RefreshWidgetCustomUnitValuePipe,
+        private cdr: ChangeDetectorRef,
     ) {
+        super(injector);
         this.selectedRefreshValue = new RefreshWidgetSelectionModel(
             refreshWidgetUnitValuePipe,
             refreshWidgetCustomUnitValuePipe,
@@ -122,8 +129,24 @@ export class DateRangeSelectorComponent implements ControlValueAccessor, OnInit 
     }
 
     ngOnInit(): void {
+        super.ngOnInit();
         this.fillDateRangeOptions();
         this.fillCustomUnitOptions();
+        
+        this.ensureDefaultValuesLoaded().subscribe(() => {
+            this.displayFormat = this.getDevExtremeDateFormat();
+            
+            // Configure calendar first day of week
+            const firstDayOfWeek = this.getFirstDayOfWeekNumber();
+            if (firstDayOfWeek !== null) {
+                this.calendarOptions = { firstDayOfWeek: firstDayOfWeek };
+            } else {
+                this.calendarOptions = {};
+            }
+            
+            // Trigger change detection to update the view
+            this.cdr.markForCheck();
+        });
     }
 
     invokeRefreshChange() {

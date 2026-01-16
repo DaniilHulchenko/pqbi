@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
 import { AppLocalizationService } from '@app/shared/common/localization/app-localization.service';
 import { DateTime } from 'luxon';
+import { UtcOffsetModel } from '@app/shared/models/utc-offset-model';
 
 @Injectable()
 export class DateTimeService {
-    constructor(private _appLocalizationService: AppLocalizationService) { }
+    constructor(
+        private _appLocalizationService: AppLocalizationService
+    ) { }
 
     createDateRangePickerOptions(): any {
         let options = {
@@ -275,5 +278,85 @@ export class DateTimeService {
         let jsDate = date.toJSDate();
         let utcDate = this.changeTimeZone(jsDate, ianaTimezoneId);
         return DateTime.fromJSDate(utcDate);
+    }
+
+    /**
+     * Determines if Monday is the first day of week based on settings
+     * @param firstDayOfWeekSetting The first day of week setting ('Auto', 'Sunday', or 'Monday')
+     * @returns true if Monday is first day, false if Sunday, or calculated from locale if Auto
+     */
+    IsMondayFirstDayOfWeek(firstDayOfWeekSetting: string): boolean {
+        if (firstDayOfWeekSetting === 'Monday') {
+            return true;
+        } else if (firstDayOfWeekSetting === 'Sunday') {
+            return false;
+        } else {
+            // Auto mode: determine from locale
+            // Luxon's startOf('week') respects locale-specific week start
+            try {
+                const locale = DateTime.now().locale || 'en-US';
+                // Create a test date and check what day the week starts on
+                // In Luxon, weekday 1 = Monday, 7 = Sunday
+                const testDate = DateTime.now().setLocale(locale);
+                const weekStart = testDate.startOf('week');
+                // If week starts on Monday (weekday === 1), return true
+                return weekStart.weekday === 1;
+            } catch (e) {
+                // Fallback: most locales use Monday as first day
+                return true;
+            }
+        }
+    }
+
+    /**
+     * Gets UTC offset in minutes based on settings
+     * @param utcOffsetModel The UTC offset model containing mode and settings
+     * @returns UTC offset in minutes (can be negative)
+     */
+    GetUtcOffsetMinutes(utcOffsetModel: UtcOffsetModel): number {
+        if (!utcOffsetModel) {
+            // Fallback: use system timezone
+            return this.getSystemUtcOffsetMinutes();
+        }
+
+        if (utcOffsetModel.mode === 'manual') {
+            // Manual mode: convert hours to minutes
+            return utcOffsetModel.manualUtcOffset * 60;
+        } else if (utcOffsetModel.mode === 'custom' && utcOffsetModel.customTimeZone) {
+            // Custom timezone mode: get offset for the specified timezone
+            return this.getTimezoneOffsetMinutes(utcOffsetModel.customTimeZone);
+        } else {
+            // Auto/timezone mode: use system timezone
+            return this.getSystemUtcOffsetMinutes();
+        }
+    }
+
+    /**
+     * Gets UTC offset in minutes for the system timezone
+     * @returns UTC offset in minutes
+     */
+    private getSystemUtcOffsetMinutes(): number {
+        const timeZoneName = this.getUserTimeZoneName();
+        if (timeZoneName && timeZoneName !== 'UTC') {
+            return this.getTimezoneOffsetMinutes(timeZoneName);
+        }
+        // Fallback: use browser's timezone offset
+        return -new Date().getTimezoneOffset();
+    }
+
+    /**
+     * Gets UTC offset in minutes for a specific IANA timezone
+     * @param ianaTimezoneId IANA timezone identifier (e.g., 'America/New_York')
+     * @returns UTC offset in minutes
+     */
+    private getTimezoneOffsetMinutes(ianaTimezoneId: string): number {
+        try {
+            const now = DateTime.now().setZone(ianaTimezoneId);
+            const offsetInMinutes = now.offset;
+            return offsetInMinutes;
+        } catch (e) {
+            // If timezone is invalid, fallback to system timezone
+            return this.getSystemUtcOffsetMinutes();
+        }
     }
 }

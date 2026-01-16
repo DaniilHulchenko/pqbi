@@ -1,4 +1,5 @@
 ﻿using PQBI.Configuration;
+using PQBI.Infrastructure;
 using PQS.Data.Measurements;
 using PQS.Data.Measurements.Enums;
 
@@ -10,172 +11,187 @@ namespace PQBI.CalculationEngine
         /// <summary>
         /// Aligns a DateTime down to the nearest interval boundary.
         /// </summary>
-        public static DateTime AlignFloor(DateTime dt, IntervalSynchronized interval, DayOfWeek? weekStart = null)
+        public static DateTimeOffset AlignFloorUtc(
+             DateTimeOffset utc,
+             IntervalSynchronized interval,
+             double multiplier,
+             TimeZoneInfo userTz,
+             bool isMondayStartOfWeek)
         {
-            // Use configured week start if not explicitly provided
-            var effectiveWeekStart = weekStart ?? WeekConfiguration.StartOfWeek;
+            // Calendar-in-user-tz intervals: floor to calendar boundary (multiplier does not redefine "calendar boundary")
+            if (interval is IntervalSynchronized.IS1HOUR or IntervalSynchronized.IS1DAY or IntervalSynchronized.IS1WEEK
+                or IntervalSynchronized.IS1MONTH or IntervalSynchronized.IS1YEAR)
+            {
+                var local = TimeZoneConversion.UtcToUserLocal(utc, userTz).DateTime;
 
-            // Extract the interval value from the enum (e.g., IS1MIN -> 60 seconds)
-            var syncInterval = new SyncInterval(interval);
-            long intervalInSeconds = (long)syncInterval.TimeIntervalInSec;
+                var localFloor = interval switch
+                {
+                    IntervalSynchronized.IS1HOUR => new DateTime(local.Year, local.Month, local.Day, local.Hour, 0, 0),
+                    IntervalSynchronized.IS1DAY => local.Date,
+                    IntervalSynchronized.IS1WEEK => FloorToWeek(local, isMondayStartOfWeek),
+                    IntervalSynchronized.IS1MONTH => new DateTime(local.Year, local.Month, 1),
+                    IntervalSynchronized.IS1YEAR => new DateTime(local.Year, 1, 1),
+                    _ => local
+                };
 
-            // Handle calendar-based intervals (Week, Month, Year)
-            if (interval == IntervalSynchronized.IS1WEEK)
-            {
-                return FloorToWeek(dt, effectiveWeekStart);
+                return TimeZoneConversion.UserLocalToUtc(localFloor, userTz);
             }
-            else if (interval == IntervalSynchronized.IS1MONTH)
-            {
-                return new DateTime(dt.Year, dt.Month, 1, 0, 0, 0, dt.Kind);
-            }
-            else if (interval == IntervalSynchronized.IS1YEAR)
-            {
-                return new DateTime(dt.Year, 1, 1, 0, 0, 0, dt.Kind);
-            }
-            // Handle fixed-duration intervals using tick arithmetic
-            else
-            {
-                long ticks = dt.Ticks;
-                long intervalTicks = TimeSpan.FromSeconds(intervalInSeconds).Ticks;
-                long alignedTicks = (ticks / intervalTicks) * intervalTicks;
-                return new DateTime(alignedTicks, dt.Kind);
-            }
+
+            // Fixed-duration UTC intervals: multiplier changes the step size
+            var baseSeconds = (decimal)new SyncInterval(interval).TimeIntervalInSec;
+            var stepSeconds = baseSeconds * (decimal)multiplier;
+            var stepTicks = (long)Math.Round(stepSeconds * TimeSpan.TicksPerSecond, MidpointRounding.AwayFromZero);
+
+            var ticks = utc.UtcTicks;
+            var alignedTicks = (ticks / stepTicks) * stepTicks;
+            return new DateTimeOffset(alignedTicks, TimeSpan.Zero);
         }
+
+        public static DateTimeOffset AlignFloorUtc(
+           DateTimeOffset utc,
+           IntervalSynchronized interval,
+           TimeZoneInfo userTz,
+           bool isMondayStartOfWeek)
+           => AlignFloorUtc(utc, interval, 1.0, userTz, isMondayStartOfWeek);
 
         /// <summary>
         /// Aligns a DateTime up to the nearest interval boundary.
         /// </summary>
-        public static DateTime AlignCeil(DateTime dt, IntervalSynchronized interval, DayOfWeek? weekStart = null)
+        public static DateTimeOffset AlignCeilUtc(
+             DateTimeOffset utc,
+             IntervalSynchronized interval,
+             double multiplier,
+             TimeZoneInfo userTz,
+             bool isMondayStartOfWeek)
         {
-            var floor = AlignFloor(dt, interval, weekStart);
+            var floor = AlignFloorUtc(utc, interval, userTz, isMondayStartOfWeek);
+            if (floor == utc)
+                return utc;
 
-            // If already aligned, return as-is
-            if (floor == dt)
-                return dt;
-
-            // Otherwise, add one interval
-            return AddInterval(floor, interval);
+            return AddIntervalUtc(floor, interval, multiplier, userTz);
         }
 
         /// <summary>
-        /// Adds interval units to the given DateTime.
+        /// If you want "advance from start boundary until you reach/exceed rangeEndUtc",
+        /// keep this (but rename it because it's not a ceil of a single instant).
         /// </summary>
-        /// <param name="dt">The DateTime to add to</param>
-        /// <param name="interval">The base interval type</param>
-        /// <param name="multiplier">The multiplier for the interval (e.g., 3.4 for 3.4x the interval)</param>
-        /// <returns>The new DateTime</returns>
-        public static DateTime AddInterval(DateTime dt, IntervalSynchronized interval, double multiplier = 1.0)
-        {
-            var syncInterval = new SyncInterval(interval);
-            double intervalInSeconds = syncInterval.TimeIntervalInSec * multiplier;
-
-            // Handle calendar-based intervals
-            if (interval == IntervalSynchronized.IS1WEEK)
-            {
-                // For weeks, multiply by 7 days
-                int wholeDays = (int)Math.Floor(multiplier * 7);
-                double remainingFraction = (multiplier * 7) - wholeDays;
-
-                var result = dt.AddDays(wholeDays);
-
-                // If there's a fractional part, add remaining hours
-                if (remainingFraction > 0)
-                {
-                    double remainingSeconds = remainingFraction * 24 * 3600;
-                    result = result.AddSeconds(remainingSeconds);
-                }
-
-                return result;
-            }
-            else if (interval == IntervalSynchronized.IS1MONTH)
-            {
-                // For months, we can only add whole months, then add remaining seconds
-                int wholeMonths = (int)Math.Floor(multiplier);
-                double remainingFraction = multiplier - wholeMonths;
-
-                var result = dt.AddMonths(wholeMonths);
-
-                // If there's a fractional part, estimate it as 30 days per month
-                if (remainingFraction > 0)
-                {
-                    double remainingSeconds = remainingFraction * 30 * 24 * 3600;
-                    result = result.AddSeconds(remainingSeconds);
-                }
-
-                return result;
-            }
-            else if (interval == IntervalSynchronized.IS1YEAR)
-            {
-                // For years, we can only add whole years, then add remaining seconds
-                int wholeYears = (int)Math.Floor(multiplier);
-                double remainingFraction = multiplier - wholeYears;
-
-                var result = dt.AddYears(wholeYears);
-
-                // If there's a fractional part, estimate it as 365 days per year
-                if (remainingFraction > 0)
-                {
-                    double remainingSeconds = remainingFraction * 365 * 24 * 3600;
-                    result = result.AddSeconds(remainingSeconds);
-                }
-
-                return result;
-            }
-            else
-            {
-                // For all other intervals (seconds, minutes, hours, days)
-                return dt.AddSeconds(intervalInSeconds);
-            }
-        }
-
-        /// <summary>
-        /// Generates time buckets for the given interval with optional multiplier.
-        /// </summary>
-        /// <param name="rangeStartUtc">Start of the time range</param>
-        /// <param name="rangeEndUtc">End of the time range</param>
-        /// <param name="interval">The base interval type</param>
-        /// <param name="multiplier">Multiplier for the interval (e.g., 3.4 for 3.4 seconds when interval is IS1SEC)</param>
-        /// <param name="weekStart">Optional week start day (defaults to configured value)</param>
-        /// <returns>Enumerable of (Start, End) tuples representing each bucket</returns>
-        public static IEnumerable<(DateTime Start, DateTime End)> GenerateBuckets(
-            DateTime rangeStartUtc,
-            DateTime rangeEndUtc,
+        public static DateTimeOffset AdvanceUntilAtOrAfterUtc(
+            DateTimeOffset rangeStartUtc,
+            DateTimeOffset rangeEndUtc,
             IntervalSynchronized interval,
-            double multiplier = 1.0,
-            DayOfWeek? weekStart = null)
+            double multiplier,
+            TimeZoneInfo userTz,
+            bool isMondayStartOfWeek)
         {
-            var cursor = AlignFloor(rangeStartUtc, interval, weekStart);
+            var cursor = AlignFloorUtc(rangeStartUtc, interval, userTz, isMondayStartOfWeek);
+
+            while (cursor < rangeEndUtc)
+                cursor = AddIntervalUtc(cursor, interval, multiplier, userTz);
+
+            return cursor;
+        }
+
+
+        public static IEnumerable<(DateTimeOffset StartUtc, DateTimeOffset EndUtc)> GenerateBucketsUtc(
+                     DateTimeOffset rangeStartUtc,
+                     DateTimeOffset rangeEndUtc,
+                     IntervalSynchronized interval,
+                     double multiplier,
+                     TimeZoneInfo userTz,
+                     bool isMondayStartOfWeek)
+        {
+            var cursor = AlignFloorUtc(rangeStartUtc, interval, userTz, isMondayStartOfWeek);
+
             while (cursor < rangeEndUtc)
             {
-                var next = AddInterval(cursor, interval, multiplier);
+                var next = AddIntervalUtc(cursor, interval, multiplier, userTz);
                 yield return (cursor, next);
                 cursor = next;
             }
         }
 
-        /// <summary>
-        /// Generates time buckets for the given interval in seconds.
-        /// This is a convenience method when you want to specify the bucket size directly in seconds.
-        /// </summary>
-        /// <param name="rangeStartUtc">Start of the time range</param>
-        /// <param name="rangeEndUtc">End of the time range</param>
-        /// <param name="bucketSizeInSeconds">The size of each bucket in seconds (e.g., 3.4)</param>
-        /// <returns>Enumerable of (Start, End) tuples representing each bucket</returns>
-        public static IEnumerable<(DateTime Start, DateTime End)> GenerateBucketsInSeconds(
-            DateTime rangeStartUtc,
-            DateTime rangeEndUtc,
-            double bucketSizeInSeconds)
+        private static DateTimeOffset AddIntervalUtc(
+                   DateTimeOffset cursorUtc,
+                   IntervalSynchronized interval,
+                   double multiplier,
+                   TimeZoneInfo userTz)
         {
-            // Use IS1SEC as base and apply multiplier
-            return GenerateBuckets(rangeStartUtc, rangeEndUtc, IntervalSynchronized.IS1SEC, bucketSizeInSeconds);
+            // Treat these as "local wall-time durations" so fractional multipliers work:
+            if (interval is IntervalSynchronized.IS1HOUR or IntervalSynchronized.IS1DAY or IntervalSynchronized.IS1WEEK)
+            {
+                var local = TimeZoneConversion.UtcToUserLocal(cursorUtc, userTz).DateTime; // wall time (Kind usually Unspecified)
+
+                // Use decimal to avoid double drift (3.4 cannot be represented exactly as binary double)
+                decimal baseSeconds = (decimal)new SyncInterval(interval).TimeIntervalInSec; // 3600 / 86400 / 604800
+                decimal seconds = baseSeconds * (decimal)multiplier;
+
+                // Add duration in local wall-time
+                var nextLocal = local.AddTicks((long)Math.Round(seconds * TimeSpan.TicksPerSecond, MidpointRounding.AwayFromZero));
+
+                // Convert local wall time -> UTC safely (must handle invalid/ambiguous DST times)
+                return TimeZoneConversion.UserLocalToUtc(nextLocal, userTz);
+            }
+
+            // Months/years: fractional is ambiguous (what is 0.4 month?) — pick a policy.
+            if (interval is IntervalSynchronized.IS1MONTH or IntervalSynchronized.IS1YEAR)
+            {
+                var local = TimeZoneConversion.UtcToUserLocal(cursorUtc, userTz).DateTime;
+                if (Math.Abs(multiplier - Math.Round(multiplier)) <= 1e-9)
+                {
+                    int n = (int)Math.Round(multiplier);                  
+                    var nextLocal = interval == IntervalSynchronized.IS1MONTH
+                        ? local.AddMonths(n)
+                        : local.AddYears(n);
+                    return TimeZoneConversion.UserLocalToUtc(nextLocal, userTz);
+                }
+                else
+                {                                      
+                    decimal baseDays = interval == IntervalSynchronized.IS1MONTH ? 30m : 365m; // average days
+                    decimal days = baseDays * (decimal)multiplier;
+                    var nextLocal = local.AddTicks((long)Math.Round(days * TimeSpan.TicksPerDay, MidpointRounding.AwayFromZero));
+                    return TimeZoneConversion.UserLocalToUtc(nextLocal, userTz);
+                }
+            }
+
+            // Everything else: fixed-duration UTC (sub-hour/minute/etc) with multiplier
+            {
+                decimal baseSeconds = (decimal)new SyncInterval(interval).TimeIntervalInSec;
+                decimal seconds = baseSeconds * (decimal)multiplier;
+                return cursorUtc.AddTicks((long)Math.Round(seconds * TimeSpan.TicksPerSecond, MidpointRounding.AwayFromZero));
+            }
         }
 
-        /// <summary>
-        /// Helper method to floor a DateTime to the start of the week.
-        /// </summary>
-        private static DateTime FloorToWeek(DateTime dt, DayOfWeek weekStart)
+        //private static DateTimeOffset AddIntervalUtc(DateTimeOffset cursorUtc, IntervalSynchronized interval, TimeZoneInfo userTz, DayOfWeek? weekStart)
+        //{
+        //    // Calendar in TZ
+        //    if (interval is IntervalSynchronized.IS1DAY or IntervalSynchronized.IS1WEEK
+        //        or IntervalSynchronized.IS1MONTH or IntervalSynchronized.IS1YEAR)
+        //    {
+        //        var local = TimeZoneInfo.ConvertTime(cursorUtc, userTz).DateTime;
+
+        //        var nextLocal = interval switch
+        //        {
+        //            IntervalSynchronized.IS1HOUR => new DateTime(local.Year, local.Month, local.Day, local.Hour, 0, 0),
+        //            IntervalSynchronized.IS1DAY => local.AddDays(1),
+        //            IntervalSynchronized.IS1WEEK => local.AddDays(7),
+        //            IntervalSynchronized.IS1MONTH => local.AddMonths(1),
+        //            IntervalSynchronized.IS1YEAR => local.AddYears(1),
+        //            _ => local
+        //        };
+
+        //        return TimeZoneConversion.UserLocalToUtc(nextLocal, userTz);
+        //    }
+
+        //    // Fixed-duration UTC
+        //    var seconds = new SyncInterval(interval).TimeIntervalInSec;
+        //    return cursorUtc.AddSeconds(seconds);
+        //}
+
+        private static DateTime FloorToWeek(DateTime dt, bool isMondayStartOfWeek)
         {
-            int delta = (7 + (dt.DayOfWeek - weekStart)) % 7;
+            DayOfWeek ws = isMondayStartOfWeek ? DayOfWeek.Monday : DayOfWeek.Sunday;
+          
+            int delta = (7 + (dt.DayOfWeek - ws)) % 7;
             return dt.Date.AddDays(-delta);
         }
     }

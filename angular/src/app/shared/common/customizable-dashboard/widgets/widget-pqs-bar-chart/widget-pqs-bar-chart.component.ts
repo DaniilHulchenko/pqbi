@@ -50,6 +50,7 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     dataSource: any;
     dataUnitType: DataUnitType;
     refreshRate: number | null = null;
+    labelFormat: { type: string; precision: number } = { type: 'fixedPoint', precision: 2 };
 
     private subs: Subscription[] = [];
     private stopStream$ = new Subject();
@@ -69,12 +70,23 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
         this._defaultWidgetName = this.l('WidgetPQSBarChart');
     }
 
-    customizeTooltip = ({ valueText, seriesName }) => ({
-        text: seriesName ? `${seriesName}: ${valueText}` : `${valueText}`,
-    });
+    customizeTooltip = ({ valueText, seriesName, value }) => {
+        // Format value with default decimal points
+        const isPercentage = this.dataUnitType && (this.dataUnitType.id === 18 || this.dataUnitType.id === 19);
+        const decimalPoints = isPercentage 
+            ? (this.defaultNumberOfDecimalsForPercentage ?? 2)
+            : (this.defaultNumberOfDecimals ?? 2);
+        const formattedValue = typeof value === 'number' ? value.toFixed(decimalPoints) : valueText;
+        return {
+            text: seriesName ? `${seriesName}: ${formattedValue}` : `${formattedValue}`,
+        };
+    };
 
     ngOnInit(): void {
         super.ngOnInit();
+        this.ensureDefaultValuesLoaded().subscribe(() => {
+            this.updateLabelFormat();
+        });
         if (this.isNew) {
             this.runDelayed(() => this.onEditRequested(null));
         }
@@ -93,12 +105,27 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     }
 
     customizeLabelText = (e: any) => {
+        // Format value with default decimal points
+        const isPercentage = this.dataUnitType && (this.dataUnitType.id === 18 || this.dataUnitType.id === 19);
+        const decimalPoints = isPercentage 
+            ? (this.defaultNumberOfDecimalsForPercentage ?? 2)
+            : (this.defaultNumberOfDecimals ?? 2);
+        const formattedValue = typeof e.value === 'number' ? e.value.toFixed(decimalPoints) : e.valueText;
+        
         if (this.dataUnitType && this.dataUnitType.id) {
             const token = this.getToken(this.dataUnitType);
-            return `${e.valueText} ${token}`;
+            return `${formattedValue} ${token}`;
         }
-        return e.valueText;
+        return formattedValue;
     };
+    
+    private updateLabelFormat(): void {
+        const isPercentage = this.dataUnitType && (this.dataUnitType.id === 18 || this.dataUnitType.id === 19);
+        const decimalPoints = isPercentage 
+            ? (this.defaultNumberOfDecimalsForPercentage ?? 2)
+            : (this.defaultNumberOfDecimals ?? 2);
+        this.labelFormat = { type: 'fixedPoint', precision: decimalPoints };
+    }
 
     getToken(dataUnitType: DataUnitType): string {
         return dataUnitType?.id !== 41 && dataUnitType?.id !== 255 && dataUnitType?.tokenCode
@@ -132,6 +159,8 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
             this.barChartRequest = new BarChartRequest({
                 seriesBy: seriesBy,
                 category: category,
+                utcOffsetMinutes: this._dateTimeService.GetUtcOffsetMinutes(this.defaultUtcOffset),
+                isMondayStartOfWeek: this._dateTimeService.IsMondayFirstDayOfWeek(this.defaultFirstDayOfWeek),
                 barPrmList: config.parameters.map((p) => {
                     let baseData: string = null;
                     let customData: CustomWidgetTableData = null;
@@ -199,6 +228,7 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
                             next: (response: BarChartResponse) => {
                                 const groups = response?.groups || [];
                                 this.dataUnitType = response?.dataUnitType;
+                                this.updateLabelFormat();
                                 if (this.barChartConfiguration?.type === BarChartType.Plain) {
                                     this.dataSource = this.getPlainData(groups);
                                 } else {
@@ -222,6 +252,7 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
                     next: (response: BarChartResponse) => {
                         const groups = response?.groups || [];
                         this.dataUnitType = response?.dataUnitType;
+                        this.updateLabelFormat();
                         if (this.barChartConfiguration?.type === BarChartType.Plain) {
                             this.dataSource = this.getPlainData(groups);
                         } else {

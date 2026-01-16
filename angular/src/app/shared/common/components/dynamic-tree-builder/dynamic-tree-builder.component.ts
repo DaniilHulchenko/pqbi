@@ -9,6 +9,7 @@ import { TreeBuilderService } from '@app/shared/services/tree-builder.service';
 import { DxCheckBoxModule, DxButtonModule } from 'devextreme-angular';
 import { CommonModule } from '@angular/common';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
+import { DefaultValueKeys } from '@shared/DefaultValueKeys';
 
 @Component({
     selector: 'app-dynamic-tree-builder',
@@ -43,7 +44,6 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
     tree: TreeNode<any>[] = [];
 
     private defaultState: PickListState;
-    private readonly _defaultStateSettingName = 'UI.Tags.PickList.State';
     private tagsTree: TagDtoV2[];
 
     private emptyTag: TagDtoV2;
@@ -87,9 +87,9 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
                 }
 
                 if (this.pickListState.source?.length === 0 && this.pickListState.target?.length === 0) {
-                    this.defaultValuesService.getValue(this._defaultStateSettingName).subscribe((result) => {
+                    this.defaultValuesService.getDefaultTagsPickListStateParsed<PickListState>().subscribe((result) => {
                         if (result) {
-                            this.defaultState = JSON.parse(result);
+                            this.defaultState = result;
                             this.prefillPickList();
                             this.checkIfDefault(); // Check if the state is equal to the default state
                         }
@@ -115,7 +115,7 @@ export class DynamicTreeBuilderComponent implements OnInit, ControlValueAccessor
                 .createOrEdit(
                     new CreateOrEditDefaultValueDto({
                         id: null,
-                        name: this._defaultStateSettingName,
+                        name: DefaultValueKeys.defaultTagsPickListStateSettingName,
                         value: JSON.stringify(this.pickListState),
                     }),
                 )

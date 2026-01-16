@@ -74,7 +74,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
     selectedFlagEvents: EventClass[] = [];
     colorScheme = ColorSchema.None;
     outOfLimitColor = '';
-    decimalPoints = 2;
+    decimalPoints = null;
     titleFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
         size: null,
@@ -324,7 +324,7 @@ export class GaugeWidgetParameterAdvancedSettingsComponent implements OnInit, On
         this.excludeFlagged = ExcludeFlagged.None;
         this.selectedFlagEvents = [];
         this.parameterName = '';
-        this.decimalPoints = 2;
+        this.decimalPoints = null;
         this.link.page = null;
         this.titleFont = this.normalizeFontSettings(null);
         this.valueFont = this.normalizeFontSettings(null);

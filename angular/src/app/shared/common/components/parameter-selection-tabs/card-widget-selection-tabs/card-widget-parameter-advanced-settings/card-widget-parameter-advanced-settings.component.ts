@@ -94,7 +94,7 @@ export class CardWidgetParameterAdvancedSettingsComponent
     useNoDataColor = false;
     showOkColor?: boolean;
     showNoDataColor?: boolean;
-    decimalPoints = 2;
+    decimalPoints = null;
     titleFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
         size: null,
@@ -211,6 +211,7 @@ constructor(
     }
 
     ngOnInit() {
+        super.ngOnInit();
         this.uploadFailedMessage = this.l('CardIconUploadFailed');
         this.normalizationOptions = this.getNormalizationOptions();
         this._eventService.pqsEvents().subscribe((evts) => {
@@ -358,7 +359,7 @@ constructor(
         this.useNoDataColor = false;
         this.showOkColor = false;
         this.showNoDataColor = false;
-        this.decimalPoints = 2;
+        this.decimalPoints = null;
         this.link.page = null;
         this.icon = this.normalizeIconSettings(null);
         this.setAsDefaultIcon = false;

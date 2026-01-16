@@ -100,8 +100,13 @@
         { "Tonga Standard Time", 300 },
        };
 
-    public static bool TryGetNumericId(string timeZoneId, out int numericId)
+    public static bool TryGetNumericId(string? timeZoneId, out int numericId)
     {
+        if (timeZoneId is null)
+        {
+            numericId = 85;
+            return true;
+        }
         // Normalize to Windows ID (in case we get IANA)
         var windowsId = TimeZoneConverter.TZConvert.TryIanaToWindows(timeZoneId, out var w)
             ? w

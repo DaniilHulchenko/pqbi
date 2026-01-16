@@ -77,6 +77,12 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
     calculatedColorSchema: string | null;
 
+    // Color preferences
+    headerBackgroundColor = '#ffffff';
+    widgetBackgroundColor = '#ffffff';
+    headerTitleColor = '#000000';
+    headerTitleBadgeColor = 'rgba(0, 0, 0, 0.08)';
+
     private stopStream$ = new Subject();
     private subs: Subscription[] = [];
 
@@ -133,12 +139,30 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
     ngOnInit(): void {
         super.ngOnInit();
+        this.loadColorPreferences();
         this.widgetDisplayName = this.widgetConfigurationInDB?.name ?? this._defaultWidgetName;
         this.subs.push(
             this.dashboardPagesService.getPages().subscribe(() => this.updateNavigationAvailability()),
         );
-        if (this.isNew) {
-            this.runDelayed(() => this.onEditRequested(null));
+    }
+
+    ngAfterViewInit() {
+        this.runDelayed(() => {
+            if (this.isNew) {
+                this.onEditRequested(null);
+            }
+            // Remove white padding from gridster-item parent
+            this.removeGridsterPadding();
+        });
+    }
+
+    private removeGridsterPadding(): void {
+        const hostElement = this.elementRef.nativeElement;
+        const gridsterItem = hostElement.closest('gridster-item');
+
+        if (gridsterItem) {
+            (gridsterItem as HTMLElement).style.background = 'transparent';
+            (gridsterItem as HTMLElement).style.padding = '0';
         }
     }
 
@@ -528,14 +552,25 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         return [DateTime.fromJSDate(startDate), DateTime.fromJSDate(endDate)];
     }
 
-    private roundValue(value: number): number {
-        let roundTo = 2;
+    private roundValue(value: number, dataUnitType?: DataUnitType): number {
+        // Check if it's percentage (id 18 or 19)
+        const isPercentage = dataUnitType && (dataUnitType.id === 18 || dataUnitType.id === 19);
+        
+        let roundTo: number;
+        
+        // First, check if parameter has custom decimal points setting
         if (
             this.parameter?.cardWidgetAdvancedSettings?.decimalPoints !== null &&
             this.parameter?.cardWidgetAdvancedSettings?.decimalPoints !== undefined
         ) {
             roundTo = this.parameter.cardWidgetAdvancedSettings.decimalPoints;
+        } else {
+            // Use default values based on unit type
+            roundTo = isPercentage 
+                ? (this.defaultNumberOfDecimalsForPercentage ?? 2)
+                : (this.defaultNumberOfDecimals ?? 2);
         }
+        
         return Number.parseFloat(value.toFixed(roundTo));
     }
 
@@ -544,7 +579,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
 
         if (value === 0 || dataUnitType.id === 18 || dataUnitType.id === 19) {
             // 18 19 is Percentage
-            this.value = this.roundValue(value);
+            this.value = this.roundValue(value, dataUnitType);
             this.unit = `${token}`;
             return;
         }
@@ -580,7 +615,7 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
         }
     }
         
-        this.value = this.roundValue(value);
+        this.value = this.roundValue(value, dataUnitType);
         this.unit = `${suffix}${token}`;
     }
 
@@ -614,7 +649,98 @@ export class WidgetPqsCardComponent extends WidgetComponentBaseComponent impleme
     private updateNavigationAvailability(): void {
         this.canNavigateToPage = !!this.dashboardPagesService.findPage(this.navigationPageId);
     }
-    
+
+    openColorPicker(picker: HTMLInputElement) {
+        picker?.click();
+    }
+
+    onTitleClick(event: MouseEvent, picker: HTMLInputElement) {
+        event.stopPropagation();
+        this.openColorPicker(picker);
+    }
+
+    onHeaderColorChange(event: Event) {
+        const color = (event.target as HTMLInputElement).value;
+        this.applyHeaderColor(color);
+    }
+
+    onBackgroundColorChange(event: Event) {
+        const color = (event.target as HTMLInputElement).value;
+        this.widgetBackgroundColor = color;
+        this.persistColorPreference('widgetBackgroundColor', color);
+    }
+
+    private loadColorPreferences() {
+        const header = abp.utils.getCookieValue(this.getColorCookieKey('headerBackgroundColor'));
+        const widget = abp.utils.getCookieValue(this.getColorCookieKey('widgetBackgroundColor'));
+
+        if (header) {
+            this.headerBackgroundColor = header;
+        }
+
+        if (widget) {
+            this.widgetBackgroundColor = widget;
+        } else {
+            this.widgetBackgroundColor = this.headerBackgroundColor;
+            this.persistColorPreference('widgetBackgroundColor', this.widgetBackgroundColor);
+        }
+
+        this.updateHeaderTitleStyling();
+    }
+
+    private getColorCookieKey(suffix: string): string {
+        const guid = this.elementRef.nativeElement.parentElement?.dataset?.guid ?? 'card';
+        return `card_${guid}_${suffix}`;
+    }
+
+    private persistColorPreference(suffix: string, value: string) {
+        abp.utils.setCookieValue(this.getColorCookieKey(suffix), value, this.getCookieExpiration());
+    }
+
+    private getCookieExpiration(): Date {
+        const expireDate = new Date();
+        expireDate.setFullYear(expireDate.getFullYear() + 1);
+        return expireDate;
+    }
+
+    private applyHeaderColor(color: string) {
+        this.headerBackgroundColor = color;
+        this.persistColorPreference('headerBackgroundColor', color);
+        this.updateHeaderTitleStyling();
+    }
+
+    private updateHeaderTitleStyling() {
+        this.headerTitleColor = this.getContrastingTextColor(this.headerBackgroundColor);
+        this.headerTitleBadgeColor = this.getBadgeColor(this.headerBackgroundColor);
+    }
+
+    private getContrastingTextColor(color: string): string {
+        const { r, g, b } = this.hexToRgb(color);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.6 ? '#1b1b1b' : '#ffffff';
+    }
+
+    private getBadgeColor(color: string): string {
+        const { r, g, b } = this.hexToRgb(color);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.6 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
+    }
+
+    private hexToRgb(hex: string): { r: number; g: number; b: number } {
+        if (!hex) {
+            return { r: 255, g: 255, b: 255 };
+        }
+
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+            ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16),
+            }
+            : { r: 255, g: 255, b: 255 };
+    }
+
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();

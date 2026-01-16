@@ -120,7 +120,9 @@ export class CreateOrEditCardConfigurationComponent
         return this.parameters.length >= 1 && !this.isEditMode;
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        super.ngOnInit();
+    }
 
     onDateRangeChanged(dateRange: DateRangeState) {
         switch (dateRange.rangeOption) {

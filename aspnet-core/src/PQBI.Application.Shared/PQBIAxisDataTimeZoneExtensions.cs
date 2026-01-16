@@ -1,4 +1,5 @@
-﻿using PQBI.Tenants.Dashboard.Dto;
+﻿using PQBI.Infrastructure;
+using PQBI.Tenants.Dashboard.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace PQBI.CalculationEngine
                 var s = src[i];
 
                 var tsUtc = DateTime.SpecifyKind(s.DateTime, DateTimeKind.Utc);
-                var tsLocal = TimeZoneInfo.ConvertTimeFromUtc(tsUtc, userTz);
+                var tsLocal = TimeZoneConversion.UtcToUserLocal(tsUtc, userTz);
 
                 converted[i] = new PQBIDataTimeStampDto(tsLocal, s.Point, s.DataValueStatus);
             }

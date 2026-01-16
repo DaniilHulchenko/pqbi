@@ -123,7 +123,9 @@ export class CreateOrEditGaugeConfigurationComponent
         return this.parameter && !this.isEditMode;
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        super.ngOnInit();
+    }
 
     onDateRangeChanged(dateRange: DateRangeState) {
         switch (dateRange.rangeOption) {

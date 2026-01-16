@@ -72,7 +72,7 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
     excludeFlagged = ExcludeFlagged.None;
     selectedFlagEvents: EventClass[] = [];
 
-    decimalPoints = 2;
+    decimalPoints = null;
     titleFont: { family?: string; size?: number | null; colorMode?: 'scheme' | 'custom'; customColor?: string } = {
         family: '',
         size: null,
@@ -259,22 +259,7 @@ export class CardWidgetEventAdvancedSettingsComponent implements OnInit, OnChang
         this.excludeFlagged = ExcludeFlagged.None;
         this.selectedFlagEvents = [];
         this.parameterName = '';
-        // this.setLimits = Limit.None;
-        // this.lowerLimit = 0;
-        // this.upperLimit = 0;
-        // this.limitFromNominal = false;
-        // this.limitFromNormalization = false;
-        // this.colorScheme = ColorSchema.None;
-        // this.outOfLimitColor = '';
-        // this.gradientFromColor = '';
-        // this.gradientToColor = '';
-        // this.okColor = '';
-        // this.noDataColor = '';
-        // this.useOkColor = false;
-        // this.useNoDataColor = false;
-        // this.showOkColor = false;
-        // this.showNoDataColor = false;
-        this.decimalPoints = 2;
+        this.decimalPoints = null;
         this.link.page = null;
         this.icon = this.normalizeIconSettings(null);
         this.selectedIconPreview = null;

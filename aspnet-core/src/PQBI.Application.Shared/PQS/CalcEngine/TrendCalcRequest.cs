@@ -1,38 +1,100 @@
-﻿using System.Collections.Generic;
-using System;
-using Abp.Runtime.Validation;
-using System.ComponentModel.DataAnnotations;
+﻿using Abp.Runtime.Validation;
+using Castle.Core.Logging;
+using Castle.MicroKernel.Internal;
 using Newtonsoft.Json;
+using PQBI.Configuration;
+using PQBI.Infrastructure;
 using PQBI.Infrastructure.Extensions;
 using PQS.Data.Measurements.Enums;
-using TimeZoneConverter;
-using Castle.Core.Logging;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PQBI.PQS.CalcEngine;
 
 public class WidgetValidationBase
 {
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-    public int? RefreshRateInSeconds { get; set; }
+    public DateTimeOffset StartDate { get; set; }
+    public DateTimeOffset EndDate { get; set; }
+    public double? RefreshRateInSeconds { get; set; }
     public bool IsRealTime { get; set; }
-    public string UserTimeZone { get; set; }
+    public string? UserTimeZone { get; set; }
+    public int? UtcOffsetMinutes { get; set; }
+    public bool IsMondayStartOfWeek { get; set; }
 
     public ILogger Logger { get; set; } = NullLogger.Instance;
     public uint? UserTimeZoneID { get; set; }
 
-    public (DateTime, DateTime) NormalizeDatesToUtc()
+    public (DateTimeOffset StartUtc, DateTimeOffset EndUtc) NormalizeDatesToDateTimeOffset()
+    {
+        // If you have a real TZ id, you normally shouldn't need offset-only conversion here.
+        // (You may still use the TZ later for bucketing/labels.)
+        if (!string.IsNullOrWhiteSpace(UserTimeZone))
+            return (StartDate.ToUniversalTime(), EndDate.ToUniversalTime());
 
+        // Offset-only mode: interpret the CLOCK part as wall time with the chosen fixed offset
+        if (UtcOffsetMinutes.HasValue)
+        {
+            var offset = TimeSpan.FromMinutes(UtcOffsetMinutes.Value);
+
+            DateTimeOffset ApplyOffsetAsWallTime(DateTimeOffset incoming)
+            {
+                // Take the wall-clock fields (year/month/day/hour/min/sec) and "stamp" the chosen offset on them
+                var wall = DateTime.SpecifyKind(incoming.DateTime, DateTimeKind.Unspecified);
+                return new DateTimeOffset(wall, offset).ToUniversalTime();
+            }
+
+            return (ApplyOffsetAsWallTime(StartDate), ApplyOffsetAsWallTime(EndDate));
+        }
+
+        // Default: treat inputs as instants
+        return (StartDate.ToUniversalTime(), EndDate.ToUniversalTime());
+    }
+
+    public (DateTime StartUtc, DateTime EndUtc) NormalizeDatesToUtc()
+    {
+        var (s, e) = NormalizeDatesToDateTimeOffset();
+        return (s.UtcDateTime, e.UtcDateTime);
+    }
+
+    //public (DateTime, DateTime) NormalizeDatesToUtc()
+    //{
+
+    //    // Parse exactly as provided — preserves the offset
+
+    //    var start = DateTimeOffset.Parse(StartDate.ToString());
+    //    var end = DateTimeOffset.Parse(EndDate.ToString());
+    //    return (start.UtcDateTime, end.UtcDateTime);      
+
+    //}
+
+    //public (DateTimeOffset, DateTimeOffset) NormalizeDatesToDateTimeOffset()
+    //{
+
+    //    // Parse exactly as provided — preserves the offset
+
+    //    var start = DateTimeOffset.Parse(StartDate.ToString());
+    //    var end = DateTimeOffset.Parse(EndDate.ToString());
+    //    return (start.ToUniversalTime(), end.ToUniversalTime());
+
+    //}
+
+    public (DateTime, DateTime, TimeSpan, TimeSpan) GetOffsetAndNormalizeDatesToUtc()
     {
 
         // Parse exactly as provided — preserves the offset
 
         var start = DateTimeOffset.Parse(StartDate.ToString());
         var end = DateTimeOffset.Parse(EndDate.ToString());
-        return (start.UtcDateTime, end.UtcDateTime);      
+        return (start.UtcDateTime, end.UtcDateTime, start - start.UtcDateTime, end - end.UtcDateTime);
 
     }
 
+    public bool IsMondayDefinedStartOfWeek()
+    {
+        return IsMondayStartOfWeek;
+        //return WeekConfiguration.IsMondayStartOfWeek;
+    }
 
 
     //public (DateTime, DateTime) NormalizeDatesToUtc()

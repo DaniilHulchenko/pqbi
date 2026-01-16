@@ -50,6 +50,11 @@ import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selec
 import { ThresholdSettingsModel } from '@app/shared/models/threshold-settings-model';
 
 
+interface ParameterColorModel {
+    color: string;
+    dataUnitType?: DataUnitType;
+}
+
 type LineLegendType = {
     name: string,
     id: string,
@@ -58,7 +63,8 @@ type LineLegendType = {
     isEditing?: boolean,
     customName?: string,
     axisName?: string,
-    dataUnitType?: DataUnitType
+    dataUnitType?: DataUnitType,
+    isHidden?: boolean
 };
 
 type ValueAxisConfig = {
@@ -76,12 +82,6 @@ class LineChartConfiguration {
     valueAxes: ValueAxisConfig[];
 }
 
-// class LineChartConfiguration {
-//     lineLegend: any[];
-//     color: string;
-//     overlappingMode: string;
-// }
-
 //#region LineChart
 class LineChart extends DashboardChartBase {
     chartData: any[];
@@ -94,47 +94,34 @@ class LineChart extends DashboardChartBase {
         valueAxes: [],
     };
     //#endregion
+    formatDateTime: (date: Date) => string = (date) => {
+        const dateTime = DateTime.fromJSDate(date);
+        return dateTime.toFormat('dd/MM/yyyy HH:mm');
+    };
+    numberOfDecimals: number = 2;
+    numberOfDecimalsForPercentage: number = 2;
+    
     constructor(
         private _dashboardService: TenantDashboardServiceProxy,
         private setErrorMessage: (error: string | null) => void,
         private localize: (key: string) => string,
+        formatDateTimeFn?: (date: Date) => string,
+        numberOfDecimals?: number,
+        numberOfDecimalsForPercentage?: number,
     ) {
         super();
+        if (formatDateTimeFn) {
+            this.formatDateTime = formatDateTimeFn;
+        }
+        if (numberOfDecimals !== undefined) {
+            this.numberOfDecimals = numberOfDecimals;
+        }
+        if (numberOfDecimalsForPercentage !== undefined) {
+            this.numberOfDecimalsForPercentage = numberOfDecimalsForPercentage;
+        }
     }
 
-    // init(data: GraphParametersComponentDtoV3[]) {
-    //     this.chartData = [];
-    //     this.chartConfiguration.lineLegend = [];
-    //     let map: Map<number, object> = new Map(); // number is datetime representation in UNIX sec
-    //     for (let compData of data) {
-    //         let legendLabel = this.parameterName(compData);
-    //         let dataId = Guid.newGuid().toString();
-    //         this.chartConfiguration.lineLegend.push({
-    //             name: legendLabel,
-    //             id: dataId,
-    //         });
-
-    //         compData.data?.forEach((axisValue: AxisValue) => {
-    //             let obj = new Object();
-    //             if (map.has(axisValue.timeStempInSeconds)) {
-    //                 obj = map.get(axisValue.timeStempInSeconds);
-    //             }
-    //             obj[dataId] = axisValue.value;
-    //             map.set(axisValue.timeStempInSeconds, obj);
-    //         });
-    //     }
-
-    //     let arr = Array.from(map, ([key, value]) => {
-    //         return {
-    //             key: DateTime.fromSeconds(key).toJSDate(),
-    //             ...value,
-    //         };
-    //     });
-
-    //     this.chartData = arr;
-    // }
-
-    init222(trend: TrendResponse, parameters?: WidgetParametersColumn[]) {
+    init(trend: TrendResponse, parameters?: WidgetParametersColumn[], updateParameterColorMap?: (parameterName: string, dataUnitType: DataUnitType) => void, parameterColorMap?: Map<string, ParameterColorModel>) {
         const data = trend.data;
         this.chartData = [];
         this.chartConfiguration.lineLegend = [];
@@ -142,19 +129,82 @@ class LineChart extends DashboardChartBase {
 
         let map: Map<number, object> = new Map(); // number is datetime representation in UNIX sec
 
+        // Map to track axes by unit type (to share axes with same unit)
+        const axisMap = new Map<string, string>(); // unitLabel -> axisName
+        let axisCounter = 0;
+        let primaryAxisSet = false;
+
         for (let i = 0; i < data.length; i++) {
             const dataItem = data[i];
-            let legendLabel = dataItem.parameterName || this.parameterName222(dataItem);
+            let legendLabel = dataItem.parameterName || this.parameterName(dataItem);
             let dataId = Guid.newGuid().toString();
             const parameter = parameters?.[i];
             const styleData = parameter?.style ? JSON.parse(parameter.style) : {};
-            const color = styleData?.color;
+            let color = styleData?.color;
+
+            if (!color && parameterColorMap && parameter) {
+                console.log(`Looking for color for parameter "${parameter.name}", dataItem.parameterName: "${dataItem.parameterName}"`);
+
+                // Try to find color from parameterColorMap using the parameter's name directly
+                let colorModel = parameterColorMap.get(parameter.name);
+                console.log(`Direct lookup result:`, colorModel);
+
+                // If not found, try extracting from dataItem.parameterName
+                if (!colorModel && dataItem.parameterName) {
+                    const extractedName = dataItem.parameterName.slice(dataItem.parameterName.indexOf("-") + 1).trim();
+                    console.log(`Trying extracted name: "${extractedName}"`);
+                    colorModel = parameterColorMap.get(extractedName);
+                    console.log(`Extracted lookup result:`, colorModel);
+                }
+
+                color = colorModel?.color;
+                console.log(`Final color for parameter "${parameter.name}": ${color}`);
+
+                // Store the color back to the parameter's style so it persists
+                if (color && parameter) {
+                    const updatedStyle = { ...styleData, color: color };
+                    parameter.style = JSON.stringify(updatedStyle);
+                    console.log(`Stored color ${color} in parameter style`);
+                }
+            }
+
             const customName = styleData?.customName;
-            const axisName = `axis-${i}`;
-            const dataUnitType = dataItem.dataUnitType ?? this.getMockDataUnitType(i);
+            const dataUnitType = dataItem.dataUnitType;
             dataItem.dataUnitType = dataUnitType;
             const unitLabel = this.getUnitLabel(dataUnitType);
             const axisColor = color || this.chartConfiguration.color;
+
+            // Update parameter color map with dataUnitType
+            if (updateParameterColorMap && dataItem.parameterName) {
+                updateParameterColorMap(dataItem.parameterName, dataUnitType);
+            }
+
+            // Determine which axis to use - reuse existing axis if same unit
+            let axisName: string;
+            const unitKey = unitLabel || 'no-unit';
+
+            if (axisMap.has(unitKey)) {
+                // Reuse existing axis for this unit
+                axisName = axisMap.get(unitKey)!;
+            } else {
+                // Create new axis for this unit
+                axisName = `axis-${axisCounter}`;
+                axisMap.set(unitKey, axisName);
+
+                // Determine position: alternate between left and right for different units
+                const position = axisCounter % 2 === 0 ? 'left' : 'right';
+
+                this.chartConfiguration.valueAxes.push({
+                    name: axisName,
+                    position: position,
+                    unitLabel: unitLabel,
+                    color: axisColor,
+                    isPrimary: !primaryAxisSet,
+                });
+
+                primaryAxisSet = true;
+                axisCounter++;
+            }
 
             this.chartConfiguration.lineLegend.push({
                 name: legendLabel,
@@ -167,22 +217,14 @@ class LineChart extends DashboardChartBase {
                 dataUnitType: dataUnitType,
             });
 
-            this.chartConfiguration.valueAxes.push({
-                name: axisName,
-                position: 'left',
-                unitLabel: unitLabel,
-                color: axisColor,
-                isPrimary: i === 0,
-            });
-
-            for (let i = 0; i < dataItem.data.length; i++) {
-                if (map.has(trend.timeStamps[i])) {
-                    let obj = map.get(trend.timeStamps[i]);
-                    obj[dataId] = dataItem.data[i];
+            for (let j = 0; j < dataItem.data.length; j++) {
+                if (map.has(trend.timeStamps[j])) {
+                    let obj = map.get(trend.timeStamps[j]);
+                    obj[dataId] = dataItem.data[j];
                 } else {
                     let obj = new Object();
-                    obj[dataId] = dataItem.data[i];
-                    map.set(trend.timeStamps[i], obj);
+                    obj[dataId] = dataItem.data[j];
+                    map.set(trend.timeStamps[j], obj);
                 }
             }
         }
@@ -198,7 +240,7 @@ class LineChart extends DashboardChartBase {
         this.isInitialLoad = false;
     }
 
-    parameterName222(parameter: CalculatedDataItem): string {
+    parameterName(parameter: CalculatedDataItem): string {
         const feedersJoined = parameter.feeders
             .map((f) => {
                 const parts = [f.name ? ` ${f.name}` : f.componentId, f.id !== undefined ? `${f.id}` : ''];
@@ -214,28 +256,37 @@ class LineChart extends DashboardChartBase {
         return feedersJoined;
     }
 
-    // parameterName(parameter: GraphParametersComponentDtoV3): string {
-    //     let result = parameter.customParameterName || parameter.parameterNames.join(',\n');
-    //     const feeders = parameter.feeders;
-    //     var firstFeeder = feeders[0];
-    //     if (firstFeeder.componentId) {
-    //         let component = this._components?.find((c) => c.componentId === firstFeeder.componentId);
-    //         let feeder: FeederDescriptionDto;
-    //         if (component && firstFeeder.id) {
-    //             feeder = component.feeders?.find((f) => f.id === firstFeeder.id);
-    //         }
-    //         result = (component?.componentName ?? '') + ' ' + (feeder?.name ?? '') + ' ' + result;
-    //     }
-    //     return result;
-    // }
-
-    customizeTooltip(object: any) {
+    customizeTooltip = (object: any) => {
         const parsed = parseFloat(object.originalValue);
-        const res = isNaN(parsed) ? object.originalValue : parsed.toFixed(2);
+        if (isNaN(parsed)) {
+            return {
+                text: `${object.seriesName}<br/>${object.originalValue}`,
+            };
+        }
+        
+        // Find the legend item by series name or by series tag (dataId)
+        const legendItem = this.chartConfiguration.lineLegend.find(
+            (item) => item.name === object.seriesName || item.id === object.series?.tag
+        );
+        
+        // Check if dataUnitType is percentage (id 18 or 19)
+        const isPercentage = legendItem?.dataUnitType && 
+            (legendItem.dataUnitType.id === 18 || legendItem.dataUnitType.id === 19);
+        
+        const decimals = isPercentage ? this.numberOfDecimalsForPercentage : this.numberOfDecimals;
+        const res = parsed.toFixed(decimals);
+        
         return {
             text: `${object.seriesName}<br/>${res}`,
         };
-    }
+    };
+
+    customizeAxisLabel = (object: any) => {
+        if (object.value && object.value instanceof Date) {
+            return this.formatDateTime(object.value);
+        }
+        return object.valueText || '';
+    };
 
     private getUnitLabel(dataUnitType?: DataUnitType): string {
         if (!dataUnitType?.id) {
@@ -247,19 +298,7 @@ class LineChart extends DashboardChartBase {
             : '';
     }
 
-    private getMockDataUnitType(index: number): DataUnitType {
-        // TODO: Remove when backend provides dataUnitType for Trend lines.
-        const mockDataUnitTypes: DataUnitType[] = [
-            new DataUnitType({ id: 1, tokenCode: 'kW' }),
-            new DataUnitType({ id: 2, tokenCode: '°C' }),
-            new DataUnitType({ id: 3, tokenCode: 'bar' }),
-            new DataUnitType({ id: 4, tokenCode: 'A' }),
-        ];
-
-        return mockDataUnitTypes[index % mockDataUnitTypes.length];
-    }
-
-    reload(input: TrendCalcRequest, parameters?: WidgetParametersColumn[]) {
+    reload(input: TrendCalcRequest, parameters?: WidgetParametersColumn[], updateParameterColorMap?: (parameterName: string, dataUnitType: DataUnitType) => void, parameterColorMap?: Map<string, ParameterColorModel>) {
         this.showLoading();
 
         var sub = this._dashboardService
@@ -272,7 +311,6 @@ class LineChart extends DashboardChartBase {
             )
             .subscribe((result) => {
                 if (!result.isSuccess) {
-                    // this.errorMessage = result2.reason || 'No Data Available';
                     this.setErrorMessage(this.errorMessage);
                 } else if (!result.data || result.data.length === 0) {
                     this.errorMessage = 'No Data for Selected Values';
@@ -280,8 +318,7 @@ class LineChart extends DashboardChartBase {
                 } else {
                     this.errorMessage = null;
                     this.setErrorMessage(null);
-                    // this.init(result2.data);
-                    this.init222(result, parameters);
+                    this.init(result, parameters, updateParameterColorMap, parameterColorMap);
                 }
                 this.hideLoading();
                 sub.unsubscribe();
@@ -316,6 +353,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     currentParameters: WidgetParametersColumn[] = [];
     chartWidth: number;
     thresholdSettings: ThresholdSettingsModel = new ThresholdSettingsModel();
+    parameterColorMap: Map<string, ParameterColorModel> = new Map();
 
     chartHeight: number = 300; // default value
     headerBackgroundColor = '#ffffff';
@@ -324,6 +362,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     chartBackgroundColor = '#ffffff';
     headerTitleColor = '#000000';
     headerTitleBadgeColor = 'rgba(0, 0, 0, 0.08)';
+    hoveredSeriesName: string | null = null;
 
     protected _defaultWidgetName;
     private subs: Subscription[] = [];
@@ -342,15 +381,37 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     ) {
         super(injector, elementRef, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSTrend');
-        this.lineChart = new LineChart(this._tenantdashboardService, (error) => {
-            this.errorMessage = error;
-        }, (key) => this.l(key));
+        this.lineChart = new LineChart(
+            this._tenantdashboardService, 
+            (error) => {
+                this.errorMessage = error;
+            }, 
+            (key) => this.l(key),
+            (date: Date) => {
+                const dateTime = DateTime.fromJSDate(date);
+                return dateTime.toFormat(this.getLuxonDateTimeFormat());
+            },
+            this.defaultNumberOfDecimals ?? 2,
+            this.defaultNumberOfDecimalsForPercentage ?? 2
+        );
         this.lineChart.isInitialLoad = true;
     }
 
     ngOnInit() {
-        this.loadColorPreferences();
         super.ngOnInit();
+        this.loadColorPreferences();
+        
+        // Update lineChart formatting functions after default values are loaded
+        this.ensureDefaultValuesLoaded().subscribe(() => {
+            if (this.lineChart) {
+                this.lineChart.formatDateTime = (date: Date) => {
+                    const dateTime = DateTime.fromJSDate(date);
+                    return dateTime.toFormat(this.getLuxonDateTimeFormat());
+                };
+                this.lineChart.numberOfDecimals = this.defaultNumberOfDecimals ?? 2;
+                this.lineChart.numberOfDecimalsForPercentage = this.defaultNumberOfDecimalsForPercentage ?? 2;
+            }
+        });
     }
 
     ngAfterViewInit() {
@@ -359,7 +420,20 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 this.onEditRequested(null);
             }
             this.chartWidth = this.chartComponent.instance.element().clientWidth;
+
+            // Remove white padding from gridster-item parent
+            this.removeGridsterPadding();
         });
+    }
+
+    private removeGridsterPadding(): void {
+        const hostElement = this.elementRef.nativeElement;
+        const gridsterItem = hostElement.closest('gridster-item');
+
+        if (gridsterItem) {
+            (gridsterItem as HTMLElement).style.background = 'transparent';
+            (gridsterItem as HTMLElement).style.padding = '0';
+        }
     }
 
     customizePoint = (pointInfo: any) => {
@@ -398,7 +472,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 .subscribe((result) => {
                     this.trendWidgetConfiguration = result.trendWidgetConfiguration;
 
-                    let rangeOption = JSON.parse(this.trendWidgetConfiguration.dateRange).rangeOption;
                     if (this.trendWidgetConfiguration) {
                         let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
                         let resulutionValueInMs = 0;
@@ -414,9 +487,14 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                             );
                         }
                         var dateModel = DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange);
-                        this.thresholdSettings = this.trendWidgetConfiguration.thresholdSettings ? JSON.parse(this.trendWidgetConfiguration.thresholdSettings) : new ThresholdSettingsModel();
+                        this.thresholdSettings = this.trendWidgetConfiguration.thresholdSettings
+                            ? JSON.parse(this.trendWidgetConfiguration.thresholdSettings)
+                            : new ThresholdSettingsModel();
 
                         this.currentParameters = JSON.parse(this.trendWidgetConfiguration.parameters);
+
+                        // Build color map for parameters using advanced colors, phase colors and defaults
+                        this.buildParameterColorMap();
 
                         if (dateModel.rangeUnit === DateRangeType.Relative && resulutionValueInMs) {
                             timer(0, resulutionValueInMs)
@@ -426,13 +504,31 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                                     input.isRealTime = true;
                                     input.refreshRateInSeconds = resulutionValueInMs / 1000;
                                     if (input) {
-                                        this.lineChart.reload(input, this.currentParameters);
+                                        this.lineChart.reload(input, this.currentParameters, (parameterName: string, dataUnitType: DataUnitType) => {
+                                            const model = this.parameterColorMap.get(parameterName);
+                                            if (model) {
+                                                model.dataUnitType = dataUnitType;
+                                            }
+                                        }, this.parameterColorMap);
+
+                                        // After first load, save the updated parameters with colors
+                                        if (result === 0) {
+                                            this.saveParameterColors();
+                                        }
                                     }
                                 });
                         } else {
                             let input = this.formatRequest();
                             if (input) {
-                                this.lineChart.reload(input, this.currentParameters);
+                                this.lineChart.reload(input, this.currentParameters, (parameterName: string, dataUnitType: DataUnitType) => {
+                                    const model = this.parameterColorMap.get(parameterName);
+                                    if (model) {
+                                        model.dataUnitType = dataUnitType;
+                                    }
+                                }, this.parameterColorMap);
+
+                                // Save the updated parameters with colors
+                                this.saveParameterColors();
                             }
                         }
                     }
@@ -487,6 +583,8 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 isAutoResolution,
                 resolutionInSeconds,
                 userTimeZone: this._dateTimeService.getUserTimeZoneName(),
+                utcOffsetMinutes: this._dateTimeService.GetUtcOffsetMinutes(this.defaultUtcOffset),
+                isMondayStartOfWeek: this._dateTimeService.IsMondayFirstDayOfWeek(this.defaultFirstDayOfWeek),
                 widgetName: this.widgetConfigurationInDB?.name,
                 startDate: DateTime.fromJSDate(dateRange[0]),
                 endDate: DateTime.fromJSDate(dateRange[1]),
@@ -571,7 +669,29 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         }
     }
 
-    openLegendColorPicker(index: number): void {
+    onLegendMarkerClick(legendItem: LineLegendType, event: MouseEvent): void {
+        event.stopPropagation();
+
+        // Toggle visibility
+        legendItem.isHidden = !legendItem.isHidden;
+
+        // Find the series in the chart and toggle its visibility
+        if (this.chartComponent?.instance) {
+            const allSeries = this.chartComponent.instance.getAllSeries();
+            const targetSeries = allSeries.find(s => s.name === legendItem.name);
+
+            if (targetSeries) {
+                if (legendItem.isHidden) {
+                    targetSeries.hide();
+                } else {
+                    targetSeries.show();
+                }
+            }
+        }
+    }
+
+    openLegendColorPicker(index: number, event: MouseEvent): void {
+        event.stopPropagation();
         const colorPickersArray = this.colorPickers.toArray();
         if (colorPickersArray[index]) {
             colorPickersArray[index].nativeElement.click();
@@ -702,6 +822,109 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         }
     }
 
+    onLegendItemHover(legendItem: LineLegendType, isHovering: boolean): void {
+        // Don't show hover effect for hidden series
+        if (legendItem.isHidden) {
+            return;
+        }
+
+        if (!this.chartComponent?.instance) {
+            console.log('Chart component not ready');
+            return;
+        }
+
+        console.log('Hover triggered:', { isHovering, name: legendItem.name });
+
+        const chartInstance = this.chartComponent.instance;
+        const allSeries = chartInstance.getAllSeries();
+
+        console.log('All series:', allSeries.map(s => s.name));
+
+        if (isHovering) {
+            // Find and hover the target series
+            const targetSeries = allSeries.find(s => s.name === legendItem.name);
+
+            if (targetSeries) {
+                console.log('Target series found:', targetSeries.name);
+
+                // Use DevExtreme's hover method
+                targetSeries.hover();
+
+                // Additionally manipulate the DOM for more control
+                const chartElement = chartInstance.element();
+                const svg = chartElement.querySelector('svg');
+
+                if (svg) {
+                    // Try multiple selectors to find series paths
+                    let seriesPaths = svg.querySelectorAll('g[clip-path] path[stroke]');
+
+                    if (seriesPaths.length === 0) {
+                        seriesPaths = svg.querySelectorAll('path[stroke][fill="none"]');
+                    }
+
+                    if (seriesPaths.length === 0) {
+                        seriesPaths = svg.querySelectorAll('path[stroke]');
+                    }
+
+                    console.log('Found series paths:', seriesPaths.length);
+                    console.log('Sample path:', seriesPaths[0]);
+
+                    // Filter to only line paths (exclude grid/axis)
+                    const linePaths = Array.from(seriesPaths).filter((path: SVGPathElement) => {
+                        const stroke = path.getAttribute('stroke');
+                        const strokeWidth = path.getAttribute('stroke-width');
+                        const fill = path.getAttribute('fill');
+
+                        // Line paths typically have stroke, no fill or fill="none", and reasonable stroke-width
+                        return stroke &&
+                               stroke !== 'none' &&
+                               (fill === 'none' || !fill) &&
+                               (!strokeWidth || parseFloat(strokeWidth) >= 1);
+                    });
+
+                    console.log('Filtered line paths:', linePaths.length);
+
+                    linePaths.forEach((path: SVGPathElement, idx) => {
+                        const series = allSeries[idx];
+                        console.log(`Path ${idx}: series=${series?.name}, stroke=${path.getAttribute('stroke')}`);
+
+                        if (series && series.name === legendItem.name) {
+                            console.log('Emphasizing series:', series.name);
+                            path.style.opacity = '1';
+                            path.style.strokeWidth = '4';
+                            path.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+                        } else {
+                            console.log('Dimming series:', series?.name);
+                            path.style.opacity = '0.2';
+                        }
+                    });
+                }
+            } else {
+                console.log('Target series NOT found');
+            }
+        } else {
+            console.log('Clearing hover state');
+
+            // Clear hover from all series
+            allSeries.forEach(series => {
+                series.clearHover();
+            });
+
+            // Reset DOM styles
+            const chartElement = chartInstance.element();
+            const svg = chartElement.querySelector('svg');
+
+            if (svg) {
+                const allPaths = svg.querySelectorAll('path[stroke]');
+                allPaths.forEach((path: SVGPathElement) => {
+                    path.style.opacity = '';
+                    path.style.strokeWidth = '';
+                    path.style.filter = '';
+                });
+            }
+        }
+    }
+
     ngOnDestroy() {
         this.stopStream$.next(null);
         this.stopStream$.complete();
@@ -744,13 +967,134 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         }
     }
 
+    /**
+     * Extracts group and phase from parameter, parsing data if needed
+     * @returns Object with group and phase, or null if extraction fails
+     */
+    private extractParameterGroupAndPhase(parameter: WidgetParametersColumn): { group: string; phase: string } | null {
+        let group: string | undefined;
+        let phase: string | undefined;
+
+        if (parameter.type === ColumnType.BaseParameter) {
+            try {
+                const parsed = JSON.parse(parameter.data as string);
+                const baseData = BaseData.fromJS?.(parsed) ?? parsed;
+                group = baseData.group;
+                phase = baseData.phase;
+            } catch (e) {
+                console.warn('Failed to parse BaseParameter data:', e);
+                return null;
+            }
+        } else {
+            // For other parameter types, use direct properties
+            group = parameter.group;
+            phase = parameter.phase;
+        }
+
+        if (!group || !phase) {
+            return null;
+        }
+
+        return { group, phase };
+    }
+
+    private buildParameterColorMap(): void {
+        this.parameterColorMap = new Map<string, ParameterColorModel>();
+
+        if (!this.currentParameters || this.currentParameters.length === 0) {
+            return;
+        }
+
+        console.log('Building parameter color map for parameters:', this.currentParameters.map(p => p.name));
+
+        this.currentParameters.forEach((parameter) => {
+            const parameterName = parameter.name;
+
+            if (!parameterName) {
+                return;
+            }
+
+            let color: string | undefined;
+
+            // Try to find color in advanced parameters
+            const advancedColor = this.findAdvancedColorForParameter(parameter);
+            if (advancedColor) {
+                color = advancedColor;
+                console.log(`Parameter "${parameterName}" - advanced color: ${color}`);
+            } else {
+                // Fallback to default phase colors
+                const groupPhase = this.extractParameterGroupAndPhase(parameter);
+                if (groupPhase && this.defaultColors) {
+                    console.log(`Parameter "${parameterName}" - group: ${groupPhase.group}, phase: ${groupPhase.phase}`);
+                    // Remove first character and convert to lowercase (e.g., "V1N" -> "1n")
+                    const phaseKey = groupPhase.phase.slice(1).toLowerCase();
+                    const phaseColor = this.defaultColors[phaseKey];
+                    if (phaseColor) {
+                        color = phaseColor;
+                        console.log(`Parameter "${parameterName}" - phase color for "${phaseKey}": ${color}`);
+                    }
+                } else {
+                    console.log(`Parameter "${parameterName}" - no group/phase found or no defaultColors`);
+                }
+            }
+
+            this.parameterColorMap.set(parameterName, {
+                color: color,
+            });
+        });
+
+        console.log('Final parameterColorMap:', this.parameterColorMap);
+    }
+
+    private findAdvancedColorForParameter(parameter: WidgetParametersColumn): string | null {
+        if (!this.advancedParameterColors || this.advancedParameterColors.length === 0) {
+            return null;
+        }
+
+        const groupPhase = this.extractParameterGroupAndPhase(parameter);
+        if (!groupPhase) {
+            return null;
+        }
+
+        const quantity = parameter.quantity;
+
+        const match = this.advancedParameterColors.find((ap: any) => {
+            const sameGroup = ap.group === groupPhase.group;
+            const samePhase = ap.phaseOrChannel === groupPhase.phase;
+            const sameQuantity = ap.quantity === String(quantity);
+
+            return sameGroup && samePhase && sameQuantity;
+        });
+
+        return match?.color ?? null;
+    }
+
+    private saveParameterColors(): void {
+        if (!this.trendWidgetConfiguration || !this.currentParameters) {
+            return;
+        }
+
+        // Update the configuration with current parameters (which now have colors)
+        this.trendWidgetConfiguration.parameters = JSON.stringify(this.currentParameters);
+
+        // Persist to database without triggering a refresh
+        this._trendWidgetConfigurationService.update(this.trendWidgetConfiguration);
+    }
+
     save(newConfig: CreateOrEditTrendWidgetConfigurationDto) {
         this.stopStream$.next(null);
         this.stopStream$.complete();
-        
+
+        // Update the configuration with current parameter colors from the chart
+        if (this.currentParameters && this.currentParameters.length > 0) {
+            newConfig.parameters = JSON.stringify(this.currentParameters);
+        }
+
         if (newConfig.id.toString() !== this.widgetConfigurationInDB?.configuration) {
             this.saveConfiguration(newConfig.id.toString());
         } else {
+            // Save the updated configuration to persist colors
+            this._trendWidgetConfigurationService.update(newConfig);
             this.refreshWidget();
         }
     }

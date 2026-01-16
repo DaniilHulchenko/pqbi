@@ -4,7 +4,7 @@
     {
         public static IReadOnlyList<IEnumerable<BasicValue>> AggregateToBars(
            IEnumerable<BasicValue> samples,          // raw signal, any cadence
-           IEnumerable<(DateTime Start, DateTime End)> buckets)      
+           IEnumerable<(DateTimeOffset Start, DateTimeOffset End)> buckets)      
         {
             var ordered = samples.OrderBy(s => s.StartTime).ToList();
             int i = 0;                         // cursor in samples

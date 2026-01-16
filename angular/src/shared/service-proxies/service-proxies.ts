@@ -3932,6 +3932,69 @@ export class DefaultValuesServiceProxy {
     }
 
     /**
+     * @param input (optional) 
+     * @return Success
+     */
+    getDefaultValueByNames(input: string[] | undefined): Observable<GetDefaultValueForEditOutput[]> {
+        let url_ = this.baseUrl + "/api/services/app/DefaultValues/GetDefaultValueByNames?";
+        if (input === null)
+            throw new Error("The parameter 'input' cannot be null.");
+        else if (input !== undefined)
+            input && input.forEach(item => { url_ += "input=" + encodeURIComponent("" + item) + "&"; });
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetDefaultValueByNames(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetDefaultValueByNames(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetDefaultValueForEditOutput[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetDefaultValueForEditOutput[]>;
+        }));
+    }
+
+    protected processGetDefaultValueByNames(response: HttpResponseBase): Observable<GetDefaultValueForEditOutput[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(GetDefaultValueForEditOutput.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
      * @param id (optional) 
      * @return Success
      */
@@ -4021,6 +4084,58 @@ export class DefaultValuesServiceProxy {
     }
 
     protected processCreateOrEdit(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    createOrEditValues(body: CreateOrEditDefaultValueDto[] | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/services/app/DefaultValues/CreateOrEditValues";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCreateOrEditValues(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCreateOrEditValues(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processCreateOrEditValues(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -22660,6 +22775,8 @@ export class BarChartRequest implements IBarChartRequest {
     refreshRateInSeconds!: number;
     isRealTime!: boolean;
     userTimeZone!: string | undefined;
+    utcOffsetMinutes!: number | undefined;
+    isMondayStartOfWeek!: boolean;
     widgetName!: string | undefined;
     category!: DimensionSelector;
     seriesBy!: DimensionSelector;
@@ -22682,6 +22799,8 @@ export class BarChartRequest implements IBarChartRequest {
             this.refreshRateInSeconds = _data["refreshRateInSeconds"];
             this.isRealTime = _data["isRealTime"];
             this.userTimeZone = _data["userTimeZone"];
+            this.utcOffsetMinutes = _data["utcOffsetMinutes"];
+            this.isMondayStartOfWeek = _data["isMondayStartOfWeek"];
             this.widgetName = _data["widgetName"];
             this.category = _data["category"] ? DimensionSelector.fromJS(_data["category"]) : <any>undefined;
             this.seriesBy = _data["seriesBy"] ? DimensionSelector.fromJS(_data["seriesBy"]) : <any>undefined;
@@ -22712,6 +22831,8 @@ export class BarChartRequest implements IBarChartRequest {
         data["refreshRateInSeconds"] = this.refreshRateInSeconds;
         data["isRealTime"] = this.isRealTime;
         data["userTimeZone"] = this.userTimeZone;
+        data["utcOffsetMinutes"] = this.utcOffsetMinutes;
+        data["isMondayStartOfWeek"] = this.isMondayStartOfWeek;
         data["widgetName"] = this.widgetName;
         data["category"] = this.category ? this.category.toJSON() : <any>undefined;
         data["seriesBy"] = this.seriesBy ? this.seriesBy.toJSON() : <any>undefined;
@@ -22735,6 +22856,8 @@ export interface IBarChartRequest {
     refreshRateInSeconds: number;
     isRealTime: boolean;
     userTimeZone: string | undefined;
+    utcOffsetMinutes: number | undefined;
+    isMondayStartOfWeek: boolean;
     widgetName: string | undefined;
     category: DimensionSelector;
     seriesBy: DimensionSelector;
@@ -39667,7 +39790,7 @@ export enum QuantityEnum {
     QMAX = 1,
     QAVG = 2,
     //QSAMPLE = 3,
-    //QSUM = 4,
+    QSUM = 4,
     //QCOUNTER = 5,
     //NONE = 6,
 }
@@ -42160,6 +42283,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
     refreshRateInSeconds!: number;
     isRealTime!: boolean;
     userTimeZone!: string | undefined;
+    utcOffsetMinutes!: number | undefined;
+    isMondayStartOfWeek!: boolean;
     widgetName!: string | undefined;
     rows!: RowWidgetTable;
     columnWidgetTables!: ColumnWidgetTable[] | undefined;
@@ -42180,6 +42305,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
             this.refreshRateInSeconds = _data["refreshRateInSeconds"];
             this.isRealTime = _data["isRealTime"];
             this.userTimeZone = _data["userTimeZone"];
+            this.utcOffsetMinutes = _data["utcOffsetMinutes"];
+            this.isMondayStartOfWeek = _data["isMondayStartOfWeek"];
             this.widgetName = _data["widgetName"];
             this.rows = _data["rows"] ? RowWidgetTable.fromJS(_data["rows"]) : <any>undefined;
             if (Array.isArray(_data["columnWidgetTables"])) {
@@ -42204,6 +42331,8 @@ export class TableWidgetRequest implements ITableWidgetRequest {
         data["refreshRateInSeconds"] = this.refreshRateInSeconds;
         data["isRealTime"] = this.isRealTime;
         data["userTimeZone"] = this.userTimeZone;
+        data["utcOffsetMinutes"] = this.utcOffsetMinutes;
+        data["isMondayStartOfWeek"] = this.isMondayStartOfWeek;
         data["widgetName"] = this.widgetName;
         data["rows"] = this.rows ? this.rows.toJSON() : <any>undefined;
         if (Array.isArray(this.columnWidgetTables)) {
@@ -42221,6 +42350,8 @@ export interface ITableWidgetRequest {
     refreshRateInSeconds: number;
     isRealTime: boolean;
     userTimeZone: string | undefined;
+    utcOffsetMinutes: number | undefined;
+    isMondayStartOfWeek: boolean;
     widgetName: string | undefined;
     rows: RowWidgetTable;
     columnWidgetTables: ColumnWidgetTable[] | undefined;
@@ -43738,6 +43869,8 @@ export class TrendCalcRequest implements ITrendCalcRequest {
     refreshRateInSeconds!: number;
     isRealTime!: boolean;
     userTimeZone!: string | undefined;
+    utcOffsetMinutes!: number | undefined;
+    isMondayStartOfWeek!: boolean;
     isAutoResolution!: boolean;
     resolutionInSeconds!: number;
     widgetName!: string | undefined;
@@ -43760,6 +43893,8 @@ export class TrendCalcRequest implements ITrendCalcRequest {
             this.refreshRateInSeconds = _data["refreshRateInSeconds"];
             this.isRealTime = _data["isRealTime"];
             this.userTimeZone = _data["userTimeZone"];
+            this.utcOffsetMinutes = _data["utcOffsetMinutes"];
+            this.isMondayStartOfWeek = _data["isMondayStartOfWeek"];
             this.isAutoResolution = _data["isAutoResolution"];
             this.resolutionInSeconds = _data["resolutionInSeconds"];
             this.widgetName = _data["widgetName"];
@@ -43786,6 +43921,8 @@ export class TrendCalcRequest implements ITrendCalcRequest {
         data["refreshRateInSeconds"] = this.refreshRateInSeconds;
         data["isRealTime"] = this.isRealTime;
         data["userTimeZone"] = this.userTimeZone;
+        data["utcOffsetMinutes"] = this.utcOffsetMinutes;
+        data["isMondayStartOfWeek"] = this.isMondayStartOfWeek;
         data["isAutoResolution"] = this.isAutoResolution;
         data["resolutionInSeconds"] = this.resolutionInSeconds;
         data["widgetName"] = this.widgetName;
@@ -43805,6 +43942,8 @@ export interface ITrendCalcRequest {
     refreshRateInSeconds: number;
     isRealTime: boolean;
     userTimeZone: string | undefined;
+    utcOffsetMinutes: number | undefined;
+    isMondayStartOfWeek: boolean;
     isAutoResolution: boolean;
     resolutionInSeconds: number;
     widgetName: string | undefined;

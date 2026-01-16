@@ -121,7 +121,7 @@ export class CardWidgetLogicalParameterSelectionTabComponent
         noDataColor: '',
         showOkColor: false,
         showNoDataColor: false,
-        decimalPoints: 2,
+        decimalPoints: null,
         linkPage: null,
         icon: {
             id: null,

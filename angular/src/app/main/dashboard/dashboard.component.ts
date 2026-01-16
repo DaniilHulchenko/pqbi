@@ -25,6 +25,7 @@ export class DashboardComponent extends AppComponentBase implements OnInit, OnDe
     }
 
     ngOnInit(): void {
+        super.ngOnInit();
         // Use snapshot for synchronous access to ensure initialPageName is set
         // before the child component initializes
         this.initialPageName = this.route.snapshot.params['pageName'];

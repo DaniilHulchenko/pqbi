@@ -77,6 +77,7 @@ export class ResolutionSelectorComponent extends AppComponentBase implements Con
     }
 
     ngOnInit(): void {
+        super.ngOnInit();
         this.changeResolutionOptions(this.resolutionState);
     }
 

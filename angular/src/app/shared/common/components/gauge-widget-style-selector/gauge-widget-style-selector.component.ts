@@ -88,6 +88,7 @@ export class GaugeWidgetStyleSelectorComponent extends AppComponentBase implemen
     }
 
     ngOnInit(): void {
+        super.ngOnInit();
         this.setStyleOptions();
         this.setOrientationOptions();
         this.setArcAngleOptions();

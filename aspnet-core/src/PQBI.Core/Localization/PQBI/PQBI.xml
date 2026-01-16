@@ -1606,5 +1606,33 @@
 		<text name="LowerThreshold">Lower Threshold</text>
 		<text name="Deviation">Deviation</text>
 
+		<text name="Localization">Localization</text>
+		<text name="DashboardSettings">Dashboard Settings</text>
+		
+		<text name="ChangesCancelled">Changes cancelled</text>
+		<text name="SettingsSavedSuccessfully">Settings saved successfully</text>
+		<text name="ErrorOccurredWhileSavingSettings">Error occurred while saving settings</text>
+		<text name="ConfigureRegionalAndDisplayPreference">Configure regional and display preference for this site.</text>
+		<text name="DisplayFormat">Display Format</text>
+		<text name="DecimalPlacesForNumbers">Decimal Places for Numbers</text>
+		<text name="DecimalPlacesForPercentage">Decimal Places for Percentage</text>
+		<text name="SelectDecimals">Select Decimals</text>
+		<text name="AppliesToAllNumericValuesAcrossTheSite">Applies to all numeric values across the site</text>
+		<text name="DateAndTime">Date and Time</text>
+		<text name="DateAndTimeDisplayFormat">Date and Time Display Format</text>
+		<text name="FirstDayOfWeek">First Day of Week</text>
+		<text name="DefaultColors">Default Colors</text>
+		<text name="ResetToPQScadaDefaults">Reset to PQScada defaults</text>
+		<text name="DefineDefaultColorsUsedForPhasesAndSystemGeneratedSeries">Define default colors used for phases and system generated series</text>
+
+		<text name="ConfigureDashboardSettings">Configure dashboard settings</text>
+
+		<text name="UtcOffset">Utc Offset</text>
+		<text name="CustomTimeZone">Custom Timezone</text>
+		<text name="SelectTimeZone">Select Timezone</text>
+		<text name="Manual">Manual</text>
+		<text name="CustomCulture">Custom Culture</text>
+		<text name="AutoCulture">Auto Culture</text>
+
 	</texts>
 </localizationDictionary>

@@ -94,6 +94,21 @@ namespace PQBI.DefaultValues
             return output;
         }
 
+        public async Task<List<GetDefaultValueForEditOutput>> GetDefaultValueByNames(string[] input)
+        {
+            var defaultValues = await _defaultValueRepository
+                .GetAll()
+                .Where(value => input.Contains(value.Name))
+                .ToListAsync();
+
+            var output = defaultValues
+                .Select(value =>
+                    new GetDefaultValueForEditOutput { DefaultValue = ObjectMapper.Map<CreateOrEditDefaultValueDto>(value) })
+                .ToList();
+
+            return output;
+        }
+
         [AbpAuthorize(AppPermissions.Pages_DefaultValues_Edit)]
         public virtual async Task<GetDefaultValueForEditOutput> GetDefaultValueForEdit(EntityDto input)
         {
@@ -118,6 +133,14 @@ namespace PQBI.DefaultValues
             }
         }
 
+        public async Task CreateOrEditValues(CreateOrEditDefaultValueDto[] input)
+        {
+            foreach(var value in input)
+            {
+                await CreateOrEdit(value);
+            }
+        }
+
         [AbpAuthorize(AppPermissions.Pages_DefaultValues_Create)]
         protected virtual async Task Create(CreateOrEditDefaultValueDto input)
         {
@@ -129,7 +152,6 @@ namespace PQBI.DefaultValues
             }
 
             await _defaultValueRepository.InsertAsync(defaultValue);
-
         }
 
         [AbpAuthorize(AppPermissions.Pages_DefaultValues_Edit)]

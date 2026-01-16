@@ -1,18 +1,40 @@
 <div
     class="kt-portlet kt-portlet--height-fluid widget-pqs-card"
+    [ngStyle]="{ 'background-color': widgetBackgroundColor }"
     (click)="onWidgetClick($event)"
     [class.widget-link-enabled]="canNavigateToPage && !editState"
     [attr.role]="canNavigateToPage && !editState ? 'button' : null"
     [attr.tabindex]="canNavigateToPage && !editState ? '0' : null"
 >
-    <div class="kt-portlet__head">
+    <div class="kt-portlet__head"
+         [ngStyle]="{ 'background-color': headerBackgroundColor, color: headerTitleColor }"
+         (click)="onTitleClick($event, headerColorPicker)">
         <div class="kt-portlet__head-label">
-            <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
-                {{ widgetDisplayName }}
+            <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize, color: headerTitleColor }">
+                <span [ngStyle]="{ 'background-color': editState ? headerTitleBadgeColor : 'transparent', color: headerTitleColor }">
+                    {{ widgetDisplayName }}
+                </span>
+                <input
+                    #headerColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="headerBackgroundColor"
+                    (input)="onHeaderColorChange($event)" />
             </h3>
         </div>
     </div>
-    <div class="kt-portlet__body widget-pqs-card__body" id="outerScroll">
+    <div class="kt-portlet__body widget-pqs-card__body" id="outerScroll" [ngStyle]="{ 'background-color': widgetBackgroundColor }">
+        <div class="card-color-controls d-flex align-items-center flex-wrap mb-2">
+            <div class="d-flex align-items-center">
+                <button type="button" class="color-swatch" [style.backgroundColor]="widgetBackgroundColor" (click)="openColorPicker(bgColorPicker)"></button>
+                <input
+                    #bgColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="widgetBackgroundColor"
+                    (input)="onBackgroundColorChange($event)" />
+            </div>
+        </div>
         <div [ngSwitch]="cardWidgetConfiguration?.styleType">
             <div *ngSwitchCase="1">
                 <div class="gauge-container">

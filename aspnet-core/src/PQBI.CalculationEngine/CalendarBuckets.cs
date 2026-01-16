@@ -1,5 +1,6 @@
 ﻿using PQS.Data.Measurements.Enums;
 using PQBI.Configuration;
+using PQBI.Infrastructure;
 
 namespace PQBI.CalculationEngine
 {
@@ -10,104 +11,176 @@ namespace PQBI.CalculationEngine
 
     public static class CalendarBuckets
     {
-        public static (TimeBucket, IEnumerable<(DateTime Start, DateTime End)>?) ChooseBucket(DateTime start, DateTime end, int maxBuckets)
+        public static (TimeBucket Bucket, IReadOnlyList<(DateTimeOffset StartUtc, DateTimeOffset EndUtc)> BucketsUtc)
+           ChooseBucket(DateTimeOffset desiredStartUtc, DateTimeOffset desiredEndUtc, TimeZoneInfo userTz, int maxBuckets, bool isMondayStartOfWeek)
         {
-            IEnumerable<(DateTime Start, DateTime End)>? buckets = null;
+            List<(DateTimeOffset, DateTimeOffset)>? buckets = null;
+
             foreach (var candidate in Enum.GetValues<TimeBucket>())
             {
-                buckets = GenerateBuckets(start, end, candidate);
-
-                int count = buckets.Count();
-                if (count <= maxBuckets)
+                buckets = GenerateBucketsUtc(desiredStartUtc, desiredEndUtc, candidate, userTz, isMondayStartOfWeek).ToList();
+                if (buckets.Count <= maxBuckets)
                     return (candidate, buckets);
             }
-            return (TimeBucket.TenYears, buckets); // fall-back: the coarsest unit
+
+            return (TimeBucket.TenYears, buckets ?? new List<(DateTimeOffset, DateTimeOffset)>());
         }
 
-        private static int CountBuckets(DateTime start, DateTime end, TimeBucket unit) =>
-          GenerateBuckets(start, end, unit).Count();
-
-        public static IEnumerable<(DateTime Start, DateTime End)> GenerateBuckets(
-            DateTime rangeStartUtc,
-            DateTime rangeEndUtc,
-            TimeBucket unit)
+        // Main API: outputs UTC instants for safe membership tests
+        public static IEnumerable<(DateTimeOffset StartUtc, DateTimeOffset EndUtc)> GenerateBucketsUtc(
+            DateTimeOffset rangeStartUtc,
+            DateTimeOffset rangeEndUtc,
+            TimeBucket unit,
+            TimeZoneInfo userTz,
+            bool isMondayStartOfWeek)
         {
-            var cursor = AlignFloor(rangeStartUtc, unit);
-            while (cursor < rangeEndUtc)
+            if (unit == TimeBucket.Hour)
             {
-                var next = AddUnit(cursor, unit);
+                // Hour buckets: fixed-duration UTC buckets are simplest and DST-safe.
+                // (Local labels may skip/repeat, which is expected behavior.)
+                return GenerateFixedUtcBuckets(rangeStartUtc, rangeEndUtc, TimeSpan.FromHours(1));
+            }
+
+            return GenerateCalendarBuckets(rangeStartUtc, rangeEndUtc, unit, userTz, isMondayStartOfWeek);
+        }
+
+        //// Align start/end to bucket boundaries, but in the USER timezone for calendar units
+        //public static DateTimeOffset AlignFloorUtc(DateTimeOffset utc, TimeBucket unit, TimeZoneInfo userTz)
+        //{
+        //    if (unit == TimeBucket.Hour)
+        //        return AlignFloorUtcFixed(utc, TimeSpan.FromHours(1));
+
+        //    var local = TimeZoneInfo.ConvertTime(utc, userTz).DateTime; // wall time
+        //    var localFloor = AlignFloorLocal(local, unit);
+        //    return TimeZoneConversion.UserLocalToUtc(localFloor, userTz);
+        //}
+
+        //public static DateTimeOffset AlignCeilUtc(DateTimeOffset utc, TimeBucket unit, TimeZoneInfo userTz)
+        //{
+        //    var floor = AlignFloorUtc(utc, unit, userTz);
+        //    if (floor == utc) return utc;
+
+        //    if (unit == TimeBucket.Hour) return floor + TimeSpan.FromHours(1);
+
+        //    var localFloor = TimeZoneInfo.ConvertTime(floor, userTz).DateTime;
+        //    var nextLocal = AddUnitLocal(localFloor, unit);
+        //    return TimeZoneConversion.UserLocalToUtc(nextLocal, userTz);
+        //}
+
+        private static IEnumerable<(DateTimeOffset StartUtc, DateTimeOffset EndUtc)> GenerateFixedUtcBuckets(
+            DateTimeOffset startUtc,
+            DateTimeOffset endUtc,
+            TimeSpan step)
+        {
+            var cursor = AlignFloorUtcFixed(startUtc, step);
+            while (cursor < endUtc)
+            {
+                var next = cursor + step;
                 yield return (cursor, next);
                 cursor = next;
             }
         }
 
-        public static DateTime AlignFloor(DateTime dt, TimeBucket unit) => unit switch
+        private static DateTimeOffset AlignFloorUtcFixed(DateTimeOffset utc, TimeSpan step)
         {
-            TimeBucket.Hour => dt.Date.AddHours(dt.Hour),
-            TimeBucket.Day => dt.Date,
-            TimeBucket.Week => FloorToWeek(dt, WeekConfiguration.StartOfWeek),
-            TimeBucket.Month => new DateTime(dt.Year, dt.Month, 1, 0, 0, 0, dt.Kind),
-            TimeBucket.Quarter => new DateTime(dt.Year, ((dt.Month - 1) / 3) * 3 + 1, 1, 0, 0, 0, dt.Kind),
-            TimeBucket.Year => new DateTime(dt.Year, 1, 1, 0, 0, 0, dt.Kind),
-            TimeBucket.FiveYears => new DateTime(dt.Year / 5 * 5, 1, 1, 0, 0, 0, dt.Kind),
-            TimeBucket.TenYears => new DateTime(dt.Year / 10 * 10, 1, 1, 0, 0, 0, dt.Kind),
-            _ => dt
-        };
-
-        public static DateTime AlignCeil(DateTime dt, TimeBucket unit)
-        {
-            var floor = CalendarBuckets.AlignFloor(dt, unit);
-            return floor == dt ? dt : CalendarBuckets.AddUnit(floor, unit);
+            var ticks = utc.UtcTicks;
+            var stepTicks = step.Ticks;
+            var aligned = (ticks / stepTicks) * stepTicks;
+            return new DateTimeOffset(aligned, TimeSpan.Zero);
         }
 
-        private static DateTime FloorToWeek(DateTime dt, DayOfWeek weekStart)
+        private static IEnumerable<(DateTimeOffset StartUtc, DateTimeOffset EndUtc)> GenerateCalendarBuckets(
+            DateTimeOffset rangeStartUtc,
+            DateTimeOffset rangeEndUtc,
+            TimeBucket unit,
+            TimeZoneInfo userTz,
+            bool isMondayStartOfWeek)
         {
+            var startLocal = TimeZoneConversion.UtcToUserLocal(rangeStartUtc, userTz).DateTime;
+            var cursorLocal = AlignFloorLocal(startLocal, unit, isMondayStartOfWeek);
+
+            while (true)
+            {
+                var nextLocal = AddUnitLocal(cursorLocal, unit);
+
+                var cursorUtc = TimeZoneConversion.UserLocalToUtc(cursorLocal, userTz);
+                var nextUtc = TimeZoneConversion.UserLocalToUtc(nextLocal, userTz);
+
+                if (nextUtc <= rangeStartUtc)
+                {
+                    cursorLocal = nextLocal;
+                    continue;
+                }
+
+                if (cursorUtc >= rangeEndUtc)
+                    yield break;
+
+                yield return (cursorUtc, nextUtc);
+                cursorLocal = nextLocal;
+            }
+        }
+
+        private static DateTime AlignFloorLocal(DateTime local, TimeBucket unit, bool isMondayStartOfWeek) => unit switch
+        {
+            TimeBucket.Hour => new DateTime(local.Year, local.Month, local.Day, local.Hour, 0, 0),
+            TimeBucket.Day => local.Date,
+            TimeBucket.Week => FloorToWeek(local, isMondayStartOfWeek),
+            TimeBucket.Month => new DateTime(local.Year, local.Month, 1),
+            TimeBucket.Quarter => new DateTime(local.Year, ((local.Month - 1) / 3) * 3 + 1, 1),
+            TimeBucket.Year => new DateTime(local.Year, 1, 1),
+            TimeBucket.FiveYears => new DateTime((local.Year / 5) * 5, 1, 1),
+            TimeBucket.TenYears => new DateTime((local.Year / 10) * 10, 1, 1),
+            _ => local
+        };
+
+        private static DateTime AddUnitLocal(DateTime local, TimeBucket unit) => unit switch
+        {
+            TimeBucket.Hour => local.AddHours(1),
+            TimeBucket.Day => local.AddDays(1),
+            TimeBucket.Week => local.AddDays(7),
+            TimeBucket.Month => local.AddMonths(1),
+            TimeBucket.Quarter => local.AddMonths(3),
+            TimeBucket.Year => local.AddYears(1),
+            TimeBucket.FiveYears => local.AddYears(5),
+            TimeBucket.TenYears => local.AddYears(10),
+            _ => local
+        };
+
+        private static DateTime FloorToWeek(DateTime dt, bool isMondayStartOfWeek)
+        {
+            DayOfWeek weekStart = isMondayStartOfWeek ? DayOfWeek.Monday : DayOfWeek.Sunday;
             int delta = (7 + (dt.DayOfWeek - weekStart)) % 7;
             return dt.Date.AddDays(-delta);
         }
-
-        // handles DST implicitly because everything is UTC; if you pass Local, CLR adjusts for you
-        public static DateTime AddUnit(DateTime dt, TimeBucket unit) => unit switch
-        {
-            TimeBucket.Hour => dt.AddHours(1),
-            TimeBucket.Day => dt.AddDays(1),
-            TimeBucket.Week => dt.AddDays(7),
-            TimeBucket.Month => dt.AddMonths(1),
-            TimeBucket.Quarter => dt.AddMonths(3),
-            TimeBucket.Year => dt.AddYears(1),
-            TimeBucket.FiveYears => dt.AddYears(5),
-            TimeBucket.TenYears => dt.AddYears(10),
-            _ => dt
-        };
     }
 
-    public static class ScadaRequestPlanner
-    {
-        /// <summary>
-        /// Decide which sync interval the SCADA must deliver and
-        /// return a time window that is a clean multiple of that interval.
-        /// </summary>
-        public static (DateTime StartUtc, DateTime EndUtc) Plan(
-            DateTime desiredStartUtc,
-            DateTime desiredEndUtc,
-            TimeBucket bucket)          // bucket chosen by your ChooseBucket(...)
-        {
-            var start = CalendarBuckets.AlignFloor(desiredStartUtc, bucket);
-            var end = CalendarBuckets.AlignCeil(desiredEndUtc, bucket);   // round *to* bar width first
-            end = CalendarBuckets.AlignCeil(end, bucket);          // then make sure it's full sync steps
-            return (start, end);
-        }
+    //public static class ScadaRequestPlanner
+    //{
+    //    /// <summary>
+    //    /// Decide which sync interval the SCADA must deliver and
+    //    /// return a time window that is a clean multiple of that interval.
+    //    /// </summary>
+    //    public static (DateTime StartUtc, DateTime EndUtc) Plan(
+    //        DateTime desiredStartUtc,
+    //        DateTime desiredEndUtc,
+    //        TimeBucket bucket)          // bucket chosen by your ChooseBucket(...)
+    //    {
+    //        var start = CalendarBuckets.AlignFloor(desiredStartUtc, bucket);
+    //        var end = CalendarBuckets.AlignCeil(desiredEndUtc, bucket);   // round *to* bar width first
+    //        end = CalendarBuckets.AlignCeil(end, bucket);          // then make sure it's full sync steps
+    //        return (start, end);
+    //    }
 
-        private static (TimeBucket timeBucket, bool isChanged) MapToScadaSync(TimeBucket bucket) => bucket switch
-        {
-            TimeBucket.Quarter => (TimeBucket.Month, true),
-            TimeBucket.FiveYears => (TimeBucket.Year, true),
-            TimeBucket.TenYears => (TimeBucket.Year, true),
-            _ => (bucket, false)          // already supported
-        };
+    //    private static (TimeBucket timeBucket, bool isChanged) MapToScadaSync(TimeBucket bucket) => bucket switch
+    //    {
+    //        TimeBucket.Quarter => (TimeBucket.Month, true),
+    //        TimeBucket.FiveYears => (TimeBucket.Year, true),
+    //        TimeBucket.TenYears => (TimeBucket.Year, true),
+    //        _ => (bucket, false)          // already supported
+    //    };
 
        
-    }
+    //}
 
     public static class TimeBucketMapping
     {

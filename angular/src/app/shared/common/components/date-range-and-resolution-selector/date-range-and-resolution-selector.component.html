@@ -43,11 +43,17 @@
                 <div class="controls-cell range-controls">
                     <span>{{'From' | localize}}:</span>
                     <dx-date-box [(ngModel)]="fromDate" (ngModelChange)="invokeOnChange()" type="datetime" width="140"
-                        [disabled]="selectedMode !== DateRangeType.Range"></dx-date-box>
+                        [displayFormat]="displayFormat"
+                        [disabled]="selectedMode !== DateRangeType.Range">
+                        <dxo-calendar-options [firstDayOfWeek]="calendarOptions?.firstDayOfWeek"></dxo-calendar-options>
+                    </dx-date-box>
 
                     <span>{{'To' | localize}}:</span>
                     <dx-date-box [(ngModel)]="toDate" (ngModelChange)="invokeOnChange()" type="datetime" width="140"
-                        [disabled]="selectedMode !== DateRangeType.Range"></dx-date-box>
+                        [displayFormat]="displayFormat"
+                        [disabled]="selectedMode !== DateRangeType.Range">
+                        <dxo-calendar-options [firstDayOfWeek]="calendarOptions?.firstDayOfWeek"></dxo-calendar-options>
+                    </dx-date-box>
 
 
                     <div class="right-controls ms-2">

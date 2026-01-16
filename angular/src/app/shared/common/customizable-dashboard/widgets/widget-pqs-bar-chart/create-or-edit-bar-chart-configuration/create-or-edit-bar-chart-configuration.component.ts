@@ -148,6 +148,7 @@ export class CreateOrEditBarChartConfigurationComponent
     }
 
     ngOnInit(): void {
+        super.ngOnInit();
         this.fillXUnitOptions();
     }
 
@@ -612,6 +613,8 @@ export class CreateOrEditBarChartConfigurationComponent
         const request = new BarChartRequest({
             seriesBy: new DimensionSelector({ type: seriesBy, id: null, name: null }),
             category: new DimensionSelector({ type: category, id: null, name: null }),
+            utcOffsetMinutes: this._dateTimeService.GetUtcOffsetMinutes(this.defaultUtcOffset),
+            isMondayStartOfWeek: this._dateTimeService.IsMondayFirstDayOfWeek(this.defaultFirstDayOfWeek),
             barPrmList: config.parameters.map((p) => {
                 let baseData: string = null;
                 let customData: CustomWidgetTableData = null;

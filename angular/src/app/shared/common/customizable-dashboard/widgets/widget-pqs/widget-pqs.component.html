@@ -32,7 +32,6 @@
             </label>
 
             <div class="trend-control d-flex align-items-center mb-0">
-                <span class="trend-control-label">{{ 'BG' | localize }}:</span>
                 <button type="button" class="color-swatch" [style.backgroundColor]="chartBackgroundColor" (click)="openColorPicker(bgColorPicker)"></button>
                 <input
                     #bgColorPicker
@@ -68,11 +67,16 @@
                     <dxo-common-pane-settings [backgroundColor]="chartBackgroundColor"></dxo-common-pane-settings>
                     <dxi-pane name="top"></dxi-pane>
 
+                    <dxo-argument-axis type="datetime">
+                        <dxo-label [customizeText]="lineChart.customizeAxisLabel"></dxo-label>
+                    </dxo-argument-axis>
+
                     <dxo-common-series-settings [type]="isStepLine ? 'stepline' : 'line'" argumentField="key" [color]="chartLineColor">
                         <dxo-point [visible]="isLinePoints" [color]="chartLineColor"></dxo-point>
                         <dxo-stepline *ngIf="isStepLine">
                             <dxo-point [visible]="isLinePoints" [color]="chartLineColor"></dxo-point>
                         </dxo-stepline>
+                        <dxo-selection-style [width]="4"></dxo-selection-style>
                     </dxo-common-series-settings>
 
                     <dxi-series pane="top" *ngFor="let source of lineChart.chartConfiguration.lineLegend"
@@ -115,12 +119,19 @@
          class="custom-legend-container"
          [ngStyle]="{ 'background-color': headerBackgroundColor, color: headerTitleColor }">
         <div class="custom-legend-items">
-            <div *ngFor="let legendItem of lineChart.chartConfiguration.lineLegend; let i = index" class="custom-legend-item">
+            <div *ngFor="let legendItem of lineChart.chartConfiguration.lineLegend; let i = index"
+                 class="custom-legend-item"
+                 [class.legend-hidden]="legendItem.isHidden"
+                 (mouseenter)="onLegendItemHover(legendItem, true)"
+                 (mouseleave)="onLegendItemHover(legendItem, false)">
                 <span
                     class="legend-marker clickable-marker"
-                    [style.background-color]="legendItem.color || chartLineColor"
-                    (click)="openLegendColorPicker(i)"
-                    [title]="'ChangeColor' | localize">
+                    [class.hidden-marker]="legendItem.isHidden"
+                    [style.background-color]="legendItem.isHidden ? 'transparent' : (legendItem.color || chartLineColor)"
+                    [style.border-color]="legendItem.color || chartLineColor"
+                    (click)="onLegendMarkerClick(legendItem, $event)"
+                    (dblclick)="openLegendColorPicker(i, $event)"
+                    [title]="legendItem.isHidden ? ('ShowSeries' | localize) : ('HideSeries' | localize)">
                 </span>
                 <input
                     #colorPicker

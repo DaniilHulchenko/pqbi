@@ -79,6 +79,8 @@
             <div class="d-flex flex-column" style="width: 100%;">
                 <dx-data-grid #grid name="components" [dataSource]="parameters"
                     (onEditingStart)="updateParameter($event)" [showBorders]="true" style="width: 100%;">
+                    <dxi-column caption="Color" [width]="80" [allowSorting]="false"
+                        cellTemplate="colorTemplate"></dxi-column>
                     <dxi-column caption="Name" dataField="name"></dxi-column>
                     <dxi-column caption="Type" dataField="type"></dxi-column>
                     <dxi-column caption="Components" dataField="component"
@@ -90,6 +92,11 @@
                         <dxi-button hint="Duplicate" icon="copy" [onClick]="duplicateParameterCommand"></dxi-button>
                         <dxi-button name="delete"></dxi-button>
                     </dxi-column>
+
+                    <div *dxTemplate="let context of 'colorTemplate'">
+                        <div [style.background-color]="getParameterColor(context.data)"
+                             style="width: 40px; height: 20px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+                    </div>
 
                     <div *dxTemplate="let context of 'componentsTemplate'">
                         {{ componentsToString(context.data.componentsState) }}

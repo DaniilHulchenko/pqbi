@@ -227,6 +227,8 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
         this.pqsTableConfigRequest = new TableWidgetRequest({
             widgetName: this.widgetConfigurationInDB?.name,
+            utcOffsetMinutes: this._dateTimeService.GetUtcOffsetMinutes(this.defaultUtcOffset),
+            isMondayStartOfWeek: this._dateTimeService.IsMondayFirstDayOfWeek(this.defaultFirstDayOfWeek),
             rows: new RowWidgetTable({
                 feeders: [...formattedFeeders, ...formattedComponents],
                 tags: tagsList.map((t) => {
@@ -588,13 +590,21 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         return [DateTime.fromJSDate(startDate), DateTime.fromJSDate(endDate)];
     }
 
-    private formatNumber(value: number, dataUnitType: DataUnitType): string {
+    private formatNumber(value: number, dataUnitType: DataUnitType, parameter?: WidgetParametersColumn): string {
         const token = dataUnitType?.id !== 41 && dataUnitType?.id !== 255 ? this.l(dataUnitType.tokenCode) : '';
 
         if (value === 0) {
             return `0${token}`;
         }
 
+        // Determine decimal points based on parameter settings or defaults
+        const isPercentage = dataUnitType && (dataUnitType.id === 18 || dataUnitType.id === 19);
+        let decimalPoints: number;
+        
+        decimalPoints = isPercentage 
+            ? (this.defaultNumberOfDecimalsForPercentage ?? 2)
+            : (this.defaultNumberOfDecimals ?? 2);
+        
         let absValue = Math.abs(value);
         let suffix = '';
 
@@ -625,7 +635,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
             }
         }
 
-        return `${value.toFixed(2)}${suffix}`;
+        return `${value.toFixed(decimalPoints)}${suffix}${token}`;
     }
 
     private calculateColumnFirstColumnAndDefaultWidth(widths: string[]): [number, number] {
@@ -927,10 +937,19 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                     calculateDisplayValue: (rowData: any) => {
                         let res = '';
                         if (typeof rowData[param.name] === 'number') {
-                            res = this.formatNumber(rowData[param.name], rowData.dataUnitType);
+                            res = this.formatNumber(rowData[param.name], rowData.dataUnitType, param);
                         } else {
                             const parsed = parseFloat(rowData[param.name]);
-                            res = isNaN(parsed) ? rowData[param.name] : parsed.toFixed(2);
+                            if (!isNaN(parsed)) {
+                                // Use default values for decimal points
+                                const isPercentage = rowData.dataUnitType && (rowData.dataUnitType.id === 18 || rowData.dataUnitType.id === 19);
+                                const decimalPoints = isPercentage 
+                                    ? (this.defaultNumberOfDecimalsForPercentage ?? 2)
+                                    : (this.defaultNumberOfDecimals ?? 2);
+                                res = parsed.toFixed(decimalPoints);
+                            } else {
+                                res = rowData[param.name];
+                            }
                         }
                         // ? this.formatNumber(rowData[param.name], rowData.dataUnitType)
                         // : rowData[param.name]
@@ -970,7 +989,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                         calculateDisplayValue: (rowData: any) => {
                             const field = this.eventDisplayMode === 'duration' ? param.name + '_duration' : param.name;
                             return typeof rowData[field] === 'number'
-                                ? this.formatNumber(rowData[field], rowData.dataUnitType)
+                                ? this.formatNumber(rowData[field], rowData.dataUnitType, param)
                                 : rowData[field];
                         },
                         calculateFilterExpression: (filterValue: any, filterOperation: any) => {
@@ -1050,7 +1069,13 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         }
 
         if (typeof rawValue === 'number') {
-            rawValue = rawValue.toFixed(2);
+            // Use default values for decimal points
+            const unitId = typeof i.dataUnitType === 'number' ? i.dataUnitType : i.dataUnitType?.id;
+            const isPercentage = unitId === 18 || unitId === 19;
+            const decimalPoints = isPercentage 
+                ? (this.defaultNumberOfDecimalsForPercentage ?? 2)
+                : (this.defaultNumberOfDecimals ?? 2);
+            rawValue = rawValue.toFixed(decimalPoints);
         }
 
         return rawValue;

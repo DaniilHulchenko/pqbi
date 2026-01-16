@@ -7,13 +7,12 @@ import {
 import { map, Observable, of, switchMap } from 'rxjs';
 import { DefaultValuesService } from './default-values-service.service';
 import { CardIcon } from '../interfaces/card-icon';
+import { DefaultValueKeys } from '@shared/DefaultValueKeys';
 
 @Injectable({
     providedIn: 'root',
 })
 export class CardIconService {
-    private readonly defaultIconSettingName = 'UI.CardWidget.DefaultIconId';
-
     constructor(
         private fileInfosService: FileInfosServiceProxy,
         private defaultValuesService: DefaultValuesService,
@@ -62,16 +61,14 @@ export class CardIconService {
     }
 
     getDefaultIconId(): Observable<number | null> {
-        return this.defaultValuesService.getValue(this.defaultIconSettingName).pipe(
-            map((value) => (value ? +value : null)),
-        );
+        return this.defaultValuesService.getDefaultIconId();
     }
 
     setDefaultIcon(id: number): Observable<void> {
         return this.defaultValuesService.createOrEdit(
             new CreateOrEditDefaultValueDto({
                 id: null,
-                name: this.defaultIconSettingName,
+                name: DefaultValueKeys.defaultIconSettingName,
                 value: id?.toString(),
             }),
         );

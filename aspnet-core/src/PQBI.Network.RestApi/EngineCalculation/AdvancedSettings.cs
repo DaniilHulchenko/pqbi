@@ -14,8 +14,19 @@ namespace PQBI.Network.RestApi.EngineCalculation
         public bool IsIgnoreAligningFunction { get; set; }
         public string? ReplaceOuterAggregationWith { get; set; }
         public List<GaugeMarkerDto>? Markers { get; set; }
+        public bool IsMondayStartOfWeek { get; set; }
 
-        public AdvancedSettings(double? nominalVal, NormalizeEnum normalizeType, bool isExcludeFlaggedData, IEnumerable<EventClass> excludeFlaggedCollection, bool isIgnoreAligningFunction, string? replaceOuterAggregationWith)
+        public AdvancedSettings()
+        {
+            NormalizeType = NormalizeEnum.NO;
+            IsExcludeFlaggedData = false;
+            FiltersGroup = null;
+            IsIgnoreAligningFunction = false;
+            ReplaceOuterAggregationWith = null;
+            IsMondayStartOfWeek = false;
+        }
+
+        public AdvancedSettings(double? nominalVal, NormalizeEnum normalizeType, bool isExcludeFlaggedData, IEnumerable<EventClass> excludeFlaggedCollection, bool isIgnoreAligningFunction, string? replaceOuterAggregationWith, bool isMondayStartOfWeek)
         {
             NominalVal = nominalVal;
             NormalizeType = normalizeType;
@@ -27,6 +38,7 @@ namespace PQBI.Network.RestApi.EngineCalculation
             FiltersGroup = filtersGroup;
             IsIgnoreAligningFunction = isIgnoreAligningFunction;
             ReplaceOuterAggregationWith = replaceOuterAggregationWith;
+            IsMondayStartOfWeek = isMondayStartOfWeek;
         }
 
         public static bool IsNeedToExcludeFlagged(bool isExcludeFlaggedData, IEnumerable<EventClass> excludeFlaggedCollection)

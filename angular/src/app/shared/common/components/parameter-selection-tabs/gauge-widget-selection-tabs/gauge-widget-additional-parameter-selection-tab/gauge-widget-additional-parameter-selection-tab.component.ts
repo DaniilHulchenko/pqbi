@@ -88,12 +88,14 @@ export class GaugeWidgetAdditionalParameterSelectionTabComponent
         [QuantityEnum.QMIN]: 'Minimum',
         [QuantityEnum.QMAX]: 'Maximum',
         [QuantityEnum.QAVG]: 'Average',
+        [QuantityEnum.QSUM]: 'Sum',
     };
 
     private readonly quantityKeys: Record<QuantityEnum, string> = {
         [QuantityEnum.QMIN]: 'MIN',
         [QuantityEnum.QMAX]: 'MAX',
         [QuantityEnum.QAVG]: 'AVG',
+        [QuantityEnum.QSUM]: 'SUM',
     };
 
     private readonly defaultAdvancedSettings: GaugeWidgetAdvancedSettingsConfig = {
@@ -106,7 +108,7 @@ export class GaugeWidgetAdditionalParameterSelectionTabComponent
         upperLimit: 0,
         limitFromNominal: false,
         limitFromNormalization: false,
-        decimalPoints: 2,
+        decimalPoints: null,
         linkPage: null,
         titleFont: { family: '', size: null, colorMode: 'scheme', customColor: '#000000' },
         valueFont: { family: '', size: null, colorMode: 'scheme', customColor: '#000000' },

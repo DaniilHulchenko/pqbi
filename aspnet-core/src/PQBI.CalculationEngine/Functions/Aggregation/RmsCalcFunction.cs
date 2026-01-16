@@ -33,6 +33,6 @@ public class RmsCalcFunction : SingleCalculationFunction
 
         sum = sum / count;
         var result = Math.Sqrt(sum);
-        return new BasicValue(result, startTime, dataValueStatus); ;
+        return new BasicValue(result, startTime, dataValueStatus);
     }
 }

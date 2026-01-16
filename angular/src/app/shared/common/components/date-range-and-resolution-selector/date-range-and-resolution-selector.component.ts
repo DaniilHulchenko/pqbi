@@ -1,10 +1,7 @@
-import { Component, forwardRef, OnInit } from '@angular/core';
+import { Component, forwardRef, Injector, OnInit, ChangeDetectorRef } from '@angular/core';
 import { DateRangeType } from '@app/shared/enums/date-range-type';
 import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
-import { RefreshWidgetCustomUnitValuePipe } from '@shared/common/pipes/refresh-widget-custom-unit-value.pipe';
-import { RefreshWidgetUnitValuePipe } from '@shared/common/pipes/refresh-widget-unit-value.pipe';
-import { RefreshWidgetSelectionModel } from '../widget-refresh-selector/widget-refresh-selector.component';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DxRadioGroupModule, DxSelectBoxModule, DxNumberBoxModule, DxDateBoxModule } from 'devextreme-angular';
@@ -13,6 +10,7 @@ import { DateRangeAndResolutionModel } from '@app/shared/models/date-range-and-r
 import { ResolutionState } from '@app/shared/models/resolution-state';
 import { ResolutionUnits } from '@app/shared/enums/resolution-selection-units';
 import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selection-units';
+import { AppComponentBase } from '@shared/common/app-component-base';
 
 @Component({
     selector: 'dateRangeAndResolutionSelector',
@@ -36,7 +34,7 @@ import { CustomResolutionUnits } from '@app/shared/enums/custom-resolution-selec
         },
     ],
 })
-export class DateRangeAndResolutionSelectorComponent implements ControlValueAccessor, OnInit {
+export class DateRangeAndResolutionSelectorComponent extends AppComponentBase implements ControlValueAccessor, OnInit {
     customUnitOptions: { value: RefreshSelectionCustomUnits; label: string }[];
     dateRangeUnitOptions: { value: RefreshSelectionCustomUnits; label: string }[];
     dateRangeOptions: DateRangeType[];
@@ -71,7 +69,9 @@ export class DateRangeAndResolutionSelectorComponent implements ControlValueAcce
 
     RefreshSelectionCustomUnits = RefreshSelectionCustomUnits;
 
-    constructor(private localizePipe: LocalizePipe) {}
+    constructor(private localizePipe: LocalizePipe, injector: Injector, private cdr: ChangeDetectorRef) {
+        super(injector);
+    }
 
     get minCustomValue(): number {
         return this.resolutionUnit === RefreshSelectionCustomUnits.Sec ? 3 : 0;
@@ -119,10 +119,29 @@ export class DateRangeAndResolutionSelectorComponent implements ControlValueAcce
         this.onTouched = fn;
     }
 
+    displayFormat: string = 'dd/MM/yyyy HH:mm';
+    calendarOptions: { firstDayOfWeek?: number } = {};
+
     ngOnInit(): void {
+        super.ngOnInit();
         this.fillDateRangeOptions();
         this.fillDateRangeUnitOptions();
         this.fillResolutionUnitOptions();
+        
+        this.ensureDefaultValuesLoaded().subscribe(() => {
+            this.displayFormat = this.getDevExtremeDateFormat();
+            
+            // Configure calendar first day of week
+            const firstDayOfWeek = this.getFirstDayOfWeekNumber();
+            if (firstDayOfWeek !== null) {
+                this.calendarOptions = { firstDayOfWeek: firstDayOfWeek };
+            } else {
+                this.calendarOptions = {};
+            }
+            
+            // Trigger change detection to update the view
+            this.cdr.markForCheck();
+        });
     }
 
     invokeOnChange() {

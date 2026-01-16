@@ -119,6 +119,18 @@ export class AppNavigationService {
                         'Pages.Administration.Tenant.Settings',
                         'flaticon-settings',
                         '/app/admin/tenantSettings'
+                    ),
+                    new AppMenuItem(
+                        'Localization',
+                        '',
+                        'flaticon-globe',
+                        '/app/admin/localization'
+                    ),
+                    new AppMenuItem(
+                        'DashboardSettings',
+                        '',
+                        'flaticon-settings',
+                        '/app/admin/dashboard-settings'
                     )
                 ]
             ),

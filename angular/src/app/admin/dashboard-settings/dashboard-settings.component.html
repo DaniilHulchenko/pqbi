@@ -1,0 +1,274 @@
+<div [@routerTransition]>
+    <sub-header [title]="'DashboardSettings' | localize">
+    </sub-header>
+    <div [class]="containerClass">
+        <div class="card card-custom gutter-b">
+            <div class="card-body">
+                <p class="text-muted mb-4">{{ 'ConfigureDashboardSettings' | localize }}</p>
+
+                <!-- Display Format Section -->
+                <div class="row">
+                    <div class="col-xl-6 mb-4">
+                        <div class="card card-custom">
+                            <div class="card-header">
+                                <h3 class="card-title">{{ 'DisplayFormat' | localize }}</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">{{ 'DecimalPlacesForNumbers' | localize }}</label>
+                                    <dx-number-box
+                                        [(value)]="decimalPlacesForNumbers"
+                                        [min]="0"
+                                        [max]="10"
+                                        [showSpinButtons]="true"
+                                        [step]="1"
+                                    ></dx-number-box>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">{{ 'DecimalPlacesForPercentage' | localize }}</label>
+                                    <dx-number-box
+                                        [(value)]="decimalPlacesForPercentage"
+                                        [min]="0"
+                                        [max]="10"
+                                        [showSpinButtons]="true"
+                                        [step]="1"
+                                    ></dx-number-box>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Default Colors Section -->
+                <div class="row">
+                    <div class="col-xl-12 mb-4">
+                        <div class="card card-custom">
+                            <div class="card-header">
+                                <h3 class="card-title">{{ 'DefaultColors' | localize }}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-4">{{ 'DefineDefaultColorsUsedForPhasesAndSystemGeneratedSeries' | localize }}</p>
+                                <dx-tab-panel [dataSource]="colorTabs" [selectedIndex]="0" [loop]="false" [animationEnabled]="true"
+                                    [swipeEnabled]="true" [deferRendering]="false">
+                                    <div *dxTemplate="let option of 'title'">
+                                        <span>{{option.name}}</span>
+                                    </div>
+                                    <div *dxTemplate="let option of 'commonTemplate'">
+                                        <div class="p-3">
+                                            <div class="row">
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'V1N' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="v1nColor"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="v1nColor"
+                                                            placeholder="{{ 'V1N' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ v1nColor }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'V2N' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="v2nColor"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="v2nColor"
+                                                            placeholder="{{ 'V2N' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ v2nColor }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'V3N' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="v3nColor"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="v3nColor"
+                                                            placeholder="{{ 'V3N' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ v3nColor }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'V12' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="v12Color"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="v12Color"
+                                                            placeholder="{{ 'V12' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ v12Color }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'V23' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="v23Color"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="v23Color"
+                                                            placeholder="{{ 'V23' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ v23Color }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'V31' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="v31Color"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="v31Color"
+                                                            placeholder="{{ 'V31' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ v31Color }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'Frequency' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="frequencyColor"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="frequencyColor"
+                                                            placeholder="{{ 'Frequency' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ frequencyColor }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'Aux' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="auxColor"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="auxColor"
+                                                            placeholder="{{ 'Aux' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ auxColor }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'Total' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="totalColor"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="totalColor"
+                                                            placeholder="{{ 'Total' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ totalColor }}</div>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">{{ 'VN' | localize }}</label>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div
+                                                            class="color-swatch"
+                                                            [style.background-color]="vnColor"
+                                                            style="width: 40px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                        ></div>
+                                                        <dx-color-box
+                                                            [(value)]="vnColor"
+                                                            placeholder="{{ 'VN' | localize }}"
+                                                            style="flex: 1;"
+                                                        ></dx-color-box>
+                                                    </div>
+                                                    <div class="form-text mt-1">{{ vnColor }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <a href="javascript:void(0)" (click)="resetToDefaults()" class="text-primary">
+                                                    {{ 'ResetToPQScadaDefaults' | localize }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div *dxTemplate="let option of 'advancedTemplate'">
+                                        <div class="p-3 h-100 d-flex flex-column">
+                                            <div class="flex-grow-1">
+                                                <app-advanced-parameter-selector
+                                                    (parameterAdded)="onParameterAdded($event)"
+                                                    class="h-100 d-flex flex-column">
+                                                </app-advanced-parameter-selector>
+                                            </div>
+
+                                            <div class="mt-4">
+                                                <dx-data-grid
+                                                    [dataSource]="advancedParameters"
+                                                    [showBorders]="true"
+                                                    [columnAutoWidth]="true"
+                                                    (onRowRemoved)="onParameterDelete($event)">
+                                                    <dxi-column caption="{{ 'Type' | localize }}" dataField="type"></dxi-column>
+                                                    <dxi-column caption="{{ 'Group' | localize }}" dataField="group"></dxi-column>
+                                                    <dxi-column caption="{{ 'Phase' | localize }} / {{ 'Channel' | localize }}" dataField="phaseOrChannel"></dxi-column>
+                                                    <dxi-column caption="{{ 'Quantity' | localize }}" dataField="quantity"></dxi-column>
+                                                    <dxi-column caption="{{ 'Color' | localize }}" [cellTemplate]="'colorCell'"></dxi-column>
+                                                    <dxo-editing [useIcons]="true" [allowDeleting]="true"></dxo-editing>
+                                                
+                                                    <div *dxTemplate="let data of 'colorCell'">
+                                                        <div [style.background-color]="data.data.color" style="width: 30px; height: 30px; border: 1px solid #ddd; border-radius: 4px; display: inline-block;"></div>
+                                                    </div>
+                                                </dx-data-grid>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </dx-tab-panel>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary" (click)="cancel()">
+                        {{ 'Cancel' | localize }}
+                    </button>
+                    <button type="button" class="btn btn-primary" (click)="saveChanges()" [disabled]="saving">
+                        {{ 'Save' | localize }}
+                    </button>
+                </div>
+            </div>
+        </div> 
+    </div>
+</div>

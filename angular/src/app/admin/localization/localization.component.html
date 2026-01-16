@@ -1,0 +1,206 @@
+<div [@routerTransition]>
+    <sub-header [title]="'LocalizationSettings' | localize">
+    </sub-header>
+    <div [class]="containerClass">
+        <div class="card card-custom gutter-b">
+            <div class="card-body">
+                <p class="text-muted mb-4">{{ 'ConfigureRegionalAndDisplayPreference' | localize }}</p>
+
+                <div class="row">
+                    <!-- Date and Time Display Format Section -->
+                    <div class="col-xl-6 mb-4">
+                        <div class="card card-custom">
+                            <div class="card-header">
+                                <h3 class="card-title">{{ 'DateAndTimeDisplayFormat' | localize }}</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex flex-column gap-2">
+                                    <!-- Auto culture option -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            id="format-auto"
+                                            name="dateTimeDisplayFormatMode"
+                                            value="auto"
+                                            [(ngModel)]="dateTimeDisplayFormatMode"
+                                            class="form-check-input">
+                                        <label for="format-auto" class="form-check-label mb-0">
+                                            {{ 'AutoCulture' | localize }}
+                                        </label>
+                                    </div>
+
+                                    <!-- Custom culture option -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            id="format-custom"
+                                            name="dateTimeDisplayFormatMode"
+                                            value="custom"
+                                            [(ngModel)]="dateTimeDisplayFormatMode"
+                                            class="form-check-input">
+                                        <label for="format-custom" class="form-check-label mb-0" style="min-width: 150px;">
+                                            {{ 'CustomCulture' | localize }}
+                                        </label>
+                                        <dx-select-box
+                                            [(value)]="customCulture"
+                                            [items]="cultures"
+                                            displayExpr="displayName"
+                                            valueExpr="name"
+                                            placeholder="{{ 'SelectCulture' | localize }}"
+                                            [searchEnabled]="true"
+                                            [disabled]="dateTimeDisplayFormatMode !== 'custom'"
+                                            style="flex: 1;">
+                                        </dx-select-box>
+                                    </div>
+
+                                    <!-- Manual option -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            id="format-manual"
+                                            name="dateTimeDisplayFormatMode"
+                                            value="manual"
+                                            [(ngModel)]="dateTimeDisplayFormatMode"
+                                            class="form-check-input">
+                                        <label for="format-manual" class="form-check-label mb-0">
+                                            {{ 'Manual' | localize }}
+                                        </label>
+                                        <div class="d-flex align-items-center gap-2 ms-2" style="flex: 1;">
+                                            <span>{{ 'DateFormat' | localize }}:</span>
+                                            <dx-select-box
+                                                [(value)]="manualDateFormat"
+                                                [items]="dateFormatOptions"
+                                                displayExpr="label"
+                                                valueExpr="value"
+                                                [searchEnabled]="false"
+                                                [disabled]="dateTimeDisplayFormatMode !== 'manual'"
+                                                style="flex: 1;">
+                                            </dx-select-box>
+                                            <span>{{ 'TimeFormat' | localize }}:</span>
+                                            <dx-select-box
+                                                [(value)]="manualTimeFormat"
+                                                [items]="timeFormatOptions"
+                                                displayExpr="label"
+                                                valueExpr="value"
+                                                [searchEnabled]="false"
+                                                [disabled]="dateTimeDisplayFormatMode !== 'manual'"
+                                                style="flex: 1;">
+                                            </dx-select-box>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Section -->
+                    <div class="col-xl-6 mb-4">
+                        <div class="card card-custom">
+                            <div class="card-header">
+                                <h3 class="card-title">{{ 'Calendar' | localize }}</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="form-label">{{ 'FirstDayOfWeek' | localize }}</label>
+                                    <dx-select-box
+                                        [(value)]="firstDayOfWeek"
+                                        [items]="firstDayOfWeekOptions"
+                                        placeholder="Select first day"
+                                        [searchEnabled]="false"
+                                    ></dx-select-box>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UTC Offset Section -->
+                <div class="row">
+                    <div class="col-xl-6 mb-4">
+                        <div class="card card-custom">
+                            <div class="card-header">
+                                <h3 class="card-title">{{ 'UtcOffset' | localize }}</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex flex-column gap-2">
+                                    <!-- Time zone option -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            id="utc-timezone"
+                                            name="utcOffsetMode"
+                                            value="timezone"
+                                            [(ngModel)]="utcOffsetMode"
+                                            class="form-check-input">
+                                        <label for="utc-timezone" class="form-check-label mb-0">
+                                            {{ 'Timezone' | localize }}
+                                        </label>
+                                    </div>
+
+                                    <!-- Custom time zone option -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            id="utc-custom"
+                                            name="utcOffsetMode"
+                                            value="custom"
+                                            [(ngModel)]="utcOffsetMode"
+                                            class="form-check-input">
+                                        <label for="utc-custom" class="form-check-label mb-0" style="min-width: 150px;">
+                                            {{ 'CustomTimeZone' | localize }}
+                                        </label>
+                                        <dx-select-box
+                                            [(value)]="customTimeZone"
+                                            [items]="timeZones"
+                                            displayExpr="name"
+                                            valueExpr="value"
+                                            placeholder="{{ 'SelectTimeZone' | localize }}"
+                                            [searchEnabled]="true"
+                                            [disabled]="utcOffsetMode !== 'custom'"
+                                            style="flex: 1;">
+                                        </dx-select-box>
+                                    </div>
+
+                                    <!-- Manual option -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            id="utc-manual"
+                                            name="utcOffsetMode"
+                                            value="manual"
+                                            [(ngModel)]="utcOffsetMode"
+                                            class="form-check-input">
+                                        <label for="utc-manual" class="form-check-label mb-0">
+                                            {{ 'Manual' | localize }}
+                                        </label>
+                                        <span class="ms-2">{{ 'UtcOffset' | localize }}:</span>
+                                        <dx-number-box
+                                            [(value)]="manualUtcOffset"
+                                            [showSpinButtons]="true"
+                                            [step]="0.5"
+                                            [min]="-12"
+                                            [max]="14"
+                                            [disabled]="utcOffsetMode !== 'manual'"
+                                            style="flex: 1;">
+                                        </dx-number-box>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary" (click)="cancel()">
+                        {{ 'Cancel' | localize }}
+                    </button>
+                    <button type="button" class="btn btn-primary" (click)="saveChanges()">
+                        {{ 'Save' | localize }}
+                    </button>
+                </div>
+            </div>
+        </div> 
+    </div>
+</div>
+

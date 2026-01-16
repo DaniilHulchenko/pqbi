@@ -33,6 +33,7 @@ export class WidgetComponentBaseComponent extends AppComponentBase implements On
     }
 
     ngOnInit(): void {
+        super.ngOnInit();
         this.isNew = this.elementRef.nativeElement.parentElement.dataset.isnew;
 
         this.widgetConfigurationInDB = new CreateOrEditWidgetConfigurationDto();
