@@ -168,7 +168,8 @@ export class CreateOrEditTrendConfigurationComponent extends AppComponentBase im
         }
 
         // Final fallback to default blue
-        return '#3498db';
+        // return '#3498db';
+        return null;
     }
 
     private findAdvancedColorForParameter(parameter: WidgetParametersColumn): string | null {

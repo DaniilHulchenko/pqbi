@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { map, Observable, of, shareReplay, tap, switchMap, forkJoin } from 'rxjs';
+import { map, Observable, of, shareReplay, tap, forkJoin, ReplaySubject } from 'rxjs';
 import { CreateOrEditDefaultValueDto, DefaultValuesServiceProxy, GetDefaultValueForEditOutput } from '@shared/service-proxies/service-proxies';
 import { ConfigurationVersionService } from './configuration-version-service.service';
 import { CacheStorageService } from './cache-storage.service';
@@ -26,6 +26,8 @@ export interface AllDefaultValues {
 export class DefaultValuesService {
     private readonly CACHE_PREFIX = 'default_value_';
     private _pendingRequests = new Map<string, Observable<string>>();
+    private dateTimeDisplayFormatSubject = new ReplaySubject<DateTimeDisplayFormatModel>(1);
+    private dateTimeDisplayFormatLoaded = false;
 
     constructor(
         private _defaultValuesServiceProxy: DefaultValuesServiceProxy,
@@ -46,6 +48,14 @@ export class DefaultValuesService {
 
     cacheValue(name: string, value: string): void {
         this.cacheStorage.set(this.CACHE_PREFIX + name, value);
+    }
+
+    updateDateTimeDisplayFormat(value: DateTimeDisplayFormatModel | string): void {
+        const model = typeof value === 'string'
+            ? DateTimeDisplayFormatModel.fromJson(value) || new DateTimeDisplayFormatModel()
+            : value;
+        this.cacheValue(DefaultValueKeys.dateTimeDisplayFormatSettingName, model.toJson());
+        this.dateTimeDisplayFormatSubject.next(model);
     }
 
     private getValue(name: string): Observable<string> {
@@ -101,9 +111,19 @@ export class DefaultValuesService {
      * @returns Observable of DateTimeDisplayFormatModel
      */
     getDateTimeDisplayFormat(): Observable<DateTimeDisplayFormatModel> {
-        return this.getValue(DefaultValueKeys.dateTimeDisplayFormatSettingName).pipe(
-            map((value: string) => DateTimeDisplayFormatModel.fromJson(value) || new DateTimeDisplayFormatModel())
-        );
+        if (!this.dateTimeDisplayFormatLoaded) {
+            this.dateTimeDisplayFormatLoaded = true;
+            this.getValue(DefaultValueKeys.dateTimeDisplayFormatSettingName)
+                .pipe(
+                    map((value: string) => DateTimeDisplayFormatModel.fromJson(value) || new DateTimeDisplayFormatModel())
+                )
+                .subscribe({
+                    next: (format) => this.dateTimeDisplayFormatSubject.next(format),
+                    error: () => this.dateTimeDisplayFormatSubject.next(new DateTimeDisplayFormatModel()),
+                });
+        }
+
+        return this.dateTimeDisplayFormatSubject.asObservable();
     }
 
     /**

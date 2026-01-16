@@ -388,8 +388,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
             }, 
             (key) => this.l(key),
             (date: Date) => {
-                const dateTime = DateTime.fromJSDate(date);
-                return dateTime.toFormat(this.getLuxonDateTimeFormat());
+                return this._dateTimeService.formatDateTimeForDisplay(DateTime.fromJSDate(date));
             },
             this.defaultNumberOfDecimals ?? 2,
             this.defaultNumberOfDecimalsForPercentage ?? 2
@@ -405,8 +404,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         this.ensureDefaultValuesLoaded().subscribe(() => {
             if (this.lineChart) {
                 this.lineChart.formatDateTime = (date: Date) => {
-                    const dateTime = DateTime.fromJSDate(date);
-                    return dateTime.toFormat(this.getLuxonDateTimeFormat());
+                    return this._dateTimeService.formatDateTimeForDisplay(DateTime.fromJSDate(date));
                 };
                 this.lineChart.numberOfDecimals = this.defaultNumberOfDecimals ?? 2;
                 this.lineChart.numberOfDecimalsForPercentage = this.defaultNumberOfDecimalsForPercentage ?? 2;

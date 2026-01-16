@@ -216,7 +216,7 @@ export class LocalizationComponent extends AppComponentBase implements OnInit {
                     this.originalValues.utcOffset = this.utcOffsetModel.toJson();
 
                     // Update cache with new values
-                    this.defaultValuesService.cacheValue(DefaultValueKeys.dateTimeDisplayFormatSettingName, this.dateTimeDisplayFormatModel.toJson());
+                    this.defaultValuesService.updateDateTimeDisplayFormat(this.dateTimeDisplayFormatModel);
                     this.defaultValuesService.cacheValue(DefaultValueKeys.defaultFirstDayOfWeekSettingName, this.firstDayOfWeek);
                     this.defaultValuesService.cacheValue(DefaultValueKeys.utcOffsetSettingName, this.utcOffsetModel.toJson());
 
@@ -268,4 +268,3 @@ export class LocalizationComponent extends AppComponentBase implements OnInit {
         this.notify.info(this.l('ChangesCancelled'));
     }
 }
-
