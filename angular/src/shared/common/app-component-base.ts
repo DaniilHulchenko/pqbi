@@ -21,6 +21,7 @@ import notify from 'devextreme/ui/notify';
 import { DefaultValuesService } from '@app/shared/services/default-values-service.service';
 import { UtcOffsetModel } from '@app/shared/models/utc-offset-model';
 import { DateTimeDisplayFormatModel } from '@app/shared/models/date-time-display-format-model';
+import { DateTimeService } from '@app/shared/common/timing/date-time.service';
 import { Observable, shareReplay, tap, catchError, of, map } from 'rxjs';
 
 interface AbpEventSubscription {
@@ -51,6 +52,7 @@ export abstract class AppComponentBase implements OnDestroy, OnInit {
 
     private ngxSpinnerTextService: NgxSpinnerTextService;
     protected defaultValuesService: DefaultValuesService;
+    protected dateTimeService: DateTimeService;
 
     // Default values fields
     defaultUtcOffset: UtcOffsetModel;
@@ -79,6 +81,7 @@ export abstract class AppComponentBase implements OnDestroy, OnInit {
         this.spinnerService = injector.get(NgxSpinnerService);
         this.ngxSpinnerTextService = injector.get(NgxSpinnerTextService);
         this.defaultValuesService = injector.get(DefaultValuesService);
+        this.dateTimeService = injector.get(DateTimeService);
 
         this.initializeDefaultValues();
     }
@@ -161,35 +164,7 @@ export abstract class AppComponentBase implements OnDestroy, OnInit {
      * @returns DevExtreme date format string for displayFormat property
      */
     protected getDevExtremeDateFormat(): string {
-        const format = this.defaultDateTimeDisplayFormat;
-        
-        if (format.mode === 'manual' && format.manualDateFormat) {
-            // Convert lowercase to uppercase for month and year in DevExtreme format
-            // dd/mm/yyyy -> dd/MM/yyyy
-            // mm/dd/yyyy -> MM/dd/yyyy
-            // yyyy-mm-dd -> yyyy-MM-dd
-            let dxFormat = format.manualDateFormat
-                .replace(/yyyy/g, 'yyyy') // yyyy stays yyyy
-                .replace(/yy/g, 'yy') // yy stays yy
-                .replace(/mm/g, 'MM') // month should be uppercase
-                .replace(/dd/g, 'dd'); // day stays lowercase
-            
-            // Add time format based on manual setting
-            if (format.manualTimeFormat === '24 hours') {
-                dxFormat += ' HH:mm';
-            } else if (format.manualTimeFormat === '12 hours') {
-                dxFormat += ' hh:mm tt';
-            } else {
-                // Default to 24 hours if not specified
-                dxFormat += ' HH:mm';
-            }
-            
-            return dxFormat;
-        }
-        
-        // For 'auto' and 'custom' modes, use default format with 24-hour time
-        // The actual date formatting will follow the system/custom culture settings
-        return 'dd/MM/yyyy HH:mm';
+        return this.dateTimeService.getDevExtremeDateTimeFormat(this.defaultDateTimeDisplayFormat);
     }
 
     /**
@@ -197,21 +172,7 @@ export abstract class AppComponentBase implements OnDestroy, OnInit {
      * @returns Luxon date format string for date only
      */
     protected getLuxonDateFormat(): string {
-        const format = this.defaultDateTimeDisplayFormat;
-        
-        if (format.mode === 'manual' && format.manualDateFormat) {
-            // Convert to Luxon format (similar to DevExtreme)
-            let luxonFormat = format.manualDateFormat
-                .replace(/yyyy/g, 'yyyy')
-                .replace(/yy/g, 'yy')
-                .replace(/mm/g, 'MM')
-                .replace(/dd/g, 'dd');
-            
-            return luxonFormat;
-        }
-        
-        // Default format for auto/custom mode
-        return 'dd/MM/yyyy';
+        return this.dateTimeService.getLuxonDateFormat(this.defaultDateTimeDisplayFormat);
     }
 
     /**
@@ -219,19 +180,7 @@ export abstract class AppComponentBase implements OnDestroy, OnInit {
      * @returns Luxon date-time format string
      */
     protected getLuxonDateTimeFormat(): string {
-        const format = this.defaultDateTimeDisplayFormat;
-        let dateFormat = this.getLuxonDateFormat();
-        
-        if (format.mode === 'manual' && format.manualTimeFormat) {
-            if (format.manualTimeFormat === '24 hours') {
-                return dateFormat + ' HH:mm';
-            } else if (format.manualTimeFormat === '12 hours') {
-                return dateFormat + ' hh:mm a';
-            }
-        }
-        
-        // Default: include 24-hour time
-        return dateFormat + ' HH:mm';
+        return this.dateTimeService.getLuxonDateTimeFormat(this.defaultDateTimeDisplayFormat);
     }
 
     /**
