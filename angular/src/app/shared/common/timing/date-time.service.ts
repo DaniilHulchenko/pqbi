@@ -2,12 +2,38 @@ import { Injectable } from '@angular/core';
 import { AppLocalizationService } from '@app/shared/common/localization/app-localization.service';
 import { DateTime } from 'luxon';
 import { UtcOffsetModel } from '@app/shared/models/utc-offset-model';
+import { DefaultValuesService } from '@app/shared/services/default-values-service.service';
+import { DateTimeDisplayFormatModel } from '@app/shared/models/date-time-display-format-model';
+
+interface DateTimeFormatParts {
+    date: string;
+    time: string;
+    dateTime: string;
+    isHour12: boolean;
+}
 
 @Injectable()
 export class DateTimeService {
     constructor(
-        private _appLocalizationService: AppLocalizationService
-    ) { }
+        private _appLocalizationService: AppLocalizationService,
+        private _defaultValuesService: DefaultValuesService
+    ) {
+        this.subscribeToDateTimeDisplayFormat();
+    }
+
+    private currentDisplayFormat: DateTimeDisplayFormatModel = new DateTimeDisplayFormatModel();
+    private customFormatCache = new Map<string, DateTimeFormatParts>();
+
+    private subscribeToDateTimeDisplayFormat(): void {
+        this._defaultValuesService.getDateTimeDisplayFormat().subscribe({
+            next: (format: DateTimeDisplayFormatModel) => {
+                this.currentDisplayFormat = format || new DateTimeDisplayFormatModel();
+            },
+            error: () => {
+                this.currentDisplayFormat = new DateTimeDisplayFormatModel();
+            },
+        });
+    }
 
     createDateRangePickerOptions(): any {
         let options = {
@@ -150,12 +176,12 @@ export class DateTimeService {
 
     formatISODateString(dateText: string, format: string): string {
         let date = this.fromISODateString(dateText);
-        return date.toFormat(format);
+        return this.applyDisplayLocale(date).toFormat(format);
     }
 
     formatJSDate(jsDate: Date, format: string): string {
         let date = DateTime.fromJSDate(jsDate);
-        return date.toFormat(format);
+        return this.applyDisplayLocale(date).toFormat(format);
     }
 
     formatDate(date: DateTime | Date, format: string): string {
@@ -163,7 +189,35 @@ export class DateTimeService {
             return this.formatDate(this.fromJSDate(date), format);
         }
 
-        return date.toFormat(format);
+        return this.applyDisplayLocale(date).toFormat(format);
+    }
+
+    formatDateForDisplay(date: DateTime | Date, displayFormat?: DateTimeDisplayFormatModel): string {
+        const format = this.getLuxonDateFormat(displayFormat);
+        return this.formatWithDisplayLocale(date, format, displayFormat);
+    }
+
+    formatTimeForDisplay(date: DateTime | Date, displayFormat?: DateTimeDisplayFormatModel): string {
+        const format = this.getLuxonTimeFormat(displayFormat);
+        return this.formatWithDisplayLocale(date, format, displayFormat);
+    }
+
+    formatDateTimeForDisplay(date: DateTime | Date, displayFormat?: DateTimeDisplayFormatModel): string {
+        const format = this.getLuxonDateTimeFormat(displayFormat);
+        return this.formatWithDisplayLocale(date, format, displayFormat);
+    }
+
+    formatWithDisplayLocale(
+        date: DateTime | Date,
+        format: string,
+        displayFormat?: DateTimeDisplayFormatModel
+    ): string {
+        if (!date) {
+            return '';
+        }
+
+        const dateTime = date instanceof Date ? this.fromJSDate(date) : date;
+        return this.applyDisplayLocale(dateTime, displayFormat).toFormat(format);
     }
 
     getDiffInSeconds(maxDate: DateTime | Date, minDate: DateTime | Date) {
@@ -231,7 +285,76 @@ export class DateTimeService {
             return this.fromNow(this.fromJSDate(date));
         }
 
-        return date.toRelative();
+        return this.applyDisplayLocale(date).toRelative();
+    }
+
+    getLuxonDateFormat(displayFormat?: DateTimeDisplayFormatModel): string {
+        const format = displayFormat || this.currentDisplayFormat;
+
+        if (format.mode === 'manual' && format.manualDateFormat) {
+            return format.manualDateFormat
+                .replace(/yyyy/g, 'yyyy')
+                .replace(/yy/g, 'yy')
+                .replace(/mm/g, 'MM')
+                .replace(/dd/g, 'dd');
+        }
+
+        if (format.mode === 'custom' && format.customCulture) {
+            return this.getCustomCultureFormats(format.customCulture, 'luxon').date;
+        }
+
+        return 'dd/MM/yyyy';
+    }
+
+    getLuxonTimeFormat(displayFormat?: DateTimeDisplayFormatModel): string {
+        const format = displayFormat || this.currentDisplayFormat;
+
+        if (format.mode === 'manual' && format.manualTimeFormat) {
+            return format.manualTimeFormat === '12 hours' ? 'hh:mm a' : 'HH:mm';
+        }
+
+        if (format.mode === 'custom' && format.customCulture) {
+            return this.getCustomCultureFormats(format.customCulture, 'luxon').time;
+        }
+
+        return 'HH:mm';
+    }
+
+    getLuxonDateTimeFormat(displayFormat?: DateTimeDisplayFormatModel): string {
+        const format = displayFormat || this.currentDisplayFormat;
+
+        if (format.mode === 'custom' && format.customCulture) {
+            return this.getCustomCultureFormats(format.customCulture, 'luxon').dateTime;
+        }
+
+        const dateFormat = this.getLuxonDateFormat(format);
+
+        if (format.mode === 'manual' && format.manualTimeFormat) {
+            return `${dateFormat} ${this.getLuxonTimeFormat(format)}`;
+        }
+
+        return `${dateFormat} ${this.getLuxonTimeFormat(format)}`;
+    }
+
+    getDevExtremeDateTimeFormat(displayFormat?: DateTimeDisplayFormatModel): string {
+        const format = displayFormat || this.currentDisplayFormat;
+
+        if (format.mode === 'manual' && format.manualDateFormat) {
+            let dxFormat = format.manualDateFormat
+                .replace(/yyyy/g, 'yyyy')
+                .replace(/yy/g, 'yy')
+                .replace(/mm/g, 'MM')
+                .replace(/dd/g, 'dd');
+
+            const timeFormat = format.manualTimeFormat === '12 hours' ? 'hh:mm tt' : 'HH:mm';
+            return `${dxFormat} ${timeFormat}`;
+        }
+
+        if (format.mode === 'custom' && format.customCulture) {
+            return this.getCustomCultureFormats(format.customCulture, 'devextreme').dateTime;
+        }
+
+        return 'dd/MM/yyyy HH:mm';
     }
 
     getTimezoneOffset(ianaTimezoneId: string): number {
@@ -358,5 +481,108 @@ export class DateTimeService {
             // If timezone is invalid, fallback to system timezone
             return this.getSystemUtcOffsetMinutes();
         }
+    }
+
+    private applyDisplayLocale(date: DateTime, displayFormat?: DateTimeDisplayFormatModel): DateTime {
+        const format = displayFormat || this.currentDisplayFormat;
+        if (format.mode === 'custom' && format.customCulture) {
+            return date.setLocale(format.customCulture);
+        }
+
+        return date;
+    }
+
+    private getCustomCultureFormats(
+        customCulture: string,
+        target: 'luxon' | 'devextreme'
+    ): DateTimeFormatParts {
+        const cacheKey = `${customCulture}-${target}`;
+        const cached = this.customFormatCache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
+        const dateOptions: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        };
+        const timeOptions: Intl.DateTimeFormatOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+        };
+        const dateTimeOptions: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        };
+
+        const timeFormatter = new Intl.DateTimeFormat(customCulture, timeOptions);
+        const hour12 = this.getHour12(timeFormatter.resolvedOptions());
+
+        const formats: DateTimeFormatParts = {
+            date: this.getFormatFromIntlParts(customCulture, dateOptions, target, hour12),
+            time: this.getFormatFromIntlParts(customCulture, timeOptions, target, hour12),
+            dateTime: this.getFormatFromIntlParts(customCulture, dateTimeOptions, target, hour12),
+            isHour12: hour12,
+        };
+
+        this.customFormatCache.set(cacheKey, formats);
+        return formats;
+    }
+
+    private getFormatFromIntlParts(
+        locale: string,
+        options: Intl.DateTimeFormatOptions,
+        target: 'luxon' | 'devextreme',
+        hour12: boolean
+    ): string {
+        const formatter = new Intl.DateTimeFormat(locale, options);
+        const parts = formatter.formatToParts(new Date(Date.UTC(2006, 10, 22, 13, 45, 0)));
+
+        return parts
+            .map((part) => this.mapIntlPartToFormat(part, target, hour12))
+            .join('');
+    }
+
+    private mapIntlPartToFormat(
+        part: Intl.DateTimeFormatPart,
+        target: 'luxon' | 'devextreme',
+        hour12: boolean
+    ): string {
+        switch (part.type) {
+            case 'year':
+                return 'yyyy';
+            case 'month':
+                return 'MM';
+            case 'day':
+                return 'dd';
+            case 'hour':
+                return hour12 ? 'hh' : 'HH';
+            case 'minute':
+                return 'mm';
+            case 'second':
+                return 'ss';
+            case 'dayPeriod':
+                return target === 'devextreme' ? 'tt' : 'a';
+            case 'literal':
+                return part.value;
+            default:
+                return part.value;
+        }
+    }
+
+    private getHour12(options: Intl.ResolvedDateTimeFormatOptions): boolean {
+        if (options.hour12 !== undefined) {
+            return options.hour12;
+        }
+
+        if (options.hourCycle) {
+            return options.hourCycle === 'h11' || options.hourCycle === 'h12';
+        }
+
+        return false;
     }
 }

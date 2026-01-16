@@ -1,6 +1,5 @@
 import { AfterViewInit, Directive, ElementRef, EventEmitter, Injector, Input, Output } from '@angular/core';
 import { AppComponentBase } from '@shared/common/app-component-base';
-import { DateTime } from 'luxon';
 import { DateTimeService } from './date-time.service';
 
 @Directive({
