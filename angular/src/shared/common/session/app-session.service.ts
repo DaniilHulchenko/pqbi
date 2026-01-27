@@ -8,6 +8,7 @@ import {
     UserLoginInfoDto,
     UiCustomizationSettingsDto,
 } from '@shared/service-proxies/service-proxies';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class AppSessionService {
@@ -22,6 +23,11 @@ export class AppSessionService {
         private _sessionService: SessionServiceProxy,
         private _abpMultiTenancyService: AbpMultiTenancyService
     ) {}
+
+    private readonly sessionReadySubject = new BehaviorSubject<boolean>(false);
+
+    /** Emits true when user session is initialized */
+    readonly sessionReady$ = this.sessionReadySubject.asObservable();
 
     get application(): ApplicationInfoDto {
         return this._application;
@@ -88,6 +94,8 @@ export class AppSessionService {
                         this._theme = result.theme;
                         this._impersonatorTenant = result.impersonatorTenant;
                         this._impersonatorUser = result.impersonatorUser;
+
+                        this.sessionReadySubject.next(!!result.user);       
                         resolve(result.theme);
                     },
                     (err) => {
@@ -114,6 +122,11 @@ export class AppSessionService {
         abp.multiTenancy.setTenantIdCookie(tenantId);
         location.reload();
         return true;
+    }
+
+    clearSession() {
+        this._user = null;
+        this.sessionReadySubject.next(false);
     }
 
     private isCurrentTenant(tenantId?: number) {

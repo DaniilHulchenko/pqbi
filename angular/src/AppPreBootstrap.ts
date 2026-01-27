@@ -21,6 +21,7 @@ import { SubdomainTenantResolver } from '@shared/multi-tenancy/tenant-resolvers/
 import { QueryStringTenantResolver } from '@shared/multi-tenancy/tenant-resolvers/query-string-tenant-resolver';
 import { SubdomainTenancyNameFinder } from '@shared/helpers/SubdomainTenancyNameFinder';
 import { CookieTenantResolver } from '@shared/multi-tenancy/tenant-resolvers/cookie-tenant-resolver';
+import { AppSessionService } from '@shared/common/session/app-session.service';
 
 export class AppPreBootstrap {
     static run(appRootUrl: string, injector: Injector, callback: () => void, resolve: any, reject: any): void {
@@ -34,7 +35,7 @@ export class AppPreBootstrap {
 
             if (queryStringObj.redirect && queryStringObj.redirect === 'TenantRegistration') {
                 if (queryStringObj.forceNewRegistration) {
-                    new AppAuthService().logout();
+                    new AppAuthService(injector.get(AppSessionService)).logout();
                 }
 
                 location.href = AppConsts.appBaseUrl + '/account/select-edition';

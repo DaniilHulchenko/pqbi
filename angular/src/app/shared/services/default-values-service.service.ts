@@ -343,7 +343,7 @@ export class DefaultValuesService {
         const defaultColors: Record<string, string> = {};
         Object.entries(DefaultValueKeys.defaultColors).forEach(([key, valueKey]) => {
             const colorValue = values.get(valueKey);
-            defaultColors[key] = colorValue || '#000000';
+            defaultColors[key] = colorValue || this.getDefaultColorKey(key);
         });
 
         return {
@@ -355,5 +355,32 @@ export class DefaultValuesService {
             advancedParameterColors,
             defaultColors,
         };
+    }
+
+    private getDefaultColorKey(colorKey: string): string {
+        switch (colorKey) {
+            case 'v1n':
+                return '#800000';
+            case 'v2n':
+                return '#008000';
+            case 'v3n':
+                return '#000080';
+            case 'v12':
+                return '#804000';
+            case 'v23':
+                return '#00C000';
+            case 'v31':
+                return '#004080';
+            case 'frequency':
+                return '#B124D5';
+            case 'aux':
+                return '#400000';
+            case 'total':
+                return '#CA6919';
+            case 'vn':
+                return '#808080';
+            default:
+                return '#000000';
+        }
     }
 }

@@ -237,9 +237,7 @@ class PowerFactorUtils {
             // Displays as "1 IND" since displayedValue = 1 - |0| = 1
             if (min < 0 && maxPoint > 0) {
                 const hasCloseLabel = labels.some(label => Math.abs(label.value - 0) < tolerance);
-                console.log('Checking for PF=0 transition:', { min, maxPoint, hasCloseLabel });
                 if (!hasCloseLabel) {
-                    console.log('Adding 1 IND label at PF=0');
                     labels.push({
                         value: 0.0,
                         text: `1 IND`
@@ -251,9 +249,7 @@ class PowerFactorUtils {
             // Displays as "1 IND" since displayedValue = 1
             if (min < 1.0 && maxPoint > 1.0) {
                 const hasCloseLabel = labels.some(label => Math.abs(label.value - 1.0) < tolerance);
-                console.log('Checking for PF=1.0 transition:', { min, maxPoint, hasCloseLabel });
                 if (!hasCloseLabel) {
-                    console.log('Adding 1 IND label at PF=1.0');
                     labels.push({
                         value: 1.0,
                         text: `1 IND`
@@ -375,28 +371,21 @@ class LineChart extends DashboardChartBase {
             let color = styleData?.color;
 
             if (!color && parameterColorMap && parameter) {
-                console.log(`Looking for color for parameter "${parameter.name}", dataItem.parameterName: "${dataItem.parameterName}"`);
-
                 // Try to find color from parameterColorMap using the parameter's name directly
                 let colorModel = parameterColorMap.get(parameter.name);
-                console.log(`Direct lookup result:`, colorModel);
 
                 // If not found, try extracting from dataItem.parameterName
                 if (!colorModel && dataItem.parameterName) {
                     const extractedName = dataItem.parameterName.slice(dataItem.parameterName.indexOf("-") + 1).trim();
-                    console.log(`Trying extracted name: "${extractedName}"`);
                     colorModel = parameterColorMap.get(extractedName);
-                    console.log(`Extracted lookup result:`, colorModel);
                 }
 
                 color = colorModel?.color;
-                console.log(`Final color for parameter "${parameter.name}": ${color}`);
 
                 // Store the color back to the parameter's style so it persists
                 if (color && parameter) {
                     const updatedStyle = { ...styleData, color: color };
                     parameter.style = JSON.stringify(updatedStyle);
-                    console.log(`Stored color ${color} in parameter style`);
                 }
             }
 
@@ -484,16 +473,11 @@ class LineChart extends DashboardChartBase {
                 const min = Math.min(...originalValues);
                 const max = Math.max(...originalValues);
 
-                console.log('Power Factor Range:', { min, max, crossesZero: min < 0 && max > 0 });
-
                 // Calculate step
                 const step = Math.round(PowerFactorUtils.calculateStep(min, max, 8) * 10000000) / 10000000;
 
                 // Create custom labels
                 const customLabels = PowerFactorUtils.createCapIndLabels(min, step, max, this.numberOfDecimals);
-
-                console.log('Generated Custom Labels:', customLabels);
-                console.log('Custom label values:', customLabels.map(l => l.value));
 
                 axis.customLabels = customLabels;
                 // Set tick values to match our custom labels so DevExtreme generates ticks at these exact positions
@@ -1059,12 +1043,9 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                     next: () => {
                     },
                     error: (error) => {
-                        console.error('onSeriesColorChange - Error saving color configuration:', error);
                     }
                 });
             this.subs.push(sub);
-        } else {
-            console.warn('onSeriesColorChange - Parameter not found for legendItem:', legendItem);
         }
 
         setTimeout(() => {
@@ -1087,8 +1068,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
             if (inputElement) {
                 inputElement.focus();
                 inputElement.select();
-            } else {
-                console.error('Input element not found after change detection');
             }
         }, 0);
     }
@@ -1125,7 +1104,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 )
                 .subscribe({
                     error: (error) => {
-                        console.error('Error saving legend name:', error);
                     }
                 });
             this.subs.push(sub);
@@ -1153,24 +1131,17 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         }
 
         if (!this.chartComponent?.instance) {
-            console.log('Chart component not ready');
             return;
         }
 
-        console.log('Hover triggered:', { isHovering, name: legendItem.name });
-
         const chartInstance = this.chartComponent.instance;
         const allSeries = chartInstance.getAllSeries();
-
-        console.log('All series:', allSeries.map(s => s.name));
 
         if (isHovering) {
             // Find and hover the target series
             const targetSeries = allSeries.find(s => s.name === legendItem.name);
 
             if (targetSeries) {
-                console.log('Target series found:', targetSeries.name);
-
                 // Use DevExtreme's hover method
                 targetSeries.hover();
 
@@ -1190,9 +1161,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                         seriesPaths = svg.querySelectorAll('path[stroke]');
                     }
 
-                    console.log('Found series paths:', seriesPaths.length);
-                    console.log('Sample path:', seriesPaths[0]);
-
                     // Filter to only line paths (exclude grid/axis)
                     const linePaths = Array.from(seriesPaths).filter((path: SVGPathElement) => {
                         const stroke = path.getAttribute('stroke');
@@ -1206,29 +1174,20 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                                (!strokeWidth || parseFloat(strokeWidth) >= 1);
                     });
 
-                    console.log('Filtered line paths:', linePaths.length);
-
                     linePaths.forEach((path: SVGPathElement, idx) => {
                         const series = allSeries[idx];
-                        console.log(`Path ${idx}: series=${series?.name}, stroke=${path.getAttribute('stroke')}`);
 
                         if (series && series.name === legendItem.name) {
-                            console.log('Emphasizing series:', series.name);
                             path.style.opacity = '1';
                             path.style.strokeWidth = '4';
                             path.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
                         } else {
-                            console.log('Dimming series:', series?.name);
                             path.style.opacity = '0.2';
                         }
                     });
                 }
-            } else {
-                console.log('Target series NOT found');
             }
         } else {
-            console.log('Clearing hover state');
-
             // Clear hover from all series
             allSeries.forEach(series => {
                 series.clearHover();
@@ -1328,9 +1287,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         if (!this.currentParameters || this.currentParameters.length === 0) {
             return;
         }
-
-        console.log('Building parameter color map for parameters:', this.currentParameters.map(p => p.name));
-
+        
         this.currentParameters.forEach((parameter) => {
             const parameterName = parameter.name;
 
@@ -1344,21 +1301,59 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
             const advancedColor = this.findAdvancedColorForParameter(parameter);
             if (advancedColor) {
                 color = advancedColor;
-                console.log(`Parameter "${parameterName}" - advanced color: ${color}`);
             } else {
                 // Fallback to default phase colors
                 const groupPhase = this.extractParameterGroupAndPhase(parameter);
                 if (groupPhase && this.defaultColors) {
-                    console.log(`Parameter "${parameterName}" - group: ${groupPhase.group}, phase: ${groupPhase.phase}`);
-                    // Remove first character and convert to lowercase (e.g., "V1N" -> "1n")
-                    const phaseKey = groupPhase.phase.slice(1).toLowerCase();
-                    const phaseColor = this.defaultColors[phaseKey];
+                    let phaseColor = null;
+                    
+                    switch(groupPhase.phase) {
+                        case 'UV1N': {
+                            phaseColor = this.defaultColors['v1n'];
+                            break;
+                        }
+                        case 'UV2N': {
+                            phaseColor = this.defaultColors['v2n'];
+                            break;
+                        }
+                        case 'UV3N': {
+                            phaseColor = this.defaultColors['v3n'];
+                            break;
+                        }
+                        case 'UV12': {
+                            phaseColor = this.defaultColors['v12'];
+                            break;
+                        }
+                        case 'UV23': {
+                            phaseColor = this.defaultColors['v23'];
+                            break;
+                        }
+                        case 'UV31': {
+                            phaseColor = this.defaultColors['v31'];
+                            break;
+                        }
+                        case 'UVN': {
+                            phaseColor = this.defaultColors['vn'];
+                            break;
+                        }
+                        case 'UP123': {
+                            phaseColor = this.defaultColors['total'];
+                            break;
+                        }
+                        case 'IAUX': {
+                            phaseColor = this.defaultColors['aux'];
+                            break;
+                        }
+                        case 'UFREQUENCY': {
+                            phaseColor = this.defaultColors['frequency'];
+                            break;
+                        }
+                        default: null;
+                    }
+
                     if (phaseColor) {
                         color = phaseColor;
-                        console.log(`Parameter "${parameterName}" - phase color for "${phaseKey}": ${color}`);
                     }
-                } else {
-                    console.log(`Parameter "${parameterName}" - no group/phase found or no defaultColors`);
                 }
             }
 
@@ -1366,8 +1361,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                 color: color,
             });
         });
-
-        console.log('Final parameterColorMap:', this.parameterColorMap);
     }
 
     private findAdvancedColorForParameter(parameter: WidgetParametersColumn): string | null {

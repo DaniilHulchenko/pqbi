@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { UtcOffsetModel } from '@app/shared/models/utc-offset-model';
 import { DefaultValuesService } from '@app/shared/services/default-values-service.service';
 import { DateTimeDisplayFormatModel } from '@app/shared/models/date-time-display-format-model';
+import { AppSessionService } from '@shared/common/session/app-session.service';
 
 interface DateTimeFormatParts {
     date: string;
@@ -16,9 +17,14 @@ interface DateTimeFormatParts {
 export class DateTimeService {
     constructor(
         private _appLocalizationService: AppLocalizationService,
-        private _defaultValuesService: DefaultValuesService
+        private _defaultValuesService: DefaultValuesService,
+        private _appSessionService: AppSessionService
     ) {
-        this.subscribeToDateTimeDisplayFormat();
+        this._appSessionService.sessionReady$.subscribe((isReady) => {
+            if (isReady) {
+                this.subscribeToDateTimeDisplayFormat();
+            }
+        });
     }
 
     private currentDisplayFormat: DateTimeDisplayFormatModel = new DateTimeDisplayFormatModel();
