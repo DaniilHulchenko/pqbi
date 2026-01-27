@@ -67,12 +67,241 @@ type LineLegendType = {
     isHidden?: boolean
 };
 
+enum PowerFactorDisplayMode {
+    Load = 'Load',
+    Source = 'Source'
+}
+
+interface PowerFactorResult {
+    value: number;
+    units: string;
+}
+
+interface CustomAxisLabel {
+    value: number;
+    text: string;
+}
+
+class PowerFactorUtils {
+    private static readonly POWER_FACTOR_UNIT_ID = 9;
+    // Default to Load mode - this should come from user settings
+    private static displayMode: PowerFactorDisplayMode = PowerFactorDisplayMode.Load;
+
+    static setDisplayMode(mode: PowerFactorDisplayMode): void {
+        this.displayMode = mode;
+    }
+
+    static normalizeToCapInd(value: number, isRawData: boolean = false): { value: number; units: string; powerFactor: number } {
+        if (isRawData) {
+            return { value, units: '', powerFactor: value };
+        }
+
+        let powerFactor: number;
+        let displayedValue: number;
+
+        switch (this.displayMode) {
+            case PowerFactorDisplayMode.Load:
+                ({ powerFactor, displayedValue } = this.normalizeLoadToCapInd(value));
+                break;
+            case PowerFactorDisplayMode.Source:
+                ({ powerFactor, displayedValue } = this.normalizeSourceToCapInd(value));
+                break;
+            default:
+                powerFactor = value;
+                displayedValue = value;
+        }
+
+        const units = this.getCapIndUnit(powerFactor);
+        return { value: displayedValue, units, powerFactor };
+    }
+
+    static normalizeLoadToCapInd(value: number): { powerFactor: number; displayedValue: number } {
+        const powerFactor = value;
+        let displayedValue: number;
+
+        // For IND (powerFactor >= 1): displayedValue = powerFactor (display the actual PF value)
+        // For CAP (powerFactor < 1): displayedValue = 1 - powerFactor
+        if (powerFactor >= 1) {
+            displayedValue = powerFactor;
+        } else {
+            displayedValue = 1 - Math.abs(powerFactor);
+        }
+
+        displayedValue = Math.round(displayedValue * 1000000) / 1000000; // round to 6 decimals to clear noise
+        return { powerFactor, displayedValue };
+    }
+
+    static normalizeSourceToCapInd(value: number): { powerFactor: number; displayedValue: number } {
+        let powerFactor: number;
+        let displayedValue: number;
+
+        if (value < 0) {
+            powerFactor = value + 2;
+            displayedValue = 1 - powerFactor;
+        } else {
+            powerFactor = value - 2;
+            displayedValue = powerFactor + 1;
+        }
+
+        displayedValue = Math.round(displayedValue * 1000000) / 1000000; // round to 6 decimals to clear noise
+        return { powerFactor, displayedValue };
+    }
+
+    static calculateStep(min: number, max: number, numOfTicks: number = 8): number {
+        const distance = Math.abs(max - min);
+        const step = distance / (numOfTicks - 1);
+
+        const stepLog = this.getLog10(step);
+        const stepRoundValue = Math.pow(10, stepLog);
+
+        const stepMainDigits = Math.round((step / stepRoundValue) * 100) / 100;
+
+        let factor = 1;
+        if (stepMainDigits < 1.5) {
+            factor = 1;
+        } else if (stepMainDigits < 3.5) {
+            factor = 2;
+        } else if (stepMainDigits < 7.5) {
+            factor = 5;
+        } else {
+            factor = 10;
+        }
+
+        return factor * stepRoundValue;
+    }
+
+    private static getLog10(value: number): number {
+        if (value === 0) return 0;
+        const log = Math.floor(Math.log10(Math.abs(value)));
+        return log;
+    }
+
+    static createCapIndLabels(min: number, step: number, maxPoint: number, precision: number = 2): CustomAxisLabel[] {
+        const labels: CustomAxisLabel[] = [];
+        let notRoundValueOnAxis = maxPoint;
+
+        // Use a small tolerance for floating-point comparison
+        const tolerance = 0.0000001;
+
+        while (notRoundValueOnAxis >= min - tolerance) {
+            let powerFactor: number;
+            let displayedPoint: number;
+            let unitsDescription: string;
+
+            switch (this.displayMode) {
+                case PowerFactorDisplayMode.Load:
+                    powerFactor = notRoundValueOnAxis;
+                    // For IND (powerFactor >= 1): displayedPoint = powerFactor (display actual PF value)
+                    // For CAP (powerFactor < 1): displayedPoint = 1 - powerFactor
+                    if (powerFactor >= 1) {
+                        displayedPoint = powerFactor;
+                    } else {
+                        displayedPoint = 1 - Math.abs(powerFactor);
+                    }
+                    displayedPoint = Math.round(displayedPoint * 1000000) / 1000000;
+                    break;
+
+                case PowerFactorDisplayMode.Source:
+                    if (notRoundValueOnAxis < 0) {
+                        powerFactor = notRoundValueOnAxis + 2;
+                        displayedPoint = 1 - powerFactor;
+                    } else {
+                        powerFactor = notRoundValueOnAxis - 2;
+                        displayedPoint = powerFactor + 1;
+                    }
+                    displayedPoint = Math.round(displayedPoint * 1000000) / 1000000;
+                    break;
+            }
+
+            // Adjust to the IEC standard
+            if (powerFactor <= -1 || (powerFactor < 1 && powerFactor > 0)) {
+                unitsDescription = 'CAP';
+            } else {
+                unitsDescription = 'IND';
+            }
+
+            const valueOnAxis = Math.round(notRoundValueOnAxis * 1000000) / 1000000;
+            const formattedValue = `${Math.round(displayedPoint * Math.pow(10, precision)) / Math.pow(10, precision)} ${unitsDescription}`;
+
+            labels.push({
+                value: valueOnAxis,
+                text: formattedValue
+            });
+
+            notRoundValueOnAxis -= step;
+        }
+
+        // Add explicit transition points if the range crosses them
+        if (this.displayMode === PowerFactorDisplayMode.Load) {
+            // Transition at PF=0 (between negative IND and positive CAP)
+            // Displays as "1 IND" since displayedValue = 1 - |0| = 1
+            if (min < 0 && maxPoint > 0) {
+                const hasCloseLabel = labels.some(label => Math.abs(label.value - 0) < tolerance);
+                console.log('Checking for PF=0 transition:', { min, maxPoint, hasCloseLabel });
+                if (!hasCloseLabel) {
+                    console.log('Adding 1 IND label at PF=0');
+                    labels.push({
+                        value: 0.0,
+                        text: `1 IND`
+                    });
+                }
+            }
+
+            // Transition at PF=1.0 (between CAP and positive IND)
+            // Displays as "1 IND" since displayedValue = 1
+            if (min < 1.0 && maxPoint > 1.0) {
+                const hasCloseLabel = labels.some(label => Math.abs(label.value - 1.0) < tolerance);
+                console.log('Checking for PF=1.0 transition:', { min, maxPoint, hasCloseLabel });
+                if (!hasCloseLabel) {
+                    console.log('Adding 1 IND label at PF=1.0');
+                    labels.push({
+                        value: 1.0,
+                        text: `1 IND`
+                    });
+                }
+            }
+        }
+
+        // Sort labels by value in descending order (highest PF to lowest PF)
+        labels.sort((a, b) => b.value - a.value);
+
+        return labels;
+    }
+
+    static getPowerFactorDisplay(
+        value: number,
+        dataUnitType: DataUnitType | undefined
+    ): PowerFactorResult {
+        if (!dataUnitType || dataUnitType.id !== this.POWER_FACTOR_UNIT_ID) {
+            return { value, units: '' };
+        }
+
+        // value is the original power factor (e.g., 0.88, -0.5)
+        // Normalize it for display
+        const normalized = this.normalizeToCapInd(value, false);
+
+        return { value: normalized.value, units: normalized.units };
+    }
+
+    private static getCapIndUnit(powerFactor: number): string {
+        // Adjust to the IEC standard
+        if (powerFactor <= -1 || (powerFactor < 1 && powerFactor > 0)) {
+            return 'CAP';
+        } else {
+            return 'IND';
+        }
+    }
+}
+
 type ValueAxisConfig = {
     name: string,
     position: 'left' | 'right',
     unitLabel: string,
     color: string,
-    isPrimary: boolean
+    isPrimary: boolean,
+    isPowerFactor?: boolean,
+    customLabels?: CustomAxisLabel[],
+    tickValues?: number[]
 };
 
 class LineChartConfiguration {
@@ -100,7 +329,7 @@ class LineChart extends DashboardChartBase {
     };
     numberOfDecimals: number = 2;
     numberOfDecimalsForPercentage: number = 2;
-    
+
     constructor(
         private _dashboardService: TenantDashboardServiceProxy,
         private setErrorMessage: (error: string | null) => void,
@@ -133,6 +362,9 @@ class LineChart extends DashboardChartBase {
         const axisMap = new Map<string, string>(); // unitLabel -> axisName
         let axisCounter = 0;
         let primaryAxisSet = false;
+
+        // Track power factor data for custom axis labels
+        const powerFactorDataByAxis = new Map<string, number[]>(); // axisName -> original values
 
         for (let i = 0; i < data.length; i++) {
             const dataItem = data[i];
@@ -173,6 +405,7 @@ class LineChart extends DashboardChartBase {
             dataItem.dataUnitType = dataUnitType;
             const unitLabel = this.getUnitLabel(dataUnitType);
             const axisColor = color || this.chartConfiguration.color;
+            const isPowerFactor = dataUnitType?.id === 9;
 
             // Update parameter color map with dataUnitType
             if (updateParameterColorMap && dataItem.parameterName) {
@@ -197,9 +430,10 @@ class LineChart extends DashboardChartBase {
                 this.chartConfiguration.valueAxes.push({
                     name: axisName,
                     position: position,
-                    unitLabel: unitLabel,
+                    unitLabel: isPowerFactor ? '' : unitLabel,  // Power factor axes don't need unit label since CAP/IND is shown in each tick
                     color: axisColor,
                     isPrimary: !primaryAxisSet,
+                    isPowerFactor: isPowerFactor,
                 });
 
                 primaryAxisSet = true;
@@ -217,17 +451,55 @@ class LineChart extends DashboardChartBase {
                 dataUnitType: dataUnitType,
             });
 
+            // For power factor data, collect original values for axis label calculation
+            if (isPowerFactor) {
+                if (!powerFactorDataByAxis.has(axisName)) {
+                    powerFactorDataByAxis.set(axisName, []);
+                }
+                const originalValues = powerFactorDataByAxis.get(axisName)!;
+                dataItem.data.forEach(val => originalValues.push(val));
+            }
+
             for (let j = 0; j < dataItem.data.length; j++) {
+                // Store the data value as-is (no transformation)
+                // The Y-axis labels will show the normalized CAP/IND format
+                let dataValue = dataItem.data[j];
+
                 if (map.has(trend.timeStamps[j])) {
                     let obj = map.get(trend.timeStamps[j]);
-                    obj[dataId] = dataItem.data[j];
+                    obj[dataId] = dataValue;
                 } else {
                     let obj = new Object();
-                    obj[dataId] = dataItem.data[j];
+                    obj[dataId] = dataValue;
                     map.set(trend.timeStamps[j], obj);
                 }
             }
         }
+
+        // Generate custom axis labels for power factor axes
+        powerFactorDataByAxis.forEach((originalValues, axisName) => {
+            const axis = this.chartConfiguration.valueAxes.find(a => a.name === axisName);
+            if (axis && originalValues.length > 0) {
+                // Calculate min and max from original values
+                const min = Math.min(...originalValues);
+                const max = Math.max(...originalValues);
+
+                console.log('Power Factor Range:', { min, max, crossesZero: min < 0 && max > 0 });
+
+                // Calculate step
+                const step = Math.round(PowerFactorUtils.calculateStep(min, max, 8) * 10000000) / 10000000;
+
+                // Create custom labels
+                const customLabels = PowerFactorUtils.createCapIndLabels(min, step, max, this.numberOfDecimals);
+
+                console.log('Generated Custom Labels:', customLabels);
+                console.log('Custom label values:', customLabels.map(l => l.value));
+
+                axis.customLabels = customLabels;
+                // Set tick values to match our custom labels so DevExtreme generates ticks at these exact positions
+                axis.tickValues = customLabels.map(l => l.value);
+            }
+        });
 
         let arr = Array.from(map, ([key, value]) => {
             return {
@@ -263,19 +535,34 @@ class LineChart extends DashboardChartBase {
                 text: `${object.seriesName}<br/>${object.originalValue}`,
             };
         }
-        
+
         // Find the legend item by series name or by series tag (dataId)
         const legendItem = this.chartConfiguration.lineLegend.find(
             (item) => item.name === object.seriesName || item.id === object.series?.tag
         );
-        
+
+        // Check if dataUnitType is power factor (id 9)
+        const isPowerFactor = legendItem?.dataUnitType && legendItem.dataUnitType.id === 9;
+
+        if (isPowerFactor) {
+            // parsed is the original power factor value (e.g., 0.88, -0.5)
+            // Normalize it for display
+            const normalized = PowerFactorUtils.normalizeToCapInd(parsed, false);
+            const decimals = this.numberOfDecimals;
+            const formattedValue = normalized.value.toFixed(decimals);
+            const displayText = normalized.units ? `${formattedValue} ${normalized.units}` : formattedValue;
+            return {
+                text: `${object.seriesName}<br/>${displayText}`,
+            };
+        }
+
         // Check if dataUnitType is percentage (id 18 or 19)
-        const isPercentage = legendItem?.dataUnitType && 
+        const isPercentage = legendItem?.dataUnitType &&
             (legendItem.dataUnitType.id === 18 || legendItem.dataUnitType.id === 19);
-        
+
         const decimals = isPercentage ? this.numberOfDecimalsForPercentage : this.numberOfDecimals;
         const res = parsed.toFixed(decimals);
-        
+
         return {
             text: `${object.seriesName}<br/>${res}`,
         };
@@ -286,6 +573,20 @@ class LineChart extends DashboardChartBase {
             return this.formatDateTime(object.value);
         }
         return object.valueText || '';
+    };
+
+    customizePowerFactorAxisLabel = (value: any) => {
+        const numValue = typeof value === 'number' ? value : parseFloat(value.value || value);
+        if (isNaN(numValue)) {
+            return '';
+        }
+
+        // numValue is the original power factor value
+        // Normalize it for display
+        const normalized = PowerFactorUtils.normalizeToCapInd(numValue, false);
+        const formattedValue = normalized.value.toFixed(2);
+
+        return `${formattedValue} ${normalized.units}`;
     };
 
     private getUnitLabel(dataUnitType?: DataUnitType): string {
@@ -382,10 +683,10 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         super(injector, elementRef, dateRangeService);
         this._defaultWidgetName = this.l('WidgetPQSTrend');
         this.lineChart = new LineChart(
-            this._tenantdashboardService, 
+            this._tenantdashboardService,
             (error) => {
                 this.errorMessage = error;
-            }, 
+            },
             (key) => this.l(key),
             (date: Date) => {
                 return this._dateTimeService.formatDateTimeForDisplay(DateTime.fromJSDate(date));
@@ -441,6 +742,28 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         }
     };
 
+    getCustomLabelFormatter(customLabels: CustomAxisLabel[]): (value: any) => string {
+        return (value: any) => {
+            const numValue = typeof value === 'number' ? value : parseFloat(value.value || value);
+            if (isNaN(numValue)) {
+                return '';
+            }
+
+            // Find the closest custom label
+            const closest = customLabels.reduce((prev, curr) => {
+                return Math.abs(curr.value - numValue) < Math.abs(prev.value - numValue) ? curr : prev;
+            });
+
+            // If the value is very close to a custom label value, use the custom text
+            if (Math.abs(closest.value - numValue) < 0.0001) {
+                return closest.text;
+            }
+
+            // Otherwise, use default power factor formatting
+            return this.lineChart.customizePowerFactorAxisLabel(numValue);
+        };
+    }
+
     edit() {
         this.isEditModalInitialized = true;
         this._configurationVersionService.refreshVersion().subscribe(() => {
@@ -464,75 +787,78 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
 
     refreshWidget(): void {
-        if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
-            var sub = this._trendWidgetConfigurationService
-                .getForEdit(+this.widgetConfigurationInDB.configuration)
-                .subscribe((result) => {
-                    this.trendWidgetConfiguration = result.trendWidgetConfiguration;
+        const sub = this.ensureDefaultValuesLoaded().subscribe(() => {
+            if (this.widgetConfigurationInDB && this.widgetConfigurationInDB.configuration) {
+                const configSub = this._trendWidgetConfigurationService
+                    .getForEdit(+this.widgetConfigurationInDB.configuration)
+                    .subscribe((result) => {
+                        this.trendWidgetConfiguration = result.trendWidgetConfiguration;
 
-                    if (this.trendWidgetConfiguration) {
-                        let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
-                        let resulutionValueInMs = 0;
+                        if (this.trendWidgetConfiguration) {
+                            let isAutoResolution = this.trendWidgetConfiguration.resolution === ResolutionUnits.AUTO;
+                            let resulutionValueInMs = 0;
 
-                        if (isAutoResolution) {
-                            resulutionValueInMs = this.calculateAutoResolution().toRefresh;
-                        } else {
-                            resulutionValueInMs = this._resolutionService.resolutionValueInMs(
-                                this._resolutionService.parseStateFromString(
-                                    this.trendWidgetConfiguration.resolution,
-                                    true,
-                                ),
-                            );
-                        }
-                        var dateModel = DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange);
-                        this.thresholdSettings = this.trendWidgetConfiguration.thresholdSettings
-                            ? JSON.parse(this.trendWidgetConfiguration.thresholdSettings)
-                            : new ThresholdSettingsModel();
+                            if (isAutoResolution) {
+                                resulutionValueInMs = this.calculateAutoResolution().toRefresh;
+                            } else {
+                                resulutionValueInMs = this._resolutionService.resolutionValueInMs(
+                                    this._resolutionService.parseStateFromString(
+                                        this.trendWidgetConfiguration.resolution,
+                                        true,
+                                    ),
+                                );
+                            }
+                            var dateModel = DateRangeAndRefreshModelNew.createItem(this.trendWidgetConfiguration.dateRange);
+                            this.thresholdSettings = this.trendWidgetConfiguration.thresholdSettings
+                                ? JSON.parse(this.trendWidgetConfiguration.thresholdSettings)
+                                : new ThresholdSettingsModel();
 
-                        this.currentParameters = JSON.parse(this.trendWidgetConfiguration.parameters);
+                            this.currentParameters = JSON.parse(this.trendWidgetConfiguration.parameters);
 
-                        // Build color map for parameters using advanced colors, phase colors and defaults
-                        this.buildParameterColorMap();
+                            // Build color map for parameters using advanced colors, phase colors and defaults
+                            this.buildParameterColorMap();
 
-                        if (dateModel.rangeUnit === DateRangeType.Relative && resulutionValueInMs) {
-                            timer(0, resulutionValueInMs)
-                                .pipe(takeUntil(this.stopStream$))
-                                .subscribe((result) => {
-                                    let input = this.formatRequest();
-                                    input.isRealTime = true;
-                                    input.refreshRateInSeconds = resulutionValueInMs / 1000;
-                                    if (input) {
-                                        this.lineChart.reload(input, this.currentParameters, (parameterName: string, dataUnitType: DataUnitType) => {
-                                            const model = this.parameterColorMap.get(parameterName);
-                                            if (model) {
-                                                model.dataUnitType = dataUnitType;
+                            if (dateModel.rangeUnit === DateRangeType.Relative && resulutionValueInMs) {
+                                timer(0, resulutionValueInMs)
+                                    .pipe(takeUntil(this.stopStream$))
+                                    .subscribe((result) => {
+                                        let input = this.formatRequest();
+                                        input.isRealTime = true;
+                                        input.refreshRateInSeconds = resulutionValueInMs / 1000;
+                                        if (input) {
+                                            this.lineChart.reload(input, this.currentParameters, (parameterName: string, dataUnitType: DataUnitType) => {
+                                                const model = this.parameterColorMap.get(parameterName);
+                                                if (model) {
+                                                    model.dataUnitType = dataUnitType;
+                                                }
+                                            }, this.parameterColorMap);
+
+                                            // After first load, save the updated parameters with colors
+                                            if (result === 0) {
+                                                this.saveParameterColors();
                                             }
-                                        }, this.parameterColorMap);
-
-                                        // After first load, save the updated parameters with colors
-                                        if (result === 0) {
-                                            this.saveParameterColors();
                                         }
-                                    }
-                                });
-                        } else {
-                            let input = this.formatRequest();
-                            if (input) {
-                                this.lineChart.reload(input, this.currentParameters, (parameterName: string, dataUnitType: DataUnitType) => {
-                                    const model = this.parameterColorMap.get(parameterName);
-                                    if (model) {
-                                        model.dataUnitType = dataUnitType;
-                                    }
-                                }, this.parameterColorMap);
+                                    });
+                            } else {
+                                let input = this.formatRequest();
+                                if (input) {
+                                    this.lineChart.reload(input, this.currentParameters, (parameterName: string, dataUnitType: DataUnitType) => {
+                                        const model = this.parameterColorMap.get(parameterName);
+                                        if (model) {
+                                            model.dataUnitType = dataUnitType;
+                                        }
+                                    }, this.parameterColorMap);
 
-                                // Save the updated parameters with colors
-                                this.saveParameterColors();
+                                    // Save the updated parameters with colors
+                                    this.saveParameterColors();
+                                }
                             }
                         }
-                    }
-                });
-            this.subs.push(sub);
-        }
+                    });
+                this.subs.push(configSub);
+            }
+        });
+        this.subs.push(sub);
     }
 
     calculateAutoResolution(): { toServer: number; toRefresh: number } {
@@ -1098,11 +1424,11 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     toggleStepLine() {
-        this.refreshChartAppearance();
+        // Angular change detection will automatically update the chart
     }
 
     toggleLinePoints() {
-        this.refreshChartAppearance();
+        // Angular change detection will automatically update the chart
     }
 
     openColorPicker(picker: HTMLInputElement) {
@@ -1125,14 +1451,12 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         this.chartLineColor = color;
         this.lineChart.chartConfiguration.color = color;
         this.persistColorPreference('chartLineColor', color);
-        this.refreshChartAppearance();
     }
 
     onBackgroundColorChange(event: Event) {
         const color = (event.target as HTMLInputElement).value;
         this.chartBackgroundColor = color;
         this.persistColorPreference('chartBackgroundColor', color);
-        this.refreshChartAppearance();
     }
 
     private loadColorPreferences() {
@@ -1176,12 +1500,6 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         const expireDate = new Date();
         expireDate.setFullYear(expireDate.getFullYear() + 1);
         return expireDate;
-    }
-
-    private refreshChartAppearance() {
-        if (this.chartComponent?.instance) {
-            this.chartComponent.instance.refresh();
-        }
     }
 
     private applyHeaderColor(color: string) {

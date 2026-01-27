@@ -58,6 +58,7 @@ import { TableWidgetConfigurationService } from '@app/shared/services/widget-con
 import { dxTreeListColumn } from '@node_modules/devextreme/ui/tree_list';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
+import { DxTreeListComponent } from 'devextreme-angular';
 
 
 
@@ -78,9 +79,15 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
     @HostBinding('style.--cell-font-family') cellFontFamily: string;
     @HostBinding('style.--header-font-family') headerFontFamily: string;
 
+    headerBackgroundColor = '#ffffff';
+    widgetBackgroundColor = '#ffffff';
+    headerTitleColor = '#000000';
+    headerTitleBadgeColor = 'rgba(0, 0, 0, 0.08)';
+
     @ViewChild('createOrEditModal') createOrEditModal: CreateOrEditTableConfigurationComponent;
     @ViewChild('renameWidgetModal') renameModal: RenameWidgetModalComponent;
     @ViewChild('treeContainer', { static: false }) treeContainer!: ElementRef;
+    @ViewChild('treeListComponent', { static: false }) treeListComponent?: DxTreeListComponent;
 
     @Output() widgetRefresh: EventEmitter<any> = new EventEmitter();
 
@@ -163,6 +170,7 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
 
     ngOnInit(): void {
         super.ngOnInit();
+        this.loadColorPreferences();
 
         this.subscribeToEvent('app.dashboardEdit.onSave', () => this.checkAndSaveColumns());
 
@@ -535,6 +543,31 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                 this.observer.observe(header, { attributes: true, attributeFilter: ['style'], subtree: true });
             });
         }
+
+        // Apply background color to non-data areas (filter row, first column, etc.)
+        this.runDelayed(() => {
+            this.applyWidgetBackgroundToNonDataCells();
+        });
+    }
+
+    private applyWidgetBackgroundToNonDataCells(): void {
+        if (!this.treeContainer) return;
+
+        // Apply to first column cells and filter row (these don't use cellTemplate)
+        const selectors = [
+            '.dx-data-row > td:first-child',  // First column (tree/name column)
+            '.dx-row-alt > td:first-child',   // First column alternating rows
+            '.dx-filter-row > td',            // Filter row cells
+            '.dx-treelist-rowsview',          // Rows view container
+            '.dx-scrollable-content',         // Scrollable content area
+        ];
+
+        selectors.forEach(selector => {
+            const elements = this.treeContainer.nativeElement.querySelectorAll(selector);
+            elements.forEach((element: HTMLElement) => {
+                element.style.backgroundColor = this.widgetBackgroundColor;
+            });
+        });
     }
 
     onDateRangeFilterChange = (dateRange) => {
@@ -973,12 +1006,17 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
                         const span = document.createElement('span');
                         span.innerText = value != null ? value.toString() : '';
 
-                        const bg = getBackgroundColor(value, settings);
                         if (settings) {
                             const bg = getBackgroundColor(value, settings);
                             if (bg) {
                                 container.style.backgroundColor = bg;
+                            } else {
+                                // No specific color from settings, use widget background
+                                container.style.backgroundColor = this.widgetBackgroundColor;
                             }
+                        } else {
+                            // No settings, use widget background
+                            container.style.backgroundColor = this.widgetBackgroundColor;
                         }
                         container.appendChild(span);
                     },
@@ -1138,6 +1176,100 @@ export class WidgetPQSTableComponent extends WidgetComponentBaseComponent implem
         }
 
         return result;
+    }
+
+    // Color picker methods
+    loadColorPreferences(): void {
+        if (!this.widgetConfigurationInDB?.id) {
+            return;
+        }
+
+        const widgetId = this.widgetConfigurationInDB.id;
+        const headerKey = `table_widget_header_color_${widgetId}`;
+        const bgKey = `table_widget_bg_color_${widgetId}`;
+
+        const savedHeaderColor = abp.utils.getCookieValue(headerKey);
+        const savedBgColor = abp.utils.getCookieValue(bgKey);
+
+        if (savedHeaderColor) {
+            this.headerBackgroundColor = savedHeaderColor;
+        }
+        if (savedBgColor) {
+            this.widgetBackgroundColor = savedBgColor;
+        }
+
+        this.updateTextColors();
+    }
+
+    onHeaderColorChange(event: any): void {
+        this.headerBackgroundColor = event.target.value;
+        this.saveColorPreference('header', this.headerBackgroundColor);
+        this.updateTextColors();
+    }
+
+    onBackgroundColorChange(event: any): void {
+        this.widgetBackgroundColor = event.target.value;
+        this.saveColorPreference('background', this.widgetBackgroundColor);
+        // Refresh table to update cell backgrounds with new color
+        // The cellTemplate function will use the updated widgetBackgroundColor
+        if (this.treeListComponent && this.treeListComponent.instance) {
+            this.treeListComponent.instance.repaint();
+        }
+        // Apply to non-data cells
+        this.applyWidgetBackgroundToNonDataCells();
+    }
+
+    openColorPicker(input: HTMLInputElement): void {
+        input.click();
+    }
+
+    onTitleClick(event: MouseEvent, colorPicker: HTMLInputElement): void {
+        if (this.editState) {
+            event.stopPropagation();
+            colorPicker.click();
+        }
+    }
+
+    private saveColorPreference(type: 'header' | 'background', color: string): void {
+        if (!this.widgetConfigurationInDB?.id) {
+            return;
+        }
+
+        const widgetId = this.widgetConfigurationInDB.id;
+        const key = type === 'header' ? `table_widget_header_color_${widgetId}` : `table_widget_bg_color_${widgetId}`;
+
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+
+        abp.utils.setCookieValue(key, color, expires, abp.appPath);
+    }
+
+    private updateTextColors(): void {
+        this.headerTitleColor = this.getContrastColor(this.headerBackgroundColor);
+        const brightness = this.getBrightness(this.headerBackgroundColor);
+        this.headerTitleBadgeColor = brightness > 128 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.15)';
+    }
+
+    private getContrastColor(hexColor: string): string {
+        const brightness = this.getBrightness(hexColor);
+        return brightness > 128 ? '#000000' : '#ffffff';
+    }
+
+    private getBrightness(hexColor: string): number {
+        const rgb = this.hexToRgb2(hexColor);
+        if (!rgb) return 128;
+        return (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+    }
+
+    private hexToRgb2(hex: string): { r: number; g: number; b: number } | null {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+            ? {
+                  r: parseInt(result[1], 16),
+                  g: parseInt(result[2], 16),
+                  b: parseInt(result[3], 16),
+              }
+            : null;
     }
 }
 function getBackgroundColor(value: number | null | undefined, settings: AdvancedSettingsConfig): string | null {

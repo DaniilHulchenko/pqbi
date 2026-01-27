@@ -1,12 +1,33 @@
-<div class="kt-portlet kt-portlet--height-fluid widget-full-height">
-    <div class="kt-portlet__head">
+<div class="kt-portlet kt-portlet--height-fluid widget-full-height" [ngStyle]="{ 'background-color': widgetBackgroundColor }">
+    <div class="kt-portlet__head"
+         [ngStyle]="{ 'background-color': headerBackgroundColor, color: headerTitleColor }"
+         (click)="onTitleClick($event, headerColorPicker)">
         <div class="kt-portlet__head-label">
-            <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize }">
-                {{ widgetConfigurationInDB?.name }}
+            <h3 class="kt-portlet__head-title" [ngStyle]="{ 'font-size': widgetNameFontSize, color: headerTitleColor }">
+                <span [ngStyle]="{ 'background-color': editState ? headerTitleBadgeColor : 'transparent', color: headerTitleColor }">
+                    {{ widgetConfigurationInDB?.name }}
+                </span>
+                <input
+                    #headerColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="headerBackgroundColor"
+                    (input)="onHeaderColorChange($event)" />
             </h3>
         </div>
     </div>
-    <div class="kt-portlet__body bar-body-flex" id="outerScroll">
+    <div class="kt-portlet__body bar-body-flex" id="outerScroll" [ngStyle]="{ 'background-color': widgetBackgroundColor }">
+        <div *ngIf="editState" class="bar-color-controls d-flex align-items-center flex-wrap mb-2">
+            <div class="d-flex align-items-center">
+                <button type="button" class="color-swatch" [style.backgroundColor]="widgetBackgroundColor" (click)="openColorPicker(bgColorPicker)"></button>
+                <input
+                    #bgColorPicker
+                    class="color-input-hidden"
+                    type="color"
+                    [value]="widgetBackgroundColor"
+                    (input)="onBackgroundColorChange($event)" />
+            </div>
+        </div>
         <div [ngSwitch]="barChartConfiguration?.type" class="w-100 h-100">
             <div *ngSwitchCase="barChartType.Plain" style="height: 100px;" class="bar-chart-container flex-grow-1">
                 <dx-chart id="chart" class="w-100 h-100" [dataSource]="dataSource">

@@ -547,7 +547,7 @@ namespace PQBI.Network.RestApi
 
                     int syncresolutionInSec = (int)new SyncInterval(syncEnum).TimeIntervalInSec;
 
-                    //if (intervalResolutionInSec != syncresolutionInSec)
+                    if (intervalResolutionInSec != syncresolutionInSec)
                     {
                         float numOFSyncIntervals = ((float)intervalResolutionInSec) / syncresolutionInSec;
                         sampleIntervalInSec = syncresolutionInSec;

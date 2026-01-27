@@ -44,6 +44,11 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
     @ViewChild('createOrEditModal') createOrEditModal: CreateOrEditBarChartConfigurationComponent;
     @ViewChild('renameWidgetModal') renameModal: RenameWidgetModalComponent;
 
+    headerBackgroundColor = '#ffffff';
+    widgetBackgroundColor = '#ffffff';
+    headerTitleColor = '#000000';
+    headerTitleBadgeColor = 'rgba(0, 0, 0, 0.08)';
+
     barChartRequest: BarChartRequest;
     barChartConfiguration: BarChartWidgetConfigurationDto;
     barChartType = BarChartType;
@@ -84,6 +89,7 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
 
     ngOnInit(): void {
         super.ngOnInit();
+        this.loadColorPreferences();
         this.ensureDefaultValuesLoaded().subscribe(() => {
             this.updateLabelFormat();
         });
@@ -443,5 +449,97 @@ export class WidgetPqsBarChartComponent extends WidgetComponentBaseComponent imp
         this.stopStream$.next(null);
         this.stopStream$.complete();
         this.subs.forEach((sub) => sub.unsubscribe());
+    }
+
+    loadColorPreferences(): void {
+        if (!this.widgetConfigurationInDB?.id) {
+            return;
+        }
+
+        const widgetId = this.widgetConfigurationInDB.id;
+        const headerKey = `bar_chart_widget_header_color_${widgetId}`;
+        const bgKey = `bar_chart_widget_bg_color_${widgetId}`;
+
+        const savedHeaderColor = abp.utils.getCookieValue(headerKey);
+        const savedBgColor = abp.utils.getCookieValue(bgKey);
+
+        if (savedHeaderColor) {
+            this.headerBackgroundColor = savedHeaderColor;
+        }
+        if (savedBgColor) {
+            this.widgetBackgroundColor = savedBgColor;
+        }
+
+        this.updateTextColors();
+    }
+
+    onHeaderColorChange(event: any): void {
+        this.headerBackgroundColor = event.target.value;
+        this.saveColorPreference('header', this.headerBackgroundColor);
+        this.updateTextColors();
+    }
+
+    onBackgroundColorChange(event: any): void {
+        this.widgetBackgroundColor = event.target.value;
+        this.saveColorPreference('background', this.widgetBackgroundColor);
+    }
+
+    openColorPicker(input: HTMLInputElement): void {
+        input.click();
+    }
+
+    onTitleClick(event: MouseEvent, colorPicker: HTMLInputElement): void {
+        if (this.editState) {
+            event.stopPropagation();
+            colorPicker.click();
+        }
+    }
+
+    private saveColorPreference(type: 'header' | 'background', color: string): void {
+        if (!this.widgetConfigurationInDB?.id) {
+            return;
+        }
+
+        const widgetId = this.widgetConfigurationInDB.id;
+        const key = type === 'header'
+            ? `bar_chart_widget_header_color_${widgetId}`
+            : `bar_chart_widget_bg_color_${widgetId}`;
+
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+
+        abp.utils.setCookieValue(key, color, expires, abp.appPath);
+    }
+
+    private updateTextColors(): void {
+        this.headerTitleColor = this.getContrastColor(this.headerBackgroundColor);
+        const brightness = this.getBrightness(this.headerBackgroundColor);
+        this.headerTitleBadgeColor = brightness > 128
+            ? 'rgba(0, 0, 0, 0.08)'
+            : 'rgba(255, 255, 255, 0.15)';
+    }
+
+    private getContrastColor(hexColor: string): string {
+        const brightness = this.getBrightness(hexColor);
+        return brightness > 128 ? '#000000' : '#ffffff';
+    }
+
+    private getBrightness(hexColor: string): number {
+        const rgb = this.hexToRgb2(hexColor);
+        if (!rgb) {
+            return 128;
+        }
+        return (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+    }
+
+    private hexToRgb2(hex: string): { r: number; g: number; b: number } | null {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+            ? {
+                  r: parseInt(result[1], 16),
+                  g: parseInt(result[2], 16),
+                  b: parseInt(result[3], 16),
+              }
+            : null;
     }
 }

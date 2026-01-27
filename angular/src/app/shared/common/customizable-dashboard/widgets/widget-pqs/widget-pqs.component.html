@@ -89,7 +89,14 @@
                         [position]="axis.position"
                         [color]="axis.color">
                         <dxo-title [text]="axis.unitLabel" [font]="{ color: axis.color }"></dxo-title>
-                        <dxo-label [font]="{ color: axis.color }"></dxo-label>
+                        <dxo-label
+                            [font]="{ color: axis.color }"
+                            [customizeText]="axis.isPowerFactor && axis.customLabels ? getCustomLabelFormatter(axis.customLabels) : (axis.isPowerFactor ? lineChart.customizePowerFactorAxisLabel : undefined)"></dxo-label>
+                        <dxi-constant-line *ngFor="let tickVal of axis.tickValues"
+                            [value]="tickVal"
+                            [width]="0"
+                            [label]="{ visible: false }">
+                        </dxi-constant-line>
                         <dxi-constant-line *ngIf="axis.isPrimary && thresholdSettings.upperEnabled"
                             [value]="thresholdSettings.upperValue"
                             [color]="thresholdSettings.upperColor"

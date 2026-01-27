@@ -1,3 +1,30 @@
+:host {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Target the parent gridster-item */
+:host-context(gridster-item) gridster-item {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+:host ::ng-deep .kt-portlet {
+    margin: 0 !important;
+}
+
+:host ::ng-deep .kt-portlet__body {
+    padding: 0 !important;
+}
+
 .widget-full-height {
 	height: 100%;
 	min-height: 0;
@@ -25,4 +52,62 @@ dx-chart {
 	height: 100% !important;
 	width: 100% !important;
 	display: block;
+}
+
+/* Widget styling */
+.widget-full-height.kt-portlet {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+::ng-deep .widget-full-height.kt-portlet .kt-portlet__body {
+    padding: 0 !important;
+}
+
+::ng-deep .widget-full-height.kt-portlet .kt-portlet__head {
+    padding: 12px 20px !important;
+}
+
+/* Color picker styles */
+.color-swatch {
+    width: 24px;
+    height: 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+    background-color: transparent;
+    padding: 0;
+    cursor: pointer;
+}
+
+.color-input-hidden {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    border: 0;
+    padding: 0;
+}
+
+.bar-color-controls {
+    padding: 6px 12px;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.kt-portlet__head {
+    transition: filter 140ms ease, box-shadow 140ms ease;
+}
+
+.kt-portlet__head:hover {
+    cursor: pointer;
+    filter: brightness(1.05);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
