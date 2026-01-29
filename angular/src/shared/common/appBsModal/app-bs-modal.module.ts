@@ -1,11 +1,10 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { AppBsModalDirective } from './app-bs-modal.directive';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
-    imports: [
-        CommonModule,
-        AppBsModalDirective
-    ],
+    declarations: [AppBsModalDirective],
+    imports: [CommonModule],
+    exports: [AppBsModalDirective],
 })
 export class AppBsModalModule {}

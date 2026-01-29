@@ -12,7 +12,8 @@ import { UtilsModule } from '../../../../../../shared/utils/utils.module';
 
 @Component({
     selector: 'exceptionParameterSelectionTab',
-    standalone: true,
+    //standalone: true
+,
     imports: [CommonModule, CustomParameterSelectorComponent, DxButtonModule, FormsModule, QuantitySelectorComponent, UtilsModule],
     templateUrl: './exception-parameter-selection-tab.component.html',
     styleUrl: './exception-parameter-selection-tab.component.css',

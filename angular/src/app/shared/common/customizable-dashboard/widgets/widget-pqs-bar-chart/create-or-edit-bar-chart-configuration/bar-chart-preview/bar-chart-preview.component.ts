@@ -4,7 +4,8 @@ import { DxChartModule } from 'devextreme-angular';
 import { BarChartType } from '@shared/service-proxies/service-proxies';
 @Component({
     selector: 'bar-chart-preview',
-    standalone: true,
+    //standalone: true
+,
     imports: [CommonModule, DxChartModule],
     templateUrl: './bar-chart-preview.component.html',
     styleUrl: './bar-chart-preview.component.css',

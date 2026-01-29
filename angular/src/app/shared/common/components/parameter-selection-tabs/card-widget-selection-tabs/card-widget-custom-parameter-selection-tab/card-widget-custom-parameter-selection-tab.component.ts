@@ -22,7 +22,8 @@ import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-s
 
 @Component({
     selector: 'cardWidgetCustomParameterSelectionTab',
-    standalone: true,
+    //standalone: true
+,
     imports: [
         CommonModule,
         LimitedComponentsSelectorComponent,

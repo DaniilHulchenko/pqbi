@@ -18,7 +18,8 @@ import { FormContainerComponent } from "../../form-container/form-container.comp
 
 @Component({
     selector: 'eventParameterSelectionTab',
-    standalone: true,
+    //standalone: true
+,
     imports: [
     CommonModule,
     DxButtonModule,

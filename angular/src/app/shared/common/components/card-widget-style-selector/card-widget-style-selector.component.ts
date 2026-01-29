@@ -8,7 +8,8 @@ import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'cardWidgetStyleSelector',
-    standalone: true,
+    //standalone: true
+,
     imports: [CommonModule, FormsModule, ReactiveFormsModule, DxSelectBoxModule, UtilsModule],
     templateUrl: './card-widget-style-selector.component.html',
     styleUrl: './card-widget-style-selector.component.css',

@@ -21,7 +21,8 @@ import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-s
 
 @Component({
     selector: 'gaugeWidgetCustomParameterSelectionTab',
-    standalone: true,
+    //standalone: true
+,
     imports: [
         CommonModule,
         LimitedComponentsSelectorComponent,

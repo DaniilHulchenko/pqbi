@@ -8,7 +8,8 @@ import { UtilsModule } from '@shared/utils/utils.module';
 
 @Component({
     selector: 'gaugeWidgetStyleSelector',
-    standalone: true,
+    //standalone: true
+,
     imports: [CommonModule, DxSelectBoxModule, DxNumberBoxModule, DxCheckBoxModule, DxTextBoxModule, UtilsModule],
     templateUrl: './gauge-widget-style-selector.component.html',
     styleUrl: './gauge-widget-style-selector.component.css',

@@ -33,7 +33,8 @@ import { CardIcon } from '@app/shared/interfaces/card-icon';
 
 @Component({
     selector: 'cardWidgetEventAdvancedSettings',
-    standalone: true,
+    //standalone: true
+,
     imports: [
         DxPopupModule,
         DxScrollViewModule,

@@ -13,7 +13,8 @@ import safeStringify from 'fast-safe-stringify';
 
 @Component({
     selector: 'limitedComponentsSelector',
-    standalone: true,
+    //standalone: true
+,
     imports: [
         CommonModule,
         DxButtonModule,

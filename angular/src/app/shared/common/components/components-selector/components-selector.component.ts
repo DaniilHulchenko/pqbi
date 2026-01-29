@@ -13,7 +13,8 @@ import { Subscription, timer } from 'rxjs';
 
 @Component({
     selector: 'componentsSelector',
-    standalone: true,
+    //standalone: true
+,
     imports: [
     CommonModule,
     DxButtonModule,

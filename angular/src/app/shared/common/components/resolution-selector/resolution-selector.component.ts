@@ -14,7 +14,8 @@ import { AppComponentBase } from '@shared/common/app-component-base';
 
 @Component({
     selector: 'resolutionSelector',
-    standalone: true,
+    //standalone: true
+,
     imports: [CommonModule, FormsModule, DxSelectBoxModule, DxNumberBoxModule, DxTooltipModule, DxTextBoxModule, UtilsModule, AppSharedModule],
     templateUrl: './resolution-selector.component.html',
     styleUrl: './resolution-selector.component.css',

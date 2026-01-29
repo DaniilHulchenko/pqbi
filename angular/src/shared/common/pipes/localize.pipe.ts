@@ -4,7 +4,6 @@ import { LocalizationService } from 'abp-ng2-module';
 
 @Pipe({
     name: 'localize',
-    standalone: true
 })
 export class LocalizePipe implements PipeTransform {
     localizationSourceName = AppConsts.localization.defaultLocalizationSourceName;

@@ -26,7 +26,8 @@ import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-s
 
 @Component({
     selector: 'gaugeWidgetEventParameterSelectionTab',
-    standalone: true,
+    //standalone: true
+,
     imports: [
         CommonModule,
         DxButtonModule,

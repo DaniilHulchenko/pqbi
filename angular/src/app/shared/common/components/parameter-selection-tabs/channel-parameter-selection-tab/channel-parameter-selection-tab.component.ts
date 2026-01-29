@@ -29,7 +29,8 @@ import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-s
 
 @Component({
     selector: 'channelParameterSelectionTab',
-    standalone: true,
+    //standalone: true
+,
     imports: [
     CommonModule,
     ComponentsSelectorComponent,

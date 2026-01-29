@@ -9,7 +9,8 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'event-advanced-settings',
-  standalone: true,
+  //standalone: true
+,
   imports: [
     CommonModule,
     DxNumberBoxModule,

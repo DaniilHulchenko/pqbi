@@ -33,7 +33,8 @@ type IconSettingsInput = (Partial<IconSettings> & { colorMode?: string | IconCol
 
 @Component({
     selector: 'cardWidgetParameterAdvancedSettings',
-    standalone: true,
+    //standalone: true
+,
     imports: [
         DxPopupModule,
         DxScrollViewModule,

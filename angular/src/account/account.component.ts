@@ -14,7 +14,7 @@ import { AppPreBootstrap } from 'AppPreBootstrap';
     encapsulation: ViewEncapsulation.None,
 })
 export class AccountComponent extends AppComponentBase implements OnInit {
-    currentYear: number = this._dateTimeService.getYear();
+    currentYear!: number;
     remoteServiceBaseUrl: string = AppConsts.remoteServiceBaseUrl;
     skin = this.appSession.theme.baseSettings.layout.darkMode ? 'dark' : 'light';
     defaultLogo = AppConsts.appBaseUrl + '/assets/common/images/app-logo-on-' + this.skin + '.svg';
@@ -72,8 +72,10 @@ export class AccountComponent extends AppComponentBase implements OnInit {
     }
 
     ngOnInit(): void {
+        this.currentYear = this._dateTimeService.getYear();
         this._loginService.init();
         document.body.className = this._uiCustomizationService.getAccountModuleBodyClass();
+        
     }
 
     goToHome(): void {
