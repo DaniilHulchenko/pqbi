@@ -16,8 +16,7 @@ import { NormalizeEnum } from '@shared/service-proxies/service-proxies';
 
 @Component({
     selector: 'gaugeWidgetExceptionParameterSelectionTab',
-    //standalone: true
-,
+    standalone: false,
     imports: [
         CommonModule,
         CustomParameterSelectorComponent,

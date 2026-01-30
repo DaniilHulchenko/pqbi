@@ -34,8 +34,7 @@ import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'gaugeWidgetParameterAdvancedSettings',
-    //standalone: true
-,
+    standalone: false,
     imports: [
         DxPopupModule,
         DxScrollViewModule,

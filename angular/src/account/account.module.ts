@@ -35,7 +35,7 @@ export function getRecaptchaLanguage(): string {
         RecaptchaV3Module,
         ModalModule.forRoot(),
         PQBICommonModule,
-        // UtilsModule,
+        UtilsModule,
         ServiceProxyModule,
         AccountRoutingModule,
         OAuthModule.forRoot(),

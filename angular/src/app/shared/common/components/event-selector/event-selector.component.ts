@@ -8,8 +8,7 @@ import { EventService } from '@app/shared/services/event-service.service';
 
 @Component({
     selector: 'eventSelector',
-    //standalone: true
-,
+    standalone: false,
     imports: [DxScrollViewModule, FormsModule, ListboxModule, UtilsModule],
     templateUrl: './event-selector.component.html',
     styleUrl: './event-selector.component.css',

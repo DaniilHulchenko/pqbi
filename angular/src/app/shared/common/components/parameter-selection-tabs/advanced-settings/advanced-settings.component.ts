@@ -12,8 +12,7 @@ import { uniqBy } from 'lodash-es';
 import { EventService } from '@app/shared/services/event-service.service';
 
 @Component({
-    //standalone: true
-,
+    standalone: false,
     imports: [
         DxPopupModule,
         DxScrollViewModule,

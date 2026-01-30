@@ -10,8 +10,7 @@ import { UtilsModule } from '../../../../../shared/utils/utils.module';
 
 @Component({
     selector: 'datetimeRangeSelector',
-    //standalone: true
-,
+    standalone: false,
     imports: [CommonModule, FormsModule, ReactiveFormsModule, DxDateBoxModule, DxSelectBoxModule, UtilsModule],
     templateUrl: './datetime-range-selector.component.html',
     styleUrls: ['./datetime-range-selector.component.css'],

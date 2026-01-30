@@ -6,7 +6,7 @@
     "mapRoot": "./",
     "module": "esnext",
     "skipLibCheck": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "outDir": "../dist/out-tsc",
     "sourceMap": true,
     "target": "es2022",
@@ -25,8 +25,8 @@
     }
   },
   "angularCompilerOptions": {
-    "fullTemplateTypeCheck": false,
-    "strictTemplates": false,
+    "fullTemplateTypeCheck": true,
+    "strictTemplates": true,
     "strictInputTypes": false,
     "strictAttributeTypes": false,
     "strictOutputEventTypes": false,

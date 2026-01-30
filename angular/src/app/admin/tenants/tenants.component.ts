@@ -39,11 +39,8 @@ export class TenantsComponent extends AppComponentBase implements OnInit {
     @ViewChild('paginator', { static: true }) paginator: Paginator;
     @ViewChild('entityTypeHistoryModal', { static: true }) entityTypeHistoryModal: EntityTypeHistoryModalComponent;
 
-    subscriptionDateRange: DateTime[] = [
-        this._dateTimeService.getStartOfDay(),
-        this._dateTimeService.getEndOfDayPlusDays(30),
-    ];
-    creationDateRange: DateTime[] = [this._dateTimeService.getStartOfDay(), this._dateTimeService.getEndOfDay()];
+    subscriptionDateRange: DateTime[] = [];
+    creationDateRange: DateTime[] = [];
 
     _entityTypeFullName = 'PQBI.MultiTenancy.Tenant';
     entityHistoryEnabled = false;
@@ -64,6 +61,11 @@ export class TenantsComponent extends AppComponentBase implements OnInit {
         private _dateTimeService: DateTimeService
     ) {
         super(injector);
+        this.subscriptionDateRange = [
+            this._dateTimeService.getStartOfDay(),
+            this._dateTimeService.getEndOfDayPlusDays(30),
+        ];
+        this.creationDateRange = [this._dateTimeService.getStartOfDay(), this._dateTimeService.getEndOfDay()];
         this.setFiltersFromRoute();
     }
 

@@ -22,8 +22,7 @@ import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-s
 
 @Component({
     selector: 'cardWidgetEventParameterSelectionTab',
-    //standalone: true
-,
+    standalone: false,
     imports: [
         CommonModule,
         DxButtonModule,

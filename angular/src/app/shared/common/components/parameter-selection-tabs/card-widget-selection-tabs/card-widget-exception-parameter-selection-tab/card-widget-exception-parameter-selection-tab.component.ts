@@ -16,8 +16,7 @@ import { CustomParameterDto, NormalizeEnum } from '@shared/service-proxies/servi
 
 @Component({
     selector: 'cardWidgetExceptionParameterSelectionTab',
-    //standalone: true
-,
+    standalone: false,
     imports: [
         CommonModule,
         CustomParameterSelectorComponent,

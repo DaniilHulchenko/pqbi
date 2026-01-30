@@ -12,8 +12,7 @@ import { TreeBuilderService } from '@app/shared/services/tree-builder.service';
 
 @Component({
     selector: 'cpComponentsSelector',
-    //standalone: true
-,
+    standalone: false,
     imports: [
         CommonModule,
         DxButtonModule,

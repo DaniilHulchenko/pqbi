@@ -8,8 +8,7 @@ import { UtilsModule } from '../../../../../shared/utils/utils.module';
 
 @Component({
     selector: 'quantitySelector',
-    //standalone: true
-,
+    standalone: false,
     imports: [FormsModule, ListboxModule, DxTooltipModule, CommonModule, UtilsModule],
     templateUrl: './quantity-selector.component.html',
     styleUrl: './quantity-selector.component.css',
