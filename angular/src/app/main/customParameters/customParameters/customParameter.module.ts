@@ -71,6 +71,7 @@ import { CpComponentsSelectorComponent } from './cp-components-selector/cp-compo
     DxPopupModule,
     DxDataGridModule,
     CustomParameterSelectionTabComponent,
+    ComponentsSelectorComponent,
     QuantitySelectorComponent,
     FormContainerComponent,
     AdvancedSettingsComponent,

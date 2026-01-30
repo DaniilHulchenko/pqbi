@@ -36,7 +36,7 @@ import { GaugeWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/gauge-
 
 @Component({
     selector: 'gaugeWidgetChannelParameterSelectionTab',
-    standalone: false,
+    standalone: true,
     imports: [
         CommonModule,
         LimitedComponentsSelectorComponent,

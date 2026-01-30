@@ -35,7 +35,7 @@ import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWid
 
 @Component({
     selector: 'cardWidgetChannelParameterSelectionTab',
-    standalone: false,
+    standalone: true,
     imports: [
         CommonModule,
         LimitedComponentsSelectorComponent,

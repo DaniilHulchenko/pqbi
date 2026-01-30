@@ -33,7 +33,7 @@ import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-s
 
 @Component({
     selector: 'additional-parameter-selection-tab',
-    standalone: false,
+    standalone: true,
     imports: [
         AdvancedSettingsComponent,
         CommonModule,

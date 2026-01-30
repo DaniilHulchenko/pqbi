@@ -10,7 +10,7 @@ import { EditionComboComponent } from '@app/admin/shared/edition-combo.component
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TreeModule } from 'primeng/tree';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
-import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
+// import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
 import { CommonModule } from '@angular/common';
 import { UtilsModule } from '@shared/utils/utils.module';
 import { AppCommonModule } from '@app/shared/common/app-common.module';
@@ -60,7 +60,7 @@ import { SubheaderModule } from '@app/shared/common/sub-header/subheader.module'
         Angular2CountoModule,
         IMaskModule,
         ImageCropperModule,
-        PerfectScrollbarModule,
+        // PerfectScrollbarModule,
         DropdownModule,
         AppBsModalModule,
         FileUploadModule,
@@ -88,7 +88,7 @@ import { SubheaderModule } from '@app/shared/common/sub-header/subheader.module'
         Angular2CountoModule,
         IMaskModule,
         ImageCropperModule,
-        PerfectScrollbarModule,
+        // PerfectScrollbarModule,
         DropdownModule,
         AppBsModalModule,
         AppSharedModule,
