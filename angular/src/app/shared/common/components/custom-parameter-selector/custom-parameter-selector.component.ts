@@ -12,7 +12,7 @@ import { CustomParameterService } from '@app/shared/services/custom-parameter-se
 
 @Component({
     selector: 'customParameterSelector',
-    standalone: false,
+    standalone: true,
     imports: [FormsModule, DxScrollViewModule, ListboxModule, UtilsModule],
     templateUrl: './custom-parameter-selector.component.html',
     styleUrl: './custom-parameter-selector.component.css',

@@ -37,7 +37,7 @@ import { CardWidgetParameterAdvancedSettingsComponent } from '../card-widget-par
 
 @Component({
     selector: 'cardWidgetLogicalParameterSelectionTab',
-    standalone: false,
+    standalone: true,
     imports: [
         CommonModule,
         DxButtonModule,

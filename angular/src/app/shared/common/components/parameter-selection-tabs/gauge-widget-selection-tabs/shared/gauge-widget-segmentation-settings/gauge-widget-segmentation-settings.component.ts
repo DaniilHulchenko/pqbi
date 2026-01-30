@@ -7,7 +7,7 @@ import { Guid } from 'guid-ts';
 
 @Component({
     selector: 'gaugeWidgetSegmentationSettings',
-    standalone: false,
+    standalone: true,
     imports: [
         CommonModule,
         FormsModule,

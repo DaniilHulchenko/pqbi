@@ -1,7 +1,7 @@
 import { APP_INITIALIZER, Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 // import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ChatSignalrService } from '@app/shared/layout/chat/chat-signalr.service';
 import { LinkAccountModalComponent } from '@app/shared/layout/link-account-modal.component';
 import { LinkedAccountsModalComponent } from '@app/shared/layout/linked-accounts-modal.component';
@@ -77,7 +77,7 @@ import { AddFriendModalComponent } from './shared/layout/chat/add-friend-modal.c
 import { AddFromDifferentTenantModalComponent } from './shared/layout/chat/add-from-different-tenant-modal.component';
 import { FriendsLookupTableComponent } from './shared/layout/chat/friends-lookup-table.component';
 import { AppSharedModule } from '@app/shared/app-shared.module';
-import { HttpClientJsonpModule } from '@angular/common/http';
+import { HttpClientJsonpModule, HttpClientModule } from '@angular/common/http';
 
 
 
@@ -140,10 +140,11 @@ import { HttpClientJsonpModule } from '@angular/common/http';
     imports: [
         BrowserModule,
         CommonModule,
+        HttpClientModule,
         HttpClientJsonpModule,
         // BrowserAnimationsModule,
-        PrimeNG
         FormsModule,
+        ReactiveFormsModule,
         AppSharedModule,
         ModalModule.forRoot(),
         TooltipModule.forRoot(),

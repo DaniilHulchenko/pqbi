@@ -13,7 +13,7 @@ import { DefaultValueKeys } from '@shared/DefaultValueKeys';
 
 @Component({
     selector: 'app-dynamic-tree-builder',
-    standalone: false,
+    standalone: true,
     imports: [PickListModule, DxCheckBoxModule, DxButtonModule, CommonModule, UtilsModule],
     templateUrl: './dynamic-tree-builder.component.html',
     styleUrl: './dynamic-tree-builder.component.css',

@@ -26,7 +26,7 @@ import { DatePickerInitialValueSetterDirective } from './timing/date-picker-init
 import { DateTimeService } from './timing/date-time.service';
 import { TimeZoneComboComponent } from './timing/timezone-combo.component';
 import { NgxBootstrapDatePickerConfigService } from 'assets/ngx-bootstrap/ngx-bootstrap-datepicker-config.service';
-import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
+// import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
 import { AppBsModalModule } from '@shared/common/appBsModal/app-bs-modal.module';
 import { SingleLineStringInputTypeComponent } from './input-types/single-line-string-input-type/single-line-string-input-type.component';
 import { ComboboxInputTypeComponent } from './input-types/combobox-input-type/combobox-input-type.component';
@@ -51,7 +51,7 @@ import { DxTextBoxModule } from 'devextreme-angular';
         TabsModule.forRoot(),
         BsDropdownModule.forRoot(),
         BsDatepickerModule.forRoot(),
-        PerfectScrollbarModule,
+        // PerfectScrollbarModule,
         Angular2CountoModule,
         AppBsModalModule,
         AutoCompleteModule,

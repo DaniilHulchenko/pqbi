@@ -13,7 +13,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { FormsModule } from '@angular/forms';
 import { TabsModule } from 'ngx-bootstrap/tabs';
-import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
+// import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
 import { AppBsModalModule } from '@shared/common/appBsModal/app-bs-modal.module';
 import { Angular2CountoModule } from '@awaismirza/angular2-counto';
 import { TableModule } from 'primeng/table';
@@ -111,7 +111,7 @@ import { DateRangeAndResolutionSelectorComponent } from '../components/date-rang
     DropdownModule,
     ModalModule,
     TabsModule,
-    PerfectScrollbarModule,
+    // PerfectScrollbarModule,
     AppBsModalModule,
     Angular2CountoModule,
     TableModule,
@@ -163,7 +163,6 @@ import { DateRangeAndResolutionSelectorComponent } from '../components/date-rang
     TabsModule.forRoot(),
     BarChartPreviewComponent,
     CardWidgetStyleSelectorComponent,
-    CardWidgetStyleSelectorComponent,
     WidgetRefreshSelectorComponent,
     DateRangeSelectorComponent,
     CardWidgetAdditionalParameterSelectionTabComponent,
@@ -180,7 +179,7 @@ import { DateRangeAndResolutionSelectorComponent } from '../components/date-rang
     GaugeWidgetExceptionParameterSelectionTabComponent,
     GaugeWidgetLogicalParameterSelectionTabComponent,
     GaugeWidgetStyleSelectorComponent,
-    DateRangeAndResolutionSelectorComponent
+    DateRangeAndResolutionSelectorComponent,
 ],
 
     declarations: [
@@ -195,7 +194,6 @@ import { DateRangeAndResolutionSelectorComponent } from '../components/date-rang
         CreateOrEditTrendConfigurationComponent,
         CreateOrEditBarChartConfigurationComponent,
         CreateOrEditTableConfigurationComponent,
-        RenameWidgetModalComponent,
         TablePreviewComponent,
         TableDesignOptionsComponent,
         WidgetPqsCardComponent,

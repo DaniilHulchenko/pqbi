@@ -27,7 +27,7 @@ import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWid
 
 @Component({
     selector: 'cardWidgetAdditionalParameterSelectionTab',
-    standalone: false,
+    standalone: true,
     imports: [
     CardWidgetParameterAdvancedSettingsComponent,
     CommonModule,
