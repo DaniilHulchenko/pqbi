@@ -2,26 +2,22 @@
   "compilerOptions": {
     "declaration": false,
     "experimentalDecorators": true,
-    "lib": ["es2022", "dom"],
+    "lib": ["ES2022", "DOM"],
     "mapRoot": "./",
-    "module": "esnext",
+    "module": "ESNext",
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "outDir": "../dist/out-tsc",
     "sourceMap": true,
-    "target": "es2022",
+    "target": "ES2022",
     "typeRoots": ["../node_modules/@types"],
     "baseUrl": ".",
     "paths": {
       "@app/*": ["./app/*"],
       "@account/*": ["./account/*"],
       "@shared/*": ["./shared/*"],
-      "@node_modules/*": ["../node_modules/*"],
-      "@angular/*": ["../node_modules/@angular/*"],
       "@metronic/*": ["./assets/metronic/*"],
-      "jszip": [
-        "node_modules/jszip/dist/jszip.min.js"
-      ]
+      "jszip": ["../node_modules/jszip/dist/jszip.min.js"]
     }
   },
   "angularCompilerOptions": {
@@ -32,6 +28,6 @@
     "strictOutputEventTypes": false,
     "strictDomEventTypes": false,
     "strictLiteralTypes": false,
-    "strictInjectionParameters": false,
+    "strictInjectionParameters": false
   }
 }

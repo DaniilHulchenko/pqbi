@@ -13,21 +13,21 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { PopoverModule } from 'ngx-bootstrap/popover';
 import { TabsModule } from 'ngx-bootstrap/tabs';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ImageCropperModule } from 'ngx-image-cropper';
-import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
+// import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { FileUploadModule as PrimeNgFileUploadModule } from 'primeng/fileupload';
 import { PaginatorModule } from 'primeng/paginator';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TableModule } from 'primeng/table';
 import { AppCommonModule } from './common/app-common.module';
 import { ThemesLayoutBaseComponent } from './layout/themes/themes-layout-base.component';
-import { AppSharedModule } from '@app/shared/app-shared.module';
 
 
 
 const imports = [
-    AppSharedModule,
     CommonModule,
     FormsModule,
     HttpClientModule,
@@ -37,6 +37,7 @@ const imports = [
     BsDropdownModule,
     PopoverModule,
     BsDatepickerModule,
+    TooltipModule,
     AppCommonModule,
     FileUploadModule,
     AppRoutingModule,
@@ -45,10 +46,11 @@ const imports = [
     TableModule,
     PaginatorModule,
     ProgressBarModule,
-    PerfectScrollbarModule ,
+    // PerfectScrollbarModule ,
     IMaskModule,
     ImageCropperModule,
     AutoCompleteModule,
+    PrimeNgFileUploadModule,
     NgxSpinnerModule,
     AppBsModalModule,
 ];

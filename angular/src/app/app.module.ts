@@ -1,7 +1,7 @@
-import { CommonModule } from '@angular/common';
 import { APP_INITIALIZER, Injector, NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+// import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule, HttpClientJsonpModule } from '@angular/common/http';
 import { ChatSignalrService } from '@app/shared/layout/chat/chat-signalr.service';
 import { LinkAccountModalComponent } from '@app/shared/layout/link-account-modal.component';
 import { LinkedAccountsModalComponent } from '@app/shared/layout/linked-accounts-modal.component';
@@ -49,11 +49,14 @@ import { NotificationSettingsModalComponent } from './shared/layout/notification
 import { NotificationsComponent } from './shared/layout/notifications/notifications.component';
 import { ImageCropperModule } from 'ngx-image-cropper';
 import { ActiveDelegatedUsersComboComponent } from './shared/layout/topbar/active-delegated-users-combo.component';
+import { CommonModule } from '@angular/common';
+ 
+
 
 import { DefaultLogoComponent } from './shared/layout/themes/default/default-logo.component';
 import { IMaskModule } from 'angular-imask';
 // Metronic
-import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
+// import { PerfectScrollbarModule } from '@craftsjs/perfect-scrollbar';
 
 import { SessionTimeoutModalComponent } from './shared/common/session-timeout/session-timeout-modal-component';
 import { SessionTimeoutComponent } from './shared/common/session-timeout/session-timeout.component';
@@ -74,6 +77,10 @@ import { AddFriendModalComponent } from './shared/layout/chat/add-friend-modal.c
 import { AddFromDifferentTenantModalComponent } from './shared/layout/chat/add-from-different-tenant-modal.component';
 import { FriendsLookupTableComponent } from './shared/layout/chat/friends-lookup-table.component';
 import { AppSharedModule } from '@app/shared/app-shared.module';
+import { HttpClientJsonpModule } from '@angular/common/http';
+
+
+
 
 
 @NgModule({
@@ -131,11 +138,13 @@ import { AppSharedModule } from '@app/shared/app-shared.module';
         },
     ],
     imports: [
-        AppSharedModule,
+        BrowserModule,
         CommonModule,
-        FormsModule,
-        HttpClientModule,
         HttpClientJsonpModule,
+        // BrowserAnimationsModule,
+        PrimeNG
+        FormsModule,
+        AppSharedModule,
         ModalModule.forRoot(),
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
@@ -151,7 +160,7 @@ import { AppSharedModule } from '@app/shared/app-shared.module';
         PaginatorModule,
         PrimeNgFileUploadModule,
         ProgressBarModule,
-        PerfectScrollbarModule,
+        // PerfectScrollbarModule,
         IMaskModule,
         ImageCropperModule,
         AutoCompleteModule,

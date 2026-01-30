@@ -36,7 +36,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { PasswordInputWithShowButtonComponent } from './password-input-with-show-button/password-input-with-show-button.component';
 import { KeyValueListManagerComponent } from './key-value-list-manager/key-value-list-manager.component';
 import { Angular2CountoModule } from '@awaismirza/angular2-counto';
-import { DxTextBoxModule } from '@node_modules/devextreme-angular';
+import { DxTextBoxModule } from 'devextreme-angular';
 
 @NgModule({
     imports: [
@@ -72,6 +72,7 @@ import { DxTextBoxModule } from '@node_modules/devextreme-angular';
         KeyValueListManagerComponent,
     ],
     exports: [
+        UtilsModule,
         TimeZoneComboComponent,
         CommonLookupModalComponent,
         EntityTypeHistoryModalComponent,
