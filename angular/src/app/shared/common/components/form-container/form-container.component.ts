@@ -3,7 +3,7 @@ import { NgClass } from '@node_modules/@angular/common';
 
 @Component({
   selector: 'form-container',
-  standalone: false,
+  standalone: true,
   imports: [],
   templateUrl: './form-container.component.html',
   styleUrl: './form-container.component.css',

@@ -18,7 +18,7 @@ import { FormContainerComponent } from "../../form-container/form-container.comp
 
 @Component({
     selector: 'customParameterSelectionTab',
-    standalone: false,
+    standalone: true,
     imports: [
         CommonModule,
         ComponentsSelectorComponent,

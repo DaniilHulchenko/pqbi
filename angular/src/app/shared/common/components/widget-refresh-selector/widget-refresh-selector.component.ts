@@ -11,7 +11,7 @@ import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'widgetRefreshSelector',
-    standalone: false,
+    standalone: true,
     imports: [
         CommonModule,
         FormsModule,

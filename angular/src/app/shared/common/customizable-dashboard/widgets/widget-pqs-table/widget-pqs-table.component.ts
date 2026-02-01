@@ -55,7 +55,7 @@ import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-s
 import { ConfigurationVersionService } from '@app/shared/services/configuration-version-service.service';
 import { ComponentsService } from '@app/shared/services/components-service.service';
 import { TableWidgetConfigurationService } from '@app/shared/services/widget-configurations/table-widget-configuration.service';
-import { dxTreeListColumn } from 'devextreme/ui/tree_list';
+import { dxTreeListColumn } from '@node_modules/devextreme/ui/tree_list';
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
 import { DxTreeListComponent } from 'devextreme-angular';

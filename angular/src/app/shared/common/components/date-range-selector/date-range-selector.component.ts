@@ -14,7 +14,7 @@ import { AppComponentBase } from '@shared/common/app-component-base';
 
 @Component({
     selector: 'dateRangeSelector',
-    standalone: false,
+    standalone: true,
     imports: [
         DxRadioGroupModule,
         DxSelectBoxModule,

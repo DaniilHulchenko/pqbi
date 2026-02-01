@@ -1,4 +1,4 @@
-import { Component, Injector, OnInit, ViewEncapsulation, ViewChild } from '@angular/core';
+import { Component, Injector, ViewEncapsulation, ViewChild } from '@angular/core';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import { NotificationServiceProxy, NotificationSeverity, TokenAuthServiceProxy } from '@shared/service-proxies/service-proxies';
 import { appModuleAnimation } from '@shared/animations/routerTransition';
@@ -16,7 +16,7 @@ import { ModalDirective } from 'ngx-bootstrap/modal';
   encapsulation: ViewEncapsulation.None,
   animations: [appModuleAnimation()],
 })
-export class MassNotificationsComponent extends AppComponentBase implements OnInit {
+export class MassNotificationsComponent extends AppComponentBase {
   @ViewChild('createMassNotificationModalComponent', { static: true })
   createMassNotificationModalComponent: CreateMassNotificationModalComponent;
 
@@ -24,7 +24,7 @@ export class MassNotificationsComponent extends AppComponentBase implements OnIn
   @ViewChild('dataTable', { static: true }) dataTable: Table;
   @ViewChild('paginator', { static: true }) paginator: Paginator;
 
-  dateRange: DateTime[] = [];
+  dateRange: DateTime[] = [this._dateTimeService.getStartOfDayMinusDays(7), this._dateTimeService.getEndOfDay()];
 
   notificationSeverity = NotificationSeverity;
 
@@ -38,10 +38,6 @@ export class MassNotificationsComponent extends AppComponentBase implements OnIn
 
   ) {
     super(injector);
-  }
-
-  ngOnInit(): void {
-    this.dateRange = [this._dateTimeService.getStartOfDayMinusDays(7), this._dateTimeService.getEndOfDay()];
   }
 
   getPublishedNotifications(event?: LazyLoadEvent) {

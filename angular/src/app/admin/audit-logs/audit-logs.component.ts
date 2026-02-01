@@ -1,4 +1,4 @@
-import { Component, Injector, ViewChild, ViewEncapsulation, AfterViewInit, OnInit } from '@angular/core';
+import { Component, Injector, ViewChild, ViewEncapsulation, AfterViewInit } from '@angular/core';
 import { AuditLogDetailModalComponent } from '@app/admin/audit-logs/audit-log-detail-modal.component';
 import { EntityChangeDetailModalComponent } from '@app/shared/common/entityHistory/entity-change-detail-modal.component';
 import { appModuleAnimation } from '@shared/animations/routerTransition';
@@ -23,7 +23,7 @@ import { DateTimeService } from '@app/shared/common/timing/date-time.service';
     encapsulation: ViewEncapsulation.None,
     animations: [appModuleAnimation()],
 })
-export class AuditLogsComponent extends AppComponentBase implements AfterViewInit, OnInit {
+export class AuditLogsComponent extends AppComponentBase implements AfterViewInit {
     @ViewChild('auditLogDetailModal', { static: true }) auditLogDetailModal: AuditLogDetailModalComponent;
     @ViewChild('entityChangeDetailModal', { static: true }) entityChangeDetailModal: EntityChangeDetailModalComponent;
     @ViewChild('dataTableAuditLogs', { static: true }) dataTableAuditLogs: Table;
@@ -32,7 +32,7 @@ export class AuditLogsComponent extends AppComponentBase implements AfterViewIni
     @ViewChild('paginatorEntityChanges', { static: true }) paginatorEntityChanges: Paginator;
 
     //Filters
-    public dateRange: DateTime[] = [];
+    public dateRange: DateTime[] = [this._dateTimeService.getStartOfDay(), this._dateTimeService.getEndOfDay()];
 
     public usernameAuditLog: string;
     public usernameEntityChange: string;
@@ -56,10 +56,6 @@ export class AuditLogsComponent extends AppComponentBase implements AfterViewIni
         private _dateTimeService: DateTimeService
     ) {
         super(injector);
-    }
-
-    ngOnInit(): void {
-        this.dateRange = [this._dateTimeService.getStartOfDay(), this._dateTimeService.getEndOfDay()];
     }
 
     ngAfterViewInit(): void {

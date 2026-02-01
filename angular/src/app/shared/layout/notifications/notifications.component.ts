@@ -1,4 +1,4 @@
-import { Component, Injector, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, Injector, ViewChild, ViewEncapsulation } from '@angular/core';
 import { appModuleAnimation } from '@shared/animations/routerTransition';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import {
@@ -20,12 +20,12 @@ import { DateTimeService } from '@app/shared/common/timing/date-time.service';
     encapsulation: ViewEncapsulation.None,
     animations: [appModuleAnimation()],
 })
-export class NotificationsComponent extends AppComponentBase implements OnInit {
+export class NotificationsComponent extends AppComponentBase {
     @ViewChild('dataTable', { static: true }) dataTable: Table;
     @ViewChild('paginator', { static: true }) paginator: Paginator;
 
     readStateFilter = 'ALL';
-    dateRange: DateTime[] = [];
+    dateRange: DateTime[] = [this._dateTimeService.getStartOfDay(), this._dateTimeService.getEndOfDay()];
     loading = false;
 
     constructor(
@@ -35,10 +35,6 @@ export class NotificationsComponent extends AppComponentBase implements OnInit {
         private _dateTimeService: DateTimeService
     ) {
         super(injector);
-    }
-
-    ngOnInit(): void {
-        this.dateRange = [this._dateTimeService.getStartOfDay(), this._dateTimeService.getEndOfDay()];
     }
 
     reloadPage(): void {

@@ -20,7 +20,7 @@ export class LoginAttemptsComponent extends AppComponentBase implements OnInit {
     @ViewChild('paginator', { static: true }) paginator: Paginator;
 
     public filter: string;
-    public dateRange: DateTime[] = [];
+    public dateRange: DateTime[] = [this._dateTimeService.getStartOfWeek(), this._dateTimeService.getEndOfDay()];
     public loginResultFilter: AbpLoginResultType;
 
     primengTableHelper = new PrimengTableHelper();
@@ -35,7 +35,6 @@ export class LoginAttemptsComponent extends AppComponentBase implements OnInit {
 
     ngOnInit(): void {
         this.loginResultFilter = '' as any;
-        this.dateRange = [this._dateTimeService.getStartOfWeek(), this._dateTimeService.getEndOfDay()];
     }
 
     getLoginAttempts(event?: LazyLoadEvent): void {

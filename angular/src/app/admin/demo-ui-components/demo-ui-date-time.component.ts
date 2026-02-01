@@ -1,4 +1,4 @@
-import { Component, ElementRef, Injector, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Injector, ViewChild } from '@angular/core';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
 import { appModuleAnimation } from '@shared/animations/routerTransition';
 import { AppComponentBase } from '@shared/common/app-component-base';
@@ -10,13 +10,16 @@ import { DateTime } from 'luxon';
     templateUrl: './demo-ui-date-time.component.html',
     animations: [appModuleAnimation()],
 })
-export class DemoUiDateTimeComponent extends AppComponentBase implements OnInit {
+export class DemoUiDateTimeComponent extends AppComponentBase {
     @ViewChild('SampleDatePicker', { static: true }) sampleDatePicker: ElementRef;
     @ViewChild('SampleDateTimePicker', { static: true }) sampleDateTimePicker: ElementRef;
 
     sampleDate: DateTime;
     sampleDateTime: DateTime;
-    sampleDateRange: DateTime[] = [];
+    sampleDateRange: DateTime[] = [
+        this._dateTimeService.getStartOfDayMinusDays(7),
+        this._dateTimeService.getStartOfDay(),
+    ];
     sampleDateWithTextInput: SendAndGetDateWithTextInput = new SendAndGetDateWithTextInput();
     dateFormat = 'yyyy-LL-dd HH:mm:ss';
 
@@ -26,13 +29,6 @@ export class DemoUiDateTimeComponent extends AppComponentBase implements OnInit 
         private _dateTimeService: DateTimeService
     ) {
         super(injector);
-    }
-
-    ngOnInit(): void {
-        this.sampleDateRange = [
-            this._dateTimeService.getStartOfDayMinusDays(7),
-            this._dateTimeService.getStartOfDay(),
-        ];
     }
 
     // default date picker - post
