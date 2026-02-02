@@ -5,7 +5,7 @@ import { AccountSharedModule } from '@account/shared/account-shared.module';
 import { PayPalPrePaymentComponent } from './paypal-pre-payment.component';
 
 @NgModule({
-    declarations: [PayPalPrePaymentComponent],
-    imports: [AppSharedModule, AccountSharedModule, PaypalPrePaymentRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AccountSharedModule, PaypalPrePaymentRoutingModule, PayPalPrePaymentComponent],
 })
 export class PaypalPrePaymentModule {}

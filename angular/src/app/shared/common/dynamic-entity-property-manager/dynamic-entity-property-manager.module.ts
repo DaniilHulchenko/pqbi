@@ -3,8 +3,8 @@ import { DynamicEntityPropertyValueModule } from '@app/admin/dynamic-properties/
 import { DynamicEntityPropertyManagerComponent } from './dynamic-entity-property-manager.component';
 
 @NgModule({
-    declarations: [DynamicEntityPropertyManagerComponent],
-    imports: [DynamicEntityPropertyValueModule],
-    exports: [DynamicEntityPropertyValueModule, DynamicEntityPropertyManagerComponent],
+    declarations: [],
+    imports: [DynamicEntityPropertyValueModule, DynamicEntityPropertyManagerComponent],
+    exports: [DynamicEntityPropertyValueModule, ],
 })
 export class DynamicEntityPropertyManagerModule {}

@@ -23,11 +23,13 @@ import { ComponentsState } from '@app/shared/models/components-state';
 import { GaugeWidgetEventAdvancedSettingsComponent } from '../gauge-widget-event-advanced-settings/gauge-widget-event-advanced-settings.component';
 import { GaugeWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
 import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-settings-options';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'gaugeWidgetEventParameterSelectionTab',
     standalone: true,
     imports: [
+        LocalizePipe,
         CommonModule,
         DxButtonModule,
         DxCheckBoxModule,

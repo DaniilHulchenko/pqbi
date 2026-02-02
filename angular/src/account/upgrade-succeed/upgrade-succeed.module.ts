@@ -5,7 +5,7 @@ import { UpgradeSucceedComponent } from './upgrade-succeed.component';
 import { AccountSharedModule } from '@account/shared/account-shared.module';
 
 @NgModule({
-    declarations: [UpgradeSucceedComponent],
-    imports: [AppSharedModule, AccountSharedModule, UpgradeSucceedRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AccountSharedModule, UpgradeSucceedRoutingModule , UpgradeSucceedComponent],
 })
 export class UpgradeSucceedModule {}

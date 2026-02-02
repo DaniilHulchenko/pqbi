@@ -33,11 +33,13 @@ import safeStringify from 'fast-safe-stringify';
 import { LimitedComponentsSelectorComponent } from '../../../limited-components-selector/limited-components-selector.component';
 import { GaugeWidgetParameterAdvancedSettingsComponent } from '../gauge-widget-parameter-advanced-settings/gauge-widget-parameter-advanced-settings.component';
 import { GaugeWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'gaugeWidgetChannelParameterSelectionTab',
     standalone: true,
     imports: [
+        LocalizePipe,
         CommonModule,
         LimitedComponentsSelectorComponent,
         DxButtonModule,

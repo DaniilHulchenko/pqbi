@@ -19,11 +19,13 @@ import { CardWidgetEventAdvancedSettingsComponent } from '../card-widget-event-a
 import { LimitedComponentsSelectorComponent } from '../../../limited-components-selector/limited-components-selector.component';
 import { ComponentsState } from '@app/shared/models/components-state';
 import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-settings-options';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'cardWidgetEventParameterSelectionTab',
     standalone: true,
     imports: [
+        LocalizePipe,
         CommonModule,
         DxButtonModule,
         DxCheckBoxModule,

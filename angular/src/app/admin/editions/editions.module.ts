@@ -9,11 +9,11 @@ import { MoveTenantsToAnotherEditionModalComponent } from './move-tenants-to-ano
 
 @NgModule({
     declarations: [
-        EditionsComponent,
+        
+    ],
+    imports: [AppSharedModule, AdminSharedModule, EditionsRoutingModule, EditionsComponent,
         EditEditionModalComponent,
         CreateEditionModalComponent,
-        MoveTenantsToAnotherEditionModalComponent,
-    ],
-    imports: [AppSharedModule, AdminSharedModule, EditionsRoutingModule],
+        MoveTenantsToAnotherEditionModalComponent,],
 })
 export class EditionsModule {}

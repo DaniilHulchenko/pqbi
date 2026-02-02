@@ -4,8 +4,8 @@ import { TenantChangeModalComponent } from '@account/shared/tenant-change-modal.
 import { AppSharedModule } from '@app/shared/app-shared.module';
 
 @NgModule({
-    imports: [AppSharedModule],
-    declarations: [TenantChangeComponent, TenantChangeModalComponent],
+    imports: [AppSharedModule, TenantChangeComponent, TenantChangeModalComponent],
+    declarations: [],
     exports: [TenantChangeComponent, TenantChangeModalComponent],
 })
 export class AccountSharedModule {}

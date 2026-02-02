@@ -6,7 +6,7 @@ import { EditTextModalComponent } from './edit-text-modal.component';
 import { LanguageTextsRoutingModules } from './language-texts-routing-modules.module';
 
 @NgModule({
-    declarations: [LanguageTextsComponent, EditTextModalComponent],
-    imports: [AppSharedModule, AdminSharedModule, LanguageTextsRoutingModules],
+    declarations: [],
+    imports: [AppSharedModule, AdminSharedModule, LanguageTextsRoutingModules, LanguageTextsComponent, EditTextModalComponent],
 })
 export class LanguageTextsModule {}

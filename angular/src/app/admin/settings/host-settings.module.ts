@@ -5,7 +5,7 @@ import { AppSharedModule } from '@app/shared/app-shared.module';
 import { HostSettingsComponent } from './host-settings.component';
 
 @NgModule({
-    declarations: [HostSettingsComponent],
-    imports: [AppSharedModule, AdminSharedModule, HostSettingsRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AdminSharedModule, HostSettingsRoutingModule, HostSettingsComponent],
 })
 export class HostSettingsModule {}

@@ -29,7 +29,24 @@ import { RefreshWidgetUnitValuePipe } from '@shared/common/pipes/refresh-widget-
 import { RefreshWidgetCustomUnitValuePipe } from '@shared/common/pipes/refresh-widget-custom-unit-value.pipe';
 
 @NgModule({
-    imports: [CommonModule],
+    imports: [
+        CommonModule, 
+        RefreshWidgetCustomUnitValuePipe,
+        RefreshWidgetPipe,
+        PermissionAllPipe,
+        DateRangePickerLuxonModifierDirective,
+        DatePickerLuxonModifierDirective,
+        FeatureCheckerPipe,
+        PermissionPipe,
+        PermissionAnyPipe,
+        RefreshWidgetUnitValuePipe,
+        LocalizePipe,
+        PasswordComplexityValidator,
+        ButtonBusyDirective,
+        AutoFocusDirective,
+        BusyIfDirective,
+
+    ],
     providers: [
         FileDownloadService,
         LocalStorageService,
@@ -44,48 +61,11 @@ import { RefreshWidgetCustomUnitValuePipe } from '@shared/common/pipes/refresh-w
         RefreshWidgetCustomUnitValuePipe
     ],
     declarations: [
-        EqualValidator,
-        PasswordComplexityValidator,
-        ButtonBusyDirective,
-        AutoFocusDirective,
-        BusyIfDirective,
-        FriendProfilePictureComponent,
-        LuxonFormatPipe,
-        LuxonFromNowPipe,
-        ValidationMessagesComponent,
-        NullDefaultValueDirective,
-        LocalizePipe,
-        PermissionPipe,
-        PermissionAnyPipe,
-        FeatureCheckerPipe,
-        DatePickerLuxonModifierDirective,
-        DateRangePickerLuxonModifierDirective,
-        PermissionAllPipe,
-        RefreshWidgetPipe,
-        RefreshWidgetUnitValuePipe,
-        RefreshWidgetCustomUnitValuePipe
+
+ 
     ],
     exports: [
-        EqualValidator,
-        PasswordComplexityValidator,
-        ButtonBusyDirective,
-        AutoFocusDirective,
-        BusyIfDirective,
-        FriendProfilePictureComponent,
-        LuxonFormatPipe,
-        LuxonFromNowPipe,
-        ValidationMessagesComponent,
-        NullDefaultValueDirective,
-        LocalizePipe,
-        PermissionPipe,
-        PermissionAnyPipe,
-        FeatureCheckerPipe,
-        DatePickerLuxonModifierDirective,
-        DateRangePickerLuxonModifierDirective,
-        PermissionAllPipe,
-        RefreshWidgetPipe,
-        RefreshWidgetUnitValuePipe,
-        RefreshWidgetCustomUnitValuePipe
+
     ],
 })
 export class UtilsModule { }

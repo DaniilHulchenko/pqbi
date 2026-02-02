@@ -30,11 +30,13 @@ import { AdvancedSettingsComponent, AdvancedSettingsConfig } from '../advanced-s
 import { FormContainerComponent } from '../../form-container/form-container.component';
 import { NormalizeEnum } from '@shared/service-proxies/service-proxies';
 import { ColorSchema, ExcludeFlagged, Limit } from '@app/shared/enums/advanced-settings-options';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'additional-parameter-selection-tab',
     standalone: true,
     imports: [
+        LocalizePipe,
         AdvancedSettingsComponent,
         CommonModule,
         DxButtonModule,

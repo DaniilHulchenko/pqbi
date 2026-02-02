@@ -6,7 +6,7 @@ import { RolesComponent } from './roles.component';
 import { CreateOrEditRoleModalComponent } from './create-or-edit-role-modal.component';
 
 @NgModule({
-    declarations: [RolesComponent, CreateOrEditRoleModalComponent],
-    imports: [AppSharedModule, AdminSharedModule, RolesRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AdminSharedModule, RolesRoutingModule , RolesComponent, CreateOrEditRoleModalComponent],
 })
 export class RolesModule {}

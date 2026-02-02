@@ -5,7 +5,7 @@ import { LoginComponent } from './login.component';
 import { AccountSharedModule } from '@account/shared/account-shared.module';
 
 @NgModule({
-    declarations: [LoginComponent],
-    imports: [AppSharedModule, AccountSharedModule, LoginRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AccountSharedModule, LoginRoutingModule, LoginComponent],
 })
 export class LoginModule {}

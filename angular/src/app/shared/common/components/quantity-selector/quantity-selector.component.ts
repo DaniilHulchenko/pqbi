@@ -5,11 +5,12 @@ import { CommonModule } from '@node_modules/@angular/common';
 import { DxTooltipModule } from 'devextreme-angular';
 import { ListboxModule } from 'primeng/listbox';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'quantitySelector',
     standalone: true,
-    imports: [FormsModule, ListboxModule, DxTooltipModule, CommonModule, UtilsModule],
+    imports: [LocalizePipe,FormsModule, ListboxModule, DxTooltipModule, CommonModule, UtilsModule],
     templateUrl: './quantity-selector.component.html',
     styleUrl: './quantity-selector.component.css',
     providers: [

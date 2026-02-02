@@ -7,8 +7,13 @@ import { FileUploader, FileUploaderOptions, FileItem } from 'ng2-file-upload';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { finalize } from 'rxjs/operators';
 import { ImageCroppedEvent, base64ToFile } from 'ngx-image-cropper';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
+    standalone: true,
+    imports: [
+        LocalizePipe
+    ],
     selector: 'changeProfilePictureModal',
     templateUrl: './change-profile-picture-modal.component.html',
 })

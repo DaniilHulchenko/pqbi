@@ -12,15 +12,15 @@ import { OrganizationUnitsComponent } from './organization-units.component';
 
 @NgModule({
     declarations: [
-        AddMemberModalComponent,
+        
+    ],
+    imports: [AppSharedModule, AdminSharedModule, OrganizationUnitsRoutingModule ,AddMemberModalComponent,
         AddRoleModalComponent,
         CreateOrEditUnitModalComponent,
         OrganizationTreeComponent,
         OrganizationUnitMembersComponent,
         OrganizationUnitRolesComponent,
-        OrganizationUnitsComponent,
-    ],
-    imports: [AppSharedModule, AdminSharedModule, OrganizationUnitsRoutingModule],
+        OrganizationUnitsComponent,],
     exports: [AddMemberModalComponent, AddRoleModalComponent, OrganizationTreeComponent],
 })
 export class OrganizationUnitsModule {}

@@ -7,11 +7,12 @@ import { DateRangeState } from '@app/shared/models/date-range-state';
 import { DxSelectBoxModule, DxDateBoxModule } from 'devextreme-angular';
 import { KeyValuePair } from '@app/shared/models/key-value-pair';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'datetimeRangeSelector',
     standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, DxDateBoxModule, DxSelectBoxModule, UtilsModule],
+    imports: [ LocalizePipe, CommonModule, FormsModule, ReactiveFormsModule, DxDateBoxModule, DxSelectBoxModule, UtilsModule],
     templateUrl: './datetime-range-selector.component.html',
     styleUrls: ['./datetime-range-selector.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush,

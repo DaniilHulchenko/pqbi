@@ -271,8 +271,9 @@ function handleLogoutRequest(authService: AppAuthService) {
         HttpClientModule,
         RootRoutingModule,
         NgxSpinnerModule,
+        RootComponent,
     ],
-    declarations: [RootComponent],
+    declarations: [],
     providers: [
         { provide: API_BASE_URL, useFactory: getRemoteServiceBaseUrl },
         {

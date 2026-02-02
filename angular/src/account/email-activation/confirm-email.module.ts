@@ -5,7 +5,7 @@ import { ConfirmEmailRoutingModule } from './confirm-email-routing.module';
 import { ConfirmEmailComponent } from './confirm-email.component';
 
 @NgModule({
-    declarations: [ConfirmEmailComponent],
-    imports: [AppSharedModule, AccountSharedModule, ConfirmEmailRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AccountSharedModule, ConfirmEmailRoutingModule, ConfirmEmailComponent],
 })
 export class EmailConfirmModule {}

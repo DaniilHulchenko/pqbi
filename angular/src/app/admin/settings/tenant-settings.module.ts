@@ -5,7 +5,7 @@ import { TenantSettingsRoutingModule } from './tenant-settings-routing.module';
 import { TenantSettingsComponent } from '@app/admin/settings/tenant-settings.component';
 
 @NgModule({
-    declarations: [TenantSettingsComponent],
-    imports: [AppSharedModule, AdminSharedModule, TenantSettingsRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AdminSharedModule, TenantSettingsRoutingModule , TenantSettingsComponent],
 })
 export class TenantSettingsModule {}

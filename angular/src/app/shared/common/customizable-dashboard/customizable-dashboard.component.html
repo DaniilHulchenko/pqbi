@@ -32,7 +32,6 @@
                                 class="dashboard-grid"
                                 [options]="options[i]"
                                 perfectScrollbar
-                                [perfectScrollOptions]="{ wheelPropagation: false }"
                                 [ngClass]="{ 'no-tab': !moreThanOnePage() }"
                             >
                                 <gridster-item
@@ -211,6 +210,7 @@
 
     <div
         appBsModal
+        bsModal
         #filterModal="bs-modal"
         class="modal fade filterModal"
         tabindex="-1"

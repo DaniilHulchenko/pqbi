@@ -6,7 +6,7 @@ import { LanguagesComponent } from './languages.component';
 import { CreateOrEditLanguageModalComponent } from './create-or-edit-language-modal.component';
 
 @NgModule({
-    declarations: [LanguagesComponent, CreateOrEditLanguageModalComponent],
-    imports: [AppSharedModule, AdminSharedModule, LanguagesRoutingModules],
+    declarations: [],
+    imports: [AppSharedModule, AdminSharedModule, LanguagesRoutingModules, LanguagesComponent, CreateOrEditLanguageModalComponent],
 })
 export class LanguagesModule {}

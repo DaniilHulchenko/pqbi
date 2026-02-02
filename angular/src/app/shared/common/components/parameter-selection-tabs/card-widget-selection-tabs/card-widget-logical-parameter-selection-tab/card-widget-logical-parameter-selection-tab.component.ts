@@ -34,11 +34,13 @@ import safeStringify from 'fast-safe-stringify';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
 import { LimitedComponentsSelectorComponent } from '../../../limited-components-selector/limited-components-selector.component';
 import { CardWidgetParameterAdvancedSettingsComponent } from '../card-widget-parameter-advanced-settings/card-widget-parameter-advanced-settings.component';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'cardWidgetLogicalParameterSelectionTab',
     standalone: true,
     imports: [
+        LocalizePipe,
         CommonModule,
         DxButtonModule,
         DxScrollViewModule,

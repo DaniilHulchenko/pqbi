@@ -24,11 +24,13 @@ import { FormContainerComponent } from '../../../form-container/form-container.c
 import { LimitedComponentsSelectorComponent } from "../../../limited-components-selector/limited-components-selector.component";
 import { CardWidgetParameterAdvancedSettingsComponent } from '../card-widget-parameter-advanced-settings/card-widget-parameter-advanced-settings.component';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'cardWidgetAdditionalParameterSelectionTab',
     standalone: true,
     imports: [
+    LocalizePipe,
     CardWidgetParameterAdvancedSettingsComponent,
     CommonModule,
     DxButtonModule,

@@ -19,11 +19,13 @@ import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWid
 import { LimitedComponentsSelectorComponent } from '../../../limited-components-selector/limited-components-selector.component';
 import { CardWidgetParameterAdvancedSettingsComponent } from '../card-widget-parameter-advanced-settings/card-widget-parameter-advanced-settings.component';
 import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-settings-options';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'cardWidgetCustomParameterSelectionTab',
     standalone: true,
     imports: [
+        LocalizePipe,
         CommonModule,
         LimitedComponentsSelectorComponent,
         CustomParameterSelectorComponent,

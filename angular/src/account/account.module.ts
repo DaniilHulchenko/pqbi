@@ -42,8 +42,9 @@ export function getRecaptchaLanguage(): string {
         PasswordModule,
         AppBsModalModule,
         AccountSharedModule,
+        AccountComponent, LanguageSwitchComponent,
     ],
-    declarations: [AccountComponent, LanguageSwitchComponent],
+    declarations: [],
     providers: [
         LoginService,
         TenantRegistrationHelperService,

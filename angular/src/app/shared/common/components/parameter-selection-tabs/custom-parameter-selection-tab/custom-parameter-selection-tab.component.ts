@@ -15,11 +15,13 @@ import { CustomParameterDto } from '@shared/service-proxies/service-proxies';
 import { UtilsModule } from '../../../../../../shared/utils/utils.module';
 import { AdvancedSettingsComponent, AdvancedSettingsConfig } from '../advanced-settings/advanced-settings.component';
 import { FormContainerComponent } from "../../form-container/form-container.component";
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'customParameterSelectionTab',
     standalone: true,
     imports: [
+        LocalizePipe,
         CommonModule,
         ComponentsSelectorComponent,
         CustomParameterSelectorComponent,

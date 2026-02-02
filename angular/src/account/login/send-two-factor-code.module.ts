@@ -5,7 +5,7 @@ import { SendTwoFactorCodeRoutingModule } from './send-two-factor-code-routing.m
 import { SendTwoFactorCodeComponent } from './send-two-factor-code.component';
 
 @NgModule({
-    declarations: [SendTwoFactorCodeComponent],
-    imports: [AppSharedModule, AccountSharedModule, SendTwoFactorCodeRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AccountSharedModule, SendTwoFactorCodeRoutingModule, SendTwoFactorCodeComponent],
 })
 export class SendTwoFactorCodeModule {}

@@ -10,11 +10,12 @@ import { DxCheckBoxModule, DxButtonModule } from 'devextreme-angular';
 import { CommonModule } from '@angular/common';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
 import { DefaultValueKeys } from '@shared/DefaultValueKeys';
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'app-dynamic-tree-builder',
     standalone: true,
-    imports: [PickListModule, DxCheckBoxModule, DxButtonModule, CommonModule, UtilsModule],
+    imports: [ LocalizePipe, PickListModule, DxCheckBoxModule, DxButtonModule, CommonModule, UtilsModule],
     templateUrl: './dynamic-tree-builder.component.html',
     styleUrl: './dynamic-tree-builder.component.css',
     providers: [

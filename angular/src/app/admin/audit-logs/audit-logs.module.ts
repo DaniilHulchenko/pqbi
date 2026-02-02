@@ -6,7 +6,7 @@ import { AuditLogsComponent } from './audit-logs.component';
 import { AuditLogDetailModalComponent } from './audit-log-detail-modal.component';
 
 @NgModule({
-    declarations: [AuditLogsComponent, AuditLogDetailModalComponent],
-    imports: [AppSharedModule, AdminSharedModule, AuditLogsRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AdminSharedModule, AuditLogsRoutingModule, AuditLogsComponent, AuditLogDetailModalComponent],
 })
 export class AuditLogsModule {}

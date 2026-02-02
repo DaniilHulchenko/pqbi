@@ -5,7 +5,7 @@ import { SessionLockScreenRoutingModule } from './session-lock-screen-routing.mo
 import { SessionLockScreenComponent } from './session-lock-screen.component';
 
 @NgModule({
-    declarations: [SessionLockScreenComponent],
-    imports: [AppSharedModule, AccountSharedModule, SessionLockScreenRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AccountSharedModule, SessionLockScreenRoutingModule, SessionLockScreenComponent],
 })
 export class SessionLockScreenModule {}

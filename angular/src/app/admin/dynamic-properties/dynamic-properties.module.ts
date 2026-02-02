@@ -11,12 +11,12 @@ import { DynamicEntityPropertiesModule } from './dynamic-entity-properties/dynam
 
 @NgModule({
     declarations: [
-        DynamicPropertyComponent,
+        
+    ],
+    imports: [AppSharedModule, AdminSharedModule, DynamicPropertiesRoutingModule, DynamicEntityPropertiesModule, DynamicPropertyComponent,
         DynamicPropertyValueModalComponent,
         CreateOrEditDynamicPropertyModalComponent,
         DynamicEntityPropertyListComponent,
-        SelectAnEntityModalComponent,
-    ],
-    imports: [AppSharedModule, AdminSharedModule, DynamicPropertiesRoutingModule, DynamicEntityPropertiesModule],
+        SelectAnEntityModalComponent,],
 })
 export class DynamicPropertiesModule {}

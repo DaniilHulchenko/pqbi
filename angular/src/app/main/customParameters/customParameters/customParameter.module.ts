@@ -29,7 +29,6 @@ import {
 } from 'devextreme-angular';
 import { CustomParameterSelectionTabComponent } from '@app/shared/common/components/parameter-selection-tabs/custom-parameter-selection-tab/custom-parameter-selection-tab.component';
 import { CpBaseParameterSelectionTabComponent } from './cp-base-parameter-selection-tab/cp-base-parameter-selection-tab.component';
-import { ComponentsSelectorComponent } from '@app/shared/common/components/components-selector/components-selector.component';
 import { QuantitySelectorComponent } from '@app/shared/common/components/quantity-selector/quantity-selector.component';
 import { CpCustomParameterSelectionTabComponent } from './cp-custom-parameter-selection-tab/cp-custom-parameter-selection-tab.component';
 import { FormContainerComponent } from "../../../shared/common/components/form-container/form-container.component";
@@ -39,7 +38,6 @@ import { CpComponentsSelectorComponent } from './cp-components-selector/cp-compo
 
 @NgModule({
     declarations: [
-        CustomParametersComponent,
         CreateOrEditCustomParameterModalComponent,
         ViewCustomParameterModalComponent,
         ArithmeticsModalComponent,
@@ -75,6 +73,7 @@ import { CpComponentsSelectorComponent } from './cp-components-selector/cp-compo
     FormContainerComponent,
     AdvancedSettingsComponent,
     CpComponentsSelectorComponent,
+    CustomParametersComponent,
 ],
     exports: [ArithmeticsModalComponent],
 })

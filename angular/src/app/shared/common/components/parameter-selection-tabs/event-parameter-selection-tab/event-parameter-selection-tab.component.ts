@@ -15,11 +15,13 @@ import { UtilsModule } from '../../../../../../shared/utils/utils.module';
 import { AdvancedSettingsConfig } from '../advanced-settings/advanced-settings.component';
 import { EventAdvancedSettingsComponent } from '../event-advanced-settings/event-advanced-settings.component';
 import { FormContainerComponent } from "../../form-container/form-container.component";
+import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'eventParameterSelectionTab',
     standalone: true,
     imports: [
+    LocalizePipe,
     CommonModule,
     DxButtonModule,
     DxCheckBoxModule,

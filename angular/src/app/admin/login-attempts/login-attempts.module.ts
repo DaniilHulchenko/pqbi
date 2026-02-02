@@ -6,7 +6,7 @@ import { LoginAttemptsComponent } from './login-attempts.component';
 import { LoginResultTypeComboComponent } from './login-result-type.combo';
 
 @NgModule({
-    declarations: [LoginAttemptsComponent, LoginResultTypeComboComponent],
-    imports: [AppSharedModule, AdminSharedModule, LoginAttemptsRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AdminSharedModule, LoginAttemptsRoutingModule , LoginAttemptsComponent, LoginResultTypeComboComponent],
 })
 export class LoginAttemptsModule {}

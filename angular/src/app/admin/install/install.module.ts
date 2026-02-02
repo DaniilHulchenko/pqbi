@@ -5,7 +5,7 @@ import { InstallRoutingModule } from './install-routing-module';
 import { InstallComponent } from './install.component';
 
 @NgModule({
-    declarations: [InstallComponent],
-    imports: [AppSharedModule, AdminSharedModule, InstallRoutingModule],
+    declarations: [],
+    imports: [AppSharedModule, AdminSharedModule, InstallRoutingModule, InstallComponent],
 })
 export class InstallModule {}
