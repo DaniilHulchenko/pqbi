@@ -11,6 +11,7 @@ import {
     Output,
     EventEmitter,
     ChangeDetectorRef,
+    ChangeDetectionStrategy,
 } from '@angular/core';
 import {
     CreateOrEditTrendWidgetConfigurationDto,
@@ -348,9 +349,8 @@ class LineChart extends DashboardChartBase {
 
     init(trend: TrendResponse, parameters?: WidgetParametersColumn[], updateParameterColorMap?: (parameterName: string, dataUnitType: DataUnitType) => void, parameterColorMap?: Map<string, ParameterColorModel>) {
         const data = trend.data;
-        this.chartData = [];
-        this.chartConfiguration.lineLegend = [];
-        this.chartConfiguration.valueAxes = [];
+        const lineLegend: LineLegendType[] = [];
+        const valueAxes: ValueAxisConfig[] = [];
 
         let map: Map<number, object> = new Map(); // number is datetime representation in UNIX sec
 
@@ -416,7 +416,7 @@ class LineChart extends DashboardChartBase {
                 // Determine position: alternate between left and right for different units
                 const position = axisCounter % 2 === 0 ? 'left' : 'right';
 
-                this.chartConfiguration.valueAxes.push({
+                valueAxes.push({
                     name: axisName,
                     position: position,
                     unitLabel: isPowerFactor ? '' : unitLabel,  // Power factor axes don't need unit label since CAP/IND is shown in each tick
@@ -429,7 +429,7 @@ class LineChart extends DashboardChartBase {
                 axisCounter++;
             }
 
-            this.chartConfiguration.lineLegend.push({
+            lineLegend.push({
                 name: legendLabel,
                 id: dataId,
                 color: color,
@@ -467,7 +467,7 @@ class LineChart extends DashboardChartBase {
 
         // Generate custom axis labels for power factor axes
         powerFactorDataByAxis.forEach((originalValues, axisName) => {
-            const axis = this.chartConfiguration.valueAxes.find(a => a.name === axisName);
+            const axis = valueAxes.find(a => a.name === axisName);
             if (axis && originalValues.length > 0) {
                 // Calculate min and max from original values
                 const min = Math.min(...originalValues);
@@ -479,9 +479,14 @@ class LineChart extends DashboardChartBase {
                 // Create custom labels
                 const customLabels = PowerFactorUtils.createCapIndLabels(min, step, max, this.numberOfDecimals);
 
-                axis.customLabels = customLabels;
-                // Set tick values to match our custom labels so DevExtreme generates ticks at these exact positions
-                axis.tickValues = customLabels.map(l => l.value);
+                const tickValues = customLabels.map(l => l.value);
+                const updatedAxis = {
+                    ...axis,
+                    customLabels: customLabels,
+                    tickValues: tickValues,
+                };
+                const axisIndex = valueAxes.findIndex((valueAxis) => valueAxis.name === axisName);
+                valueAxes[axisIndex] = updatedAxis;
             }
         });
 
@@ -492,7 +497,12 @@ class LineChart extends DashboardChartBase {
             };
         });
 
-        this.chartData = arr;
+        this.chartConfiguration = {
+            ...this.chartConfiguration,
+            lineLegend: [...lineLegend],
+            valueAxes: [...valueAxes],
+        };
+        this.chartData = [...arr];
         this.isInitialLoad = false;
     }
 
@@ -583,7 +593,13 @@ class LineChart extends DashboardChartBase {
             : '';
     }
 
-    reload(input: TrendCalcRequest, parameters?: WidgetParametersColumn[], updateParameterColorMap?: (parameterName: string, dataUnitType: DataUnitType) => void, parameterColorMap?: Map<string, ParameterColorModel>) {
+    reload(
+        input: TrendCalcRequest,
+        parameters?: WidgetParametersColumn[],
+        updateParameterColorMap?: (parameterName: string, dataUnitType: DataUnitType) => void,
+        parameterColorMap?: Map<string, ParameterColorModel>,
+        onDataReady?: () => void,
+    ) {
         this.showLoading();
 
         var sub = this._dashboardService
@@ -606,6 +622,9 @@ class LineChart extends DashboardChartBase {
                     this.init(result, parameters, updateParameterColorMap, parameterColorMap);
                 }
                 this.hideLoading();
+                if (onDataReady) {
+                    onDataReady();
+                }
                 sub.unsubscribe();
             });
     }
@@ -616,6 +635,7 @@ class LineChart extends DashboardChartBase {
     templateUrl: './widget-pqs.component.html',
     styleUrls: ['./widget-pqs.component.css'],
     providers: [TreeDragDropService],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WidgetPQSComponent extends WidgetComponentBaseComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChild(DxChartComponent, { static: false }) chartComponent!: DxChartComponent;
@@ -670,6 +690,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
             this._tenantdashboardService,
             (error) => {
                 this.errorMessage = error;
+                this.markForCheck();
             },
             (key) => this.l(key),
             (date: Date) => {
@@ -801,6 +822,7 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
 
                             // Build color map for parameters using advanced colors, phase colors and defaults
                             this.buildParameterColorMap();
+                            this.markForCheck();
 
                             if (dateModel.rangeUnit === DateRangeType.Relative && resulutionValueInMs) {
                                 timer(0, resulutionValueInMs)
@@ -810,12 +832,18 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                                         input.isRealTime = true;
                                         input.refreshRateInSeconds = resulutionValueInMs / 1000;
                                         if (input) {
-                                            this.lineChart.reload(input, this.currentParameters, (parameterName: string, dataUnitType: DataUnitType) => {
-                                                const model = this.parameterColorMap.get(parameterName);
-                                                if (model) {
-                                                    model.dataUnitType = dataUnitType;
-                                                }
-                                            }, this.parameterColorMap);
+                                            this.lineChart.reload(
+                                                input,
+                                                this.currentParameters,
+                                                (parameterName: string, dataUnitType: DataUnitType) => {
+                                                    const model = this.parameterColorMap.get(parameterName);
+                                                    if (model) {
+                                                        model.dataUnitType = dataUnitType;
+                                                    }
+                                                },
+                                                this.parameterColorMap,
+                                                () => this.markForCheck(),
+                                            );
 
                                             // After first load, save the updated parameters with colors
                                             if (result === 0) {
@@ -826,12 +854,18 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
                             } else {
                                 let input = this.formatRequest();
                                 if (input) {
-                                    this.lineChart.reload(input, this.currentParameters, (parameterName: string, dataUnitType: DataUnitType) => {
-                                        const model = this.parameterColorMap.get(parameterName);
-                                        if (model) {
-                                            model.dataUnitType = dataUnitType;
-                                        }
-                                    }, this.parameterColorMap);
+                                    this.lineChart.reload(
+                                        input,
+                                        this.currentParameters,
+                                        (parameterName: string, dataUnitType: DataUnitType) => {
+                                            const model = this.parameterColorMap.get(parameterName);
+                                            if (model) {
+                                                model.dataUnitType = dataUnitType;
+                                            }
+                                        },
+                                        this.parameterColorMap,
+                                        () => this.markForCheck(),
+                                    );
 
                                     // Save the updated parameters with colors
                                     this.saveParameterColors();
@@ -1417,11 +1451,11 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
     }
 
     toggleStepLine() {
-        // Angular change detection will automatically update the chart
+        this.markForCheck();
     }
 
     toggleLinePoints() {
-        // Angular change detection will automatically update the chart
+        this.markForCheck();
     }
 
     openColorPicker(picker: HTMLInputElement) {
@@ -1499,11 +1533,16 @@ export class WidgetPQSComponent extends WidgetComponentBaseComponent implements 
         this.headerBackgroundColor = color;
         this.persistColorPreference('headerBackgroundColor', color);
         this.updateHeaderTitleStyling();
+        this.markForCheck();
     }
 
     private updateHeaderTitleStyling() {
         this.headerTitleColor = this.getContrastingTextColor(this.headerBackgroundColor);
         this.headerTitleBadgeColor = this.getBadgeColor(this.headerBackgroundColor);
+    }
+
+    private markForCheck(): void {
+        this.cdr.markForCheck();
     }
 
     private getContrastingTextColor(color: string): string {
