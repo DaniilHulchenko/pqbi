@@ -5,7 +5,7 @@ import { AccountSharedModule } from '@account/shared/account-shared.module';
 import { StripeCancelPaymentComponent } from './stripe-cancel-payment.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, StripeCancelPaymentRoutingModule,StripeCancelPaymentComponent],
+    declarations: [StripeCancelPaymentComponent],
+    imports: [AppSharedModule, AccountSharedModule, StripeCancelPaymentRoutingModule],
 })
 export class StripeCancelPaymentModule {}

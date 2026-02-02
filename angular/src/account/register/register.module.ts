@@ -6,7 +6,7 @@ import { RegisterComponent } from './register.component';
 import { PasswordModule } from 'primeng/password';
 
 @NgModule({
-    imports: [AppSharedModule, AccountSharedModule, RegisterRoutingModule, PasswordModule, RegisterComponent],
-    declarations: [],
+    imports: [AppSharedModule, AccountSharedModule, RegisterRoutingModule, PasswordModule],
+    declarations: [RegisterComponent],
 })
 export class RegisterModule {}

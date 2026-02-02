@@ -5,7 +5,7 @@ import { AccountSharedModule } from '@account/shared/account-shared.module';
 import { ValidateTwoFactorCodeComponent } from './validate-two-factor-code.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, ValidateTwoFactorCodeRoutingModule,ValidateTwoFactorCodeComponent],
+    declarations: [ValidateTwoFactorCodeComponent],
+    imports: [AppSharedModule, AccountSharedModule, ValidateTwoFactorCodeRoutingModule],
 })
 export class ValidateTwoFactorCodeModule {}

@@ -5,7 +5,7 @@ import { AccountSharedModule } from '@account/shared/account-shared.module';
 import { SelectEditionComponent } from './select-edition.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, SelectEditionRoutingModule, SelectEditionComponent],
+    declarations: [SelectEditionComponent],
+    imports: [AppSharedModule, AccountSharedModule, SelectEditionRoutingModule],
 })
 export class SelectEditionModule {}

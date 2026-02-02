@@ -8,10 +8,7 @@ import { OrganizationUnitLookupTableModalComponent } from './organization-unit-l
 import { CreateMassNotificationModalComponent } from './create-mass-notification-modal.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AdminSharedModule, MassNotificationsRoutingModule , MassNotificationsComponent,
-        UserLookupTableModalComponent,
-        OrganizationUnitLookupTableModalComponent,
-        CreateMassNotificationModalComponent],
+    declarations: [MassNotificationsComponent, UserLookupTableModalComponent, OrganizationUnitLookupTableModalComponent, CreateMassNotificationModalComponent],
+    imports: [AppSharedModule, AdminSharedModule, MassNotificationsRoutingModule],
 })
 export class MassNotificationsModule {}

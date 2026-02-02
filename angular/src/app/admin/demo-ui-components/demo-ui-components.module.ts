@@ -11,8 +11,13 @@ import { DemoUiDateTimeComponent } from './demo-ui-date-time.component';
 
 @NgModule({
     declarations: [
-        
+        DemoUiComponentsComponent,
+        DemoUiSelectionComponent,
+        DemoUiInputMaskComponent,
+        DemoUiFileUploadComponent,
+        DemoUiEditorComponent,
+        DemoUiDateTimeComponent,
     ],
-    imports: [AppSharedModule, AdminSharedModule, DemoUIComponentsRoutingModule , DemoUiComponentsComponent, DemoUiSelectionComponent, DemoUiInputMaskComponent, DemoUiFileUploadComponent, DemoUiEditorComponent, DemoUiDateTimeComponent],
+    imports: [AppSharedModule, AdminSharedModule, DemoUIComponentsRoutingModule],
 })
 export class DemoUIComponentsModule {}

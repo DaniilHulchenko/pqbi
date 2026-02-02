@@ -2,7 +2,7 @@ import { Component, EventEmitter, Injector, OnDestroy, OnInit, Output, ViewChild
 import { DateRangeUnits } from '@app/shared/enums/date-range-selection-units';
 import { WidgetParametersColumn } from '@app/shared/interfaces/widget-parameter-column';
 import { DateRangeState } from '@app/shared/models/date-range-state';
-import { FormsModule, NgForm } from '@angular/forms';
+import { NgForm } from '@angular/forms';
 import { CreateOrEditGaugeWidgetConfigurationDto, CreateOrEditWidgetConfigurationDto, CustomParametersServiceProxy, GaugeWidgetConfigurationsServiceProxy } from '@shared/service-proxies/service-proxies';
 import { WidgetConfigurationModalBaseComponent } from '../../widget-configuration-modal-base';
 import { DxTabPanelComponent } from 'devextreme-angular';
@@ -30,38 +30,11 @@ import { EditableTabComponentBaseComponent } from '@app/shared/common/components
 import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-refresh-model-new';
 import { DateRangeSelectorComponent } from '@app/shared/common/components/date-range-selector/date-range-selector.component';
 import { GaugeWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
-import { AppSharedModule } from '@app/shared/app-shared.module';
-import { CommonModule } from '@angular/common';
-import { DxPopupModule, DxScrollViewModule, DxTabPanelModule, DxDataGridModule } from 'devextreme-angular';
 
 @Component({
     selector: 'createOrEditGaugeConfiguration',
-    standalone: true,
     templateUrl: './create-or-edit-gauge-configuration.component.html',
     styleUrl: './create-or-edit-gauge-configuration.component.css',
-    imports: [
-        // Angular
-        CommonModule,
-        FormsModule,
-
-        // DevExtreme
-        DxPopupModule,
-        DxScrollViewModule,
-        DxTabPanelModule,
-        DxDataGridModule,
-
-        // Shared / pipes
-        AppSharedModule, 
-
-        // Gauge-specific child components (обязательно!)
-        GaugeWidgetStyleSelectorComponent,
-        GaugeWidgetCustomParameterSelectionTabComponent,
-        GaugeWidgetLogicalParameterSelectionTabComponent,
-        GaugeWidgetChannelParameterSelectionTabComponent,
-        GaugeWidgetAdditionalParameterSelectionTabComponent,
-        GaugeWidgetExceptionParameterSelectionTabComponent,
-        GaugeWidgetEventParameterSelectionTabComponent,
-    ],
 })
 export class CreateOrEditGaugeConfigurationComponent
     extends WidgetConfigurationModalBaseComponent

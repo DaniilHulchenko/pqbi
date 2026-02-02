@@ -5,7 +5,7 @@ import { ExtendSucceedComponent } from './extend-succeed.component';
 import { AccountSharedModule } from '@account/shared/account-shared.module';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, ExtendSucceedRoutingModule,ExtendSucceedComponent],
+    declarations: [ExtendSucceedComponent],
+    imports: [AppSharedModule, AccountSharedModule, ExtendSucceedRoutingModule],
 })
 export class ExtendSucceedModule {}

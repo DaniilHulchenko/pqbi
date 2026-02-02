@@ -16,7 +16,6 @@ import { AppComponentBase } from '@shared/common/app-component-base';
     selector: 'dateRangeSelector',
     standalone: true,
     imports: [
-        LocalizePipe,
         DxRadioGroupModule,
         DxSelectBoxModule,
         DxNumberBoxModule,

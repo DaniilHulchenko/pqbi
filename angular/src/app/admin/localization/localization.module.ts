@@ -7,10 +7,9 @@ import { DxSelectBoxModule, DxRadioGroupModule, DxNumberBoxModule } from 'devext
 
 @NgModule({
     declarations: [
-        
+        LocalizationComponent,
     ],
     imports: [
-        LocalizationComponent,
         AppSharedModule,
         AdminSharedModule,
         LocalizationRoutingModule,

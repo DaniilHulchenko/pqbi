@@ -37,8 +37,6 @@ import { DateRangeAndRefreshModelNew } from '@app/shared/models/date-range-and-r
 import { RefreshSelectionCustomUnits } from '@app/shared/enums/refresh-selection-custom-units';
 import { DashboardPagesService } from '@app/shared/services/dashboard-pages.service';
 import { DateTimeService } from '@app/shared/common/timing/date-time.service';
-import { CommonModule } from '@angular/common';
-import { DxLinearGaugeModule, DxCircularGaugeModule } from 'devextreme-angular';
 
 
 
@@ -58,20 +56,8 @@ interface WeightedSegmentMeta extends Segment {
 
 @Component({
     selector: 'app-widget-pqs-gauge',
-    standalone: true,
     templateUrl: './widget-pqs-gauge.component.html',
     styleUrl: './widget-pqs-gauge.component.css',
-    imports: [
-        CommonModule,
-
-        // DevExtreme
-        DxLinearGaugeModule,
-        DxCircularGaugeModule,
-
-        // Modals / child components used in template
-        CreateOrEditGaugeConfigurationComponent,
-        RenameWidgetModalComponent,
-    ],
 })
 export class WidgetPqsGaugeComponent extends WidgetComponentBaseComponent implements OnInit, OnDestroy {
     @ViewChild('createOrEditModal') createOrEditModal: CreateOrEditGaugeConfigurationComponent;

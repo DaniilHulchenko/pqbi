@@ -5,7 +5,7 @@ import { AppSharedModule } from '@app/shared/app-shared.module';
 import { InvoiceComponent } from './invoice.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AdminSharedModule, InvoiceRoutingModule , InvoiceComponent],
+    declarations: [InvoiceComponent],
+    imports: [AppSharedModule, AdminSharedModule, InvoiceRoutingModule],
 })
 export class InvoiceModule {}

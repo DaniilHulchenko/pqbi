@@ -10,7 +10,8 @@ import { FormContainerComponent } from '@app/shared/common/components/form-conta
 
 @NgModule({
     declarations: [
-        
+        DashboardSettingsComponent,
+        AdvancedParameterSelectorComponent,
     ],
     imports: [
         AppSharedModule,
@@ -23,8 +24,6 @@ import { FormContainerComponent } from '@app/shared/common/components/form-conta
         DxScrollViewModule,
         ListboxModule,
         FormContainerComponent,
-        DashboardSettingsComponent,
-        AdvancedParameterSelectorComponent,
     ],
 })
 export class DashboardSettingsModule {}

@@ -7,7 +7,7 @@ import { ShowDetailModalComponent } from './show-detail-modal.component';
 import { FormContainerComponent } from "../../shared/common/components/form-container/form-container.component";
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AdminSharedModule, SubscriptionManagementRoutingModule, FormContainerComponent, SubscriptionManagementComponent, ShowDetailModalComponent],
+    declarations: [SubscriptionManagementComponent, ShowDetailModalComponent],
+    imports: [AppSharedModule, AdminSharedModule, SubscriptionManagementRoutingModule, FormContainerComponent],
 })
 export class SubscriptionManagementModule {}

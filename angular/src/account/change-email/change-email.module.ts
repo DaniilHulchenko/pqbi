@@ -5,7 +5,7 @@ import { ChangeEmailRoutingModule } from './change-email-routing.module';
 import { ChangeEmailComponent } from './change-email.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, ChangeEmailRoutingModule, ChangeEmailComponent],
+    declarations: [ChangeEmailComponent],
+    imports: [AppSharedModule, AccountSharedModule, ChangeEmailRoutingModule],
 })
 export class ChangeEmailModule {}

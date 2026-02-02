@@ -6,7 +6,7 @@ import { HostDashboardComponent } from './host-dashboard.component';
 import { CustomizableDashboardModule } from '@app/shared/common/customizable-dashboard/customizable-dashboard.module';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AdminSharedModule, HostDashboardRoutingModule, CustomizableDashboardModule, HostDashboardComponent],
+    declarations: [HostDashboardComponent],
+    imports: [AppSharedModule, AdminSharedModule, HostDashboardRoutingModule, CustomizableDashboardModule],
 })
 export class HostDashboardModule {}

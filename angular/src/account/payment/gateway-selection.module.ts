@@ -5,7 +5,7 @@ import { BuyRoutingModule } from './gateway-selection-routing.module';
 import { GatewaySelectionComponent } from './gateway-selection.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, BuyRoutingModule, GatewaySelectionComponent],
+    declarations: [GatewaySelectionComponent],
+    imports: [AppSharedModule, AccountSharedModule, BuyRoutingModule],
 })
 export class GatewaySelectionModule {}

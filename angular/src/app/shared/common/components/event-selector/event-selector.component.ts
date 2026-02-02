@@ -5,12 +5,11 @@ import { DxScrollViewModule } from 'devextreme-angular';
 import { ListboxModule } from 'primeng/listbox';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
 import { EventService } from '@app/shared/services/event-service.service';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'eventSelector',
     standalone: true,
-    imports: [ LocalizePipe, DxScrollViewModule, FormsModule, ListboxModule, UtilsModule],
+    imports: [DxScrollViewModule, FormsModule, ListboxModule, UtilsModule],
     templateUrl: './event-selector.component.html',
     styleUrl: './event-selector.component.css',
     providers: [

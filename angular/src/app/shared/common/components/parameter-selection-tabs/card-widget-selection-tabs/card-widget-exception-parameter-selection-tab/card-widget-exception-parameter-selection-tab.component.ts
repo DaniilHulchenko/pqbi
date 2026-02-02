@@ -13,13 +13,11 @@ import { CardWidgetParameterAdvancedSettingsComponent } from '../card-widget-par
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
 import { ExcludeFlagged, Limit, ColorSchema } from '@app/shared/enums/advanced-settings-options';
 import { CustomParameterDto, NormalizeEnum } from '@shared/service-proxies/service-proxies';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'cardWidgetExceptionParameterSelectionTab',
     standalone: true,
     imports: [
-        LocalizePipe,
         CommonModule,
         CustomParameterSelectorComponent,
         DxButtonModule,

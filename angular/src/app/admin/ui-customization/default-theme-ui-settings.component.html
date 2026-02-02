@@ -80,7 +80,7 @@
                                 name="DefaultMinimizedAside"
                                 class="form-check-input"
                                 [(ngModel)]="settings.menu.defaultMinimizedAside"
-                                [disabled]="!settings.menu.allowAsideMinimizing"
+                                [(disabled)]="!settings.menu.allowAsideMinimizing"
                             />
                             <span class="form-check-label">
                                 {{ 'UiCustomization_DefaultMinimizedAside' | localize }}

@@ -180,39 +180,49 @@ import { DateRangeAndResolutionSelectorComponent } from '../components/date-rang
     GaugeWidgetExceptionParameterSelectionTabComponent,
     GaugeWidgetLogicalParameterSelectionTabComponent,
     GaugeWidgetStyleSelectorComponent,
-    DateRangeAndResolutionSelectorComponent,
-    WidgetPqsGaugeComponent,
-    CreateOrEditGaugeConfigurationComponent,
-    CustomizableDashboardComponent,
-    FilterDateRangePickerComponent,
-    AddWidgetModalComponent,
-    RenameWidgetModalComponent,
-    WidgetComponentBaseComponent,
-    WidgetPQSComponent,
-    WidgetPQSTableComponent,
-    WidgetPqsBarChartComponent,
-    CreateOrEditTrendConfigurationComponent,
-    CreateOrEditBarChartConfigurationComponent,
-    CreateOrEditTableConfigurationComponent,
-    RenameWidgetModalComponent,
-    TablePreviewComponent,
+    DateRangeAndResolutionSelectorComponent
 ],
 
     declarations: [
-        
-        
+        CustomizableDashboardComponent,
+        FilterDateRangePickerComponent,
+        AddWidgetModalComponent,
+        RenameWidgetModalComponent,
+        WidgetComponentBaseComponent,
+        WidgetPQSComponent,
+        WidgetPQSTableComponent,
+        WidgetPqsBarChartComponent,
+        CreateOrEditTrendConfigurationComponent,
+        CreateOrEditBarChartConfigurationComponent,
+        CreateOrEditTableConfigurationComponent,
+        RenameWidgetModalComponent,
+        TablePreviewComponent,
         TableDesignOptionsComponent,
         WidgetPqsCardComponent,
         CreateOrEditCardConfigurationComponent,
-        
+        WidgetPqsGaugeComponent,
+        CreateOrEditGaugeConfigurationComponent
     ],
 
     providers: [DashboardViewConfigurationService],
 
     exports: [
+        CustomizableDashboardComponent,
         FilterDateRangePickerComponent,
+        AddWidgetModalComponent,
+        RenameWidgetModalComponent,
+        WidgetPQSComponent,
+        WidgetPQSTableComponent,
+        WidgetPqsBarChartComponent,
+        WidgetPqsCardComponent,
+        WidgetPqsGaugeComponent,
+        CreateOrEditTrendConfigurationComponent,
+        CreateOrEditBarChartConfigurationComponent,
+        CreateOrEditTableConfigurationComponent,
         CreateOrEditCardConfigurationComponent,
         CreateOrEditGaugeConfigurationComponent,
+        RenameWidgetModalComponent,
+        TablePreviewComponent,
     ],
 })
 export class CustomizableDashboardModule {}

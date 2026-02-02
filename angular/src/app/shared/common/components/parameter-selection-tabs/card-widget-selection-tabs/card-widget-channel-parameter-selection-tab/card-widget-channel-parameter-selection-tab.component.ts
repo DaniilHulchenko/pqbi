@@ -32,13 +32,11 @@ import safeStringify from 'fast-safe-stringify';
 import { LimitedComponentsSelectorComponent } from '../../../limited-components-selector/limited-components-selector.component';
 import { CardWidgetParameterAdvancedSettingsComponent } from '../card-widget-parameter-advanced-settings/card-widget-parameter-advanced-settings.component';
 import { CardWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/CardWidgetAdvancedSettingsConfig';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'cardWidgetChannelParameterSelectionTab',
     standalone: true,
     imports: [
-        LocalizePipe,
         CommonModule,
         LimitedComponentsSelectorComponent,
         DxButtonModule,

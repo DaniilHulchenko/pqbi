@@ -3,8 +3,8 @@ import { AppBsModalDirective } from './app-bs-modal.directive';
 import { CommonModule } from '@angular/common';
 
 @NgModule({
-    declarations: [],
-    imports: [CommonModule, AppBsModalDirective],
-    exports: [],
+    declarations: [AppBsModalDirective],
+    imports: [CommonModule],
+    exports: [AppBsModalDirective],
 })
 export class AppBsModalModule {}

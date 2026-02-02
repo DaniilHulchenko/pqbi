@@ -10,12 +10,12 @@ import {
     HostListener,
 
 } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import { DashboardViewConfigurationService } from './dashboard-view-configuration.service';
 import { appModuleAnimation } from '@shared/animations/routerTransition';
-import { GridsterConfig, GridsterModule } from 'angular-gridster2';
+import { GridsterConfig } from 'angular-gridster2';
 import {
     DashboardCustomizationServiceProxy,
     DashboardOutput,
@@ -28,12 +28,12 @@ import {
     Dashboard,
     WidgetConfigurationsServiceProxy,
 } from '@shared/service-proxies/service-proxies';
-import { TabDirective, TabsModule, TabsetComponent } from 'ngx-bootstrap/tabs';
-import { BsDropdownDirective, BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { TabDirective, TabsetComponent } from 'ngx-bootstrap/tabs';
+import { BsDropdownDirective } from 'ngx-bootstrap/dropdown';
 import { WidgetViewDefinition, WidgetFilterViewDefinition } from './definitions';
 import { AddWidgetModalComponent } from './add-widget-modal/add-widget-modal.component';
 import { DashboardCustomizationConst } from './DashboardCustomizationConsts';
-import { ModalDirective, ModalModule } from 'ngx-bootstrap/modal';
+import { ModalDirective } from 'ngx-bootstrap/modal';
 import * as rtlDetect from 'rtl-detect';
 import { Subject, Subscription, forkJoin } from 'rxjs';
 import { GuidGeneratorService } from '@shared/utils/guid-generator.service';
@@ -46,8 +46,6 @@ import {
     DashboardConfigurationState,
 } from './dashboard-configuration.service';
 import { DashboardToolbarService } from '@app/shared/services/dashboard-toolbar.service';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
-import { FormsModule } from '@angular/forms';
 
 
 export const WIDGETONRESIZEEVENTHANDLERTOKEN = new InjectionToken<WidgetOnResizeEventHandler>(
@@ -61,25 +59,6 @@ export class WidgetOnResizeEventHandler {
 
 @Component({
     selector: 'customizable-dashboard',
-    standalone: true, 
-    imports: [
-        CommonModule,
-        FormsModule,
-
-        // pipes
-        LocalizePipe,
-
-        // ngx-bootstrap
-        TabsModule,
-        BsDropdownModule,
-        ModalModule,
-
-        // grid
-        GridsterModule,
-
-        // modals / widgets
-        AddWidgetModalComponent,
-    ],
     templateUrl: './customizable-dashboard.component.html',
     styleUrls: ['./customizable-dashboard.component.css'],
     animations: [appModuleAnimation()],

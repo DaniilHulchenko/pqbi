@@ -23,29 +23,20 @@ import { ArrayUtils } from '@app/shared/services/array-utils.service';
 import { QuantityUnits } from '@app/shared/enums/quantity-units';
 import { GaugeWidgetParameterAdvancedSettingsComponent } from '../gauge-widget-parameter-advanced-settings/gauge-widget-parameter-advanced-settings.component';
 import { GaugeWidgetAdvancedSettingsConfig } from '@app/shared/interfaces/gauge-widget-advanced-settings-config';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'gaugeWidgetAdditionalParameterSelectionTab',
     standalone: true,
     imports: [
-        // pipes
-        LocalizePipe,
-
-        // Angular
+        GaugeWidgetParameterAdvancedSettingsComponent,
         CommonModule,
-        FormsModule,
-
-        // DevExtreme
         DxButtonModule,
         DxScrollViewModule,
-
-        // Prime / shared
         ListboxModule,
+        FormsModule,
         UtilsModule,
         FormContainerComponent,
         LimitedComponentsSelectorComponent,
-        GaugeWidgetParameterAdvancedSettingsComponent,
     ],
     templateUrl: './gauge-widget-additional-parameter-selection-tab.component.html',
     styleUrl: './gauge-widget-additional-parameter-selection-tab.component.css',

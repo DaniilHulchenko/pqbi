@@ -7,8 +7,8 @@ import { DynamicEntityPropertyValueComponent } from './dynamic-entity-property-v
 import { ManagerComponent } from './manager.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AdminSharedModule, DynamicEntityPropertyValueRoutingModule , ManageValuesModalComponent, DynamicEntityPropertyValueComponent, ManagerComponent],
+    declarations: [ManageValuesModalComponent, DynamicEntityPropertyValueComponent, ManagerComponent],
+    imports: [AppSharedModule, AdminSharedModule, DynamicEntityPropertyValueRoutingModule],
     exports: [ManageValuesModalComponent, ManagerComponent],
 })
 export class DynamicEntityPropertyValueModule {}

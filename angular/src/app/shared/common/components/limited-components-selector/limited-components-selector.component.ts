@@ -10,13 +10,11 @@ import { Tree, TreeModule } from 'primeng/tree';
 import { DynamicTreeBuilderComponent } from '../dynamic-tree-builder/dynamic-tree-builder.component';
 import { UtilsModule } from '@shared/utils/utils.module';
 import safeStringify from 'fast-safe-stringify';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'limitedComponentsSelector',
     standalone: true,
     imports: [
-        LocalizePipe,
         CommonModule,
         DxButtonModule,
         DxScrollViewModule,

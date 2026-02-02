@@ -5,7 +5,7 @@ import { StripePrePaymentRoutingModule } from './stripe-pre-payment-routing.modu
 import { StripePrePaymentComponent } from './stripe-pre-payment.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, StripePrePaymentRoutingModule, StripePrePaymentComponent],
+    declarations: [StripePrePaymentComponent],
+    imports: [AppSharedModule, AccountSharedModule, StripePrePaymentRoutingModule],
 })
 export class StripePrePaymentModule {}

@@ -9,23 +9,21 @@ import { TreeBuilderService } from '@app/shared/services/tree-builder.service';
 import { FeederComponentInfo } from '@shared/service-proxies/service-proxies';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
 import { Subscription, timer } from 'rxjs';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 
 @Component({
     selector: 'componentsSelector',
     standalone: true,
     imports: [
-        LocalizePipe,
-        CommonModule,
-        DxButtonModule,
-        DxScrollViewModule,
-        DxPopoverModule,
-        FormsModule,
-        TreeModule,
-        DynamicTreeBuilderComponent,
-        DxLoadIndicatorModule,
-        UtilsModule
+    CommonModule,
+    DxButtonModule,
+    DxScrollViewModule,
+    DxPopoverModule,
+    FormsModule,
+    TreeModule,
+    DynamicTreeBuilderComponent,
+    DxLoadIndicatorModule,
+    UtilsModule
 ],
     templateUrl: './components-selector.component.html',
     styleUrl: './components-selector.component.css',

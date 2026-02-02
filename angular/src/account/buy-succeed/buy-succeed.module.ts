@@ -5,7 +5,7 @@ import { AccountSharedModule } from '@account/shared/account-shared.module';
 import { BuySucceedComponent } from './buy-succeed.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, BuySucceedRoutingModule,BuySucceedComponent],
+    declarations: [BuySucceedComponent],
+    imports: [AppSharedModule, AccountSharedModule, BuySucceedRoutingModule],
 })
 export class BuySucceedModule {}

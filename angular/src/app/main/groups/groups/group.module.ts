@@ -22,12 +22,8 @@ import { ListboxModule } from 'primeng/listbox';
 import { SubgroupCreateOrEditBlockComponent } from '@app/shared/common/components/subgroup-create-or-edit-block/subgroup-create-or-edit-block.component';
 
 @NgModule({
-    declarations: [],
+    declarations: [GroupsComponent, CreateOrEditGroupModalComponent, ViewGroupModalComponent, SubgroupCreateOrEditBlockComponent],
     imports: [
-        GroupsComponent, 
-        CreateOrEditGroupModalComponent, 
-        ViewGroupModalComponent, 
-        SubgroupCreateOrEditBlockComponent,
         AppSharedModule,
         GroupRoutingModule,
         AdminSharedModule,

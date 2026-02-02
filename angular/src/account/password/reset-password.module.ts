@@ -5,7 +5,7 @@ import { AccountSharedModule } from '@account/shared/account-shared.module';
 import { ResetPasswordComponent } from './reset-password.component';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, ResetPasswordRoutingModule, ResetPasswordComponent],
+    declarations: [ResetPasswordComponent],
+    imports: [AppSharedModule, AccountSharedModule, ResetPasswordRoutingModule],
 })
 export class ResetPasswordModule {}

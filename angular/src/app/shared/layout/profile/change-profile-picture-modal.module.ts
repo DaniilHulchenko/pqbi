@@ -4,9 +4,9 @@ import { AppSharedModule } from '@app/shared/app-shared.module';
 import { ChangeProfilePictureModalComponent } from './change-profile-picture-modal.component';
 
 @NgModule({
-    imports: [CommonModule, AppSharedModule, ChangeProfilePictureModalComponent],
-    declarations: [],
-    exports: [],
+    imports: [CommonModule, AppSharedModule],
+    declarations: [ChangeProfilePictureModalComponent],
+    exports: [ChangeProfilePictureModalComponent],
 })
 export class ChangeProfilePictureModalModule {}
 

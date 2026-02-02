@@ -5,12 +5,11 @@ import { GaugeStyle, GaugeStyleArcAngleEnum, GaugeStyleEnum, GaugeStyleOrientati
 import { AppComponentBase } from '@shared/common/app-component-base';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { UtilsModule } from '@shared/utils/utils.module';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'gaugeWidgetStyleSelector',
     standalone: true,
-    imports: [LocalizePipe, CommonModule, DxSelectBoxModule, DxNumberBoxModule, DxCheckBoxModule, DxTextBoxModule, UtilsModule],
+    imports: [CommonModule, DxSelectBoxModule, DxNumberBoxModule, DxCheckBoxModule, DxTextBoxModule, UtilsModule],
     templateUrl: './gauge-widget-style-selector.component.html',
     styleUrl: './gauge-widget-style-selector.component.css',
     providers: [

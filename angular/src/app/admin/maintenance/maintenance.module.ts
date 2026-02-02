@@ -5,7 +5,7 @@ import { AdminSharedModule } from '@app/admin/shared/admin-shared.module';
 import { AppSharedModule } from '@app/shared/app-shared.module';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AdminSharedModule, MaintenanceRoutingModule, MaintenanceComponent],
+    declarations: [MaintenanceComponent],
+    imports: [AppSharedModule, AdminSharedModule, MaintenanceRoutingModule],
 })
 export class MaintenanceModule {}

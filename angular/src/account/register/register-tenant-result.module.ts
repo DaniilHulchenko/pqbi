@@ -5,7 +5,7 @@ import { RegisterTenantResultRoutingModule } from './register-tenant-result-rout
 import { RegisterTenantResultComponent } from './register-tenant-result.component';
 
 @NgModule({
-    imports: [AppSharedModule, AccountSharedModule, RegisterTenantResultRoutingModule, RegisterTenantResultComponent],
-    declarations: [],
+    imports: [AppSharedModule, AccountSharedModule, RegisterTenantResultRoutingModule],
+    declarations: [RegisterTenantResultComponent],
 })
 export class RegisterTenantResultModule {}

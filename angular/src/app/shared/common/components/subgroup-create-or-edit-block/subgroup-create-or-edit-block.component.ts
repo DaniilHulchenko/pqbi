@@ -1,17 +1,11 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Subgroup } from '@app/shared/models/subgroup';
 import { Guid } from '@node_modules/guid-ts/lib';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
-    standalone: true,
-    imports: [
-        LocalizePipe
-    ],
     selector: 'subgroupCreateOrEditBlock',
     templateUrl: './subgroup-create-or-edit-block.component.html',
     styleUrl: './subgroup-create-or-edit-block.component.css',
-
 })
 export class SubgroupCreateOrEditBlockComponent {
     @Output() onAdd: EventEmitter<Subgroup> = new EventEmitter<Subgroup>();

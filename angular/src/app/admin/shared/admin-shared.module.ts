@@ -32,7 +32,13 @@ import { SubheaderModule } from '@app/shared/common/sub-header/subheader.module'
 
 @NgModule({
     declarations: [
-        
+        RoleComboComponent,
+        PermissionTreeComponent,
+        PermissionTreeModalComponent,
+        PermissionComboComponent,
+        OrganizationUnitsTreeComponent,
+        FeatureTreeComponent,
+        EditionComboComponent,
     ],
     imports: [
         AppSharedModule,
@@ -60,13 +66,6 @@ import { SubheaderModule } from '@app/shared/common/sub-header/subheader.module'
         FileUploadModule,
         PrimeNgFileUploadModule,
         SubheaderModule,
-        RoleComboComponent,
-        PermissionTreeComponent,
-        PermissionTreeModalComponent,
-        PermissionComboComponent,
-        OrganizationUnitsTreeComponent,
-        FeatureTreeComponent,
-        EditionComboComponent,
     ],
     exports: [
         RoleComboComponent,

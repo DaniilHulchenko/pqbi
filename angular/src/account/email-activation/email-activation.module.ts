@@ -5,7 +5,7 @@ import { EmailActivationComponent } from './email-activation.component';
 import { AccountSharedModule } from '@account/shared/account-shared.module';
 
 @NgModule({
-    declarations: [],
-    imports: [AppSharedModule, AccountSharedModule, EmailActivationRoutingModule, EmailActivationComponent],
+    declarations: [EmailActivationComponent],
+    imports: [AppSharedModule, AccountSharedModule, EmailActivationRoutingModule],
 })
 export class EmailActivationModule {}

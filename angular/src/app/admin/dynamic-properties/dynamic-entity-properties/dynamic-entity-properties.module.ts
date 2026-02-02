@@ -6,8 +6,8 @@ import { ManageDynamicEntityPropertyModalComponent } from './manage-dynamic-enti
 import { CreateDynamicEntityPropertyModalComponent } from './create-dynamic-entity-property-modal.component';
 
 @NgModule({
-    declarations: [],
+    declarations: [ManageDynamicEntityPropertyModalComponent, CreateDynamicEntityPropertyModalComponent],
     exports: [ManageDynamicEntityPropertyModalComponent],
-    imports: [AppSharedModule, AdminSharedModule, DynamicEntityPropertiesRoutingModule , ManageDynamicEntityPropertyModalComponent, CreateDynamicEntityPropertyModalComponent],
+    imports: [AppSharedModule, AdminSharedModule, DynamicEntityPropertiesRoutingModule],
 })
 export class DynamicEntityPropertiesModule {}

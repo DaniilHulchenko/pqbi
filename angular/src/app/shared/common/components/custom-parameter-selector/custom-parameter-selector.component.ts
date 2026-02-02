@@ -9,12 +9,11 @@ import { DxScrollViewModule } from 'devextreme-angular';
 import { ListboxModule } from 'primeng/listbox';
 import { UtilsModule } from '../../../../../shared/utils/utils.module';
 import { CustomParameterService } from '@app/shared/services/custom-parameter-service.service';
-import { LocalizePipe } from '@shared/common/pipes/localize.pipe';
 
 @Component({
     selector: 'customParameterSelector',
     standalone: true,
-    imports: [ LocalizePipe, FormsModule, DxScrollViewModule, ListboxModule, UtilsModule],
+    imports: [FormsModule, DxScrollViewModule, ListboxModule, UtilsModule],
     templateUrl: './custom-parameter-selector.component.html',
     styleUrl: './custom-parameter-selector.component.css',
     providers: [
